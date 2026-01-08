@@ -4,11 +4,15 @@
 :root {
 	--background: #ffffff;
 	--foreground: #171717;
+	--brand: #d50e0c;
+	--secondary: #0ea5a5;
 }
 
 @theme inline {
 	--color-background: var(--background);
 	--color-foreground: var(--foreground);
+	--color-brand: var(--brand);
+	--color-secondary: var(--secondary);
 	--font-sans: var(--font-geist-sans);
 	--font-mono: var(--font-geist-mono);
 }

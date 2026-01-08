@@ -14,16 +14,22 @@ import {
 	Button,
 	Divider,
 	CssBaseline,
+	IconButton,
+	Chip,
 } from "@mui/material";
 import { authClient } from "@/lib/auth-client";
-
-const drawerWidth = 260;
+import MenuIcon from "@mui/icons-material/Menu";
+import DashboardIcon from "@mui/icons-material/Dashboard";
+import PeopleIcon from "@mui/icons-material/People";
+import ArticleIcon from "@mui/icons-material/Article";
+import SettingsIcon from "@mui/icons-material/Settings";
+import { useState } from "react";
 
 const nav = [
-	{ label: "Dashboard", href: "/admin" },
-	{ label: "Users", href: "/admin/users" },
-	{ label: "CMS Pages", href: "/admin/cms/pages" },
-	{ label: "Settings", href: "/admin/settings" },
+	{ label: "Dashboard", href: "/admin", icon: <DashboardIcon fontSize="small" /> },
+	{ label: "Users", href: "/admin/users", icon: <PeopleIcon fontSize="small" /> },
+	{ label: "CMS Pages", href: "/admin/cms/pages", icon: <ArticleIcon fontSize="small" /> },
+	{ label: "Settings", href: "/admin/settings", icon: <SettingsIcon fontSize="small" /> },
 ];
 
 function isActive(pathname: string, href: string) {
@@ -41,50 +47,90 @@ export default function AdminShell({
 	role: string;
 }) {
 	const pathname = usePathname();
+	const [mobileOpen, setMobileOpen] = useState(false);
 
 	return (
-		<Box sx={{ display: "flex" }}>
+		<Box sx={{ display: "flex", minHeight: "100vh", bgcolor: "background.default" }}>
 			<CssBaseline />
 
-			<AppBar position="fixed" sx={{ zIndex: (t) => t.zIndex.drawer + 1 }}>
+			<AppBar
+				position="fixed"
+				sx={{
+					zIndex: (t) => t.zIndex.drawer + 1,
+					bgcolor: "background.paper",
+					color: "text.primary",
+					boxShadow: "0 1px 6px rgba(0,0,0,0.08)",
+				}}
+			>
 				<Toolbar sx={{ gap: 2 }}>
-					<Typography variant="h6" sx={{ flexGrow: 1 }}>
-						PT AMP — Admin Panel
-					</Typography>
-
-					<Typography variant="body2" sx={{ opacity: 0.9 }}>
-						{role} • {userEmail}
-					</Typography>
-
-					<Button
-						color="inherit"
-						onClick={async () => {
-							await authClient.signOut();
-							window.location.href = "/login";
-						}}
+					<IconButton
+						color="default"
+						edge="start"
+						onClick={() => setMobileOpen((v) => !v)}
+						sx={{ mr: 1, display: { sm: "none" } }}
+						aria-label="open navigation"
 					>
-						Logout
-					</Button>
+						<MenuIcon />
+					</IconButton>
+					<Box sx={{ flexGrow: 1 }}>
+						<Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+							<Box sx={{ width: 32, height: 32, bgcolor: "var(--brand)", borderRadius: 1 }} />
+							<Typography
+								variant="h6"
+								sx={{
+									fontWeight: 800,
+									letterSpacing: 0.4,
+									color: "var(--brand)",
+								}}
+							>
+								Admin Panel
+							</Typography>
+						</Box>
+						<Typography variant="caption" sx={{ color: "text.secondary" }}>
+							<i>Enterprise Resource Planning</i>
+						</Typography>
+					</Box>
+
+					<Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+						<Chip
+							label={role}
+							size="small"
+							sx={{
+								border: "1px solid var(--secondary)",
+								color: "var(--secondary)",
+								bgcolor: "transparent",
+							}}
+						/>
+						<Button
+							variant="outlined"
+							onClick={async () => {
+								await authClient.signOut();
+								window.location.href = "/login";
+							}}
+							sx={{ borderColor: "var(--brand)", color: "var(--brand)" }}
+						>
+							Logout
+						</Button>
+					</Box>
 				</Toolbar>
 			</AppBar>
 
 			<Drawer
-				variant="permanent"
+				variant="temporary"
+				open={mobileOpen}
+				onClose={() => setMobileOpen(false)}
 				sx={{
-					width: drawerWidth,
-					flexShrink: 0,
+					display: { xs: "block", sm: "none" },
 					[`& .MuiDrawer-paper`]: {
-						width: drawerWidth,
+						width: 260,
 						boxSizing: "border-box",
+						backgroundColor: "background.paper",
+						borderRight: "1px solid rgba(0,0,0,0.06)",
 					},
 				}}
 			>
 				<Toolbar />
 				<Box sx={{ px: 1 }}>
-					<Typography variant="subtitle2" sx={{ px: 2, py: 1, opacity: 0.7 }}>
-						Navigation
-					</Typography>
-
 					<List>
 						{nav.map((item) => (
 							<ListItemButton
@@ -92,17 +138,88 @@ export default function AdminShell({
 								component={Link}
 								href={item.href}
 								selected={isActive(pathname, item.href)}
+								onClick={() => setMobileOpen(false)}
+								sx={{
+									mx: 1,
+									mb: 0.5,
+									borderRadius: 1.5,
+									borderLeft: isActive(pathname, item.href)
+										? `3px solid var(--secondary)`
+										: "3px solid transparent",
+									"&.Mui-selected": {
+										backgroundColor: "rgba(213,14,12,0.08)",
+									},
+									"&.Mui-selected:hover": {
+										backgroundColor: "rgba(213,14,12,0.12)",
+									},
+								}}
 							>
-								<ListItemText primary={item.label} />
+								<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+									{item.icon}
+									<ListItemText primary={item.label} />
+								</Box>
+							</ListItemButton>
+						))}
+					</List>
+					<Divider sx={{ my: 1 }} />
+					<Box sx={{ px: 2, pb: 2 }}>
+						<Typography variant="caption" sx={{ opacity: 0.7, color: "text.secondary" }}>
+							ERP Pt. AMP
+						</Typography>
+					</Box>
+				</Box>
+			</Drawer>
+
+			<Drawer
+				variant="permanent"
+				sx={{
+					display: { xs: "none", sm: "block" },
+					width: 260,
+					flexShrink: 0,
+					[`& .MuiDrawer-paper`]: {
+						width: 260,
+						boxSizing: "border-box",
+						backgroundColor: "background.paper",
+						borderRight: "1px solid rgba(0,0,0,0.06)",
+					},
+				}}
+			>
+				<Toolbar />
+				<Box sx={{ px: 1 }}>
+					<List>
+						{nav.map((item) => (
+							<ListItemButton
+								key={item.href}
+								component={Link}
+								href={item.href}
+								selected={isActive(pathname, item.href)}
+								sx={{
+									mx: 1,
+									mb: 0.5,
+									borderRadius: 1.5,
+									borderLeft: isActive(pathname, item.href)
+										? `3px solid var(--secondary)`
+										: "3px solid transparent",
+									"&.Mui-selected": {
+										backgroundColor: "rgba(213,14,12,0.08)",
+									},
+									"&.Mui-selected:hover": {
+										backgroundColor: "rgba(213,14,12,0.12)",
+									},
+								}}
+							>
+								<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+									{item.icon}
+									<ListItemText primary={item.label} />
+								</Box>
 							</ListItemButton>
 						))}
 					</List>
 
 					<Divider sx={{ my: 1 }} />
-
 					<Box sx={{ px: 2, pb: 2 }}>
-						<Typography variant="caption" sx={{ opacity: 0.6 }}>
-							v0.1 • ERP + CMS (1 panel)
+						<Typography variant="caption" sx={{ opacity: 0.6, color: "text.secondary" }}>
+							ERP Pt. AMP
 						</Typography>
 					</Box>
 				</Box>
@@ -112,9 +229,9 @@ export default function AdminShell({
 				component="main"
 				sx={{
 					flexGrow: 1,
-					p: 3,
+					p: { xs: 2, md: 3 },
 					minHeight: "100vh",
-					bgcolor: "background.default",
+					bgcolor: (t) => (t.palette.mode === "dark" ? "background.default" : "#f5f5f5"),
 				}}
 			>
 				<Toolbar />

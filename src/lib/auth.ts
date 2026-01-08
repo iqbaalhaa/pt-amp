@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 export const auth = betterAuth({
 	emailAndPassword: {
 		enabled: true,
-		disableSignUp: true, //tidak bisa regis
+		disableSignUp: false,
 	},
 
 	user: {
