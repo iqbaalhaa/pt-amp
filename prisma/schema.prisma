@@ -27,6 +27,7 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   role          String    @default("STAFF")
+  posts         Post[]
   sessions      Session[]
   accounts      Account[]
 
@@ -80,4 +81,95 @@ model Verification {
 
   @@index([identifier])
   @@map("verification")
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  grade       String?  // e.g., Grade A, KA, KB
+  price       Decimal? @db.Decimal(10, 2)
+  image       String?
+  stock       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("product")
+}
+
+model Customer {
+  id        String   @id @default(cuid())
+  name      String
+  email     String?
+  phone     String?
+  company   String?
+  address   String?
+  type      CustomerType @default(BUYER) // BUYER or SUPPLIER (Farmer)
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("customer")
+}
+
+model Inquiry {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  phone     String?
+  subject   String?
+  message   String
+  status    InquiryStatus @default(NEW)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("inquiry")
+}
+
+model Post {
+  id        String   @id @default(cuid())
+  title     String
+  slug      String   @unique
+  content   String
+  image     String?
+  published Boolean  @default(false)
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("post")
+}
+
+model ContactInfo {
+  id        String   @id @default(cuid())
+  address   String?
+  phone     String?
+  email     String?
+  whatsapp  String?
+  updatedAt DateTime @updatedAt
+
+  @@map("contact_info")
+}
+
+model SocialMedia {
+  id        String   @id @default(cuid())
+  platform  String
+  url       String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("social_media")
+}
+
+enum CustomerType {
+  BUYER
+  SUPPLIER
+}
+
+enum InquiryStatus {
+  NEW
+  READ
+  REPLIED
 }

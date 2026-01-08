@@ -1,51 +1,23 @@
+import { Navbar } from "@/components/Navbar";
+
 export default function BlogLayout({
 	children,
 }: {
 	children: React.ReactNode;
 }) {
 	return (
-		<div className="min-h-screen font-sans">
-			<header className="sticky top-0 z-50 bg-white/90 backdrop-blur border-b border-zinc-200">
-				<div className="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between">
-					<div
-						className="text-xl font-semibold tracking-tight"
-						style={{ color: "var(--brand)" }}
-					>
-						PT AMP
-					</div>
-					<nav className="hidden md:flex items-center gap-2 text-sm">
-						<a href="/" className="inline-flex items-center h-9 px-3 rounded hover:bg-zinc-100">Home</a>
-						<a href="/#about" className="inline-flex items-center h-9 px-3 rounded hover:bg-zinc-100">About Us</a>
-						<a href="/#products" className="inline-flex items-center h-9 px-3 rounded hover:bg-zinc-100">Product</a>
-						<a href="/blog" className="inline-flex items-center h-9 px-3 rounded hover:bg-zinc-100">Blog</a>
-						<a href="/#contact" className="inline-flex items-center h-9 px-3 rounded hover:bg-zinc-100">Contact</a>
-						<a
-							href="/login"
-							className="inline-flex items-center h-9 px-3 rounded text-white"
-							style={{ backgroundColor: "var(--brand)" }}
-						>
-							Login
-						</a>
-					</nav>
-					<a
-						href="/login"
-						className="md:hidden inline-block rounded px-3 py-2 text-white"
-						style={{ backgroundColor: "var(--brand)" }}
-					>
-						Login
-					</a>
-				</div>
-			</header>
+		<div className="min-h-screen font-sans bg-zinc-50">
+			<Navbar />
 			{children}
-			<footer className="border-t border-zinc-200">
-				<div className="mx-auto max-w-6xl px-4 py-8 flex items-center justify-between">
-					<div className="text-sm">© {new Date().getFullYear()} PT AMP</div>
-					<div className="flex gap-4 text-sm">
-						<a href="/">Home</a>
-						<a href="/#about">About</a>
-						<a href="/#products">Product</a>
-						<a href="/blog">Blog</a>
-						<a href="/#contact">Contact</a>
+			<footer className="border-t border-zinc-200 bg-white">
+				<div className="container mx-auto px-4 md:px-6 lg:px-8 py-8 flex flex-col md:flex-row items-center justify-between gap-4">
+					<div className="text-sm text-zinc-600">© {new Date().getFullYear()} PT AMP</div>
+					<div className="flex gap-6 text-sm text-zinc-600">
+						<a href="/" className="hover:text-brand">Home</a>
+						<a href="/#about" className="hover:text-brand">About</a>
+						<a href="/#products" className="hover:text-brand">Product</a>
+						<a href="/blog" className="hover:text-brand">Blog</a>
+						<a href="/#contact" className="hover:text-brand">Contact</a>
 					</div>
 				</div>
 			</footer>

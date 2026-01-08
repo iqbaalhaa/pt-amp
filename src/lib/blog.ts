@@ -164,3 +164,26 @@ export function latestPosts(n = 3) {
 export function allSlugs() {
 	return POSTS.map((p) => p.slug);
 }
+
+export function getRelatedPosts(slug: string, n = 3) {
+	const current = getPost(slug);
+	if (!current) return [];
+	
+	const currentTags = current.tags || [];
+	
+	// Score posts based on tag matches
+	const scored = POSTS
+		.filter(p => p.slug !== slug)
+		.map(p => {
+			const matchingTags = (p.tags || []).filter(t => currentTags.includes(t)).length;
+			return { post: p, score: matchingTags };
+		})
+		.sort((a, b) => b.score - a.score); // Sort by score desc
+
+	// Take top N, if no related found (score 0), it will still return them which is fine, 
+    // but better to fallback to latest if no matches?
+    // Let's just return the top scored ones, even if score is 0 it acts like random/latest which is ok.
+    // Actually, let's prioritize latest if scores are tied.
+    
+    return scored.slice(0, n).map(s => s.post);
+}

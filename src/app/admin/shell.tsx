@@ -23,13 +23,42 @@ import DashboardIcon from "@mui/icons-material/Dashboard";
 import PeopleIcon from "@mui/icons-material/People";
 import ArticleIcon from "@mui/icons-material/Article";
 import SettingsIcon from "@mui/icons-material/Settings";
+import Inventory2Icon from "@mui/icons-material/Inventory2";
+import StorefrontIcon from "@mui/icons-material/Storefront";
+import EmailIcon from "@mui/icons-material/Email";
+import InfoIcon from "@mui/icons-material/Info";
+import CollectionsIcon from "@mui/icons-material/Collections";
+import RssFeedIcon from "@mui/icons-material/RssFeed";
+import ContactMailIcon from "@mui/icons-material/ContactMail";
 import { useState } from "react";
 
-const nav = [
-	{ label: "Dashboard", href: "/admin", icon: <DashboardIcon fontSize="small" /> },
-	{ label: "Users", href: "/admin/users", icon: <PeopleIcon fontSize="small" /> },
-	{ label: "CMS Pages", href: "/admin/cms/pages", icon: <ArticleIcon fontSize="small" /> },
-	{ label: "Settings", href: "/admin/settings", icon: <SettingsIcon fontSize="small" /> },
+const menuGroups = [
+	{
+		title: "ERP",
+		items: [
+			{ label: "Dashboard", href: "/admin", icon: <DashboardIcon fontSize="small" /> },
+			{ label: "Products", href: "/admin/products", icon: <Inventory2Icon fontSize="small" /> },
+			{ label: "Customers", href: "/admin/customers", icon: <StorefrontIcon fontSize="small" /> },
+			{ label: "Inquiries", href: "/admin/inquiries", icon: <EmailIcon fontSize="small" /> },
+		]
+	},
+	{
+		title: "Compro",
+		items: [
+			{ label: "About Us", href: "/admin/compro/about", icon: <InfoIcon fontSize="small" /> },
+			{ label: "Product", href: "/admin/products", icon: <Inventory2Icon fontSize="small" /> },
+			{ label: "Gallery", href: "/admin/compro/gallery", icon: <CollectionsIcon fontSize="small" /> },
+			{ label: "Blog", href: "/admin/compro/blog", icon: <RssFeedIcon fontSize="small" /> },
+			{ label: "Contact Us", href: "/admin/compro/contact", icon: <ContactMailIcon fontSize="small" /> },
+		]
+	},
+	{
+		title: "Lainnya / Setting",
+		items: [
+			{ label: "Users", href: "/admin/users", icon: <PeopleIcon fontSize="small" /> },
+			{ label: "Settings", href: "/admin/settings", icon: <SettingsIcon fontSize="small" /> },
+		]
+	}
 ];
 
 function isActive(pathname: string, href: string) {
@@ -130,39 +159,57 @@ export default function AdminShell({
 				}}
 			>
 				<Toolbar />
-				<Box sx={{ px: 1 }}>
-					<List>
-						{nav.map((item) => (
-							<ListItemButton
-								key={item.href}
-								component={Link}
-								href={item.href}
-								selected={isActive(pathname, item.href)}
-								onClick={() => setMobileOpen(false)}
-								sx={{
-									mx: 1,
-									mb: 0.5,
-									borderRadius: 1.5,
-									borderLeft: isActive(pathname, item.href)
-										? `3px solid var(--secondary)`
-										: "3px solid transparent",
-									"&.Mui-selected": {
-										backgroundColor: "rgba(213,14,12,0.08)",
-									},
-									"&.Mui-selected:hover": {
-										backgroundColor: "rgba(213,14,12,0.12)",
-									},
+				<Box sx={{ px: 1, pb: 4 }}>
+					{menuGroups.map((group, index) => (
+						<Box key={group.title} sx={{ mb: 2 }}>
+							<Typography 
+								variant="caption" 
+								sx={{ 
+									px: 2, 
+									py: 1, 
+									display: "block", 
+									fontWeight: "bold", 
+									color: "text.secondary",
+									textTransform: "uppercase",
+									fontSize: "0.7rem"
 								}}
 							>
-								<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-									{item.icon}
-									<ListItemText primary={item.label} />
-								</Box>
-							</ListItemButton>
-						))}
-					</List>
-					<Divider sx={{ my: 1 }} />
-					<Box sx={{ px: 2, pb: 2 }}>
+								{group.title}
+							</Typography>
+							<List dense>
+								{group.items.map((item) => (
+									<ListItemButton
+										key={item.href}
+										component={Link}
+										href={item.href}
+										selected={isActive(pathname, item.href)}
+										onClick={() => setMobileOpen(false)}
+										sx={{
+											mx: 1,
+											mb: 0.5,
+											borderRadius: 1.5,
+											borderLeft: isActive(pathname, item.href)
+												? `3px solid var(--secondary)`
+												: "3px solid transparent",
+											"&.Mui-selected": {
+												backgroundColor: "rgba(213,14,12,0.08)",
+											},
+											"&.Mui-selected:hover": {
+												backgroundColor: "rgba(213,14,12,0.12)",
+											},
+										}}
+									>
+										<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+											{item.icon}
+											<ListItemText primary={item.label} />
+										</Box>
+									</ListItemButton>
+								))}
+							</List>
+							{index < menuGroups.length - 1 && <Divider sx={{ my: 1, mx: 2 }} />}
+						</Box>
+					))}
+					<Box sx={{ px: 2, pb: 2, mt: 4 }}>
 						<Typography variant="caption" sx={{ opacity: 0.7, color: "text.secondary" }}>
 							ERP Pt. AMP
 						</Typography>
@@ -185,39 +232,57 @@ export default function AdminShell({
 				}}
 			>
 				<Toolbar />
-				<Box sx={{ px: 1 }}>
-					<List>
-						{nav.map((item) => (
-							<ListItemButton
-								key={item.href}
-								component={Link}
-								href={item.href}
-								selected={isActive(pathname, item.href)}
-								sx={{
-									mx: 1,
-									mb: 0.5,
-									borderRadius: 1.5,
-									borderLeft: isActive(pathname, item.href)
-										? `3px solid var(--secondary)`
-										: "3px solid transparent",
-									"&.Mui-selected": {
-										backgroundColor: "rgba(213,14,12,0.08)",
-									},
-									"&.Mui-selected:hover": {
-										backgroundColor: "rgba(213,14,12,0.12)",
-									},
+				<Box sx={{ px: 1, pb: 4 }}>
+					{menuGroups.map((group, index) => (
+						<Box key={group.title} sx={{ mb: 2 }}>
+							<Typography 
+								variant="caption" 
+								sx={{ 
+									px: 2, 
+									py: 1, 
+									display: "block", 
+									fontWeight: "bold", 
+									color: "text.secondary",
+									textTransform: "uppercase",
+									fontSize: "0.7rem"
 								}}
 							>
-								<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-									{item.icon}
-									<ListItemText primary={item.label} />
-								</Box>
-							</ListItemButton>
-						))}
-					</List>
+								{group.title}
+							</Typography>
+							<List dense>
+								{group.items.map((item) => (
+									<ListItemButton
+										key={item.href}
+										component={Link}
+										href={item.href}
+										selected={isActive(pathname, item.href)}
+										sx={{
+											mx: 1,
+											mb: 0.5,
+											borderRadius: 1.5,
+											borderLeft: isActive(pathname, item.href)
+												? `3px solid var(--secondary)`
+												: "3px solid transparent",
+											"&.Mui-selected": {
+												backgroundColor: "rgba(213,14,12,0.08)",
+											},
+											"&.Mui-selected:hover": {
+												backgroundColor: "rgba(213,14,12,0.12)",
+											},
+										}}
+									>
+										<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+											{item.icon}
+											<ListItemText primary={item.label} />
+										</Box>
+									</ListItemButton>
+								))}
+							</List>
+							{index < menuGroups.length - 1 && <Divider sx={{ my: 1, mx: 2 }} />}
+						</Box>
+					))}
 
-					<Divider sx={{ my: 1 }} />
-					<Box sx={{ px: 2, pb: 2 }}>
+					<Box sx={{ px: 2, pb: 2, mt: 4 }}>
 						<Typography variant="caption" sx={{ opacity: 0.6, color: "text.secondary" }}>
 							ERP Pt. AMP
 						</Typography>
