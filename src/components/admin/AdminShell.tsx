@@ -30,6 +30,10 @@ import InfoIcon from "@mui/icons-material/Info";
 import CollectionsIcon from "@mui/icons-material/Collections";
 import RssFeedIcon from "@mui/icons-material/RssFeed";
 import ContactMailIcon from "@mui/icons-material/ContactMail";
+import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
+import EngineeringIcon from "@mui/icons-material/Engineering";
+import PointOfSaleIcon from "@mui/icons-material/PointOfSale";
+import FactoryIcon from "@mui/icons-material/Factory";
 import { useState } from "react";
 
 const menuGroups = [
@@ -40,6 +44,10 @@ const menuGroups = [
 			{ label: "Products", href: "/admin/products", icon: <Inventory2Icon fontSize="small" /> },
 			{ label: "Customers", href: "/admin/customers", icon: <StorefrontIcon fontSize="small" /> },
 			{ label: "Inquiries", href: "/admin/inquiries", icon: <EmailIcon fontSize="small" /> },
+			{ label: "Purchases", href: "/admin/purchases", icon: <ShoppingCartIcon fontSize="small" /> },
+			{ label: "Sales", href: "/admin/sales", icon: <PointOfSaleIcon fontSize="small" /> },
+			{ label: "Production", href: "/admin/production", icon: <FactoryIcon fontSize="small" /> },
+			{ label: "Workers", href: "/admin/workers", icon: <EngineeringIcon fontSize="small" /> },
 		]
 	},
 	{

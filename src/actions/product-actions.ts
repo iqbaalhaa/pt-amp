@@ -2,7 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import { ProductType } from "@prisma/client";
+import { ProductType } from "@/generated/prisma";
 
 export type ProductDTO = {
 	id: string;
@@ -16,7 +16,7 @@ export type ProductDTO = {
 };
 
 export async function getProducts(): Promise<ProductDTO[]> {
-	const [products, stockSums] = await prisma.$transaction([
+	const [products, stockSums] = await Promise.all([
 		prisma.product.findMany({
 			orderBy: { createdAt: "desc" },
 		}),
