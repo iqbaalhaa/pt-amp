@@ -100,7 +100,13 @@ export function InquiryList({ initialInquiries }: InquiryListProps) {
                   }}
                 >
                   <TableCell>
-                    {format(new Date(row.createdAt), "dd MMM yyyy HH:mm")}
+                    {new Date(row.createdAt).toLocaleString("id-ID", {
+                      day: "2-digit",
+                      month: "short",
+                      year: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
                   </TableCell>
                   <TableCell>
                     <Typography variant="body2" fontWeight="bold">{row.name}</Typography>
@@ -134,7 +140,6 @@ export function InquiryList({ initialInquiries }: InquiryListProps) {
         </Table>
       </TableContainer>
 
-      {/* Detail Dialog */}
       <Dialog 
         open={openDialog} 
         onClose={() => setOpenDialog(false)}
@@ -206,3 +211,4 @@ export function InquiryList({ initialInquiries }: InquiryListProps) {
     </Box>
   );
 }
+

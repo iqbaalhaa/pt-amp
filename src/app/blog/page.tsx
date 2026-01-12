@@ -78,7 +78,7 @@ export default async function BlogPage({
         <div className="container mx-auto px-4 md:px-6 lg:px-8">
           {q && (
              <div className="mb-8 flex items-center gap-2 text-zinc-600">
-               <span>Hasil pencarian untuk: <span className="font-bold text-zinc-900">"{q}"</span></span>
+               <span>Hasil pencarian untuk: <span className="font-bold text-zinc-900">&quot;{q}&quot;</span></span>
                <Link href="/blog" className="text-sm text-[var(--brand)] hover:underline ml-2">Clear</Link>
              </div>
           )}

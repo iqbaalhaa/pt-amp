@@ -4,10 +4,32 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { CustomerType } from "@prisma/client";
 
-export async function getCustomers() {
-  return await prisma.customer.findMany({
-    orderBy: { createdAt: "desc" },
-  });
+export type CustomerDTO = {
+	id: string;
+	name: string;
+	email: string | null;
+	phone: string | null;
+	company: string | null;
+	address: string | null;
+	type: CustomerType;
+	notes: string | null;
+};
+
+export async function getCustomers(): Promise<CustomerDTO[]> {
+	const customers = await prisma.customer.findMany({
+		orderBy: { createdAt: "desc" },
+	});
+
+	return customers.map((c) => ({
+		id: c.id.toString(),
+		name: c.name,
+		email: c.email,
+		phone: c.phone,
+		company: c.company,
+		address: c.address,
+		type: c.type,
+		notes: c.notes,
+	}));
 }
 
 export async function createCustomer(formData: FormData) {
@@ -44,7 +66,7 @@ export async function updateCustomer(id: string, formData: FormData) {
   const notes = formData.get("notes") as string;
 
   await prisma.customer.update({
-    where: { id },
+    where: { id: BigInt(id) },
     data: {
       name,
       email,
@@ -61,7 +83,7 @@ export async function updateCustomer(id: string, formData: FormData) {
 
 export async function deleteCustomer(id: string) {
   await prisma.customer.delete({
-    where: { id },
+    where: { id: BigInt(id) },
   });
 
   revalidatePath("/admin/customers");

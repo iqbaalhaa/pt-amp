@@ -18,62 +18,63 @@ import {
   DialogContent,
   DialogActions,
   TextField,
-  Grid,
+  MenuItem,
+  Chip,
+  FormControlLabel,
+  Checkbox,
 } from "@mui/material";
+import Grid from "@mui/material/Grid";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { createProduct, updateProduct, deleteProduct } from "@/actions/product-actions";
 
-// Define the type locally for now since we don't have the Prisma generated types handy in a shared file easily without reading it.
-// Ideally import { Product } from "@prisma/client"
 import { useRouter } from "next/navigation";
-import { Product } from "@prisma/client";
+import type { ProductDTO } from "@/actions/product-actions";
 
 interface ProductClientProps {
-  initialProducts: Product[];
+  initialProducts: ProductDTO[];
 }
 
 export default function ProductClient({ initialProducts }: ProductClientProps) {
   const router = useRouter();
-  const [products, setProducts] = useState<Product[]>(initialProducts);
+  const [products, setProducts] = useState<ProductDTO[]>(initialProducts);
   const [open, setOpen] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [editingProduct, setEditingProduct] = useState<ProductDTO | null>(null);
 
   useEffect(() => {
     setProducts(initialProducts);
   }, [initialProducts]);
 
-  // Form State
   const [formData, setFormData] = useState({
     name: "",
     description: "",
-    grade: "",
-    price: "",
-    stock: "",
+    type: "raw",
+    unit: "kg",
     image: "",
+    isActive: true,
   });
 
-  const handleOpen = (product?: Product) => {
+  const handleOpen = (product?: ProductDTO) => {
     if (product) {
       setEditingProduct(product);
       setFormData({
         name: product.name,
         description: product.description || "",
-        grade: product.grade || "",
-        price: product.price ? String(product.price) : "",
-        stock: String(product.stock),
+        type: product.type,
+        unit: product.unit,
         image: product.image || "",
+        isActive: product.isActive,
       });
     } else {
       setEditingProduct(null);
       setFormData({
         name: "",
         description: "",
-        grade: "",
-        price: "",
-        stock: "0",
+        type: "raw",
+        unit: "kg",
         image: "",
+        isActive: true,
       });
     }
     setOpen(true);
@@ -85,15 +86,14 @@ export default function ProductClient({ initialProducts }: ProductClientProps) {
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const data = new FormData();
-    Object.entries(formData).forEach(([key, value]) => {
-      data.append(key, value);
-    });
+    Object.entries(formData).forEach(([key, value]) => data.append(key, String(value)));
 
     if (editingProduct) {
       await updateProduct(editingProduct.id, data);
@@ -134,9 +134,10 @@ export default function ProductClient({ initialProducts }: ProductClientProps) {
           <TableHead>
             <TableRow>
               <TableCell>Name</TableCell>
-              <TableCell>Grade</TableCell>
+              <TableCell>Type</TableCell>
+              <TableCell>Unit</TableCell>
               <TableCell>Stock</TableCell>
-              <TableCell>Price</TableCell>
+              <TableCell>Status</TableCell>
               <TableCell align="right">Actions</TableCell>
             </TableRow>
           </TableHead>
@@ -144,9 +145,25 @@ export default function ProductClient({ initialProducts }: ProductClientProps) {
             {products.map((product) => (
               <TableRow key={product.id}>
                 <TableCell>{product.name}</TableCell>
-                <TableCell>{product.grade}</TableCell>
-                <TableCell>{product.stock}</TableCell>
-                <TableCell>{product.price ? `$${String(product.price)}` : "-"}</TableCell>
+                <TableCell>
+                  <Chip
+                    size="small"
+                    variant="outlined"
+                    label={product.type === "raw" ? "Raw" : "Finished"}
+                  />
+                </TableCell>
+                <TableCell>{product.unit}</TableCell>
+                <TableCell>
+                  {product.stock} {product.unit}
+                </TableCell>
+                <TableCell>
+                  <Chip
+                    size="small"
+                    variant="outlined"
+                    color={product.isActive ? "success" : "default"}
+                    label={product.isActive ? "Active" : "Inactive"}
+                  />
+                </TableCell>
                 <TableCell align="right">
                   <IconButton size="small" onClick={() => handleOpen(product)}>
                     <EditIcon />
@@ -159,7 +176,7 @@ export default function ProductClient({ initialProducts }: ProductClientProps) {
             ))}
             {products.length === 0 && (
               <TableRow>
-                <TableCell colSpan={5} align="center" sx={{ py: 3 }}>
+                <TableCell colSpan={6} align="center" sx={{ py: 3 }}>
                   No products found. Add one to get started.
                 </TableCell>
               </TableRow>
@@ -173,7 +190,7 @@ export default function ProductClient({ initialProducts }: ProductClientProps) {
           <DialogTitle>{editingProduct ? "Edit Product" : "Add Product"}</DialogTitle>
           <DialogContent>
             <Grid container spacing={2} sx={{ mt: 1 }}>
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <TextField
                   fullWidth
                   label="Product Name"
@@ -183,36 +200,42 @@ export default function ProductClient({ initialProducts }: ProductClientProps) {
                   required
                 />
               </Grid>
-              <Grid item xs={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
                   fullWidth
-                  label="Grade"
-                  name="grade"
-                  value={formData.grade}
+                  select
+                  label="Type"
+                  name="type"
+                  value={formData.type}
+                  onChange={handleChange}
+                >
+                  <MenuItem value="raw">Raw</MenuItem>
+                  <MenuItem value="finished">Finished</MenuItem>
+                </TextField>
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <TextField
+                  fullWidth
+                  label="Unit"
+                  name="unit"
+                  value={formData.unit}
                   onChange={handleChange}
                 />
               </Grid>
-              <Grid item xs={6}>
-                <TextField
-                  fullWidth
-                  label="Stock (Kg)"
-                  name="stock"
-                  type="number"
-                  value={formData.stock}
-                  onChange={handleChange}
+              <Grid size={{ xs: 12 }}>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={formData.isActive}
+                      onChange={(e) =>
+                        setFormData({ ...formData, isActive: e.target.checked })
+                      }
+                    />
+                  }
+                  label="Active"
                 />
               </Grid>
-              <Grid item xs={6}>
-                <TextField
-                  fullWidth
-                  label="Price (per Kg)"
-                  name="price"
-                  type="number"
-                  value={formData.price}
-                  onChange={handleChange}
-                />
-              </Grid>
-              <Grid item xs={6}>
+              <Grid size={{ xs: 12 }}>
                 <TextField
                   fullWidth
                   label="Image URL"
@@ -222,7 +245,7 @@ export default function ProductClient({ initialProducts }: ProductClientProps) {
                   placeholder="https://..."
                 />
               </Grid>
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <TextField
                   fullWidth
                   label="Description"
@@ -246,3 +269,4 @@ export default function ProductClient({ initialProducts }: ProductClientProps) {
     </Box>
   );
 }
+

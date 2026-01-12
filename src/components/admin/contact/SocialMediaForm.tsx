@@ -17,7 +17,6 @@ export function SocialMediaForm({ socialMedias }: { socialMedias: SocialMedia[] 
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   
-  // Form state
   const [platform, setPlatform] = useState("");
   const [url, setUrl] = useState("");
 
@@ -44,7 +43,7 @@ export function SocialMediaForm({ socialMedias }: { socialMedias: SocialMedia[] 
     const formData = new FormData();
     formData.append("platform", platform);
     formData.append("url", url);
-    formData.append("isActive", "true"); // Default to true
+    formData.append("isActive", "true");
 
     if (editingId) {
       await updateSocialMedia(editingId, formData);
@@ -62,8 +61,8 @@ export function SocialMediaForm({ socialMedias }: { socialMedias: SocialMedia[] 
 
   return (
     <Box>
-      <Paper variant="outlined" sx={{ borderRadius: 2, overflow: 'hidden' }}>
-        <Box sx={{ p: 3, bgcolor: 'grey.50', borderBottom: 1, borderColor: 'divider', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <Paper variant="outlined" sx={{ borderRadius: 2, overflow: "hidden" }}>
+        <Box sx={{ p: 3, bgcolor: "grey.50", borderBottom: 1, borderColor: "divider", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <Stack direction="row" alignItems="center" spacing={1}>
             <LinkIcon color="primary" />
             <Typography variant="h6" fontWeight="bold">
@@ -91,7 +90,7 @@ export function SocialMediaForm({ socialMedias }: { socialMedias: SocialMedia[] 
             <TableBody>
               {socialMedias.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={3} align="center" sx={{ py: 4, color: 'text.secondary' }}>
+                  <TableCell colSpan={3} align="center" sx={{ py: 4, color: "text.secondary" }}>
                     Belum ada link sosial media.
                   </TableCell>
                 </TableRow>
@@ -100,7 +99,7 @@ export function SocialMediaForm({ socialMedias }: { socialMedias: SocialMedia[] 
                   <TableRow key={item.id}>
                     <TableCell sx={{ fontWeight: 500 }}>{item.platform}</TableCell>
                     <TableCell>
-                      <a href={item.url} target="_blank" rel="noopener noreferrer" style={{ color: '#1976d2', textDecoration: 'none' }}>
+                      <a href={item.url} target="_blank" rel="noopener noreferrer" style={{ color: "#1976d2", textDecoration: "none" }}>
                         {item.url}
                       </a>
                     </TableCell>
@@ -152,3 +151,4 @@ export function SocialMediaForm({ socialMedias }: { socialMedias: SocialMedia[] 
     </Box>
   );
 }
+

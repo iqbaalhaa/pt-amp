@@ -65,8 +65,7 @@ export default function InquiryClient({ initialInquiries }: InquiryClientProps) 
     await updateInquiryStatus(id, "REPLIED");
     router.refresh();
     if (selectedInquiry?.id === id) {
-       // update local state temporarily for better UX if needed, but router.refresh handles it
-       handleClose();
+      handleClose();
     }
   };
 
@@ -145,7 +144,7 @@ export default function InquiryClient({ initialInquiries }: InquiryClientProps) 
                 <Typography variant="subtitle2" color="text.secondary">From</Typography>
                 <Typography variant="body1">{selectedInquiry.name} ({selectedInquiry.email})</Typography>
                 {selectedInquiry.phone && (
-                   <Typography variant="body2" color="text.secondary">{selectedInquiry.phone}</Typography>
+                  <Typography variant="body2" color="text.secondary">{selectedInquiry.phone}</Typography>
                 )}
               </Box>
               <Box sx={{ mb: 2 }}>
@@ -185,3 +184,4 @@ export default function InquiryClient({ initialInquiries }: InquiryClientProps) 
     </Box>
   );
 }
+

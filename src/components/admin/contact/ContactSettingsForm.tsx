@@ -40,10 +40,8 @@ export function ContactSettingsForm({ initialData }: { initialData: ContactInfo 
 
   return (
     <Box component="form" onSubmit={handleSubmit} noValidate>
-      <Paper variant="outlined" sx={{ borderRadius: 2, overflow: 'hidden' }}>
-        
-        {/* Header Section */}
-        <Box sx={{ p: 3, bgcolor: 'grey.50', borderBottom: 1, borderColor: 'divider' }}>
+      <Paper variant="outlined" sx={{ borderRadius: 2, overflow: "hidden" }}>
+        <Box sx={{ p: 3, bgcolor: "grey.50", borderBottom: 1, borderColor: "divider" }}>
           <Stack direction="row" alignItems="center" spacing={1}>
              <BusinessIcon color="primary" />
              <Typography variant="h6" fontWeight="bold">
@@ -123,8 +121,7 @@ export function ContactSettingsForm({ initialData }: { initialData: ContactInfo 
           </Stack>
         </Box>
 
-        {/* Footer Actions */}
-        <Box sx={{ p: 3, bgcolor: 'grey.50', borderTop: 1, borderColor: 'divider', display: 'flex', justifyContent: 'flex-end' }}>
+        <Box sx={{ p: 3, bgcolor: "grey.50", borderTop: 1, borderColor: "divider", display: "flex", justifyContent: "flex-end" }}>
           <Button
             type="submit"
             variant="contained"
@@ -136,10 +133,8 @@ export function ContactSettingsForm({ initialData }: { initialData: ContactInfo 
             {loading ? "Menyimpan..." : "Simpan Kontak"}
           </Button>
         </Box>
-
       </Paper>
 
-      {/* Notifications */}
       <Snackbar
         open={notification.open}
         autoHideDuration={6000}
@@ -150,7 +145,7 @@ export function ContactSettingsForm({ initialData }: { initialData: ContactInfo 
           onClose={() => setNotification({ ...notification, open: false })} 
           severity={notification.severity}
           variant="filled"
-          sx={{ width: '100%' }}
+          sx={{ width: "100%" }}
         >
           {notification.message}
         </Alert>
@@ -158,3 +153,4 @@ export function ContactSettingsForm({ initialData }: { initialData: ContactInfo 
     </Box>
   );
 }
+

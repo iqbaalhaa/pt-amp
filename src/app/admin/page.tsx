@@ -1,4 +1,5 @@
-import { Paper, Stack, Typography, Grid, Button, Box } from "@mui/material";
+import { Paper, Stack, Typography, Button, Box } from "@mui/material";
+import Grid from "@mui/material/Grid";
 
 export default function AdminDashboard() {
 	return (
@@ -13,7 +14,7 @@ export default function AdminDashboard() {
 			</Box>
 
 			<Grid container spacing={2}>
-				<Grid item xs={12} md={3}>
+				<Grid size={{ xs: 12, md: 3 }}>
 					<Paper
 						sx={{
 							p: 2,
@@ -31,7 +32,7 @@ export default function AdminDashboard() {
 						</Typography>
 					</Paper>
 				</Grid>
-				<Grid item xs={12} md={3}>
+				<Grid size={{ xs: 12, md: 3 }}>
 					<Paper
 						sx={{
 							p: 2,
@@ -49,7 +50,7 @@ export default function AdminDashboard() {
 						</Typography>
 					</Paper>
 				</Grid>
-				<Grid item xs={12} md={3}>
+				<Grid size={{ xs: 12, md: 3 }}>
 					<Paper
 						sx={{
 							p: 2,
@@ -67,7 +68,7 @@ export default function AdminDashboard() {
 						</Typography>
 					</Paper>
 				</Grid>
-				<Grid item xs={12} md={3}>
+				<Grid size={{ xs: 12, md: 3 }}>
 					<Paper
 						sx={{
 							p: 2,

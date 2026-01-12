@@ -1,4 +1,5 @@
-import { Paper, Stack, Typography, Grid, Button, Box } from "@mui/material";
+import { Paper, Stack, Typography, Button, Box } from "@mui/material";
+import Grid from "@mui/material/Grid";
 
 export default function CmsPagesPage() {
   return (
@@ -12,7 +13,7 @@ export default function CmsPagesPage() {
         </Typography>
       </Box>
       <Grid container spacing={2}>
-        <Grid item xs={12} md={8}>
+        <Grid size={{ xs: 12, md: 8 }}>
           <Paper sx={{ p: 2, borderRadius: 2 }}>
             <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>
               Daftar Halaman
@@ -25,7 +26,7 @@ export default function CmsPagesPage() {
             </Button>
           </Paper>
         </Grid>
-        <Grid item xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <Paper
             sx={{
               p: 2,

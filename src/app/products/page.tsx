@@ -1,5 +1,6 @@
 import { Navbar } from "@/components/Navbar";
 import { getProducts } from "@/actions/product-actions";
+import Link from "next/link";
 
 export default async function ProductsPage() {
   const products = await getProducts();
@@ -38,9 +39,11 @@ export default async function ProductsPage() {
                     <div className="text-xl font-semibold mb-2 text-zinc-900">{product.name}</div>
                     <div className="flex items-center justify-between">
                       <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-zinc-100 text-zinc-800">
-                        {product.grade || "Standard"}
+                        {product.type === "raw" ? "Raw" : "Finished"}
                       </span>
-                      <span className="text-zinc-600 text-sm font-medium">Stock: {product.stock} kg</span>
+                      <span className="text-zinc-600 text-sm font-medium">
+                        Stock: {product.stock} {product.unit}
+                      </span>
                     </div>
                     {product.description && (
                       <p className="mt-3 text-zinc-500 text-sm line-clamp-2">{product.description}</p>
@@ -125,10 +128,10 @@ export default async function ProductsPage() {
             <div>
               <h3 className="font-semibold mb-4 text-zinc-900">Links</h3>
               <ul className="space-y-3 text-zinc-600">
-                <li><a href="/#about" className="hover:text-brand transition-colors">About Us</a></li>
-                <li><a href="/products" className="hover:text-brand transition-colors">Products</a></li>
-                <li><a href="/blog" className="hover:text-brand transition-colors">Blog</a></li>
-                <li><a href="/login" className="hover:text-brand transition-colors">Login</a></li>
+                <li><Link href="/#about" className="hover:text-brand transition-colors">About Us</Link></li>
+                <li><Link href="/products" className="hover:text-brand transition-colors">Products</Link></li>
+                <li><Link href="/blog" className="hover:text-brand transition-colors">Blog</Link></li>
+                <li><Link href="/login" className="hover:text-brand transition-colors">Login</Link></li>
               </ul>
             </div>
 

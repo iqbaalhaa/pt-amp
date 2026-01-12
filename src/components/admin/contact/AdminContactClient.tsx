@@ -12,9 +12,9 @@ import SettingsIcon from "@mui/icons-material/Settings";
 import MailIcon from "@mui/icons-material/Mail";
 import LinkIcon from "@mui/icons-material/Link";
 import { ContactInfo, Inquiry, SocialMedia } from "@prisma/client";
-import { ContactSettingsForm } from "./contact-settings-form";
-import { SocialMediaForm } from "./social-media-form";
-import { InquiryList } from "./inquiry-list";
+import { ContactSettingsForm } from "@/components/admin/contact/ContactSettingsForm";
+import { SocialMediaForm } from "@/components/admin/contact/SocialMediaForm";
+import { InquiryList } from "@/components/admin/contact/InquiryList";
 
 interface AdminContactClientProps {
   contactInfo: ContactInfo | null;
@@ -55,22 +55,21 @@ export function AdminContactClient({ contactInfo, inquiries, socialMedias }: Adm
     setTab(newValue);
   };
 
-  const newMessagesCount = inquiries.filter(i => i.status === 'NEW').length;
+  const newMessagesCount = inquiries.filter(i => i.status === "NEW").length;
 
   return (
     <Container maxWidth="xl" sx={{ pb: 4 }}>
-      {/* Tabs Navigation */}
       <Box sx={{ borderBottom: 1, borderColor: "divider", mb: 3 }}>
         <Tabs 
           value={tab} 
           onChange={handleTabChange} 
           aria-label="contact management tabs"
           sx={{ 
-            '& .MuiTab-root': { 
+            "& .MuiTab-root": { 
               minHeight: 48, 
-              textTransform: 'none', 
+              textTransform: "none", 
               fontSize: 16, 
-              fontWeight: 'medium',
+              fontWeight: "medium",
               mr: 2
             } 
           }}
@@ -87,7 +86,7 @@ export function AdminContactClient({ contactInfo, inquiries, socialMedias }: Adm
           />
           <Tab 
             icon={
-              <Badge badgeContent={newMessagesCount} color="error" sx={{ '& .MuiBadge-badge': { right: -3, top: 3 } }}>
+              <Badge badgeContent={newMessagesCount} color="error" sx={{ "& .MuiBadge-badge": { right: -3, top: 3 } }}>
                 <MailIcon fontSize="small" />
               </Badge>
             } 
@@ -97,7 +96,6 @@ export function AdminContactClient({ contactInfo, inquiries, socialMedias }: Adm
         </Tabs>
       </Box>
 
-      {/* Content Panels */}
       <Box>
         <CustomTabPanel value={tab} index={0}>
           <ContactSettingsForm initialData={contactInfo} />
@@ -112,3 +110,4 @@ export function AdminContactClient({ contactInfo, inquiries, socialMedias }: Adm
     </Container>
   );
 }
+

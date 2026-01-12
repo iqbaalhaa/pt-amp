@@ -1,4 +1,5 @@
-import { Paper, Stack, Typography, Grid, Button, Box } from "@mui/material";
+import { Paper, Stack, Typography, Button, Box } from "@mui/material";
+import Grid from "@mui/material/Grid";
 
 export default function SettingsPage() {
 	return (
@@ -12,7 +13,7 @@ export default function SettingsPage() {
 				</Typography>
 			</Box>
 			<Grid container spacing={2}>
-				<Grid item xs={12} md={6}>
+				<Grid size={{ xs: 12, md: 6 }}>
 					<Paper sx={{ p: 2, borderRadius: 2 }}>
 						<Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>
 							Umum
@@ -25,7 +26,7 @@ export default function SettingsPage() {
 						</Button>
 					</Paper>
 				</Grid>
-				<Grid item xs={12} md={6}>
+				<Grid size={{ xs: 12, md: 6 }}>
 					<Paper
 						sx={{
 							p: 2,

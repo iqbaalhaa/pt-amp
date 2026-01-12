@@ -19,25 +19,25 @@ import {
   DialogContent,
   DialogActions,
   TextField,
-  Grid,
   MenuItem,
   Chip,
 } from "@mui/material";
+import Grid from "@mui/material/Grid";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { createCustomer, updateCustomer, deleteCustomer } from "@/actions/customer-actions";
-import { Customer, CustomerType } from "@prisma/client";
+import type { CustomerDTO } from "@/actions/customer-actions";
 
 interface CustomerClientProps {
-  initialCustomers: Customer[];
+  initialCustomers: CustomerDTO[];
 }
 
 export default function CustomerClient({ initialCustomers }: CustomerClientProps) {
   const router = useRouter();
-  const [customers, setCustomers] = useState<Customer[]>(initialCustomers);
+  const [customers, setCustomers] = useState<CustomerDTO[]>(initialCustomers);
   const [open, setOpen] = useState(false);
-  const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
+  const [editingCustomer, setEditingCustomer] = useState<CustomerDTO | null>(null);
 
   useEffect(() => {
     setCustomers(initialCustomers);
@@ -53,7 +53,7 @@ export default function CustomerClient({ initialCustomers }: CustomerClientProps
     notes: "",
   });
 
-  const handleOpen = (customer?: Customer) => {
+  const handleOpen = (customer?: CustomerDTO) => {
     if (customer) {
       setEditingCustomer(customer);
       setFormData({
@@ -188,7 +188,7 @@ export default function CustomerClient({ initialCustomers }: CustomerClientProps
           <DialogTitle>{editingCustomer ? "Edit Customer" : "Add Customer"}</DialogTitle>
           <DialogContent>
             <Grid container spacing={2} sx={{ mt: 1 }}>
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <TextField
                   fullWidth
                   label="Name"
@@ -198,7 +198,7 @@ export default function CustomerClient({ initialCustomers }: CustomerClientProps
                   required
                 />
               </Grid>
-              <Grid item xs={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
                   fullWidth
                   select
@@ -211,7 +211,7 @@ export default function CustomerClient({ initialCustomers }: CustomerClientProps
                   <MenuItem value="SUPPLIER">Supplier (Farmer)</MenuItem>
                 </TextField>
               </Grid>
-              <Grid item xs={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
                   fullWidth
                   label="Company"
@@ -220,7 +220,7 @@ export default function CustomerClient({ initialCustomers }: CustomerClientProps
                   onChange={handleChange}
                 />
               </Grid>
-              <Grid item xs={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
                   fullWidth
                   label="Email"
@@ -230,7 +230,7 @@ export default function CustomerClient({ initialCustomers }: CustomerClientProps
                   onChange={handleChange}
                 />
               </Grid>
-              <Grid item xs={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
                   fullWidth
                   label="Phone"
@@ -239,7 +239,7 @@ export default function CustomerClient({ initialCustomers }: CustomerClientProps
                   onChange={handleChange}
                 />
               </Grid>
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <TextField
                   fullWidth
                   label="Address"
@@ -250,7 +250,7 @@ export default function CustomerClient({ initialCustomers }: CustomerClientProps
                   onChange={handleChange}
                 />
               </Grid>
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <TextField
                   fullWidth
                   label="Notes"
@@ -274,3 +274,4 @@ export default function CustomerClient({ initialCustomers }: CustomerClientProps
     </Box>
   );
 }
+

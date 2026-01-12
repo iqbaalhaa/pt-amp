@@ -1,7 +1,7 @@
 import { getContactInfo } from "@/actions/contact-info-actions";
 import { getInquiries } from "@/actions/inquiry-actions";
 import { getSocialMedias } from "@/actions/social-media-actions";
-import { AdminContactClient } from "./admin-contact-client";
+import { AdminContactClient } from "@/components/admin/contact/AdminContactClient";
 
 export const dynamic = "force-dynamic";
 
