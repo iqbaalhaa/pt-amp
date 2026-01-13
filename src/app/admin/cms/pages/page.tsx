@@ -1,6 +1,6 @@
 "use client";
 
-import { Paper, Stack, Typography, Button, Box } from "@mui/material";
+import { Stack, Typography, Box } from "@mui/material";
 import Grid from "@mui/material/Grid";
 import Link from "next/link";
 import HomeIcon from "@mui/icons-material/Home";
@@ -8,6 +8,8 @@ import InfoIcon from "@mui/icons-material/Info";
 import CollectionsIcon from "@mui/icons-material/Collections";
 import RssFeedIcon from "@mui/icons-material/RssFeed";
 import ContactMailIcon from "@mui/icons-material/ContactMail";
+import GlassButton from "@/components/ui/GlassButton";
+import GlassCard from "@/components/ui/GlassCard";
 
 export default function CmsPagesPage() {
   return (
@@ -22,79 +24,71 @@ export default function CmsPagesPage() {
       </Box>
       <Grid container spacing={2}>
         <Grid size={{ xs: 12, md: 8 }}>
-          <Paper sx={{ p: 2, borderRadius: 2 }}>
+          <GlassCard className="p-4">
             <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>
               Daftar Halaman
             </Typography>
             <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 1.5 }}>
-              <Button
-                component={Link}
+              <GlassButton
+                as={Link}
                 href="/admin/cms/pages/home"
-                variant="outlined"
-                startIcon={<HomeIcon />}
-                sx={{ justifyContent: "flex-start" }}
+                variant="ghost"
+                className="justify-start"
               >
+                <HomeIcon className="mr-2" fontSize="small" />
                 Beranda
-              </Button>
-              <Button
-                component={Link}
+              </GlassButton>
+              <GlassButton
+                as={Link}
                 href="/admin/compro/about"
-                variant="outlined"
-                startIcon={<InfoIcon />}
-                sx={{ justifyContent: "flex-start" }}
+                variant="ghost"
+                className="justify-start"
               >
+                <InfoIcon className="mr-2" fontSize="small" />
                 About Us
-              </Button>
-              <Button
-                component={Link}
+              </GlassButton>
+              <GlassButton
+                as={Link}
                 href="/admin/compro/gallery"
-                variant="outlined"
-                startIcon={<CollectionsIcon />}
-                sx={{ justifyContent: "flex-start" }}
+                variant="ghost"
+                className="justify-start"
               >
+                <CollectionsIcon className="mr-2" fontSize="small" />
                 Gallery
-              </Button>
-              <Button
-                component={Link}
+              </GlassButton>
+              <GlassButton
+                as={Link}
                 href="/admin/compro/blog"
-                variant="outlined"
-                startIcon={<RssFeedIcon />}
-                sx={{ justifyContent: "flex-start" }}
+                variant="ghost"
+                className="justify-start"
               >
+                <RssFeedIcon className="mr-2" fontSize="small" />
                 Blog
-              </Button>
-              <Button
-                component={Link}
+              </GlassButton>
+              <GlassButton
+                as={Link}
                 href="/admin/compro/contact"
-                variant="outlined"
-                startIcon={<ContactMailIcon />}
-                sx={{ justifyContent: "flex-start" }}
+                variant="ghost"
+                className="justify-start"
               >
+                <ContactMailIcon className="mr-2" fontSize="small" />
                 Contact
-              </Button>
+              </GlassButton>
             </Box>
-          </Paper>
+          </GlassCard>
         </Grid>
         <Grid size={{ xs: 12, md: 4 }}>
-          <Paper
-            sx={{
-              p: 2,
-              borderRadius: 2,
-              border: "1px solid rgba(213,14,12,0.2)",
-              background:
-                "linear-gradient(180deg, rgba(213,14,12,0.06), rgba(255,138,0,0.04))",
-            }}
-          >
+          <GlassCard className="p-4 bg-red-glass">
             <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>
               Buat Halaman
             </Typography>
             <Typography variant="body2" sx={{ color: "text.secondary", mb: 2 }}>
               Placeholder: form pembuatan halaman singkat.
             </Typography>
-            <Button variant="contained" sx={{ backgroundColor: "var(--brand)" }}>
+            <GlassButton variant="primary">
               Buat Halaman
-            </Button>
-          </Paper>
+            </GlassButton>
+          </GlassCard>
         </Grid>
       </Grid>
     </Stack>
