@@ -53,11 +53,11 @@ const menuGroups = [
 	{
 		title: "Compro",
 		items: [
+			{ label: "Home", href: "/admin/cms/pages/home", icon: <ArticleIcon fontSize="small" /> },
 			{ label: "About Us", href: "/admin/compro/about", icon: <InfoIcon fontSize="small" /> },
-			{ label: "Product", href: "/admin/products", icon: <Inventory2Icon fontSize="small" /> },
 			{ label: "Gallery", href: "/admin/compro/gallery", icon: <CollectionsIcon fontSize="small" /> },
 			{ label: "Blog", href: "/admin/compro/blog", icon: <RssFeedIcon fontSize="small" /> },
-			{ label: "Contact Us", href: "/admin/compro/contact", icon: <ContactMailIcon fontSize="small" /> },
+			{ label: "Contact & Social", href: "/admin/compro/contact", icon: <ContactMailIcon fontSize="small" /> },
 		]
 	},
 	{

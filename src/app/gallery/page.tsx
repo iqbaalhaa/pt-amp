@@ -1,16 +1,10 @@
-import { Navbar } from "@/components/Navbar";
-import { GalleryAlbums } from "@/components/GalleryAlbums";
+import GalleryPage from "@/components/pages/gallery/GalleryPage";
 
 export const metadata = {
   title: "Gallery | PT AMP",
-  description: "Dokumentasi aktivitas, fasilitas, dan produk PT AMP.",
+  description: "Dokumentasi kegiatan produksi, gudang, dan pengiriman PT AMP.",
 };
 
-export default function GalleryPage() {
-  return (
-    <div className="min-h-screen font-sans bg-zinc-50">
-      <Navbar />
-      <GalleryAlbums />
-    </div>
-  );
-}
+export const dynamic = "force-dynamic";
+
+export default GalleryPage;

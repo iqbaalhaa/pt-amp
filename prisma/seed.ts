@@ -2,7 +2,8 @@ import "dotenv/config";
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { prisma } from "../src/lib/prisma";
-import { ProductType } from "@prisma/client";
+import { ProductType } from "../src/generated/prisma";
+import { seedContent } from "./seeds/content-seed";
 
 async function main() {
 	// ============================================================
@@ -29,6 +30,10 @@ async function main() {
 	await prisma.productionType.deleteMany();
 	await prisma.worker.deleteMany();
 	// Customer model removed
+
+    // Note: CMS Content tables are NOT cleared here to preserve them if needed, 
+    // or you can add deleteMany here if you want a full reset.
+    // For now, we rely on the check in seedContent.
 	
 	console.log("✅ Data lama berhasil dihapus.");
 
@@ -155,6 +160,11 @@ async function main() {
 	// --- Customers / Suppliers ---
 	// Customer model removed; supplier/buyer now use manual string IDs
 	console.log("   - Customers/Suppliers skipped (Customer model removed)");
+
+	// ============================================================
+	// 3. SEED CMS CONTENT
+	// ============================================================
+	await seedContent(prisma);
 
 	console.log("✅ Seeding selesai!");
 }

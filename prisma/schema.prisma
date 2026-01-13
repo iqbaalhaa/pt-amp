@@ -332,6 +332,90 @@ model SocialMedia {
 }
 
 // =========================================================
+// CMS - HOME PAGE
+// =========================================================
+
+model HeroSlide {
+  id          String       @id @default(cuid())
+  type        String       // "image" | "video"
+  src         String
+  title       String
+  description String
+  order       Int          @default(0)
+  buttons     HeroButton[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@map("hero_slides")
+}
+
+model HeroButton {
+  id        String    @id @default(cuid())
+  text      String
+  href      String
+  isPrimary Boolean   @default(false)
+  slideId   String
+  slide     HeroSlide @relation(fields: [slideId], references: [id], onDelete: Cascade)
+
+  @@map("hero_buttons")
+}
+
+model HomePage {
+  id               String   @id @default(cuid())
+  aboutTitle       String
+  aboutDescription String
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@map("home_page")
+}
+
+// =========================================================
+// CMS - ABOUT PAGE
+// =========================================================
+
+model AboutPage {
+  id              String       @id @default(cuid())
+  heroTitle       String
+  heroDescription String
+  mainTitle       String
+  mainDescription String       @db.Text
+  mainImage       String
+  points          AboutPoint[]
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  @@map("about_page")
+}
+
+model AboutPoint {
+  id          String    @id @default(cuid())
+  text        String
+  aboutPageId String
+  aboutPage   AboutPage @relation(fields: [aboutPageId], references: [id], onDelete: Cascade)
+  order       Int       @default(0)
+
+  @@map("about_points")
+}
+
+// =========================================================
+// CMS - SHARED / GENERIC SECTIONS
+// =========================================================
+
+model FeatureCard {
+  id          String   @id @default(cuid())
+  section     String   // "HOME_ABOUT" | "ABOUT_VALUES"
+  title       String
+  description String
+  icon        String?
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("feature_cards")
+}
+
+// =========================================================
 // ENUMS
 // =========================================================
 
