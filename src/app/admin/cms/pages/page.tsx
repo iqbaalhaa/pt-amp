@@ -1,5 +1,13 @@
+"use client";
+
 import { Paper, Stack, Typography, Button, Box } from "@mui/material";
 import Grid from "@mui/material/Grid";
+import Link from "next/link";
+import HomeIcon from "@mui/icons-material/Home";
+import InfoIcon from "@mui/icons-material/Info";
+import CollectionsIcon from "@mui/icons-material/Collections";
+import RssFeedIcon from "@mui/icons-material/RssFeed";
+import ContactMailIcon from "@mui/icons-material/ContactMail";
 
 export default function CmsPagesPage() {
   return (
@@ -18,12 +26,53 @@ export default function CmsPagesPage() {
             <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>
               Daftar Halaman
             </Typography>
-            <Typography variant="body2" sx={{ color: "text.secondary", mb: 2 }}>
-              Placeholder: tabel halaman CMS akan ditampilkan di sini.
-            </Typography>
-            <Button variant="outlined" sx={{ borderColor: "var(--brand)", color: "var(--brand)" }}>
-              Sinkronisasi
-            </Button>
+            <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 1.5 }}>
+              <Button
+                component={Link}
+                href="/admin/cms/pages/home"
+                variant="outlined"
+                startIcon={<HomeIcon />}
+                sx={{ justifyContent: "flex-start" }}
+              >
+                Beranda
+              </Button>
+              <Button
+                component={Link}
+                href="/admin/compro/about"
+                variant="outlined"
+                startIcon={<InfoIcon />}
+                sx={{ justifyContent: "flex-start" }}
+              >
+                About Us
+              </Button>
+              <Button
+                component={Link}
+                href="/admin/compro/gallery"
+                variant="outlined"
+                startIcon={<CollectionsIcon />}
+                sx={{ justifyContent: "flex-start" }}
+              >
+                Gallery
+              </Button>
+              <Button
+                component={Link}
+                href="/admin/compro/blog"
+                variant="outlined"
+                startIcon={<RssFeedIcon />}
+                sx={{ justifyContent: "flex-start" }}
+              >
+                Blog
+              </Button>
+              <Button
+                component={Link}
+                href="/admin/compro/contact"
+                variant="outlined"
+                startIcon={<ContactMailIcon />}
+                sx={{ justifyContent: "flex-start" }}
+              >
+                Contact
+              </Button>
+            </Box>
           </Paper>
         </Grid>
         <Grid size={{ xs: 12, md: 4 }}>

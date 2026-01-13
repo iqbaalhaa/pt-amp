@@ -17,11 +17,10 @@ const modelConfigs: Record<
 	product: { idType: "bigint", bigIntFields: ["id"] },
 	worker: { idType: "bigint", bigIntFields: ["id"] },
 	productionType: { idType: "bigint", bigIntFields: ["id"] },
-	customer: { idType: "bigint", bigIntFields: ["id"] },
 
-	purchase: { idType: "bigint", bigIntFields: ["id", "supplierId"] },
+	purchase: { idType: "bigint", bigIntFields: ["id"] },
 	purchaseItem: { idType: "bigint", bigIntFields: ["id", "purchaseId", "productId"] },
-	sale: { idType: "bigint", bigIntFields: ["id", "customerId"] },
+	sale: { idType: "bigint", bigIntFields: ["id"] },
 	saleItem: { idType: "bigint", bigIntFields: ["id", "saleId", "productId"] },
 
 	production: { idType: "bigint", bigIntFields: ["id", "productionTypeId"] },

@@ -2,7 +2,8 @@ import "dotenv/config";
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { prisma } from "../src/lib/prisma";
-import { ProductType, CustomerType } from "@prisma/client";
+import { ProductType } from "../src/generated/prisma";
+import { seedContent } from "./seeds/content-seed";
 
 async function main() {
 	// ============================================================
@@ -28,7 +29,11 @@ async function main() {
 	await prisma.product.deleteMany();
 	await prisma.productionType.deleteMany();
 	await prisma.worker.deleteMany();
-	await prisma.customer.deleteMany();
+	// Customer model removed
+
+    // Note: CMS Content tables are NOT cleared here to preserve them if needed, 
+    // or you can add deleteMany here if you want a full reset.
+    // For now, we rely on the check in seedContent.
 	
 	console.log("✅ Data lama berhasil dihapus.");
 
@@ -153,43 +158,13 @@ async function main() {
 	console.log("   - Workers seeded");
 
 	// --- Customers / Suppliers ---
-	const customers = [
-		{
-			name: "KUD Makmur Jaya",
-			type: CustomerType.SUPPLIER,
-			company: "Koperasi Unit Desa",
-			email: "kud.makmur@example.com",
-			address: "Desa Sukamaju, Blok C",
-		},
-		{
-			name: "PT Sinar Mas Oleo",
-			type: CustomerType.BUYER,
-			company: "PT Sinar Mas",
-			email: "purchasing@sinarmas.example.com",
-			address: "Kawasan Industri Medan",
-		},
-		{
-			name: "H. Samsul",
-			type: CustomerType.SUPPLIER,
-			company: "Petani Mandiri",
-			phone: "08123456789",
-			address: "Dusun 3",
-		},
-	];
+	// Customer model removed; supplier/buyer now use manual string IDs
+	console.log("   - Customers/Suppliers skipped (Customer model removed)");
 
-	for (const c of customers) {
-		await prisma.customer.create({
-			data: {
-				name: c.name,
-				type: c.type,
-				company: c.company,
-				email: c.email,
-				phone: c.phone,
-				address: c.address
-			},
-		});
-	}
-	console.log("   - Customers/Suppliers seeded");
+	// ============================================================
+	// 3. SEED CMS CONTENT
+	// ============================================================
+	await seedContent(prisma);
 
 	console.log("✅ Seeding selesai!");
 }

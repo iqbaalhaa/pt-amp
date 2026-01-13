@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 export interface HeroSlide {
-  id: number;
+  id: number | string;
   type: "image" | "video";
   src: string;
   title: string;
@@ -13,6 +13,7 @@ export interface HeroSlide {
     text: string;
     href: string;
     primary?: boolean;
+    isPrimary?: boolean;
   }[];
 }
 
@@ -72,11 +73,11 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
                   key={idx}
                   href={btn.href}
                   className={`inline-flex justify-center items-center rounded-lg px-6 py-3 font-medium transition-all ${
-                    btn.primary
+                    (btn.primary || btn.isPrimary)
                       ? "text-white shadow-lg shadow-red-200 hover:-translate-y-0.5"
                       : "border border-zinc-300 text-zinc-700 hover:bg-zinc-50"
                   }`}
-                  style={btn.primary ? { backgroundColor: "var(--brand)" } : {}}
+                  style={(btn.primary || btn.isPrimary) ? { backgroundColor: "var(--brand)" } : {}}
                 >
                   {btn.text}
                 </a>
