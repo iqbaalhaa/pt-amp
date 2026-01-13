@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Plus_Jakarta_Sans, Geist_Mono } from "next/font/google";
 import { AppRouterCacheProvider } from "@mui/material-nextjs/v16-appRouter";
 import "./globals.css";
 
-const geistSans = Geist({
+const plusJakarta = Plus_Jakarta_Sans({
 	variable: "--font-geist-sans",
 	subsets: ["latin"],
+	weight: ["400","500","600","700","800"],
 });
 
 const geistMono = Geist_Mono({
@@ -23,13 +24,13 @@ export default function RootLayout({
 }: {
 	children: React.ReactNode;
 }) {
-	return (
-		<html lang="id">
-			<body>
+		return (
+			<html lang="id">
+			<body className={`${plusJakarta.variable} ${geistMono.variable}`}>
 				<AppRouterCacheProvider options={{ enableCssLayer: true }}>
 					{children}
 				</AppRouterCacheProvider>
 			</body>
-		</html>
+			</html>
 	);
 }

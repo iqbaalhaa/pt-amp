@@ -1,7 +1,7 @@
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import AdminShell from "@/components/admin/AdminShell";
+import GlassAdminShell from "@/components/admin/GlassAdminShell";
 
 export default async function AdminLayout({
 	children,
@@ -14,8 +14,8 @@ export default async function AdminLayout({
 	if (session.user.role !== "SUPERADMIN") redirect("/");
 
 	return (
-		<AdminShell userEmail={session.user.email} role={session.user.role}>
+		<GlassAdminShell>
 			{children}
-		</AdminShell>
+		</GlassAdminShell>
 	);
 }

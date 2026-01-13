@@ -8,14 +8,6 @@ import {
   TextField,
   MenuItem,
   Button,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  IconButton,
   Snackbar,
   Alert,
 } from "@mui/material";
@@ -30,6 +22,8 @@ import { createPurchase } from "@/actions/purchase-actions";
 import TagBadge from "@/components/TagBadge";
 import { formatRupiah } from "@/lib/currency";
 import { TransactionStatus } from "@/generated/prisma";
+import GlassTable, { Column } from "@/components/ui/GlassTable";
+import GlassButton from "@/components/ui/GlassButton";
 
 type ProductOption = { id: string; name: string; unit: string; type: "raw" | "finished" };
 
@@ -121,6 +115,82 @@ export default function PurchaseForm({ products }: Props) {
     }
   };
 
+  const columns: Column<ItemRow>[] = [
+    {
+      header: "Produk",
+      cell: (row, idx) => (
+        <TextField
+          select
+          fullWidth
+          value={row.productId}
+          onChange={(e) => updateItem(idx, "productId", e.target.value)}
+          label="Produk"
+          SelectProps={{
+            renderValue: (selected) => {
+              const sel = products.find((pr) => pr.id === String(selected));
+              if (!sel) return "";
+              return (
+                <Stack direction="row" spacing={1} alignItems="center">
+                  <Typography sx={{ mr: 1 }}>{sel.name}</Typography>
+                  <TagBadge label={sel.unit} color="info" />
+                  <TagBadge
+                    label={sel.type === "raw" ? "Raw" : "Finished"}
+                    color={sel.type === "raw" ? "warning" : "success"}
+                  />
+                </Stack>
+              );
+            },
+          }}
+        >
+          {products.map((pr) => (
+            <MenuItem key={pr.id} value={pr.id}>
+              <Stack direction="row" spacing={1} alignItems="center">
+                <Typography sx={{ mr: 1 }}>{pr.name}</Typography>
+                <TagBadge label={pr.unit} color="info" />
+                <TagBadge
+                  label={pr.type === "raw" ? "Raw" : "Finished"}
+                  color={pr.type === "raw" ? "warning" : "success"}
+                />
+              </Stack>
+            </MenuItem>
+          ))}
+        </TextField>
+      ),
+      className: "min-w-[240px]",
+    },
+    {
+      header: "Qty",
+      cell: (row, idx) => (
+        <TextField
+          type="number"
+          inputProps={{ step: "0.0001" }}
+          label="Qty"
+          value={row.qty}
+          onChange={(e) => updateItem(idx, "qty", e.target.value)}
+        />
+      ),
+      className: "min-w-[140px]",
+    },
+    {
+      header: "Unit Cost",
+      cell: (row, idx) => (
+        <TextField
+          type="number"
+          inputProps={{ step: "0.0001" }}
+          label="Unit Cost"
+          value={row.unitCost}
+          onChange={(e) => updateItem(idx, "unitCost", e.target.value)}
+        />
+      ),
+      className: "min-w-[160px]",
+    },
+    {
+      header: "Total",
+      cell: (row) => formatRupiah(lineTotal(row), 0),
+      className: "min-w-[160px]",
+    },
+  ];
+
   return (
     <Box component="form" onSubmit={handleSubmit}>
       <Stack spacing={3}>
@@ -171,107 +241,21 @@ export default function PurchaseForm({ products }: Props) {
             <Typography variant="h6" sx={{ fontWeight: 700 }}>
               Items
             </Typography>
-            <Button
-              variant="contained"
-              startIcon={<AddIcon />}
-              onClick={addItem}
-              sx={{ backgroundColor: "var(--brand)" }}
-            >
+            <GlassButton onClick={addItem}>
+              <AddIcon className="mr-2" fontSize="small" />
               Tambah Item
-            </Button>
+            </GlassButton>
           </Box>
 
-          <TableContainer component={Paper} variant="outlined">
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Produk</TableCell>
-                  <TableCell>Qty</TableCell>
-                  <TableCell>Unit Cost</TableCell>
-                  <TableCell>Total</TableCell>
-                  <TableCell align="right">Aksi</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {items.map((row, idx) => {
-                  const p = findProduct(row.productId);
-                  const total = lineTotal(row);
-                  return (
-                    <TableRow key={idx}>
-                      <TableCell sx={{ minWidth: 240 }}>
-                        <TextField
-                          select
-                          fullWidth
-                          value={row.productId}
-                          onChange={(e) =>
-                            updateItem(idx, "productId", e.target.value)
-                          }
-                          label="Produk"
-                          SelectProps={{
-                            renderValue: (selected) => {
-                              const sel = products.find((pr) => pr.id === String(selected));
-                              if (!sel) return "";
-                              return (
-                                <Stack direction="row" spacing={1} alignItems="center">
-                                  <Typography sx={{ mr: 1 }}>{sel.name}</Typography>
-                                  <TagBadge label={sel.unit} color="info" />
-                                  <TagBadge
-                                    label={sel.type === "raw" ? "Raw" : "Finished"}
-                                    color={sel.type === "raw" ? "warning" : "success"}
-                                  />
-                                </Stack>
-                              );
-                            },
-                          }}
-                        >
-                          {products.map((pr) => (
-                            <MenuItem key={pr.id} value={pr.id}>
-                              <Stack direction="row" spacing={1} alignItems="center">
-                                <Typography sx={{ mr: 1 }}>{pr.name}</Typography>
-                                <TagBadge label={pr.unit} color="info" />
-                                <TagBadge
-                                  label={pr.type === "raw" ? "Raw" : "Finished"}
-                                  color={pr.type === "raw" ? "warning" : "success"}
-                                />
-                              </Stack>
-                            </MenuItem>
-                          ))}
-                        </TextField>
-                      </TableCell>
-                      <TableCell sx={{ minWidth: 140 }}>
-                        <TextField
-                          type="number"
-                          inputProps={{ step: "0.0001" }}
-                          label="Qty"
-                          value={row.qty}
-                          onChange={(e) => updateItem(idx, "qty", e.target.value)}
-                        />
-                      </TableCell>
-                      <TableCell sx={{ minWidth: 160 }}>
-                        <TextField
-                          type="number"
-                          inputProps={{ step: "0.0001" }}
-                          label="Unit Cost"
-                          value={row.unitCost}
-                          onChange={(e) =>
-                            updateItem(idx, "unitCost", e.target.value)
-                          }
-                        />
-                      </TableCell>
-                      <TableCell sx={{ minWidth: 160 }}>
-                        <Typography>{formatRupiah(total, 0)}</Typography>
-                      </TableCell>
-                      <TableCell align="right">
-                        <IconButton color="error" onClick={() => removeItem(idx)}>
-                          <DeleteIcon />
-                        </IconButton>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </TableContainer>
+          <GlassTable
+            columns={columns}
+            data={items}
+            actions={(row, idx) => (
+              <GlassButton variant="danger" size="icon" onClick={() => removeItem(idx)}>
+                <DeleteIcon fontSize="small" />
+              </GlassButton>
+            )}
+          />
 
           <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}>
             <Typography variant="h6" sx={{ fontWeight: 700 }}>
@@ -281,18 +265,17 @@ export default function PurchaseForm({ products }: Props) {
         </Box>
 
         <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
-          <Button
+          <GlassButton
             type="submit"
-            variant="contained"
-            startIcon={<SaveIcon />}
+            variant="primary"
             disabled={
               saving ||
               items.filter((r) => r.productId && r.qty && r.unitCost).length === 0
             }
-            sx={{ backgroundColor: "var(--brand)" }}
           >
+            <SaveIcon className="mr-2" fontSize="small" />
             Simpan Purchase
-          </Button>
+          </GlassButton>
         </Box>
       </Stack>
 

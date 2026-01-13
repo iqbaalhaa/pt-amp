@@ -11,7 +11,7 @@ import {
 import SettingsIcon from "@mui/icons-material/Settings";
 import MailIcon from "@mui/icons-material/Mail";
 import LinkIcon from "@mui/icons-material/Link";
-import { ContactInfo, Inquiry, SocialMedia } from "@prisma/client";
+import type { ContactInfo, Inquiry, SocialMedia } from "@/generated/prisma";
 import { ContactSettingsForm } from "@/components/admin/contact/ContactSettingsForm";
 import { SocialMediaForm } from "@/components/admin/contact/SocialMediaForm";
 import { InquiryList } from "@/components/admin/contact/InquiryList";
