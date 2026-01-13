@@ -2,6 +2,8 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { promises as fs } from "fs";
+import path from "path";
 
 export async function getHomePageData() {
   return await prisma.homePage.findFirst();
@@ -16,6 +18,119 @@ export async function getHeroSlides() {
       order: "asc",
     },
   });
+}
+
+export async function createHeroSlide(formData: FormData) {
+  let type = (formData.get("type") as string) || "image";
+  let src = (formData.get("src") as string) || "";
+  const title = (formData.get("title") as string) || "";
+  const description = (formData.get("description") as string) || "";
+  const orderRaw = (formData.get("order") as string) || "0";
+  const order = Number(orderRaw) || 0;
+
+  const file = formData.get("file") as File | null;
+  if (file && file.size > 0) {
+    if (file.type.startsWith("video/")) {
+      type = "video";
+    } else if (file.type.startsWith("image/")) {
+      type = "image";
+    }
+    const uploaded = await saveUploadToPublic(file);
+    if (uploaded) src = uploaded;
+  }
+
+  await prisma.heroSlide.create({
+    data: { type, src, title, description, order },
+  });
+
+  revalidatePath("/");
+  revalidatePath("/admin/cms/pages/home");
+}
+
+export async function updateHeroSlide(id: string, formData: FormData) {
+  let type = (formData.get("type") as string) || "image";
+  let src = (formData.get("src") as string) || "";
+  const title = (formData.get("title") as string) || "";
+  const description = (formData.get("description") as string) || "";
+  const orderRaw = (formData.get("order") as string) || "0";
+  const order = Number(orderRaw) || 0;
+
+  const file = formData.get("file") as File | null;
+  if (file && file.size > 0) {
+    if (file.type.startsWith("video/")) {
+      type = "video";
+    } else if (file.type.startsWith("image/")) {
+      type = "image";
+    }
+    const uploaded = await saveUploadToPublic(file);
+    if (uploaded) src = uploaded;
+  }
+
+  await prisma.heroSlide.update({
+    where: { id },
+    data: { type, src, title, description, order },
+  });
+
+  revalidatePath("/");
+  revalidatePath("/admin/cms/pages/home");
+}
+
+export async function deleteHeroSlide(id: string) {
+  await prisma.heroSlide.delete({ where: { id } });
+  revalidatePath("/");
+  revalidatePath("/admin/cms/pages/home");
+}
+
+export async function createHeroButton(slideId: string, formData: FormData) {
+  const text = (formData.get("text") as string) || "";
+  const href = (formData.get("href") as string) || "";
+  const isPrimary = (formData.get("isPrimary") as string) === "true";
+
+  await prisma.heroButton.create({
+    data: { text, href, isPrimary, slideId },
+  });
+
+  revalidatePath("/");
+  revalidatePath("/admin/cms/pages/home");
+}
+
+export async function updateHeroButton(id: string, formData: FormData) {
+  const text = (formData.get("text") as string) || "";
+  const href = (formData.get("href") as string) || "";
+  const isPrimary = (formData.get("isPrimary") as string) === "true";
+
+  await prisma.heroButton.update({
+    where: { id },
+    data: { text, href, isPrimary },
+  });
+
+  revalidatePath("/");
+  revalidatePath("/admin/cms/pages/home");
+}
+
+export async function deleteHeroButton(id: string) {
+  await prisma.heroButton.delete({ where: { id } });
+  revalidatePath("/");
+  revalidatePath("/admin/cms/pages/home");
+}
+
+async function saveUploadToPublic(file: File): Promise<string | null> {
+  try {
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
+    const uploadsDir = path.join(process.cwd(), "public", "uploads");
+    await fs.mkdir(uploadsDir, { recursive: true });
+    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+    const timestamp = Date.now();
+    const ext = path.extname(safeName) || ".png";
+    const base = path.basename(safeName, ext);
+    const filename = `${base}-${timestamp}${ext}`;
+    const filePath = path.join(uploadsDir, filename);
+    await fs.writeFile(filePath, buffer);
+    return `/uploads/${filename}`;
+  } catch {
+    return null;
+  }
 }
 
 export async function getFeatureCards(section: string) {
@@ -108,6 +223,23 @@ export async function deleteFeatureCard(id: string) {
   revalidatePath("/admin/compro/about");
 }
 
+export async function updateFeatureCard(id: string, formData: FormData) {
+  const title = (formData.get("title") as string) || "";
+  const description = (formData.get("description") as string) || "";
+  const icon = (formData.get("icon") as string) || null;
+  const orderRaw = (formData.get("order") as string) || "0";
+  const order = Number(orderRaw) || 0;
+
+  await prisma.featureCard.update({
+    where: { id },
+    data: { title, description, icon, order },
+  });
+
+  revalidatePath("/");
+  revalidatePath("/admin/cms/pages/home");
+  revalidatePath("/admin/compro/about");
+}
+
 export async function createAboutPoint(formData: FormData) {
   const aboutPageId = (formData.get("aboutPageId") as string) || "";
   const text = (formData.get("text") as string) || "";
@@ -126,6 +258,20 @@ export async function createAboutPoint(formData: FormData) {
 
 export async function deleteAboutPoint(id: string) {
   await prisma.aboutPoint.delete({ where: { id } });
+  revalidatePath("/about");
+  revalidatePath("/admin/compro/about");
+}
+
+export async function updateAboutPoint(id: string, formData: FormData) {
+  const text = (formData.get("text") as string) || "";
+  const orderRaw = (formData.get("order") as string) || "0";
+  const order = Number(orderRaw) || 0;
+
+  await prisma.aboutPoint.update({
+    where: { id },
+    data: { text, order },
+  });
+
   revalidatePath("/about");
   revalidatePath("/admin/compro/about");
 }

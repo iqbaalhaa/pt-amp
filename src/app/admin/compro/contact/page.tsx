@@ -15,7 +15,7 @@ export default async function AdminContactPage() {
     <div className="space-y-6">
       <h1 className="text-2xl font-bold text-zinc-900">Manajemen Halaman Kontak</h1>
       <p className="text-zinc-600">Kelola informasi kontak, link sosial media, dan pesan masuk.</p>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="space-y-6">
         <div className="bg-white p-6 rounded-xl shadow-sm border border-zinc-200">
           <AdminContactClient 
             contactInfo={contactInfo} 
