@@ -4,6 +4,7 @@ import { useMemo, useRef, useState } from "react";
 import GlassCard from "@/components/ui/GlassCard";
 import GlassButton from "@/components/ui/GlassButton";
 import jsPDF from "jspdf";
+import DeleteIcon from "@mui/icons-material/Delete";
 import { createPengikisan } from "@/actions/pengikisan-actions";
 
 type Row = {
@@ -18,6 +19,7 @@ const UPAH_STIK = 1200;
 
 const F4_W_MM = 210;
 const F4_H_MM = 330;
+const PER_LEMBAR_H_MM = 100;
 const PRINT_MARGIN_MM = 10;
 
 let logoImagePromise: Promise<HTMLImageElement | null> | null = null;
@@ -140,9 +142,7 @@ export default function PengikisanPage() {
 	};
 
 	const removeRow = (id: number) => {
-		setRows((prev) =>
-			prev.length <= 1 ? prev : prev.filter((r) => r.id !== id)
-		);
+		setRows((prev) => prev.filter((r) => r.id !== id));
 	};
 
 	const addFromForm = () => {
@@ -228,20 +228,20 @@ export default function PengikisanPage() {
 		const logo = await loadLogoImage();
 
 		const pdf = new jsPDF({
-			orientation: "p",
+			orientation: "l",
 			unit: "mm",
-			format: [F4_W_MM, F4_H_MM],
+			format: [F4_W_MM, PER_LEMBAR_H_MM],
 		});
 
 		const margin = PRINT_MARGIN_MM;
 		const pageW = F4_W_MM;
-		const pageH = F4_H_MM;
+		const pageH = PER_LEMBAR_H_MM;
 		const lineY = (y: number) => Math.min(Math.max(y, margin), pageH - margin);
 
 		const rowsForPrint = activeRows.length ? activeRows : rows;
 
 		rowsForPrint.forEach((row, idx) => {
-			if (idx > 0) pdf.addPage([pageW, pageH], "p");
+			if (idx > 0) pdf.addPage([pageW, pageH], "l");
 
 			const jumlahKg = row.kaKg + row.stikKg;
 			const total = getRowTotal(row);
@@ -249,7 +249,7 @@ export default function PengikisanPage() {
 			let y = margin + 4;
 
 			if (logo) {
-				const logoW = 30;
+				const logoW = 26;
 				const ratio = logo.height / logo.width || 1;
 				const logoH = logoW * ratio;
 
@@ -257,16 +257,41 @@ export default function PengikisanPage() {
 
 				pdf.setFont("helvetica", "bold");
 				pdf.setFontSize(11);
-				pdf.text("PT AURORA MITRA PRAKARSA", margin + logoW + 5, lineY(y + 5));
-				pdf.setFontSize(9);
-				pdf.text("Nota Pengikisan", margin + logoW + 5, lineY(y + 11));
+				pdf.text(
+					"PT AURORA MITRA PRAKARSA (AMP)",
+					margin + logoW + 6,
+					lineY(y + 5)
+				);
 
-				y += logoH + 4;
+				pdf.setFont("helvetica", "normal");
+				pdf.setFontSize(7);
+				pdf.text(
+					"(General Contractor, Supplier, Infrastructure)",
+					margin + logoW + 6,
+					lineY(y + 11)
+				);
+
+				pdf.setFont("helvetica", "bold");
+				pdf.setFontSize(9);
+				pdf.text("NOTA PENGIKISAN", pageW - margin, lineY(y + 5), {
+					align: "right",
+				});
+
+				y += logoH + 6;
+
+				pdf.setDrawColor(26, 35, 126);
+				pdf.setLineWidth(0.4);
+				pdf.line(margin, lineY(y), pageW - margin, lineY(y));
+				y += 4;
 			} else {
 				pdf.setFont("helvetica", "bold");
 				pdf.setFontSize(12);
-				pdf.text("Nota Pengikisan", pageW / 2, lineY(y), { align: "center" });
+				pdf.text("NOTA PENGIKISAN", pageW / 2, lineY(y), { align: "center" });
 				y += 8;
+				pdf.setDrawColor(26, 35, 126);
+				pdf.setLineWidth(0.4);
+				pdf.line(margin, lineY(y), pageW - margin, lineY(y));
+				y += 4;
 			}
 
 			pdf.setFont("helvetica", "normal");
@@ -357,16 +382,35 @@ export default function PengikisanPage() {
 
 			pdf.setFont("helvetica", "bold");
 			pdf.setFontSize(11);
-			pdf.text("PT AURORA MITRA PRAKARSA", margin + logoW + 5, y + 5);
-			pdf.setFontSize(9);
-			pdf.text("Rekap Pengikisan", margin + logoW + 5, y + 11);
+			pdf.text("PT AURORA MITRA PRAKARSA (AMP)", margin + logoW + 6, y + 5);
 
-			y += logoH + 4;
+			pdf.setFont("helvetica", "normal");
+			pdf.setFontSize(7);
+			pdf.text(
+				"(General Contractor, Supplier, Infrastructure)",
+				margin + logoW + 6,
+				y + 11
+			);
+
+			pdf.setFont("helvetica", "bold");
+			pdf.setFontSize(9);
+			pdf.text("REKAP PENGIKISAN", pageW - margin, y + 5, { align: "right" });
+
+			y += logoH + 6;
+
+			pdf.setDrawColor(26, 35, 126);
+			pdf.setLineWidth(0.4);
+			pdf.line(margin, y, pageW - margin, y);
+			y += 4;
 		} else {
 			pdf.setFont("helvetica", "bold");
 			pdf.setFontSize(12);
-			pdf.text("Rekap Pengikisan", pageW / 2, y, { align: "center" });
+			pdf.text("REKAP PENGIKISAN", pageW / 2, y, { align: "center" });
 			y += 8;
+			pdf.setDrawColor(26, 35, 126);
+			pdf.setLineWidth(0.4);
+			pdf.line(margin, y, pageW - margin, y);
+			y += 4;
 		}
 
 		pdf.setFont("helvetica", "normal");
@@ -668,10 +712,9 @@ export default function PengikisanPage() {
 												<button
 													type="button"
 													onClick={() => removeRow(row.id)}
-													className="text-xs text-red-600 hover:text-red-700 disabled:opacity-40"
-													disabled={rows.length <= 1}
+													className="inline-flex items-center justify-center text-red-600 hover:text-red-700"
 												>
-													Hapus
+													<DeleteIcon fontSize="small" />
 												</button>
 											</td>
 										</tr>
@@ -746,26 +789,30 @@ export default function PengikisanPage() {
 								padding: "10mm",
 							}}
 						>
-							<div className="flex items-start justify-between mb-3 border-b border-gray-300 pb-2">
-								<div className="flex items-center gap-2">
+							<div className="mb-3">
+								<div className="flex flex-col items-center gap-1 text-center">
 									<img
 										src="/logoAMP.png"
 										alt="Logo PT AMP"
 										className="h-10 w-auto"
 									/>
-									<div>
-										<div className="font-bold text-xs tracking-wide">
-											PT AURORA MITRA PRAKARSA
-										</div>
-										<div className="text-[10px]">Rekap Pengikisan</div>
+									<div className="font-bold text-xs tracking-wide text-[#1a237e]">
+										PT AURORA MITRA PRAKARSA (AMP)
+									</div>
+									<div className="text-[9px] italic text-gray-600">
+										(General Contractor, Supplier, Infrastructure)
 									</div>
 								</div>
-								<div className="text-right text-[10px] space-y-0.5">
-									<div>
-										Tanggal:{" "}
-										{date ? new Date(date).toLocaleDateString("id-ID") : "-"}
+								<div className="mt-1 mb-2 border-b-2 border-[#1a237e]" />
+								<div className="flex items-start justify-between text-[10px]">
+									<div className="font-semibold">REKAP PENGIKISAN</div>
+									<div className="text-right space-y-0.5">
+										<div>
+											Tanggal:{" "}
+											{date ? new Date(date).toLocaleDateString("id-ID") : "-"}
+										</div>
+										{notes && <div>Catatan: {notes}</div>}
 									</div>
-									{notes && <div>Catatan: {notes}</div>}
 								</div>
 							</div>
 

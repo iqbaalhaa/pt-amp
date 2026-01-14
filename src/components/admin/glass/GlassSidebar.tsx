@@ -45,6 +45,11 @@ const groups: Group[] = [
 				icon: <PrecisionManufacturingIcon fontSize="small" />,
 			},
 			{
+				label: "Pembukuan",
+				href: "/admin/ledger",
+				icon: <MenuBookIcon fontSize="small" />,
+			},
+			{
 				label: "Products",
 				href: "/admin/products",
 				icon: <Inventory2Icon fontSize="small" />,
@@ -73,11 +78,6 @@ const groups: Group[] = [
 				label: "Workers",
 				href: "/admin/workers",
 				icon: <HandymanIcon fontSize="small" />,
-			},
-			{
-				label: "Pembukuan",
-				href: "/admin/ledger",
-				icon: <MenuBookIcon fontSize="small" />,
 			},
 		],
 	},
@@ -165,7 +165,13 @@ export default function GlassSidebar({
 					className={`glass rounded-2xl h-full shadow-soft flex flex-col transition-[width] duration-200 ease-out ${widthClass}`}
 				>
 					<div className="flex items-center gap-2 px-3 pt-3">
-						<div className="w-7 h-7 rounded-lg bg-[var(--brand)]" />
+						<div className="w-7 h-7 rounded-lg overflow-hidden bg-white flex items-center justify-center">
+							<img
+								src="/logoAMP.png"
+								alt="Logo PT AMP"
+								className="w-full h-full object-contain"
+							/>
+						</div>
 						<AnimatePresence initial={false}>
 							{(!collapsed || isMobile) && (
 								<motion.div
@@ -175,7 +181,7 @@ export default function GlassSidebar({
 									transition={{ duration: 0.2, ease: "easeOut" }}
 									className="text-sm font-semibold tracking-wide text-[var(--brand)]"
 								>
-									Admin
+									Aurora Mitra Perkasa
 								</motion.div>
 							)}
 						</AnimatePresence>
