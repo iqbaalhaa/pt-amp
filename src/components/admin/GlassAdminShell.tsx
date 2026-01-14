@@ -38,12 +38,6 @@ export default function GlassAdminShell({
 				isMobile={isMobile}
 				onToggle={() => setCollapsed((v) => !v)}
 			/>
-			{isMobile && !collapsed && (
-				<div 
-					className="fixed inset-0 bg-black/50 z-30 backdrop-blur-sm"
-					onClick={() => setCollapsed(true)}
-				/>
-			)}
 			<main
 				className="pt-20 md:pt-24 pr-2 md:pr-4 transition-all duration-200"
 				style={{ paddingLeft: isMobile ? 16 : sidebarWidth }}

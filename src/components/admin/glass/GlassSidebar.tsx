@@ -20,6 +20,7 @@ import ContactMailIcon from "@mui/icons-material/ContactMail";
 import SettingsIcon from "@mui/icons-material/Settings";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import PrecisionManufacturingIcon from "@mui/icons-material/PrecisionManufacturing";
 
 type Item = { label: string; href: string; icon: React.ReactNode };
 type Group = { title: string; items: Item[] };
@@ -37,6 +38,11 @@ const groups: Group[] = [
 				label: "Pembelian",
 				href: "/admin/purchases",
 				icon: <ShoppingCartIcon fontSize="small" />,
+			},
+			{
+				label: "Pengikisan",
+				href: "/admin/pengikisan",
+				icon: <PrecisionManufacturingIcon fontSize="small" />,
 			},
 			{
 				label: "Products",
