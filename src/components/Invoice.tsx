@@ -40,7 +40,7 @@ export const Invoice = forwardRef<HTMLDivElement, InvoiceProps>(
 			<Box
 				ref={ref}
 				sx={{
-					p: 1.5,
+					p: 1,
 					bgcolor: "white",
 					color: "black",
 					width: "105mm",
@@ -52,15 +52,15 @@ export const Invoice = forwardRef<HTMLDivElement, InvoiceProps>(
 				}}
 			>
 				{/* Header */}
-				<Box sx={{ mb: 1, textAlign: "center" }}>
+				<Box sx={{ mb: 0.6, textAlign: "center" }}>
 					<Typography
 						variant="h6"
 						sx={{
 							fontWeight: "bold",
 							color: "#1a237e",
-							fontSize: "10pt",
-							letterSpacing: "0.5px",
-							lineHeight: 1.2,
+							fontSize: "9pt",
+							letterSpacing: "0.4px",
+							lineHeight: 1.15,
 						}}
 					>
 						PT AURORA MITRA PRAKARSA (AMP)
@@ -70,32 +70,32 @@ export const Invoice = forwardRef<HTMLDivElement, InvoiceProps>(
 						sx={{
 							color: "#555",
 							fontStyle: "italic",
-							fontSize: "6pt",
-							mt: 0.2,
+							fontSize: "5.5pt",
+							mt: 0.1,
 						}}
 					>
 						(General Contractor, Supplier, Infrastructure)
 					</Typography>
 					<Divider
-						sx={{ my: 0.5, borderBottomWidth: 1.5, borderColor: "#1a237e" }}
+						sx={{ my: 0.4, borderBottomWidth: 1.2, borderColor: "#1a237e" }}
 					/>
 				</Box>
 
 				{/* Invoice Details */}
-				<Box sx={{ display: "flex", justifyContent: "space-between", mb: 1.5 }}>
+				<Box sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}>
 					<Box>
 						<Typography
 							variant="subtitle2"
-							sx={{ fontWeight: "bold", fontSize: "8pt" }}
+							sx={{ fontWeight: "bold", fontSize: "7.5pt" }}
 						>
 							{data.type === "Purchase Invoice"
 								? "FAKTUR PEMBELIAN"
 								: "FAKTUR PENJUALAN"}
 						</Typography>
-						<Typography variant="body2" sx={{ fontSize: "7pt", mt: 0.2 }}>
+						<Typography variant="body2" sx={{ fontSize: "6.5pt", mt: 0.1 }}>
 							No: {data.id}
 						</Typography>
-						<Typography variant="body2" sx={{ fontSize: "7pt", mt: 0.2 }}>
+						<Typography variant="body2" sx={{ fontSize: "6.5pt", mt: 0.1 }}>
 							Tgl:{" "}
 							{new Date(data.date).toLocaleDateString("id-ID", {
 								day: "2-digit",
@@ -107,29 +107,29 @@ export const Invoice = forwardRef<HTMLDivElement, InvoiceProps>(
 					<Box sx={{ textAlign: "right" }}>
 						<Typography
 							variant="subtitle2"
-							sx={{ fontWeight: "bold", fontSize: "8pt" }}
+							sx={{ fontWeight: "bold", fontSize: "7.5pt" }}
 						>
 							{data.partyType === "Supplier" ? "Pemasok" : "Pelanggan"}:
 						</Typography>
-						<Typography variant="body2" sx={{ fontSize: "7pt", mt: 0.2 }}>
+						<Typography variant="body2" sx={{ fontSize: "6.5pt", mt: 0.1 }}>
 							{(data.partyName || "-").toUpperCase()}
 						</Typography>
 					</Box>
 				</Box>
 
 				{/* Items Table */}
-				<TableContainer sx={{ mb: 1, border: "0.5px solid #000" }}>
+				<TableContainer sx={{ mb: 0.8, border: "0.4px solid #000" }}>
 					<Table size="small" sx={{ tableLayout: "fixed" }}>
 						<TableHead sx={{ bgcolor: "#eeeeee" }}>
 							<TableRow>
 								<TableCell
 									sx={{
 										fontWeight: "bold",
-										fontSize: "7pt",
-										py: 0.5,
-										px: 0.5,
+										fontSize: "6.5pt",
+										py: 0.4,
+										px: 0.4,
 										width: "40%",
-										borderBottom: "0.5px solid #000",
+										borderBottom: "0.4px solid #000",
 										color: "black",
 									}}
 								>
@@ -139,11 +139,11 @@ export const Invoice = forwardRef<HTMLDivElement, InvoiceProps>(
 									align="right"
 									sx={{
 										fontWeight: "bold",
-										fontSize: "7pt",
-										py: 0.5,
-										px: 0.5,
+										fontSize: "6.5pt",
+										py: 0.4,
+										px: 0.4,
 										width: "20%",
-										borderBottom: "0.5px solid #000",
+										borderBottom: "0.4px solid #000",
 										color: "black",
 									}}
 								>
@@ -153,11 +153,11 @@ export const Invoice = forwardRef<HTMLDivElement, InvoiceProps>(
 									align="right"
 									sx={{
 										fontWeight: "bold",
-										fontSize: "7pt",
-										py: 0.5,
-										px: 0.5,
+										fontSize: "6.5pt",
+										py: 0.4,
+										px: 0.4,
 										width: "20%",
-										borderBottom: "0.5px solid #000",
+										borderBottom: "0.4px solid #000",
 										color: "black",
 									}}
 								>
@@ -167,11 +167,11 @@ export const Invoice = forwardRef<HTMLDivElement, InvoiceProps>(
 									align="right"
 									sx={{
 										fontWeight: "bold",
-										fontSize: "7pt",
-										py: 0.5,
-										px: 0.5,
+										fontSize: "6.5pt",
+										py: 0.4,
+										px: 0.4,
 										width: "20%",
-										borderBottom: "0.5px solid #000",
+										borderBottom: "0.4px solid #000",
 										color: "black",
 									}}
 								>
@@ -184,12 +184,12 @@ export const Invoice = forwardRef<HTMLDivElement, InvoiceProps>(
 								<TableRow key={index}>
 									<TableCell
 										sx={{
-											fontSize: "7pt",
-											py: 0.4,
-											px: 0.5,
+											fontSize: "6.5pt",
+											py: 0.35,
+											px: 0.4,
 											wordBreak: "break-word",
-											borderBottom: "0.5px solid #e0e0e0",
-											lineHeight: 1.1,
+											borderBottom: "0.4px solid #e0e0e0",
+											lineHeight: 1.05,
 										}}
 									>
 										{item.productName}
@@ -197,11 +197,11 @@ export const Invoice = forwardRef<HTMLDivElement, InvoiceProps>(
 									<TableCell
 										align="right"
 										sx={{
-											fontSize: "7pt",
-											py: 0.4,
-											px: 0.5,
-											borderBottom: "0.5px solid #e0e0e0",
-											lineHeight: 1.1,
+											fontSize: "6.5pt",
+											py: 0.35,
+											px: 0.4,
+											borderBottom: "0.4px solid #e0e0e0",
+											lineHeight: 1.05,
 										}}
 									>
 										{parseFloat(item.qty).toLocaleString("id-ID")} {item.unit}
@@ -209,11 +209,11 @@ export const Invoice = forwardRef<HTMLDivElement, InvoiceProps>(
 									<TableCell
 										align="right"
 										sx={{
-											fontSize: "7pt",
-											py: 0.4,
-											px: 0.5,
-											borderBottom: "0.5px solid #e0e0e0",
-											lineHeight: 1.1,
+											fontSize: "6.5pt",
+											py: 0.35,
+											px: 0.4,
+											borderBottom: "0.4px solid #e0e0e0",
+											lineHeight: 1.05,
 										}}
 									>
 										{parseFloat(item.price).toLocaleString("id-ID")}
@@ -221,11 +221,11 @@ export const Invoice = forwardRef<HTMLDivElement, InvoiceProps>(
 									<TableCell
 										align="right"
 										sx={{
-											fontSize: "7pt",
-											py: 0.4,
-											px: 0.5,
-											borderBottom: "0.5px solid #e0e0e0",
-											lineHeight: 1.1,
+											fontSize: "6.5pt",
+											py: 0.35,
+											px: 0.4,
+											borderBottom: "0.4px solid #e0e0e0",
+											lineHeight: 1.05,
 										}}
 									>
 										{parseFloat(item.total).toLocaleString("id-ID")}
@@ -236,25 +236,25 @@ export const Invoice = forwardRef<HTMLDivElement, InvoiceProps>(
 					</Table>
 				</TableContainer>
 
-				<Box sx={{ display: "flex", justifyContent: "flex-end", mb: 1.5 }}>
+				<Box sx={{ display: "flex", justifyContent: "flex-end", mb: 1 }}>
 					<Box sx={{ minWidth: "50%" }}>
 						<Box
 							sx={{
 								display: "flex",
 								justifyContent: "space-between",
 								borderTop: "1px solid black",
-								pt: 0.5,
+								pt: 0.4,
 							}}
 						>
 							<Typography
 								variant="subtitle2"
-								sx={{ fontWeight: "bold", fontSize: "8pt" }}
+								sx={{ fontWeight: "bold", fontSize: "7.5pt" }}
 							>
 								Total:
 							</Typography>
 							<Typography
 								variant="subtitle2"
-								sx={{ fontWeight: "bold", fontSize: "8pt" }}
+								sx={{ fontWeight: "bold", fontSize: "7.5pt" }}
 							>
 								Rp {parseFloat(data.totalAmount).toLocaleString("id-ID")}
 							</Typography>
@@ -263,19 +263,19 @@ export const Invoice = forwardRef<HTMLDivElement, InvoiceProps>(
 				</Box>
 
 				{data.notes && data.notes.trim().length > 0 && (
-					<Box sx={{ mb: 1 }}>
+					<Box sx={{ mb: 0.8 }}>
 						<Typography
 							variant="subtitle2"
-							sx={{ fontWeight: "bold", fontSize: "7pt", mb: 0.2 }}
+							sx={{ fontWeight: "bold", fontSize: "6.5pt", mb: 0.15 }}
 						>
 							Catatan:
 						</Typography>
 						<Typography
 							variant="body2"
 							sx={{
-								fontSize: "6pt",
+								fontSize: "5.5pt",
 								whiteSpace: "pre-wrap",
-								lineHeight: 1.1,
+								lineHeight: 1.05,
 							}}
 						>
 							{(data.notes || "").toUpperCase()}
@@ -283,27 +283,27 @@ export const Invoice = forwardRef<HTMLDivElement, InvoiceProps>(
 					</Box>
 				)}
 
-				<Box sx={{ display: "flex", justifyContent: "space-between", mt: 2 }}>
+				<Box sx={{ display: "flex", justifyContent: "space-between", mt: 1.5 }}>
 					<Box sx={{ textAlign: "center", width: "40%" }}>
-						<Typography variant="body2" sx={{ mb: 4, fontSize: "7pt" }}>
+						<Typography variant="body2" sx={{ mb: 3, fontSize: "6.5pt" }}>
 							Dibuat Oleh
 						</Typography>
 						<Divider sx={{ borderColor: "black" }} />
 						<Typography
 							variant="caption"
-							sx={{ fontSize: "6pt", mt: 0.2, display: "block" }}
+							sx={{ fontSize: "5.5pt", mt: 0.15, display: "block" }}
 						>
 							(Staf)
 						</Typography>
 					</Box>
 					<Box sx={{ textAlign: "center", width: "40%" }}>
-						<Typography variant="body2" sx={{ mb: 4, fontSize: "7pt" }}>
+						<Typography variant="body2" sx={{ mb: 3, fontSize: "6.5pt" }}>
 							Disetujui Oleh
 						</Typography>
 						<Divider sx={{ borderColor: "black" }} />
 						<Typography
 							variant="caption"
-							sx={{ fontSize: "6pt", mt: 0.2, display: "block" }}
+							sx={{ fontSize: "5.5pt", mt: 0.15, display: "block" }}
 						>
 							(Manajer)
 						</Typography>

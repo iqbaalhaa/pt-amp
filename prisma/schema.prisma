@@ -151,6 +151,9 @@ model Purchase {
   date       DateTime          @db.Date
   status     TransactionStatus // draft, posted, cancelled
   notes      String?
+  revokedAt    DateTime?      @map("revoked_at")
+  revokedById  String?        @map("revoked_by_id")
+  revokeReason String?        @map("revoke_reason")
 
   // Relations
   purchaseItems PurchaseItem[]
@@ -179,6 +182,9 @@ model Sale {
   date       DateTime          @db.Date
   status     TransactionStatus // draft, posted, cancelled
   notes      String?
+  revokedAt    DateTime?      @map("revoked_at")
+  revokedById  String?        @map("revoked_by_id")
+  revokeReason String?        @map("revoke_reason")
 
   // Relations
   saleItems SaleItem[]
@@ -207,6 +213,9 @@ model Production {
   date             DateTime         @db.Date
   status           ProductionStatus // draft, completed, cancelled
   notes            String?
+  revokedAt    DateTime?      @map("revoked_at")
+  revokedById  String?        @map("revoked_by_id")
+  revokeReason String?        @map("revoke_reason")
 
   // Relations
   productionType    ProductionType     @relation(fields: [productionTypeId], references: [id])
@@ -266,6 +275,8 @@ model StockMovement {
   qty        Decimal  @db.Decimal(14, 4)
   sourceType String   @map("source_type") // purchase_item, sale_item, production_input, production_output
   sourceId   BigInt   @map("source_id")
+  displayUnit String? 
+  conversionRateUsed Decimal? @db.Decimal(14, 6) @map("conversion_rate_used")
   createdAt  DateTime @default(now()) @map("created_at")
 
   // Relations

@@ -11,6 +11,7 @@ import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
 import FactoryIcon from "@mui/icons-material/Factory";
 import HandymanIcon from "@mui/icons-material/Handyman";
+import MenuBookIcon from "@mui/icons-material/MenuBook";
 import HomeIcon from "@mui/icons-material/Home";
 import InfoIcon from "@mui/icons-material/Info";
 import CollectionsIcon from "@mui/icons-material/Collections";
@@ -66,6 +67,11 @@ const groups: Group[] = [
 				label: "Workers",
 				href: "/admin/workers",
 				icon: <HandymanIcon fontSize="small" />,
+			},
+			{
+				label: "Pembukuan",
+				href: "/admin/ledger",
+				icon: <MenuBookIcon fontSize="small" />,
 			},
 		],
 	},

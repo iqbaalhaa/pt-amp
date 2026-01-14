@@ -34,6 +34,7 @@ import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import EngineeringIcon from "@mui/icons-material/Engineering";
 import PointOfSaleIcon from "@mui/icons-material/PointOfSale";
 import FactoryIcon from "@mui/icons-material/Factory";
+import MenuBookIcon from "@mui/icons-material/MenuBook";
 import { useState } from "react";
 
 const menuGroups = [
@@ -79,6 +80,11 @@ const menuGroups = [
 				label: "Workers",
 				href: "/admin/workers",
 				icon: <EngineeringIcon fontSize="small" />,
+			},
+			{
+				label: "Pembukuan",
+				href: "/admin/ledger",
+				icon: <MenuBookIcon fontSize="small" />,
 			},
 		],
 	},

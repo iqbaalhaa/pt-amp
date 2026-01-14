@@ -25,8 +25,8 @@ export default function RootLayout({
 	children: React.ReactNode;
 }) {
 		return (
-			<html lang="id">
-			<body className={`${plusJakarta.variable} ${geistMono.variable}`}>
+			<html lang="id" suppressHydrationWarning>
+			<body className={`${plusJakarta.variable} ${geistMono.variable}`} suppressHydrationWarning>
 				<AppRouterCacheProvider options={{ enableCssLayer: true }}>
 					{children}
 				</AppRouterCacheProvider>

@@ -3,6 +3,8 @@
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { ProductionStatus } from "@/generated/prisma";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 
 export type ProductionItemInput = {
 	productId: string;
@@ -147,10 +149,18 @@ export async function getProductions() {
 	}));
 }
 
-export async function revokeProduction(id: string) {
+export async function revokeProduction(id: string, reason?: string) {
+	const session = await auth.api.getSession({ headers: await headers() });
+	const userId = session?.user.id ?? null;
 	await prisma.production.update({
 		where: { id: BigInt(id) },
-		data: { status: "cancelled" },
+		data: {
+			status: "cancelled",
+			revokeReason: reason ?? null,
+			revokedAt: new Date(),
+			revokedById: userId,
+		},
 	});
 	revalidatePath("/admin/production");
+	revalidatePath("/admin/ledger");
 }

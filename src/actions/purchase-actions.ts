@@ -3,6 +3,8 @@
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { TransactionStatus } from "@/generated/prisma";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 
 export type PurchaseItemInput = {
   productId: string;
@@ -78,10 +80,18 @@ export async function getPurchases() {
   }));
 }
 
-export async function revokePurchase(id: string) {
+export async function revokePurchase(id: string, reason?: string) {
+  const session = await auth.api.getSession({ headers: await headers() });
+  const userId = session?.user.id ?? null;
   await prisma.purchase.update({
     where: { id: BigInt(id) },
-    data: { status: "cancelled" },
+    data: {
+      status: "cancelled",
+      revokeReason: reason ?? null,
+      revokedAt: new Date(),
+      revokedById: userId,
+    },
   });
   revalidatePath("/admin/purchases");
+  revalidatePath("/admin/ledger");
 }
