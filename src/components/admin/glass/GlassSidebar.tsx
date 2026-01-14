@@ -33,6 +33,11 @@ const groups: Group[] = [
 				icon: <DashboardIcon fontSize="small" />,
 			},
 			{
+				label: "Pembelian",
+				href: "/admin/purchases",
+				icon: <ShoppingCartIcon fontSize="small" />,
+			},
+			{
 				label: "Products",
 				href: "/admin/products",
 				icon: <Inventory2Icon fontSize="small" />,
@@ -46,11 +51,6 @@ const groups: Group[] = [
 				label: "Inquiries",
 				href: "/admin/inquiries",
 				icon: <MailIcon fontSize="small" />,
-			},
-			{
-				label: "Purchases",
-				href: "/admin/purchases",
-				icon: <ShoppingCartIcon fontSize="small" />,
 			},
 			{
 				label: "Sales",
@@ -118,9 +118,11 @@ const groups: Group[] = [
 
 export default function GlassSidebar({
 	collapsed,
+	isMobile,
 	onToggle,
 }: {
 	collapsed: boolean;
+	isMobile: boolean;
 	onToggle: () => void;
 }) {
 	const pathname = usePathname();
@@ -130,18 +132,30 @@ export default function GlassSidebar({
 		}
 		return pathname === href || pathname.startsWith(href + "/");
 	};
+
+	// Determine width/transform classes based on state
+	const containerClasses = isMobile
+		? `fixed left-0 top-0 h-screen z-40 transition-transform duration-300 ease-in-out ${
+				collapsed ? "-translate-x-full" : "translate-x-0"
+		  }`
+		: "fixed left-0 top-0 h-screen z-40";
+
+	const widthClass = isMobile
+		? "w-[260px]"
+		: collapsed
+		? "w-[76px]"
+		: "w-[260px]";
+
 	return (
-		<div className="fixed left-0 top-0 h-screen z-40">
-			<div className="p-2 md:p-3">
+		<div className={containerClasses}>
+			<div className="p-2 md:p-3 h-full">
 				<div
-					className={`glass rounded-2xl h-[92vh] md:h-[94vh] shadow-soft flex flex-col transition-[width] duration-200 ease-out ${
-						collapsed ? "w-[76px]" : "w-[260px]"
-					}`}
+					className={`glass rounded-2xl h-full shadow-soft flex flex-col transition-[width] duration-200 ease-out ${widthClass}`}
 				>
 					<div className="flex items-center gap-2 px-3 pt-3">
 						<div className="w-7 h-7 rounded-lg bg-[var(--brand)]" />
 						<AnimatePresence initial={false}>
-							{!collapsed && (
+							{(!collapsed || isMobile) && (
 								<motion.div
 									initial={{ opacity: 0, x: -6 }}
 									animate={{ opacity: 1, x: 0 }}
@@ -153,23 +167,26 @@ export default function GlassSidebar({
 								</motion.div>
 							)}
 						</AnimatePresence>
-						<button
-							aria-label="Toggle sidebar"
-							className="ml-auto w-8 h-8 rounded-full glass flex items-center justify-center text-secondary hover:text-[var(--brand)] transition-transform hover:scale-105"
-							onClick={onToggle}
-						>
-							{collapsed ? (
-								<ChevronRightIcon fontSize="small" />
-							) : (
-								<ChevronLeftIcon fontSize="small" />
-							)}
-						</button>
+
+						{!isMobile && (
+							<button
+								aria-label="Toggle sidebar"
+								className="ml-auto w-8 h-8 rounded-full glass flex items-center justify-center text-secondary hover:text-[var(--brand)] transition-transform hover:scale-105"
+								onClick={onToggle}
+							>
+								{collapsed ? (
+									<ChevronRightIcon fontSize="small" />
+								) : (
+									<ChevronLeftIcon fontSize="small" />
+								)}
+							</button>
+						)}
 					</div>
-					<div className="px-2 mt-2 overflow-y-auto no-scrollbar">
+					<div className="px-2 mt-2 overflow-y-auto no-scrollbar flex-1">
 						{groups.map((g) => (
 							<div key={g.title} className="mb-4">
 								<AnimatePresence initial={false}>
-									{!collapsed && (
+									{(!collapsed || isMobile) && (
 										<motion.div
 											initial={{ opacity: 0, x: -6 }}
 											animate={{ opacity: 1, x: 0 }}
@@ -202,7 +219,7 @@ export default function GlassSidebar({
 													{it.icon}
 												</div>
 												<AnimatePresence initial={false}>
-													{!collapsed && (
+													{(!collapsed || isMobile) && (
 														<motion.span
 															initial={{ opacity: 0, x: -6 }}
 															animate={{ opacity: 1, x: 0 }}

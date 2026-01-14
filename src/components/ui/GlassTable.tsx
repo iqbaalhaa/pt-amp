@@ -26,7 +26,7 @@ export default function GlassTable<T extends Record<string, any>>({
 }: Props<T>) {
 	return (
 		<div className="glass-card overflow-hidden w-full border border-[var(--glass-border)] rounded-xl shadow-sm">
-			<div className="overflow-x-auto no-scrollbar">
+			<div className="overflow-x-auto">
 				<table className="w-full text-sm text-left">
 					<thead className="text-xs uppercase tracking-wider text-black bg-[rgba(255,255,255,0.08)] border-b border-[var(--glass-border)]">
 						<tr>

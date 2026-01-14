@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import GlassSidebar from "./glass/GlassSidebar";
 import GlassNavbar from "./glass/GlassNavbar";
 
@@ -10,17 +10,43 @@ export default function GlassAdminShell({
 	children: React.ReactNode;
 }) {
 	const [collapsed, setCollapsed] = useState(false);
+	const [isMobile, setIsMobile] = useState(false);
+
+	useEffect(() => {
+		const checkMobile = () => {
+			const mobile = window.innerWidth < 768;
+			setIsMobile(mobile);
+			if (mobile) {
+				setCollapsed(true);
+			} else {
+				setCollapsed(false);
+			}
+		};
+
+		checkMobile();
+		window.addEventListener("resize", checkMobile);
+		return () => window.removeEventListener("resize", checkMobile);
+	}, []);
+
+	const sidebarWidth = collapsed ? (isMobile ? 0 : 92) : 284;
 
 	return (
 		<div className="min-h-screen bg-[var(--background)] text-[var(--foreground)]">
-			<GlassNavbar sidebarCollapsed={collapsed} />
+			<GlassNavbar sidebarCollapsed={collapsed} isMobile={isMobile} onMenuClick={() => setCollapsed(!collapsed)} />
 			<GlassSidebar
 				collapsed={collapsed}
+				isMobile={isMobile}
 				onToggle={() => setCollapsed((v) => !v)}
 			/>
+			{isMobile && !collapsed && (
+				<div 
+					className="fixed inset-0 bg-black/50 z-30 backdrop-blur-sm"
+					onClick={() => setCollapsed(true)}
+				/>
+			)}
 			<main
-				className="pt-20 md:pt-24 pr-2 md:pr-4"
-				style={{ paddingLeft: collapsed ? 92 : 284 }}
+				className="pt-20 md:pt-24 pr-2 md:pr-4 transition-all duration-200"
+				style={{ paddingLeft: isMobile ? 16 : sidebarWidth }}
 			>
 				<div className="mx-auto max-w-[1400px]">
 					<div className="grid gap-4 md:gap-6">{children}</div>

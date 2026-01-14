@@ -75,6 +75,7 @@ export default function PurchaseHistory({
 			partyName: purchase.supplier,
 			partyType: "Supplier",
 			type: "Purchase Invoice",
+			notes: purchase.notes,
 			items,
 			totalAmount,
 		};

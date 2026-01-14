@@ -69,6 +69,7 @@ export default function SaleHistory({ sales }: { sales: Sale[] }) {
 			partyName: sale.customer,
 			partyType: "Customer",
 			type: "Sales Invoice",
+			notes: sale.notes,
 			items,
 			totalAmount,
 		};
