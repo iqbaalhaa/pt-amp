@@ -276,6 +276,33 @@ model StockMovement {
   @@map("stock_movements")
 }
 
+// 6. PENGIKISAN
+model Pengikisan {
+  id        BigInt            @id @default(autoincrement())
+  date      DateTime          @db.Date
+  notes     String?
+  totalUpah Decimal?          @db.Decimal(14, 2) @map("total_upah")
+
+  pengikisanItems PengikisanItem[]
+
+  @@map("pengikisan")
+}
+
+model PengikisanItem {
+  id           BigInt   @id @default(autoincrement())
+  pengikisanId BigInt   @map("pengikisan_id")
+  nama         String
+  kaKg         Decimal  @db.Decimal(14, 4) @map("ka_kg")
+  stikKg       Decimal  @db.Decimal(14, 4) @map("stik_kg")
+  upahKa       Decimal  @db.Decimal(14, 2) @map("upah_ka")
+  upahStik     Decimal  @db.Decimal(14, 2) @map("upah_stik")
+  total        Decimal  @db.Decimal(14, 2)
+
+  pengikisan Pengikisan @relation(fields: [pengikisanId], references: [id], onDelete: Cascade)
+
+  @@map("pengikisan_items")
+}
+
 // =========================================================
 // CMS / WEBSITE (Keep existing)
 // =========================================================
