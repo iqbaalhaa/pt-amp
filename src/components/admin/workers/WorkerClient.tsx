@@ -50,7 +50,6 @@ export default function WorkerClient({ initialWorkers }: WorkerClientProps) {
 
 	const [formData, setFormData] = useState({
 		name: "",
-		role: "",
 		isActive: true,
 	});
 
@@ -59,14 +58,12 @@ export default function WorkerClient({ initialWorkers }: WorkerClientProps) {
 			setEditingWorker(worker);
 			setFormData({
 				name: worker.name,
-				role: worker.role || "",
 				isActive: worker.isActive,
 			});
 		} else {
 			setEditingWorker(null);
 			setFormData({
 				name: "",
-				role: "",
 				isActive: true,
 			});
 		}
@@ -88,7 +85,6 @@ export default function WorkerClient({ initialWorkers }: WorkerClientProps) {
 		try {
 			const data = new FormData();
 			data.append("name", formData.name);
-			data.append("role", formData.role);
 			data.append("isActive", String(formData.isActive));
 
 			if (editingWorker) {
@@ -136,7 +132,6 @@ export default function WorkerClient({ initialWorkers }: WorkerClientProps) {
 
 	const columns: Column<WorkerDTO>[] = [
 		{ header: "Nama", accessorKey: "name", className: "font-medium" },
-		{ header: "Role", cell: (row) => row.role || "-" },
 		{
 			header: "Status",
 			cell: (row) => (
@@ -152,10 +147,10 @@ export default function WorkerClient({ initialWorkers }: WorkerClientProps) {
 			<div className="flex items-center justify-between mb-6">
 				<div>
 					<h1 className="text-2xl font-bold text-[var(--foreground)]">
-						Workers
+						Pekerja
 					</h1>
 					<p className="text-sm text-[var(--text-secondary)]">
-						Manajemen data tenaga kerja
+						Manajemen data pekerja (hanya nama, tanpa akun login)
 					</p>
 				</div>
 				<GlassButton onClick={() => handleOpen()}>
@@ -215,16 +210,6 @@ export default function WorkerClient({ initialWorkers }: WorkerClientProps) {
 								value={formData.name}
 								onChange={handleChange}
 								required
-							/>
-						</Grid>
-						<Grid size={{ xs: 12 }}>
-							<TextField
-								fullWidth
-								label="Role / Jabatan"
-								name="role"
-								value={formData.role}
-								onChange={handleChange}
-								placeholder="Contoh: Operator Mesin"
 							/>
 						</Grid>
 						<Grid size={{ xs: 12 }}>

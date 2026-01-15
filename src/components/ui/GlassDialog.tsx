@@ -6,7 +6,6 @@ import {
   DialogTitle,
   IconButton,
   DialogProps,
-  Typography,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 
@@ -49,12 +48,23 @@ export default function GlassDialog({
       }}
     >
       {title && (
-        <DialogTitle sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", pb: 1 }}>
-          <Typography variant="h6" fontWeight="bold" sx={{ color: "black" }}>
-            {title}
-          </Typography>
+        <DialogTitle
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            pb: 1,
+            fontWeight: "bold",
+            color: "black",
+          }}
+        >
+          {title}
           {onClose && (
-            <IconButton onClick={onClose} size="small" sx={{ color: "rgba(0,0,0,0.5)" }}>
+            <IconButton
+              onClick={onClose}
+              size="small"
+              sx={{ color: "rgba(0,0,0,0.5)" }}
+            >
               <CloseIcon />
             </IconButton>
           )}

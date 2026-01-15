@@ -38,6 +38,11 @@ const groups: Group[] = [
 				icon: <DashboardIcon fontSize="small" />,
 			},
 			{
+				label: "Pekerja",
+				href: "/admin/workers",
+				icon: <HandymanIcon fontSize="small" />,
+			},
+			{
 				label: "Pembelian",
 				href: "/admin/purchases",
 				icon: <ShoppingCartIcon fontSize="small" />,
@@ -59,7 +64,7 @@ const groups: Group[] = [
 			},
 			{
 				label: "Pemotongan",
-				href: "/admin/ledger",
+				href: "/admin/pemotongan",
 				icon: <ContentCutIcon fontSize="small" />,
 			},
 			{
@@ -73,16 +78,6 @@ const groups: Group[] = [
 				icon: <Inventory2Icon fontSize="small" />,
 			},
 			{
-				label: "Customers",
-				href: "/admin/customers",
-				icon: <PeopleIcon fontSize="small" />,
-			},
-			{
-				label: "Inquiries",
-				href: "/admin/inquiries",
-				icon: <MailIcon fontSize="small" />,
-			},
-			{
 				label: "Sales",
 				href: "/admin/sales",
 				icon: <ReceiptLongIcon fontSize="small" />,
@@ -91,11 +86,6 @@ const groups: Group[] = [
 				label: "Production",
 				href: "/admin/production",
 				icon: <FactoryIcon fontSize="small" />,
-			},
-			{
-				label: "Workers",
-				href: "/admin/workers",
-				icon: <HandymanIcon fontSize="small" />,
 			},
 		],
 	},

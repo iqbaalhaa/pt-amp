@@ -145,14 +145,14 @@ async function main() {
 
 	// --- Workers ---
 	const workers = [
-		{ name: "Budi Santoso", role: "Operator Boiler" },
-		{ name: "Siti Aminah", role: "Admin Timbangan" },
-		{ name: "Joko Anwar", role: "Mandor Lapangan" },
+		{ name: "Budi Santoso" },
+		{ name: "Siti Aminah" },
+		{ name: "Joko Anwar" },
 	];
 
 	for (const w of workers) {
 		await prisma.worker.create({
-			data: { name: w.name, role: w.role },
+			data: { name: w.name },
 		});
 	}
 	console.log("   - Workers seeded");

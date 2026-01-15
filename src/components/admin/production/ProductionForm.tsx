@@ -35,7 +35,7 @@ type ProductOption = {
 	unit: string;
 	type: "raw" | "finished";
 };
-type WorkerOption = { id: string; name: string; role: string | null };
+type WorkerOption = { id: string; name: string };
 type TypeOption = { id: string; name: string };
 
 type Props = {
@@ -252,7 +252,9 @@ export default function ProductionForm({
 					size="small"
 					inputProps={{ step: "0.0001" }}
 					value={row.unitCost}
-					onChange={(e) => updateItem(setInputs, idx, "unitCost", e.target.value)}
+					onChange={(e) =>
+						updateItem(setInputs, idx, "unitCost", e.target.value)
+					}
 				/>
 			),
 			className: "min-w-[120px]",
@@ -317,7 +319,9 @@ export default function ProductionForm({
 					size="small"
 					inputProps={{ step: "0.0001" }}
 					value={row.unitCost}
-					onChange={(e) => updateItem(setOutputs, idx, "unitCost", e.target.value)}
+					onChange={(e) =>
+						updateItem(setOutputs, idx, "unitCost", e.target.value)
+					}
 				/>
 			),
 			className: "min-w-[120px]",
@@ -341,7 +345,7 @@ export default function ProductionForm({
 				>
 					{workers.map((w) => (
 						<MenuItem key={w.id} value={w.id}>
-							{w.name} {w.role ? `(${w.role})` : ""}
+							{w.name}
 						</MenuItem>
 					))}
 				</TextField>

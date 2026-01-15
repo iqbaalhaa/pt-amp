@@ -6,7 +6,6 @@ import { revalidatePath } from "next/cache";
 export type WorkerDTO = {
   id: string;
   name: string;
-  role: string | null;
   isActive: boolean;
 };
 
@@ -18,20 +17,17 @@ export async function getWorkers(): Promise<WorkerDTO[]> {
   return workers.map((w) => ({
     id: w.id.toString(),
     name: w.name,
-    role: w.role,
     isActive: w.isActive,
   }));
 }
 
 export async function createWorker(formData: FormData) {
   const name = formData.get("name") as string;
-  const role = (formData.get("role") as string) || null;
   const isActive = formData.get("isActive") === "true";
 
   await prisma.worker.create({
     data: {
       name,
-      role,
       isActive,
     },
   });
@@ -41,14 +37,12 @@ export async function createWorker(formData: FormData) {
 
 export async function updateWorker(id: string, formData: FormData) {
   const name = formData.get("name") as string;
-  const role = (formData.get("role") as string) || null;
   const isActive = formData.get("isActive") === "true";
 
   await prisma.worker.update({
     where: { id: BigInt(id) },
     data: {
       name,
-      role,
       isActive,
     },
   });

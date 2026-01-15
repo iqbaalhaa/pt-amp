@@ -116,7 +116,6 @@ model Product {
 model Worker {
   id       BigInt  @id @default(autoincrement())
   name     String
-  role     String?
   isActive Boolean @default(true) @map("is_active")
 
   // Relations
@@ -367,6 +366,32 @@ model PengemasanItem {
   pengemasan Pengemasan @relation(fields: [pengemasanId], references: [id], onDelete: Cascade)
 
   @@map("pengemasan_items")
+}
+
+// 9. PEMOTONGAN
+model Pemotongan {
+  id        BigInt            @id @default(autoincrement())
+  date      DateTime          @db.Date
+  notes     String?
+  totalUpah Decimal?          @db.Decimal(14, 2) @map("total_upah")
+  upahPerKg Decimal?          @db.Decimal(14, 2) @map("upah_per_kg")
+
+  pemotonganItems PemotonganItem[]
+
+  @@map("pemotongan")
+}
+
+model PemotonganItem {
+  id           BigInt     @id @default(autoincrement())
+  pemotonganId BigInt     @map("pemotongan_id")
+  nama         String
+  qty          Decimal    @db.Decimal(14, 4) // dalam Kg
+  upahPerKg    Decimal    @db.Decimal(14, 2) @map("upah_per_kg")
+  total        Decimal    @db.Decimal(14, 2)
+
+  pemotongan Pemotongan @relation(fields: [pemotonganId], references: [id], onDelete: Cascade)
+
+  @@map("pemotongan_items")
 }
 
 // =========================================================

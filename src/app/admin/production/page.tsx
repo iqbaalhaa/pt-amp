@@ -17,7 +17,7 @@ export default async function AdminProductionPage() {
 	const workers = await prisma.worker.findMany({
 		where: { isActive: true },
 		orderBy: { name: "asc" },
-		select: { id: true, name: true, role: true },
+		select: { id: true, name: true },
 	});
 
 	const productionTypes = await prisma.productionType.findMany({
@@ -36,7 +36,6 @@ export default async function AdminProductionPage() {
 	const workerOptions = workers.map((w) => ({
 		id: w.id.toString(),
 		name: w.name,
-		role: w.role,
 	}));
 
 	const typeOptions = productionTypes.map((t) => ({

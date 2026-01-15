@@ -77,7 +77,7 @@ const menuGroups = [
 				icon: <FactoryIcon fontSize="small" />,
 			},
 			{
-				label: "Workers",
+				label: "Pekerja",
 				href: "/admin/workers",
 				icon: <EngineeringIcon fontSize="small" />,
 			},

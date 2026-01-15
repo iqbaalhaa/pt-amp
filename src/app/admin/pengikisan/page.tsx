@@ -1,11 +1,13 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState, useEffect } from "react";
 import GlassCard from "@/components/ui/GlassCard";
 import GlassButton from "@/components/ui/GlassButton";
 import jsPDF from "jspdf";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { createPengikisan } from "@/actions/pengikisan-actions";
+import { Autocomplete, TextField } from "@mui/material";
+import { getWorkers, WorkerDTO } from "@/actions/worker-actions";
 
 type Row = {
 	id: number;
@@ -103,6 +105,13 @@ export default function PengikisanPage() {
 	const [saving, setSaving] = useState(false);
 	const [openPreview, setOpenPreview] = useState(false);
 	const [lastSavedId, setLastSavedId] = useState<string | null>(null);
+	const [workerOptions, setWorkerOptions] = useState<WorkerDTO[]>([]);
+
+	useEffect(() => {
+		getWorkers().then((data) => {
+			setWorkerOptions(data.filter((w) => w.isActive));
+		});
+	}, []);
 
 	// Form atas untuk menambah baris
 	const [newNama, setNewNama] = useState("");
@@ -558,12 +567,40 @@ export default function PengikisanPage() {
 										<span className="text-[11px] font-medium text-primary">
 											Nama pekerja
 										</span>
-										<input
-											type="text"
-											value={newNama}
-											onChange={(e) => setNewNama(e.target.value.toUpperCase())}
-											className="w-full px-2 py-1.5 rounded-xl border border-[var(--glass-border)] bg-[rgba(255,255,255,0.98)] text-sm outline-none focus:ring-2 focus:ring-[var(--brand)] focus:border-[var(--brand)] uppercase tracking-wide"
-											placeholder="Masukkan nama"
+										<Autocomplete
+											options={workerOptions.map((w) => w.name)}
+											value={newNama || null}
+											onChange={(_, newValue) => setNewNama(newValue ?? "")}
+											renderInput={(params) => (
+												<TextField
+													{...params}
+													placeholder="Pilih Nama"
+													size="small"
+													sx={{
+														"& .MuiOutlinedInput-root": {
+															borderRadius: "0.75rem",
+															backgroundColor: "rgba(255,255,255,0.98)",
+															fontSize: "0.875rem",
+															padding: "2px 8px !important", // Adjust padding match other inputs
+															"& fieldset": {
+																borderColor: "var(--glass-border)",
+															},
+															"&:hover fieldset": {
+																borderColor: "var(--brand)",
+															},
+															"&.Mui-focused fieldset": {
+																borderColor: "var(--brand)",
+																borderWidth: "2px",
+															},
+														},
+														"& input": {
+															textTransform: "uppercase",
+															letterSpacing: "0.025em",
+															padding: "4px 0 !important", // Adjust inner padding
+														},
+													}}
+												/>
+											)}
 										/>
 									</div>
 									<div className="flex flex-col gap-1">
@@ -661,14 +698,42 @@ export default function PengikisanPage() {
 											</td>
 
 											<td className="px-3 py-2">
-												<input
-													type="text"
-													value={row.nama}
-													onChange={(e) =>
-														handleChange(row.id, "nama", e.target.value)
+												<Autocomplete
+													options={workerOptions.map((w) => w.name)}
+													value={row.nama || null}
+													onChange={(_, newValue) =>
+														handleChange(row.id, "nama", newValue ?? "")
 													}
-													className="w-full px-2 py-1.5 rounded-lg border border-[var(--glass-border)] bg-[rgba(255,255,255,0.9)] text-sm outline-none focus:ring-2 focus:ring-[var(--brand)] focus:border-[var(--brand)]"
-													placeholder="Nama"
+													renderInput={(params) => (
+														<TextField
+															{...params}
+															placeholder="Nama"
+															size="small"
+															sx={{
+																"& .MuiOutlinedInput-root": {
+																	borderRadius: "0.5rem",
+																	backgroundColor: "rgba(255,255,255,0.9)",
+																	fontSize: "0.875rem",
+																	padding: "2px 8px !important",
+																	"& fieldset": {
+																		borderColor: "var(--glass-border)",
+																	},
+																	"&:hover fieldset": {
+																		borderColor: "var(--brand)",
+																	},
+																	"&.Mui-focused fieldset": {
+																		borderColor: "var(--brand)",
+																		borderWidth: "2px",
+																	},
+																},
+																"& input": {
+																	textTransform: "uppercase",
+																	letterSpacing: "0.025em",
+																	padding: "4px 0 !important",
+																},
+															}}
+														/>
+													)}
 												/>
 											</td>
 
