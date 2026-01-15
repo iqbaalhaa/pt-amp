@@ -45,6 +45,21 @@ const groups: Group[] = [
 				icon: <PrecisionManufacturingIcon fontSize="small" />,
 			},
 			{
+				label: "Penjemuran",
+				href: "/admin/ledger",
+				icon: <MenuBookIcon fontSize="small" />,
+			},
+			{
+				label: "Pengemasan",
+				href: "/admin/ledger",
+				icon: <MenuBookIcon fontSize="small" />,
+			},
+			{
+				label: "Pemotongan",
+				href: "/admin/ledger",
+				icon: <MenuBookIcon fontSize="small" />,
+			},
+			{
 				label: "Pembukuan",
 				href: "/admin/ledger",
 				icon: <MenuBookIcon fontSize="small" />,

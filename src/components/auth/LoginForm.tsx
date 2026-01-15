@@ -1,16 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react";
+import { Loader2, Mail, Lock, Eye, EyeOff, AlertTriangle } from "lucide-react";
 
 export function LoginForm() {
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
+	const [showPw, setShowPw] = useState(false);
 	const [isLoading, setIsLoading] = useState(false);
 	const [error, setError] = useState("");
 	const router = useRouter();
+
+	const canSubmit = useMemo(() => {
+		if (isLoading) return false;
+		if (!email.trim() || !password) return false;
+		return true;
+	}, [email, password, isLoading]);
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
@@ -18,14 +25,11 @@ export function LoginForm() {
 		setError("");
 
 		await authClient.signIn.email(
-			{
-				email,
-				password,
-			},
+			{ email, password },
 			{
 				onSuccess: () => {
 					router.push("/admin");
-                    router.refresh();
+					router.refresh();
 				},
 				onError: (ctx) => {
 					setError(ctx.error.message);
@@ -36,51 +40,123 @@ export function LoginForm() {
 	};
 
 	return (
-		<form onSubmit={handleSubmit} className="space-y-4">
-			{error && (
-				<div className="bg-red-50 text-red-600 text-sm p-3 rounded-lg">
-					{error}
+		<div className="w-full">
+			{/* Corporate card */}
+			<div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
+				{/* Header */}
+				<div className="mb-6">
+					<div className="inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1 text-xs text-zinc-700">
+						<span className="h-2 w-2 rounded-full bg-emerald-500" />
+						Admin Portal
+					</div>
+
+					<h2 className="mt-3 text-2xl font-semibold tracking-tight text-zinc-900">
+						Masuk ke Dashboard
+					</h2>
+					<p className="mt-1 text-sm text-zinc-600">
+						Gunakan kredensial admin perusahaan.
+					</p>
 				</div>
-			)}
-			
-			<div className="space-y-2">
-				<label className="text-sm font-medium text-zinc-700">Email</label>
-				<input
-					type="email"
-					required
-					value={email}
-					onChange={(e) => setEmail(e.target.value)}
-					className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--brand)] focus:border-transparent"
-					placeholder="nama@perusahaan.com"
-				/>
-			</div>
 
-			<div className="space-y-2">
-				<label className="text-sm font-medium text-zinc-700">Password</label>
-				<input
-					type="password"
-					required
-					value={password}
-					onChange={(e) => setPassword(e.target.value)}
-					className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--brand)] focus:border-transparent"
-					placeholder="••••••••"
-				/>
-			</div>
-
-			<button
-				type="submit"
-				disabled={isLoading}
-				className="w-full bg-zinc-900 text-white py-2.5 rounded-lg hover:bg-zinc-800 transition-colors font-medium flex items-center justify-center"
-			>
-				{isLoading ? (
-					<>
-						<Loader2 className="w-4 h-4 mr-2 animate-spin" />
-						Memproses...
-					</>
-				) : (
-					"Masuk"
+				{/* Error */}
+				{error && (
+					<div className="mb-5 flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-red-700">
+						<AlertTriangle className="mt-0.5 h-4 w-4 flex-none" />
+						<div className="text-sm leading-relaxed">{error}</div>
+					</div>
 				)}
-			</button>
-		</form>
+
+				<form onSubmit={handleSubmit} className="space-y-4">
+					{/* Email */}
+					<div className="space-y-2">
+						<label className="text-sm font-medium text-zinc-800">Email</label>
+						<div className="relative">
+							<Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
+							<input
+								type="email"
+								required
+								value={email}
+								onChange={(e) => setEmail(e.target.value)}
+								placeholder="nama@perusahaan.com"
+								className="h-11 w-full rounded-xl border border-zinc-200 bg-white pl-10 pr-3 text-sm text-zinc-900 shadow-sm outline-none transition
+                           placeholder:text-zinc-400
+                           focus:border-[var(--brand)] focus:ring-4 focus:ring-[var(--brand)]/15"
+							/>
+						</div>
+					</div>
+
+					{/* Password */}
+					<div className="space-y-2">
+						<label className="text-sm font-medium text-zinc-800">
+							Password
+						</label>
+						<div className="relative">
+							<Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
+							<input
+								type={showPw ? "text" : "password"}
+								required
+								value={password}
+								onChange={(e) => setPassword(e.target.value)}
+								placeholder="••••••••"
+								className="h-11 w-full rounded-xl border border-zinc-200 bg-white pl-10 pr-11 text-sm text-zinc-900 shadow-sm outline-none transition
+                           placeholder:text-zinc-400
+                           focus:border-[var(--brand)] focus:ring-4 focus:ring-[var(--brand)]/15"
+							/>
+							<button
+								type="button"
+								onClick={() => setShowPw((s) => !s)}
+								className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-2 text-zinc-500 transition hover:bg-zinc-100 hover:text-zinc-900"
+								aria-label={
+									showPw ? "Sembunyikan password" : "Tampilkan password"
+								}
+							>
+								{showPw ? (
+									<EyeOff className="h-4 w-4" />
+								) : (
+									<Eye className="h-4 w-4" />
+								)}
+							</button>
+						</div>
+
+						<div className="flex items-center justify-between pt-1">
+							<span className="text-xs text-zinc-500">
+								Pastikan caps lock tidak aktif.
+							</span>
+							<a
+								href="#"
+								className="text-xs font-medium text-[var(--brand)] hover:opacity-80"
+							>
+								Lupa password?
+							</a>
+						</div>
+					</div>
+
+					{/* Button (FIXED) */}
+					<button
+						type="submit"
+						disabled={!canSubmit}
+						className="h-11 w-full rounded-xl bg-[var(--brand)] px-4 text-sm font-semibold text-white shadow-sm
+                       transition hover:brightness-95 active:brightness-90
+                       disabled:cursor-not-allowed disabled:opacity-60"
+					>
+						<span className="inline-flex items-center justify-center gap-2">
+							{isLoading ? (
+								<>
+									<Loader2 className="h-4 w-4 animate-spin" />
+									Memproses...
+								</>
+							) : (
+								"Masuk"
+							)}
+						</span>
+					</button>
+
+					<div className="pt-1 text-center text-xs text-zinc-500">
+						© {new Date().getFullYear()} PT. Aurora Mitra Prakarsa. Akses
+						terbatas untuk admin.
+					</div>
+				</form>
+			</div>
+		</div>
 	);
 }
