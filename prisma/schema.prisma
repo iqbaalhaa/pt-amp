@@ -314,6 +314,61 @@ model PengikisanItem {
   @@map("pengikisan_items")
 }
 
+// 7. PENJEMURAN
+model Penjemuran {
+  id        BigInt             @id @default(autoincrement())
+  date      DateTime           @db.Date
+  notes     String?
+  totalUpah Decimal?           @db.Decimal(14, 2) @map("total_upah")
+  upahPerHari      Decimal?    @db.Decimal(14, 2) @map("upah_per_hari")
+  upahLemburPerJam Decimal?    @db.Decimal(14, 2) @map("upah_lembur_per_jam")
+
+  penjemuranItems PenjemuranItem[]
+
+  @@map("penjemuran")
+}
+
+model PenjemuranItem {
+  id            BigInt    @id @default(autoincrement())
+  penjemuranId  BigInt    @map("penjemuran_id")
+  nama          String
+  hari          Decimal   @db.Decimal(10, 2)
+  lemburJam     Decimal   @db.Decimal(10, 2) @map("lembur_jam")
+  upahPerHari   Decimal   @db.Decimal(14, 2) @map("upah_per_hari")
+  upahLemburPerJam Decimal @db.Decimal(14, 2) @map("upah_lembur_per_jam")
+  total         Decimal   @db.Decimal(14, 2)
+
+  penjemuran Penjemuran @relation(fields: [penjemuranId], references: [id], onDelete: Cascade)
+
+  @@map("penjemuran_items")
+}
+
+// 8. PENGEMASAN
+model Pengemasan {
+  id        BigInt   @id @default(autoincrement())
+  date      DateTime @db.Date
+  notes     String?
+  totalUpah Decimal? @db.Decimal(14, 2) @map("total_upah")
+  upahPerBungkus Decimal? @db.Decimal(14, 2) @map("upah_per_bungkus")
+
+  pengemasanItems PengemasanItem[]
+
+  @@map("pengemasan")
+}
+
+model PengemasanItem {
+  id            BigInt   @id @default(autoincrement())
+  pengemasanId  BigInt   @map("pengemasan_id")
+  nama          String
+  bungkus       Decimal  @db.Decimal(10, 2)
+  upahPerBungkus Decimal @db.Decimal(14, 2) @map("upah_per_bungkus")
+  total         Decimal  @db.Decimal(14, 2)
+
+  pengemasan Pengemasan @relation(fields: [pengemasanId], references: [id], onDelete: Cascade)
+
+  @@map("pengemasan_items")
+}
+
 // =========================================================
 // CMS / WEBSITE (Keep existing)
 // =========================================================

@@ -21,6 +21,9 @@ import SettingsIcon from "@mui/icons-material/Settings";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import PrecisionManufacturingIcon from "@mui/icons-material/PrecisionManufacturing";
+import WbSunnyIcon from "@mui/icons-material/WbSunny";
+import InventoryIcon from "@mui/icons-material/Inventory";
+import ContentCutIcon from "@mui/icons-material/ContentCut";
 
 type Item = { label: string; href: string; icon: React.ReactNode };
 type Group = { title: string; items: Item[] };
@@ -46,18 +49,18 @@ const groups: Group[] = [
 			},
 			{
 				label: "Penjemuran",
-				href: "/admin/ledger",
-				icon: <MenuBookIcon fontSize="small" />,
+				href: "/admin/penjemuran",
+				icon: <WbSunnyIcon fontSize="small" />,
 			},
 			{
 				label: "Pengemasan",
-				href: "/admin/ledger",
-				icon: <MenuBookIcon fontSize="small" />,
+				href: "/admin/pengemasan",
+				icon: <InventoryIcon fontSize="small" />,
 			},
 			{
 				label: "Pemotongan",
 				href: "/admin/ledger",
-				icon: <MenuBookIcon fontSize="small" />,
+				icon: <ContentCutIcon fontSize="small" />,
 			},
 			{
 				label: "Pembukuan",
@@ -233,20 +236,20 @@ export default function GlassSidebar({
 								</AnimatePresence>
 								<div className="flex flex-col gap-1">
 									{g.items.map((it) => {
-										const active = isActive(it.href);
+										const isItemActive = isActive(it.href);
 										return (
 											<Link
-												key={it.href}
+												key={`${g.title}-${it.label}`}
 												href={it.href}
 												className={`flex items-center gap-2 px-3 py-2 rounded-xl transition-colors ${
-													active
+													isItemActive
 														? "bg-[rgba(213,14,12,0.12)] text-[var(--brand)]"
 														: "hover:bg-[rgba(255,255,255,0.06)] text-primary"
 												}`}
 											>
 												<div
 													className={`w-6 h-6 flex items-center justify-center ${
-														active ? "text-[var(--brand)]" : "text-black"
+														isItemActive ? "text-[var(--brand)]" : "text-black"
 													}`}
 												>
 													{it.icon}
@@ -264,7 +267,7 @@ export default function GlassSidebar({
 														</motion.span>
 													)}
 												</AnimatePresence>
-												{active && (
+												{isItemActive && (
 													<span className="ml-auto w-1.5 h-1.5 rounded-full bg-[var(--brand)] shadow-[0_0_12px_rgba(213,14,12,0.8)]" />
 												)}
 											</Link>
