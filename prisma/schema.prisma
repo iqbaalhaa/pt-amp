@@ -5,9 +5,9 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
   previewFeatures = ["driverAdapters"]
-  output   = "../src/generated/prisma"
+  output          = "../src/generated/prisma"
 }
 
 datasource db {
@@ -531,6 +531,34 @@ model FeatureCard {
   updatedAt   DateTime @updatedAt
 
   @@map("feature_cards")
+}
+
+model GalleryAlbum {
+  id          String         @id @default(cuid())
+  title       String
+  description String
+  coverImage  String
+  order       Int            @default(0)
+  items       GalleryMedia[]
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@map("gallery_albums")
+}
+
+model GalleryMedia {
+  id        String       @id @default(cuid())
+  type      String
+  src       String
+  thumbnail String?
+  caption   String?
+  order     Int          @default(0)
+  albumId   String
+  album     GalleryAlbum @relation(fields: [albumId], references: [id], onDelete: Cascade)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  @@map("gallery_media")
 }
 
 // =========================================================

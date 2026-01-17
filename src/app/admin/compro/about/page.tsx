@@ -1,5 +1,15 @@
 import AboutPage from "@/components/pages/about/AboutPage";
-import { getAboutPageData, updateAboutPage, createAboutPoint, deleteAboutPoint, getFeatureCards, createFeatureCard, deleteFeatureCard } from "@/actions/cms-actions";
+import {
+  getAboutPageData,
+  updateAboutPage,
+  createAboutPoint,
+  deleteAboutPoint,
+  updateAboutPoint,
+  getFeatureCards,
+  createFeatureCard,
+  deleteFeatureCard,
+  updateFeatureCard,
+} from "@/actions/cms-actions";
 
 export default async function AdminAboutPage() {
   const [about, valueCards] = await Promise.all([

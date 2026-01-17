@@ -10,7 +10,6 @@ import {
 	Alert,
 	Divider,
 } from "@mui/material";
-import Grid from "@mui/material/Grid";
 import SaveIcon from "@mui/icons-material/Save";
 import PrintIcon from "@mui/icons-material/Print";
 import DownloadIcon from "@mui/icons-material/Download";
@@ -298,14 +297,7 @@ export default function PurchaseForm({ products }: Props) {
 	const invoicePrintRef = useRef<HTMLDivElement>(null);
 
 	const handlePrint = useReactToPrint({
-		content: () => invoicePrintRef.current,
-		documentTitle: `nota-purchase-${date || "draft"}`,
-		removeAfterPrint: true,
-		pageStyle: `
-      @page { size: ${A6_W_MM}mm ${A6_H_MM}mm; margin: ${PRINT_MARGIN_MM}mm; }
-      html, body { margin: 0; padding: 0; }
-      * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    `,
+		contentRef: invoicePrintRef,
 	});
 
 	const handleDownloadPdf = async () => {
@@ -369,28 +361,34 @@ export default function PurchaseForm({ products }: Props) {
 
 	const canExport = invoiceItems.length > 0;
 
-	return (
+		return (
 		<Box component="form" onSubmit={handleSubmit}>
 			{/* 2 kolom md+: jangan wrap */}
-			<Grid
-				container
-				spacing={2}
-				alignItems="flex-start"
-				sx={{ flexWrap: { xs: "wrap", md: "nowrap" } }}
+			<Box
+				sx={{
+					display: "flex",
+					flexDirection: { xs: "column", md: "row" },
+					gap: 2,
+					alignItems: "flex-start",
+				}}
 			>
 				{/* KIRI */}
-				<Grid item xs={12} md sx={{ minWidth: 0 }}>
+				<Box sx={{ flex: 1, minWidth: 0 }}>
 					<Stack spacing={3}>
-						<Grid container spacing={2}>
-							<Grid item xs={12}>
-								<TextField
-									fullWidth
-									label="Nama Pemilik Barang"
-									value={supplier}
-									onChange={(e) => setSupplier(e.target.value)}
-								/>
-							</Grid>
-							<Grid item xs={12} md={6}>
+						<Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+							<TextField
+								fullWidth
+								label="Nama Pemilik Barang"
+								value={supplier}
+								onChange={(e) => setSupplier(e.target.value)}
+							/>
+							<Box
+								sx={{
+									display: "flex",
+									flexDirection: { xs: "column", md: "row" },
+									gap: 2,
+								}}
+							>
 								<TextField
 									type="date"
 									label="Tanggal"
@@ -399,30 +397,26 @@ export default function PurchaseForm({ products }: Props) {
 									onChange={(e) => setDate(e.target.value)}
 									InputLabelProps={{ shrink: true }}
 								/>
-							</Grid>
-							<Grid item xs={12} md={6}>
 								<TextField
 									fullWidth
 									label="Catatan"
 									value={notes}
 									onChange={(e) => setNotes(e.target.value)}
 								/>
-							</Grid>
-						</Grid>
+							</Box>
+						</Box>
 
 						<Box>
-							<Grid container spacing={2} sx={{ mb: 2 }}>
-								<Grid item xs={12}>
-									<Box sx={{ overflowX: "auto" }}>
-										<GlassTable columns={columns1} data={items.slice(0, 6)} />
-									</Box>
-								</Grid>
-								<Grid item xs={12}>
-									<Box sx={{ overflowX: "auto" }}>
-										<GlassTable columns={columns2} data={items.slice(6, 12)} />
-									</Box>
-								</Grid>
-							</Grid>
+							<Box sx={{ mb: 2 }}>
+								<Box sx={{ overflowX: "auto" }}>
+									<GlassTable columns={columns1} data={items.slice(0, 6)} />
+								</Box>
+							</Box>
+							<Box sx={{ mb: 2 }}>
+								<Box sx={{ overflowX: "auto" }}>
+									<GlassTable columns={columns2} data={items.slice(6, 12)} />
+								</Box>
+							</Box>
 
 							<Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}>
 								<Typography variant="h6" sx={{ fontWeight: 700 }}>
@@ -438,13 +432,10 @@ export default function PurchaseForm({ products }: Props) {
 							</GlassButton>
 						</Box>
 					</Stack>
-				</Grid>
+				</Box>
 
 				{/* KANAN */}
-				<Grid
-					item
-					xs={12}
-					md="auto"
+				<Box
 					sx={{
 						flexShrink: 0,
 						width: { md: 420 },
@@ -527,8 +518,8 @@ export default function PurchaseForm({ products }: Props) {
 							)}
 						</Stack>
 					</Box>
-				</Grid>
-			</Grid>
+				</Box>
+			</Box>
 
 			{/* NODE KHUSUS PRINT/PDF: disembunyikan, TANPA SCALE */}
 			<Box

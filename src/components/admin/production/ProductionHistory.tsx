@@ -81,14 +81,16 @@ export default function ProductionHistory({
 		};
 	};
 
-	const getStatusVariant = (status: string) => {
+	const getStatusVariant = (
+		status: string
+	): "success" | "warning" | "danger" | "info" | "neutral" => {
 		switch (status) {
 			case "completed":
 				return "success";
 			case "cancelled":
 				return "danger";
 			default:
-				return "default";
+				return "neutral";
 		}
 	};
 
@@ -108,10 +110,9 @@ export default function ProductionHistory({
 		{
 			header: "Status",
 			cell: (row) => (
-				<StatusBadge
-					status={row.status}
-					variant={getStatusVariant(row.status)}
-				/>
+				<StatusBadge status={getStatusVariant(row.status)}>
+					{row.status}
+				</StatusBadge>
 			),
 		},
 		{

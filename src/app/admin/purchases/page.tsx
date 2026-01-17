@@ -1,5 +1,4 @@
 import { Paper, Stack, Typography, Box } from "@mui/material";
-import Grid from "@mui/material/Grid";
 import PurchaseForm from "@/components/admin/purchases/PurchaseForm";
 import PurchaseHistory from "@/components/admin/purchases/PurchaseHistory";
 import { prisma } from "@/lib/prisma";
@@ -28,17 +27,15 @@ export default async function AdminPurchasesPage() {
 				</Typography>
 			</Box>
 
-			<Grid container spacing={2}>
-				<Grid item xs={12}>
-					<Paper sx={{ p: 2, borderRadius: 2 }}>
-						<PurchaseForm products={productOptions} />
-					</Paper>
-				</Grid>
+			<Box>
+				<Paper sx={{ p: 2, borderRadius: 2 }}>
+					<PurchaseForm products={productOptions} />
+				</Paper>
+			</Box>
 
-				{/* <Grid item xs={12}>
-					<PurchaseHistory purchases={purchases} />
-				</Grid> */}
-			</Grid>
+			{/* <Box>
+				<PurchaseHistory purchases={purchases} />
+			</Box> */}
 		</Stack>
 	);
 }

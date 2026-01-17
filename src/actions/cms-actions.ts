@@ -214,6 +214,8 @@ export async function createFeatureCard(formData: FormData) {
   revalidatePath("/");
   revalidatePath("/admin/cms/pages/home");
   revalidatePath("/admin/compro/about");
+  revalidatePath("/gallery");
+  revalidatePath("/admin/compro/gallery");
 }
 
 export async function deleteFeatureCard(id: string) {
@@ -221,6 +223,8 @@ export async function deleteFeatureCard(id: string) {
   revalidatePath("/");
   revalidatePath("/admin/cms/pages/home");
   revalidatePath("/admin/compro/about");
+  revalidatePath("/gallery");
+  revalidatePath("/admin/compro/gallery");
 }
 
 export async function updateFeatureCard(id: string, formData: FormData) {
@@ -238,6 +242,8 @@ export async function updateFeatureCard(id: string, formData: FormData) {
   revalidatePath("/");
   revalidatePath("/admin/cms/pages/home");
   revalidatePath("/admin/compro/about");
+  revalidatePath("/gallery");
+  revalidatePath("/admin/compro/gallery");
 }
 
 export async function createAboutPoint(formData: FormData) {
@@ -274,4 +280,205 @@ export async function updateAboutPoint(id: string, formData: FormData) {
 
   revalidatePath("/about");
   revalidatePath("/admin/compro/about");
+}
+
+export async function getGalleryAlbums() {
+  const client: any = prisma;
+  if (!client.galleryAlbum) {
+    return [];
+  }
+
+  return await client.galleryAlbum.findMany({
+    include: {
+      items: {
+        orderBy: {
+          order: "asc",
+        },
+      },
+    },
+    orderBy: {
+      order: "asc",
+    },
+  });
+}
+
+export async function createGalleryAlbum(formData: FormData) {
+  const title = (formData.get("title") as string) || "";
+  const description = (formData.get("description") as string) || "";
+  let coverImage = (formData.get("coverImage") as string) || "";
+  const orderRaw = (formData.get("order") as string) || "0";
+  const order = Number(orderRaw) || 0;
+
+  const file = formData.get("coverFile") as File | null;
+  if (file && file.size > 0) {
+    const uploaded = await saveUploadToPublic(file);
+    if (uploaded) coverImage = uploaded;
+  }
+
+  if (!coverImage) {
+    return;
+  }
+
+  const client: any = prisma;
+  if (!client.galleryAlbum) {
+    return;
+  }
+
+  await client.galleryAlbum.create({
+    data: {
+      title,
+      description,
+      coverImage,
+      order,
+    },
+  });
+
+  revalidatePath("/gallery");
+  revalidatePath("/admin/compro/gallery");
+}
+
+export async function updateGalleryAlbum(id: string, formData: FormData) {
+  const title = (formData.get("title") as string) || "";
+  const description = (formData.get("description") as string) || "";
+  let coverImage = (formData.get("coverImage") as string) || "";
+  const orderRaw = (formData.get("order") as string) || "0";
+  const order = Number(orderRaw) || 0;
+
+  const file = formData.get("coverFile") as File | null;
+  if (file && file.size > 0) {
+    const uploaded = await saveUploadToPublic(file);
+    if (uploaded) coverImage = uploaded;
+  }
+
+  const client: any = prisma;
+  if (!client.galleryAlbum) {
+    return;
+  }
+
+  const data: any = {
+    title,
+    description,
+    order,
+  };
+
+  if (coverImage) {
+    data.coverImage = coverImage;
+  }
+
+  await client.galleryAlbum.update({
+    where: { id },
+    data,
+  });
+
+  revalidatePath("/gallery");
+  revalidatePath("/admin/compro/gallery");
+}
+
+export async function deleteGalleryAlbum(id: string) {
+  const client: any = prisma;
+  if (!client.galleryAlbum) {
+    return;
+  }
+
+  await client.galleryAlbum.delete({
+    where: { id },
+  });
+
+  revalidatePath("/gallery");
+  revalidatePath("/admin/compro/gallery");
+}
+
+export async function createGalleryMedia(formData: FormData) {
+  const albumId = (formData.get("albumId") as string) || "";
+  let type = (formData.get("type") as string) || "image";
+  let src = (formData.get("src") as string) || "";
+  const caption = (formData.get("caption") as string) || "";
+  const thumbnail = (formData.get("thumbnail") as string) || "";
+  const orderRaw = (formData.get("order") as string) || "0";
+  const order = Number(orderRaw) || 0;
+
+  const file = formData.get("file") as File | null;
+  if (file && file.size > 0) {
+    if (file.type.startsWith("video/")) {
+      type = "video";
+    } else if (file.type.startsWith("image/")) {
+      type = "image";
+    }
+    const uploaded = await saveUploadToPublic(file);
+    if (uploaded) src = uploaded;
+  }
+
+  if (!albumId) return;
+
+  const client: any = prisma;
+  if (!client.galleryMedia) {
+    return;
+  }
+
+  await client.galleryMedia.create({
+    data: {
+      albumId,
+      type,
+      src,
+      caption,
+      thumbnail: thumbnail || null,
+      order,
+    },
+  });
+
+  revalidatePath("/gallery");
+  revalidatePath("/admin/compro/gallery");
+}
+
+export async function updateGalleryMedia(id: string, formData: FormData) {
+  let type = (formData.get("type") as string) || "image";
+  let src = (formData.get("src") as string) || "";
+  const caption = (formData.get("caption") as string) || "";
+  const thumbnail = (formData.get("thumbnail") as string) || "";
+  const orderRaw = (formData.get("order") as string) || "0";
+  const order = Number(orderRaw) || 0;
+
+  const file = formData.get("file") as File | null;
+  if (file && file.size > 0) {
+    if (file.type.startsWith("video/")) {
+      type = "video";
+    } else if (file.type.startsWith("image/")) {
+      type = "image";
+    }
+    const uploaded = await saveUploadToPublic(file);
+    if (uploaded) src = uploaded;
+  }
+
+  const client: any = prisma;
+  if (!client.galleryMedia) {
+    return;
+  }
+
+  await client.galleryMedia.update({
+    where: { id },
+    data: {
+      type,
+      src,
+      caption,
+      thumbnail: thumbnail || null,
+      order,
+    },
+  });
+
+  revalidatePath("/gallery");
+  revalidatePath("/admin/compro/gallery");
+}
+
+export async function deleteGalleryMedia(id: string) {
+  const client: any = prisma;
+  if (!client.galleryMedia) {
+    return;
+  }
+
+  await client.galleryMedia.delete({
+    where: { id },
+  });
+
+  revalidatePath("/gallery");
+  revalidatePath("/admin/compro/gallery");
 }

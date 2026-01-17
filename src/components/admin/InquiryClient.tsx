@@ -58,7 +58,9 @@ export default function InquiryClient({
 		}
 	};
 
-	const getStatusVariant = (status: InquiryStatus) => {
+	const getStatusVariant = (
+		status: InquiryStatus
+	): "success" | "warning" | "danger" | "info" | "neutral" => {
 		switch (status) {
 			case "NEW":
 				return "danger";
@@ -67,7 +69,7 @@ export default function InquiryClient({
 			case "REPLIED":
 				return "success";
 			default:
-				return "default";
+				return "neutral";
 		}
 	};
 
@@ -98,9 +100,10 @@ export default function InquiryClient({
 			header: "Status",
 			cell: (row) => (
 				<StatusBadge
-					status={row.status}
-					variant={getStatusVariant(row.status)}
-				/>
+					status={getStatusVariant(row.status)}
+				>
+					{row.status}
+				</StatusBadge>
 			),
 		},
 	];

@@ -1,4 +1,3 @@
-import { Navbar } from "@/components/Navbar";
 import { listPosts } from "@/lib/blog";
 import Link from "next/link";
 import { Calendar, User, ArrowRight, FileText } from "lucide-react";
@@ -16,8 +15,6 @@ export default async function BlogPage() {
 
   return (
     <div className="flex flex-col flex-1">
-      <Navbar />
-      {/* Hero Header */}
       <section className="bg-zinc-50 border-b border-zinc-200 py-20 md:py-28">
         <div className="container mx-auto px-4 md:px-6 lg:px-8 text-center">
           <span className="text-[var(--brand)] font-semibold tracking-wider text-sm uppercase mb-3 block">

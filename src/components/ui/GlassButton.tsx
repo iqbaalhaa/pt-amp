@@ -14,6 +14,8 @@ type Size = "sm" | "md" | "lg" | "icon";
 type Props = HTMLMotionProps<"button"> & {
 	variant?: Variant;
 	size?: Size;
+	as?: React.ElementType;
+	href?: string;
 };
 
 export default function GlassButton({
@@ -21,6 +23,7 @@ export default function GlassButton({
 	size = "md",
 	className,
 	children,
+	as,
 	...rest
 }: Props) {
 	const base =
@@ -48,14 +51,17 @@ export default function GlassButton({
 			"text-white bg-amber-500 hover:bg-amber-600 active:scale-95 shadow-[0_4px_12px_rgba(245,158,11,0.3)]",
 	};
 
+	const MotionComponent =
+		as != null ? motion(as as React.ElementType) : motion.button;
+
 	return (
-		<motion.button
+		<MotionComponent
 			whileHover={{ scale: size === "icon" ? 1.1 : 1.02 }}
 			whileTap={{ scale: 0.95 }}
 			className={`${base} ${sizes[size]} ${styles[variant]} ${className ?? ""}`}
 			{...rest}
 		>
 			{children}
-		</motion.button>
+		</MotionComponent>
 	);
 }
