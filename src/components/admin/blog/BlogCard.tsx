@@ -1,9 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { motion } from "framer-motion";
-import { Calendar, User, Eye, EyeOff, FileText, Image as ImageIcon } from "lucide-react";
+import { Calendar, User, Eye, EyeOff, FileText, Image as ImageIcon, Trash2, Globe } from "lucide-react";
 import BlogModal from "./BlogModal";
+import { deletePost, togglePublish } from "@/actions/blog-actions";
+import { useRouter } from "next/navigation";
+import Modal from "@/components/ui/Modal";
+import GlassButton from "@/components/ui/GlassButton";
 
 interface Post {
   id: string;
@@ -28,12 +32,46 @@ interface BlogCardProps {
 
 export default function BlogCard({ post, currentUserId }: BlogCardProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isPending, startTransition] = useTransition();
+  const router = useRouter();
 
   const formatDate = (date: Date) => {
     return new Date(date).toLocaleDateString("id-ID", {
       day: "numeric",
       month: "short",
       year: "numeric",
+    });
+  };
+
+  const handleTogglePublish = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    startTransition(async () => {
+      try {
+        await togglePublish(post.id, post.published);
+        router.refresh();
+      } catch (error) {
+        console.error("Error toggling publish:", error);
+        alert("Gagal mengubah status publikasi");
+      }
+    });
+  };
+
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsDeleteModalOpen(true);
+  };
+
+  const confirmDelete = () => {
+    startTransition(async () => {
+      try {
+        await deletePost(post.id);
+        router.refresh();
+        setIsDeleteModalOpen(false);
+      } catch (error) {
+        console.error("Error deleting post:", error);
+        alert("Gagal menghapus artikel");
+      }
     });
   };
 
@@ -95,6 +133,35 @@ export default function BlogCard({ post, currentUserId }: BlogCardProps) {
             <span className="text-xs font-medium text-[var(--brand)] flex items-center gap-1 group-hover:underline">
               Edit Artikel
             </span>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                <span className={`text-[10px] uppercase font-bold ${post.published ? "text-green-600" : "text-zinc-400"}`}>
+                  {post.published ? "Publish" : "Private"}
+                </span>
+                <button
+                  onClick={handleTogglePublish}
+                  disabled={isPending}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--brand)] focus:ring-offset-2 border ${
+                    post.published ? "bg-green-500 border-transparent" : "bg-zinc-200 border-zinc-200"
+                  }`}
+                  title={post.published ? "Unpublish" : "Publish"}
+                >
+                  <span
+                    className={`${
+                      post.published ? "translate-x-6" : "translate-x-1"
+                    } inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-200 ease-in-out shadow-sm`}
+                  />
+                </button>
+              </div>
+              <button
+                onClick={handleDelete}
+                disabled={isPending}
+                className="p-1.5 rounded-md text-red-400 hover:bg-red-50 hover:text-red-600 transition-colors"
+                title="Hapus"
+              >
+                <Trash2 size={16} />
+              </button>
+            </div>
           </div>
         </div>
       </motion.div>
@@ -105,6 +172,34 @@ export default function BlogCard({ post, currentUserId }: BlogCardProps) {
         post={post}
         authorId={currentUserId}
       />
+
+      <Modal
+        open={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        title="Hapus Artikel"
+      >
+        <div className="flex flex-col gap-4">
+          <p className="text-zinc-600">
+            Apakah Anda yakin ingin menghapus artikel <strong>"{post.title}"</strong>? Tindakan ini tidak dapat dibatalkan.
+          </p>
+          <div className="flex justify-end gap-2 mt-2">
+            <GlassButton 
+              variant="secondary" 
+              onClick={() => setIsDeleteModalOpen(false)}
+              disabled={isPending}
+            >
+              Batal
+            </GlassButton>
+            <GlassButton 
+              variant="danger" 
+              onClick={confirmDelete}
+              disabled={isPending}
+            >
+              {isPending ? "Menghapus..." : "Hapus"}
+            </GlassButton>
+          </div>
+        </div>
+      </Modal>
     </>
   );
 }

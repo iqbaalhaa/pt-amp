@@ -7,10 +7,10 @@ import { ReadingProgress } from "@/components/ReadingProgress";
 type Props = { slug: string };
 
 export default async function BlogDetailPage({ slug }: Props) {
-	const post = getPost(slug);
+	const post = await getPost(slug);
 	if (!post) return notFound();
 
-    const relatedPosts = getRelatedPosts(slug, 3);
+    const relatedPosts = await getRelatedPosts(slug, 3);
 
     // Calculate reading time (rough estimate: 200 words per minute)
     const wordCount = post.content.split(/\s+/).length;

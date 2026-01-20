@@ -98,9 +98,8 @@ export async function createPost(formData: FormData) {
     },
   });
 
-  revalidatePath("/blog");
   revalidatePath("/admin/compro/blog");
-  return { success: true };
+  revalidatePath("/blog");
 }
 
 export async function updatePost(id: string, formData: FormData) {
@@ -116,10 +115,6 @@ export async function updatePost(id: string, formData: FormData) {
     if (uploaded) image = uploaded;
   }
 
-  // Update slug if title changed (optional, maybe better not to change slug to preserve SEO)
-  // For now, let's keep slug stable unless explicitly requested, but here we just keep it as is.
-  // Or we can regenerate if needed. Let's stick to stable slug for now.
-  
   await prisma.post.update({
     where: { id },
     data: {
@@ -130,8 +125,8 @@ export async function updatePost(id: string, formData: FormData) {
     },
   });
 
-  revalidatePath("/blog");
   revalidatePath("/admin/compro/blog");
+  revalidatePath("/blog");
   return { success: true };
 }
 
@@ -140,9 +135,20 @@ export async function deletePost(id: string) {
     where: { id },
   });
 
-  revalidatePath("/blog");
   revalidatePath("/admin/compro/blog");
-  return { success: true };
+  revalidatePath("/blog");
+}
+
+export async function togglePublish(id: string, currentState: boolean) {
+  await prisma.post.update({
+    where: { id },
+    data: {
+      published: !currentState,
+    },
+  });
+
+  revalidatePath("/admin/compro/blog");
+  revalidatePath("/blog");
 }
 
 export async function uploadImage(formData: FormData) {

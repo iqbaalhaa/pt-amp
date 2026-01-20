@@ -1,48 +1,49 @@
 import { Stack, Typography, Box } from "@mui/material";
 import Grid from "@mui/material/Grid";
-import GlassButton from "@/components/ui/GlassButton";
-import GlassCard from "@/components/ui/GlassCard";
+import UserCard from "@/components/admin/users/UserCard";
+import AddUserButton from "@/components/admin/users/AddUserButton";
+import { getUsers } from "@/actions/user-actions";
 
-export default function UsersPage() {
-	return (
-		<Stack spacing={3}>
-			<Box>
-				<Typography variant="h4" sx={{ fontWeight: 800 }}>
-					Users
-				</Typography>
-				<Typography variant="body2" sx={{ color: "text.secondary" }}>
-					Manajemen akun dan peran staff
-				</Typography>
-			</Box>
+export const dynamic = "force-dynamic";
 
-			<Grid container spacing={2}>
-				<Grid size={{ xs: 12, md: 8 }}>
-					<GlassCard className="p-4">
-						<Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>
-							Daftar Staff
-						</Typography>
-						<Typography variant="body2" sx={{ color: "text.secondary", mb: 2 }}>
-							Placeholder: tabel staff akan ditampilkan di sini.
-						</Typography>
-						<GlassButton variant="ghost">
-							Export
-						</GlassButton>
-					</GlassCard>
-				</Grid>
-				<Grid size={{ xs: 12, md: 4 }}>
-					<GlassCard className="p-4 bg-red-glass">
-						<Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>
-							Tambah Staff
-						</Typography>
-						<Typography variant="body2" sx={{ color: "text.secondary", mb: 2 }}>
-							Placeholder: form pembuatan staff singkat.
-						</Typography>
-						<GlassButton variant="primary">
-							Buat Akun
-						</GlassButton>
-					</GlassCard>
-				</Grid>
-			</Grid>
-		</Stack>
-	);
+export default async function UsersPage() {
+  const { users, error } = await getUsers();
+
+  return (
+    <Stack spacing={3}>
+      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <Box>
+          <Typography variant="h4" sx={{ fontWeight: 800 }}>
+            Users
+          </Typography>
+          <Typography variant="body2" sx={{ color: "text.secondary" }}>
+            Manajemen akun dan peran staff
+          </Typography>
+        </Box>
+        <AddUserButton />
+      </Box>
+
+      {error ? (
+        <Box className="p-4 bg-red-50 text-red-600 rounded-lg">
+          {error}
+        </Box>
+      ) : (
+        <Grid container spacing={3}>
+          {users?.map((user) => (
+            <Grid key={user.id} size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+              <UserCard user={user} />
+            </Grid>
+          ))}
+          
+          {users?.length === 0 && (
+            <Grid size={{ xs: 12 }}>
+                <div className="text-center py-20 bg-zinc-50 rounded-xl border border-dashed border-zinc-300">
+                    <p className="text-zinc-500">Belum ada user terdaftar.</p>
+                </div>
+            </Grid>
+          )}
+        </Grid>
+      )}
+    </Stack>
+  );
 }

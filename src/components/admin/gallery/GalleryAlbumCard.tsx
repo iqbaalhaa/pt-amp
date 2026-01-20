@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Album } from "@/components/GalleryAlbums";
 import {
   updateGalleryAlbum,
@@ -17,12 +17,21 @@ import {
   Save,
   X,
   MoreHorizontal,
-  Edit2
+  Edit2,
+  ChevronDown,
+  ChevronUp,
+  AlertTriangle
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function GalleryAlbumCard({ album }: { album: Album }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [isInfoExpanded, setIsInfoExpanded] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [hasFile, setHasFile] = useState(false);
+  const [hasCoverFile, setHasCoverFile] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const mediaFormRef = useRef<HTMLFormElement>(null);
 
   // Fallback gradient if no cover image
   const bgImage = album.coverImage 
@@ -54,7 +63,7 @@ export default function GalleryAlbumCard({ album }: { album: Album }) {
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60" />
           
           {/* Badge Count */}
-          <div className="absolute top-3 right-3 bg-black/50 backdrop-blur-md text-white text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1">
+          <div className="absolute bottom-3 right-3 bg-black/50 backdrop-blur-md text-white text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1">
              <ImageIcon size={12} />
              {album.items.length}
           </div>
@@ -81,6 +90,18 @@ export default function GalleryAlbumCard({ album }: { album: Album }) {
                Kelola Album
             </span>
         </div>
+
+        {/* Quick Delete Button (Moved to Root for better visibility) */}
+        <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsDeleteModalOpen(true);
+            }}
+            className="absolute top-2 right-2 z-30 p-2 bg-red-600 hover:bg-red-700 text-white rounded-full shadow-lg transition-all hover:scale-110"
+            title="Hapus Album"
+        >
+            <Trash2 size={16} />
+        </button>
       </motion.div>
 
 
@@ -108,14 +129,22 @@ export default function GalleryAlbumCard({ album }: { album: Album }) {
               <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-100 bg-white z-10">
                 <div>
                    <h2 className="text-lg font-bold text-zinc-900">Edit Album: {album.title}</h2>
-                   <p className="text-xs text-zinc-500">Kelola detail album dan media di dalamnya</p>
                 </div>
-                <button 
-                  onClick={() => setIsOpen(false)}
-                  className="p-2 rounded-full hover:bg-zinc-100 text-zinc-500 transition-colors"
-                >
-                  <X size={20} />
-                </button>
+                <div className="flex items-center gap-2">
+                    <button 
+                        onClick={() => setIsDeleteModalOpen(true)}
+                        className="flex items-center gap-2 px-3 py-2 text-xs font-bold text-white bg-red-600 hover:bg-red-700 rounded-lg transition-all shadow-sm"
+                        title="Hapus Album"
+                    >
+                        <Trash2 size={14} /> Hapus
+                    </button>
+                    <button 
+                      onClick={() => setIsOpen(false)}
+                      className="p-2 rounded-full hover:bg-zinc-100 text-zinc-500 transition-colors"
+                    >
+                      <X size={20} />
+                    </button>
+                </div>
               </div>
 
               {/* Scrollable Body */}
@@ -125,92 +154,96 @@ export default function GalleryAlbumCard({ album }: { album: Album }) {
                     {/* LEFT COLUMN: Album Settings */}
                     <div className="space-y-6">
                         <div className="bg-white p-5 rounded-xl border border-zinc-200 shadow-sm space-y-4">
-                           <h3 className="text-sm font-semibold text-zinc-900 flex items-center gap-2">
-                              <Edit2 size={14} /> Informasi Album
-                           </h3>
+                           <div className="flex items-center justify-between">
+                             <button 
+                               type="button" 
+                               onClick={() => setIsInfoExpanded(!isInfoExpanded)}
+                               className="flex items-center gap-2 text-sm font-semibold text-zinc-900 hover:text-zinc-700 transition-colors"
+                             >
+                                <div className="flex items-center gap-2">
+                                  <Edit2 size={14} /> Informasi Album
+                                </div>
+                                {isInfoExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                             </button>
+                           </div>
                            
-                           <form
-                              action={async (formData) => {
-                                await updateGalleryAlbum(album.id, formData);
-                              }}
-                              className="space-y-4"
-                            >
-                              <div className="space-y-1.5">
-                                <label className="text-xs font-medium text-zinc-700">Judul Album</label>
-                                <input
-                                  name="title"
-                                  defaultValue={album.title}
-                                  className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-900/10 focus:border-zinc-900"
-                                />
-                              </div>
-                              
-                              <div className="grid grid-cols-2 gap-3">
+                           {isInfoExpanded && (
+                             <form
+                                action={async (formData) => {
+                                  await updateGalleryAlbum(album.id, formData);
+                                }}
+                                className="space-y-4 pt-2 border-t border-zinc-100 animate-in slide-in-from-top-2 duration-200"
+                              >
                                 <div className="space-y-1.5">
-                                    <label className="text-xs font-medium text-zinc-700">Urutan</label>
+                                  <label className="text-xs font-medium text-zinc-700">Judul Album</label>
+                                  <input
+                                    name="title"
+                                    defaultValue={album.title}
+                                    className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-900/10 focus:border-zinc-900"
+                                  />
+                                </div>
+                                
+                                <div className="grid grid-cols-2 gap-3">
+                                  <div className="space-y-1.5">
+                                      <label className="text-xs font-medium text-zinc-700">Urutan</label>
+                                      <input
+                                        name="order"
+                                        type="number"
+                                        defaultValue={album.order ?? 0}
+                                        className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-900/10 focus:border-zinc-900"
+                                      />
+                                  </div>
+                                </div>
+
+                                <div className="space-y-1.5">
+                                  <label className="text-xs font-medium text-zinc-700">Deskripsi</label>
+                                  <textarea
+                                    name="description"
+                                    defaultValue={album.description ?? ""}
+                                    rows={3}
+                                    className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-900/10 focus:border-zinc-900 resize-none"
+                                  />
+                                </div>
+
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-medium text-zinc-700">Cover URL</label>
                                     <input
-                                      name="order"
-                                      type="number"
-                                      defaultValue={album.order ?? 0}
+                                      name="coverImage"
+                                      defaultValue={album.coverImage}
                                       className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-900/10 focus:border-zinc-900"
+                                      placeholder="https://..."
                                     />
                                 </div>
-                              </div>
+                                
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-medium text-zinc-700">Upload Cover</label>
+                                    <label className={`w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg cursor-pointer transition-all border ${
+                                         hasCoverFile 
+                                           ? "bg-red-50 border-red-200 text-red-700" 
+                                           : "bg-white border-zinc-200 text-zinc-600 hover:bg-zinc-50"
+                                    }`}>
+                                        <div className={`p-1 rounded-full ${hasCoverFile ? "bg-red-100" : "bg-zinc-100"}`}>
+                                           {hasCoverFile ? <Upload size={12} className="text-red-600" /> : <Upload size={12} className="text-zinc-500" />}
+                                        </div>
+                                        <span className="text-[10px] font-medium">
+                                           {hasCoverFile ? "Cover Siap" : "Pilih Cover"}
+                                        </span>
+                                        <input
+                                            name="coverFile"
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={(e) => setHasCoverFile((e.target.files?.length || 0) > 0)}
+                                            className="hidden"
+                                        />
+                                    </label>
+                                </div>
 
-                              <div className="space-y-1.5">
-                                <label className="text-xs font-medium text-zinc-700">Deskripsi</label>
-                                <textarea
-                                  name="description"
-                                  defaultValue={album.description ?? ""}
-                                  rows={3}
-                                  className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-900/10 focus:border-zinc-900 resize-none"
-                                />
-                              </div>
-
-                              <div className="space-y-1.5">
-                                  <label className="text-xs font-medium text-zinc-700">Cover URL</label>
-                                  <input
-                                    name="coverImage"
-                                    defaultValue={album.coverImage}
-                                    className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-900/10 focus:border-zinc-900"
-                                    placeholder="https://..."
-                                  />
-                              </div>
-                              
-                              <div className="space-y-1.5">
-                                  <label className="text-xs font-medium text-zinc-700">Upload Cover</label>
-                                  <input
-                                      name="coverFile"
-                                      type="file"
-                                      accept="image/*"
-                                      className="block w-full text-xs text-zinc-500 file:mr-3 file:px-3 file:py-1.5 file:border-0 file:rounded-md file:text-xs file:font-medium file:bg-zinc-100 file:text-zinc-700 hover:file:bg-zinc-200"
-                                  />
-                              </div>
-
-                              <button className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-zinc-900 text-white text-xs font-medium hover:bg-zinc-800 transition-all">
-                                <Save size={14} />
-                                Simpan Perubahan
-                              </button>
-                            </form>
-                        </div>
-
-                        <div className="bg-red-50 p-5 rounded-xl border border-red-100 space-y-3">
-                            <h3 className="text-xs font-bold text-red-800 uppercase tracking-wider">Zona Bahaya</h3>
-                            <p className="text-[11px] text-red-600">
-                              Menghapus album ini akan menghapus semua media di dalamnya secara permanen.
-                            </p>
-                            <form
-                                action={async () => {
-                                  if (confirm("Yakin hapus album ini? Tindakan tidak bisa dibatalkan.")) {
-                                    await deleteGalleryAlbum(album.id);
-                                    setIsOpen(false);
-                                  }
-                                }}
-                              >
-                                <button className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-red-200 bg-white text-red-600 text-xs font-medium hover:bg-red-600 hover:text-white transition-all">
-                                  <Trash2 size={14} />
-                                  Hapus Album Permanen
+                                <button className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-zinc-900 text-white text-xs font-medium hover:bg-zinc-800 transition-all">
+                                  <Save size={14} />
+                                  Simpan Perubahan
                                 </button>
                               </form>
+                           )}
                         </div>
                     </div>
 
@@ -222,8 +255,19 @@ export default function GalleryAlbumCard({ album }: { album: Album }) {
                               <Upload size={16} /> Tambah Media Baru
                            </h4>
                            <form
+                              ref={mediaFormRef}
                               action={async (formData) => {
-                                await createGalleryMedia(formData);
+                                setIsUploading(true);
+                                try {
+                                  await createGalleryMedia(formData);
+                                  mediaFormRef.current?.reset();
+                                  setHasFile(false);
+                                } catch (error) {
+                                  console.error("Upload error:", error);
+                                  alert("Gagal mengupload media. Pastikan file tidak terlalu besar.");
+                                } finally {
+                                  setIsUploading(false);
+                                }
                               }}
                               className="grid grid-cols-1 md:grid-cols-[100px_1fr_1fr_auto] gap-3 items-end"
                            >
@@ -250,20 +294,50 @@ export default function GalleryAlbumCard({ album }: { album: Album }) {
                               </div>
 
                               <div className="space-y-1">
-                                   <label className="text-[10px] text-zinc-500 font-bold uppercase">File / URL</label>
+                                   <label className="text-[10px] text-zinc-500 font-bold uppercase">Upload Media</label>
                                    <div className="flex gap-2">
-                                       <input
-                                           name="file"
-                                           type="file"
-                                           className="w-full text-[10px] file:py-1 file:px-2 file:rounded-md file:border-0 file:bg-zinc-100"
-                                       />
-                                       {/* Hidden src input fallback if needed, or handle in server action */}
-                                       <input name="src" type="hidden" /> 
+                                       <label className={`w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg cursor-pointer transition-all border ${
+                                        hasFile 
+                                          ? "bg-red-50 border-red-200 text-red-700" 
+                                          : "bg-white border-red-200 text-red-600 hover:bg-red-50"
+                                   }`}>
+                                       <div className={`p-1.5 rounded-full ${hasFile ? "bg-red-100" : "bg-red-50"}`}>
+                                          <Upload size={14} className="text-red-600" />
+                                       </div>
+                                       <span className="text-xs font-bold">
+                                          {hasFile ? "File Siap Diupload" : "Pilih File Gambar / Video"}
+                                       </span>
+                                           <input
+                                               name="file"
+                                               type="file"
+                                               multiple
+                                               accept="image/*,video/*"
+                                               onChange={(e) => setHasFile((e.target.files?.length || 0) > 0)}
+                                               className="hidden"
+                                           />
+                                       </label>
                                    </div>
                               </div>
 
-                              <button className="px-4 py-2 h-[34px] rounded-lg bg-[var(--brand)] text-white text-xs font-bold hover:brightness-110 transition-all flex items-center gap-1">
-                                  <Upload size={14} /> Add
+                              <button 
+                                disabled={!hasFile || isUploading}
+                                className={`w-full px-4 py-2 h-[38px] rounded-lg text-white text-xs font-bold transition-all flex items-center justify-center gap-2 ${
+                                  hasFile && !isUploading
+                                    ? "bg-red-600 hover:bg-red-700 shadow-md transform hover:-translate-y-0.5" 
+                                    : "bg-zinc-100 text-zinc-400 border border-zinc-200 cursor-not-allowed"
+                                }`}
+                              >
+                                  {isUploading ? (
+                                    <>
+                                      <div className="animate-spin rounded-full h-3 w-3 border-2 border-zinc-400 border-t-zinc-600" />
+                                      <span>Proses...</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Upload size={14} /> 
+                                      {hasFile ? "Upload Sekarang" : "Pilih File"}
+                                    </>
+                                  )}
                               </button>
                            </form>
                         </div>
@@ -293,6 +367,32 @@ export default function GalleryAlbumCard({ album }: { album: Album }) {
             </motion.div>
           </div>
         )}
+
+        {/* Delete Confirmation Modal */}
+        {isDeleteModalOpen && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsDeleteModalOpen(false)} />
+             <div className="bg-white rounded-xl shadow-2xl p-6 max-w-sm w-full space-y-4 relative z-10 animate-in fade-in zoom-in-95 duration-200">
+                <div className="flex items-center gap-3 text-red-600">
+                   <div className="p-2 bg-red-100 rounded-full"><AlertTriangle size={24} /></div>
+                   <h3 className="text-lg font-bold text-zinc-900">Hapus Album?</h3>
+                </div>
+                <p className="text-sm text-zinc-600">
+                   Tindakan ini permanen. Semua media di dalam album ini akan ikut terhapus.
+                </p>
+                <div className="flex justify-end gap-3 pt-2">
+                   <button onClick={() => setIsDeleteModalOpen(false)} className="px-4 py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-100 rounded-lg">Batal</button>
+                   <form action={async () => {
+                       await deleteGalleryAlbum(album.id);
+                       setIsDeleteModalOpen(false);
+                       setIsOpen(false);
+                   }}>
+                        <button className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg">Ya, Hapus</button>
+                   </form>
+                </div>
+             </div>
+          </div>
+        )}
       </AnimatePresence>
     </>
   );
@@ -300,6 +400,7 @@ export default function GalleryAlbumCard({ album }: { album: Album }) {
 
 function MediaItemCard({ item }: { item: any }) {
     const [isEditing, setIsEditing] = useState(false);
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
     return (
         <div className="group relative bg-white border border-zinc-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all">
@@ -325,13 +426,13 @@ function MediaItemCard({ item }: { item: any }) {
                      >
                         <Edit2 size={14} />
                      </button>
-                     <form action={async () => {
-                         if(confirm("Hapus media ini?")) await deleteGalleryMedia(item.id);
-                     }}>
-                        <button className="p-2 bg-white rounded-full text-red-600 hover:bg-red-50 hover:scale-110 transition-transform" title="Hapus">
-                            <Trash2 size={14} />
-                        </button>
-                     </form>
+                     <button 
+                        onClick={() => setIsDeleteModalOpen(true)}
+                        className="p-2 bg-white rounded-full text-red-600 hover:bg-red-50 hover:scale-110 transition-transform" 
+                        title="Hapus"
+                     >
+                        <Trash2 size={14} />
+                     </button>
                 </div>
             </div>
 
@@ -346,7 +447,7 @@ function MediaItemCard({ item }: { item: any }) {
                 </div>
             </div>
 
-            {/* Edit Modal (Nested) - Or could be inline overlay */}
+            {/* Edit Modal (Nested) */}
             {isEditing && (
                 <div className="absolute inset-0 z-10 bg-white p-3 flex flex-col gap-2 animate-in fade-in duration-200">
                     <div className="flex items-center justify-between mb-1">
@@ -372,6 +473,31 @@ function MediaItemCard({ item }: { item: any }) {
                         <button className="mt-auto w-full bg-zinc-900 text-white text-[10px] py-1 rounded">Simpan</button>
                     </form>
                 </div>
+            )}
+
+            {/* Delete Confirmation Modal - Moved to Portal/Fixed High Z-Index Context */}
+            {isDeleteModalOpen && (
+              <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+                 <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsDeleteModalOpen(false)} />
+                 <div className="bg-white rounded-xl shadow-2xl p-6 max-w-sm w-full space-y-4 relative z-10 animate-in fade-in zoom-in-95 duration-200">
+                    <div className="flex items-center gap-3 text-red-600">
+                       <div className="p-2 bg-red-100 rounded-full"><AlertTriangle size={24} /></div>
+                       <h3 className="text-lg font-bold text-zinc-900">Hapus Media?</h3>
+                    </div>
+                    <p className="text-sm text-zinc-600">
+                       Apakah Anda yakin ingin menghapus media ini? Tindakan ini tidak dapat dibatalkan.
+                    </p>
+                    <div className="flex justify-end gap-3 pt-2">
+                       <button onClick={() => setIsDeleteModalOpen(false)} className="px-4 py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-100 rounded-lg">Batal</button>
+                       <form action={async () => {
+                           await deleteGalleryMedia(item.id);
+                           setIsDeleteModalOpen(false);
+                       }}>
+                            <button className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg">Hapus</button>
+                       </form>
+                    </div>
+                 </div>
+              </div>
             )}
         </div>
     );

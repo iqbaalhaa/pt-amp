@@ -391,40 +391,62 @@ export async function deleteGalleryAlbum(id: string) {
 export async function createGalleryMedia(formData: FormData) {
   const albumId = (formData.get("albumId") as string) || "";
   let type = (formData.get("type") as string) || "image";
-  let src = (formData.get("src") as string) || "";
   const caption = (formData.get("caption") as string) || "";
   const thumbnail = (formData.get("thumbnail") as string) || "";
   const orderRaw = (formData.get("order") as string) || "0";
   const order = Number(orderRaw) || 0;
 
-  const file = formData.get("file") as File | null;
-  if (file && file.size > 0) {
-    if (file.type.startsWith("video/")) {
-      type = "video";
-    } else if (file.type.startsWith("image/")) {
-      type = "image";
-    }
-    const uploaded = await saveUploadToPublic(file);
-    if (uploaded) src = uploaded;
-  }
-
-  if (!albumId) return;
+  const files = formData.getAll("file") as File[];
+  const validFiles = files.filter((f) => f.size > 0);
 
   const client: any = prisma;
   if (!client.galleryMedia) {
     return;
   }
 
-  await client.galleryMedia.create({
-    data: {
-      albumId,
-      type,
-      src,
-      caption,
-      thumbnail: thumbnail || null,
-      order,
-    },
-  });
+  if (validFiles.length > 0) {
+    // Process multiple files
+    for (const file of validFiles) {
+      let currentType = type;
+      let currentSrc = "";
+
+      if (file.type.startsWith("video/")) {
+        currentType = "video";
+      } else if (file.type.startsWith("image/")) {
+        currentType = "image";
+      }
+
+      const uploaded = await saveUploadToPublic(file);
+      if (uploaded) {
+        currentSrc = uploaded;
+        await client.galleryMedia.create({
+          data: {
+            albumId,
+            type: currentType,
+            src: currentSrc,
+            caption, // All will share the same caption initially if provided
+            thumbnail: thumbnail || null,
+            order,
+          },
+        });
+      }
+    }
+  } else {
+    // Fallback for URL-only (if supported) or no file but src provided
+    let src = (formData.get("src") as string) || "";
+    if (src) {
+      await client.galleryMedia.create({
+        data: {
+          albumId,
+          type,
+          src,
+          caption,
+          thumbnail: thumbnail || null,
+          order,
+        },
+      });
+    }
+  }
 
   revalidatePath("/gallery");
   revalidatePath("/admin/compro/gallery");

@@ -107,7 +107,27 @@
 	.hover-reflect:hover::after {
 		opacity: 1;
 	}
-	.shadow-soft {
+	.prose table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1.5em;
+    margin-bottom: 1.5em;
+  }
+  .prose th {
+    background-color: #f9fafb;
+    font-weight: 600;
+    text-align: left;
+    padding: 0.75rem;
+    border: 1px solid #e5e7eb;
+  }
+  .prose td {
+    padding: 0.75rem;
+    border: 1px solid #e5e7eb;
+  }
+  .prose tr:nth-child(even) {
+    background-color: #f9fafb;
+  }
+  .shadow-soft {
 		box-shadow: var(--shadow-soft-1), var(--shadow-soft-2);
 	}
 	.focus-ring-brand:focus-visible {
