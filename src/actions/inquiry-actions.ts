@@ -2,7 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import { InquiryStatus } from "@prisma/client";
+import type { InquiryStatus } from "@/generated/prisma";
 
 export async function getInquiries() {
   return await prisma.inquiry.findMany({

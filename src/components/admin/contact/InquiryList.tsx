@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Inquiry, InquiryStatus } from "@prisma/client";
+import type { Inquiry, InquiryStatus } from "@/generated/prisma";
 import { updateInquiryStatus, deleteInquiry } from "@/actions/inquiry-actions";
 import { 
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, 
@@ -211,4 +211,3 @@ export function InquiryList({ initialInquiries }: InquiryListProps) {
     </Box>
   );
 }
-

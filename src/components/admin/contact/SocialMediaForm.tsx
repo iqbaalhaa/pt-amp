@@ -10,7 +10,7 @@ import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import LinkIcon from "@mui/icons-material/Link";
-import { SocialMedia } from "@prisma/client";
+import type { SocialMedia } from "@/generated/prisma";
 import { createSocialMedia, updateSocialMedia, deleteSocialMedia } from "@/actions/social-media-actions";
 
 export function SocialMediaForm({ socialMedias }: { socialMedias: SocialMedia[] }) {
@@ -151,4 +151,3 @@ export function SocialMediaForm({ socialMedias }: { socialMedias: SocialMedia[] 
     </Box>
   );
 }
-

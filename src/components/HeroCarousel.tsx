@@ -25,6 +25,30 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
   const [current, setCurrent] = useState(0);
   const videoRef = useRef<HTMLVideoElement>(null);
 
+  if (!slides || slides.length === 0) {
+    return (
+      <div className="relative overflow-hidden min-h-[500px] flex items-center bg-gradient-to-b from-zinc-50 via-white to-zinc-50 border-b border-zinc-200">
+        <div className="container mx-auto px-4 md:px-6 lg:px-8">
+          <div className="grid md:grid-cols-2 gap-10 items-center">
+            <div className="order-2 md:order-1">
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6 text-zinc-900">
+                <span className="bg-gradient-to-r from-[var(--brand)] to-orange-500 bg-clip-text text-transparent">
+                  PT AMP
+                </span>
+              </h1>
+              <p className="text-lg text-zinc-600 mb-8 leading-relaxed max-w-lg">
+                Pengolahan dan distribusi kulit manis dengan standar mutu terbaik.
+              </p>
+            </div>
+            <div className="order-1 md:order-2">
+              <div className="relative rounded-2xl h-64 md:h-96 w-full bg-zinc-100 shadow-inner overflow-hidden border border-zinc-100" />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const next = () => {
     setCurrent((curr) => (curr + 1) % slides.length);
   };

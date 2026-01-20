@@ -13,7 +13,7 @@ import PhoneIcon from "@mui/icons-material/Phone";
 import EmailIcon from "@mui/icons-material/Email";
 import WhatsAppIcon from "@mui/icons-material/WhatsApp";
 import BusinessIcon from "@mui/icons-material/Business";
-import { ContactInfo } from "@prisma/client";
+import type { ContactInfo } from "@/generated/prisma";
 
 export function ContactSettingsForm({ initialData }: { initialData: ContactInfo | null }) {
   const [loading, setLoading] = useState(false);
@@ -153,4 +153,3 @@ export function ContactSettingsForm({ initialData }: { initialData: ContactInfo 
     </Box>
   );
 }
-

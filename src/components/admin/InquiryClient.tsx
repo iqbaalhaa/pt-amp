@@ -24,7 +24,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import { updateInquiryStatus, deleteInquiry } from "@/actions/inquiry-actions";
-import { Inquiry, InquiryStatus } from "@prisma/client";
+import type { Inquiry, InquiryStatus } from "@/generated/prisma";
 
 interface InquiryClientProps {
   initialInquiries: Inquiry[];
@@ -184,4 +184,3 @@ export default function InquiryClient({ initialInquiries }: InquiryClientProps) 
     </Box>
   );
 }
-
