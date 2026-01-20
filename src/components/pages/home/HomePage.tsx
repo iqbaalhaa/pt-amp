@@ -9,16 +9,16 @@ import { getHomePageData, getHeroSlides, getFeatureCards } from "@/actions/cms-a
 import { DynamicIcon } from "@/components/DynamicIcon";
 
 export default async function HomePage() {
-  const [allProducts, homePage, slides, featureCards] = await Promise.all([
+  const [allProducts, homePage, slides, featureCards, posts] = await Promise.all([
     getProducts(),
     getHomePageData(),
     getHeroSlides(),
-    getFeatureCards("HOME_ABOUT")
+    getFeatureCards("HOME_ABOUT"),
+    latestPosts(3)
   ]);
   
   const products = allProducts.slice(0, 3);
   const showStatic = products.length === 0;
-  const posts = latestPosts(3);
 
   // Fallback for slides if empty (optional, but good for safety)
   const finalSlides = slides.length > 0 ? (slides as unknown as HeroSlide[]) : [];

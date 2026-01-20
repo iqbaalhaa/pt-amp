@@ -11,7 +11,7 @@ export default async function AdminLayout({
 	const session = await auth.api.getSession({ headers: await headers() });
 
 	if (!session) redirect("/login");
-	if (session.user.role !== "SUPERADMIN") redirect("/");
+	// if (session.user.role !== "SUPERADMIN") redirect("/");
 
 	return (
 		<GlassAdminShell>

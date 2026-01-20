@@ -99,9 +99,7 @@ export function LoginForm() {
 					</div>
 
 					<div className="flex items-center justify-between pt-1">
-						<span className="text-xs text-zinc-500">
-							Pastikan caps lock tidak aktif.
-						</span>
+						
 						<a
 							href="#"
 							className="text-xs font-medium text-[var(--brand)] hover:opacity-80"
@@ -132,7 +130,6 @@ export function LoginForm() {
 
 				<div className="pt-1 text-center text-xs text-zinc-500">
 					© {new Date().getFullYear()} PT. Aurora Mitra Prakarsa. Akses
-					terbatas untuk admin.
 				</div>
 			</form>
 		</div>

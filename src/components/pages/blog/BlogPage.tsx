@@ -11,7 +11,7 @@ function formatDate(dateStr: string) {
 }
 
 export default async function BlogPage() {
-  const { posts } = listPosts(1);
+  const { posts } = await listPosts(1);
 
   return (
     <div className="flex flex-col flex-1">
@@ -44,9 +44,15 @@ export default async function BlogPage() {
               {posts.map((post) => (
                 <article key={post.slug} className="flex flex-col bg-white border border-zinc-200 rounded-2xl overflow-hidden hover:shadow-lg hover:border-[var(--brand)]/30 transition-all duration-300 group">
                   <Link href={`/blog/${post.slug}`} className="block overflow-hidden aspect-[16/9] relative">
-                    <div className="w-full h-full bg-zinc-200 group-hover:scale-105 transition-transform duration-500 flex items-center justify-center">
-                        <FileText className="w-12 h-12 text-zinc-300" />
-                    </div>
+                    {post.image ? (
+                        <div className="w-full h-full bg-zinc-200 group-hover:scale-105 transition-transform duration-500">
+                            <img src={post.image} alt={post.title} className="w-full h-full object-cover" />
+                        </div>
+                    ) : (
+                        <div className="w-full h-full bg-zinc-200 group-hover:scale-105 transition-transform duration-500 flex items-center justify-center">
+                            <FileText className="w-12 h-12 text-zinc-300" />
+                        </div>
+                    )}
                     {post.tags && post.tags.length > 0 && (
                         <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-bold text-[var(--brand)] shadow-sm">
                         {post.tags[0]}
