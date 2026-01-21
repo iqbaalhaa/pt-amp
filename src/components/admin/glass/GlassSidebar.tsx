@@ -29,112 +29,128 @@ type Item = { label: string; href: string; icon: React.ReactNode };
 type Group = { title: string; items: Item[] };
 
 const groups: Group[] = [
-	{
-		title: "ERP",
-		items: [
-			{
-				label: "Dashboard",
-				href: "/admin",
-				icon: <DashboardIcon fontSize="small" />,
-			},
-			{
-				label: "Pekerja",
-				href: "/admin/workers",
-				icon: <HandymanIcon fontSize="small" />,
-			},
-			{
-				label: "Pembelian",
-				href: "/admin/purchases",
-				icon: <ShoppingCartIcon fontSize="small" />,
-			},
-			{
-				label: "Pengikisan",
-				href: "/admin/pengikisan",
-				icon: <PrecisionManufacturingIcon fontSize="small" />,
-			},
-			{
-				label: "Penjemuran",
-				href: "/admin/penjemuran",
-				icon: <WbSunnyIcon fontSize="small" />,
-			},
-			{
-				label: "Pengemasan",
-				href: "/admin/pengemasan",
-				icon: <InventoryIcon fontSize="small" />,
-			},
-			{
-				label: "Pemotongan",
-				href: "/admin/pemotongan",
-				icon: <ContentCutIcon fontSize="small" />,
-			},
-			{
-				label: "Pembukuan",
-				href: "/admin/ledger",
-				icon: <MenuBookIcon fontSize="small" />,
-			},
-			{
-				label: "Products",
-				href: "/admin/products",
-				icon: <Inventory2Icon fontSize="small" />,
-			},
-			{
-				label: "Sales",
-				href: "/admin/sales",
-				icon: <ReceiptLongIcon fontSize="small" />,
-			},
-			{
-				label: "Production",
-				href: "/admin/production",
-				icon: <FactoryIcon fontSize="small" />,
-			},
-		],
-	},
-	{
-		title: "Compro",
-		items: [
-			{
-				label: "Home",
-				href: "/admin/cms/pages/home",
-				icon: <HomeIcon fontSize="small" />,
-			},
-			{
-				label: "About Us",
-				href: "/admin/compro/about",
-				icon: <InfoIcon fontSize="small" />,
-			},
-			{
-				label: "Gallery",
-				href: "/admin/compro/gallery",
-				icon: <CollectionsIcon fontSize="small" />,
-			},
-			{
-				label: "Blog",
-				href: "/admin/compro/blog",
-				icon: <RssFeedIcon fontSize="small" />,
-			},
-			{
-				label: "Contact & Social",
-				href: "/admin/compro/contact",
-				icon: <ContactMailIcon fontSize="small" />,
-			},
-		],
-	},
-	{
-		title: "Settings",
-		items: [
-			{
-				label: "Users",
-				href: "/admin/users",
-				icon: <PeopleIcon fontSize="small" />,
-			},
-			{
-				label: "Settings",
-				href: "/admin/settings",
-				icon: <SettingsIcon fontSize="small" />,
-			},
-		],
-	},
+  {
+    title: "Home",
+    items: [
+      {
+        label: "Dashboard",
+        href: "/admin",
+        icon: <DashboardIcon fontSize="small" />,
+      },
+    ],
+  },
+
+  {
+    title: "Transaksi",
+    items: [
+      {
+        label: "Pembelian",
+        href: "/admin/purchases",
+        icon: <ShoppingCartIcon fontSize="small" />,
+      },
+	  {
+        label: "Sales",
+        href: "/admin/sales",
+        icon: <ReceiptLongIcon fontSize="small" />,
+      },
+      {
+        label: "Pembukuan",
+        href: "/admin/ledger",
+        icon: <MenuBookIcon fontSize="small" />,
+      },
+    ],
+  },
+
+  {
+    title: "Produksi",
+    items: [
+      {
+        label: "Pengikisan",
+        href: "/admin/pengikisan",
+        icon: <PrecisionManufacturingIcon fontSize="small" />,
+      },
+      {
+        label: "Pemotongan",
+        href: "/admin/pemotongan",
+        icon: <ContentCutIcon fontSize="small" />,
+      },
+      {
+        label: "Penjemuran",
+        href: "/admin/penjemuran",
+        icon: <WbSunnyIcon fontSize="small" />,
+      },
+      {
+        label: "Pengemasan",
+        href: "/admin/pengemasan",
+        icon: <InventoryIcon fontSize="small" />,
+      },
+    ],
+  },
+
+  {
+    title: "Master Data",
+    items: [
+      {
+        label: "Pekerja",
+        href: "/admin/workers",
+        icon: <HandymanIcon fontSize="small" />,
+      },
+      {
+        label: "Products",
+        href: "/admin/products",
+        icon: <Inventory2Icon fontSize="small" />,
+      },    
+    ],
+  },
+
+  {
+    title: "Compro",
+    items: [
+      {
+        label: "Home",
+        href: "/admin/cms/pages/home",
+        icon: <HomeIcon fontSize="small" />,
+      },
+      {
+        label: "About Us",
+        href: "/admin/compro/about",
+        icon: <InfoIcon fontSize="small" />,
+      },
+      {
+        label: "Gallery",
+        href: "/admin/compro/gallery",
+        icon: <CollectionsIcon fontSize="small" />,
+      },
+      {
+        label: "Blog",
+        href: "/admin/compro/blog",
+        icon: <RssFeedIcon fontSize="small" />,
+      },
+      {
+        label: "Contact & Social",
+        href: "/admin/compro/contact",
+        icon: <ContactMailIcon fontSize="small" />,
+      },
+    ],
+  },
+
+  {
+    title: "Settings",
+    items: [
+      {
+        label: "Users",
+        href: "/admin/users",
+        icon: <PeopleIcon fontSize="small" />,
+      },
+      {
+        label: "Settings",
+        href: "/admin/settings",
+        icon: <SettingsIcon fontSize="small" />,
+      },
+    ],
+  },
 ];
+
 
 export default function GlassSidebar({
 	collapsed,
