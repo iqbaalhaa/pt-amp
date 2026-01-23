@@ -10,8 +10,13 @@ const connectionString = process.env.DATABASE_URL;
 const pool = new Pool({ connectionString });
 const adapter = new PrismaPg(pool);
 
+// Check if existing instance is stale (missing new models like pemotongan)
+const existingPrisma = globalForPrisma.prisma;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const isStale = existingPrisma && !("pemotongan" in (existingPrisma as any));
+
 export const prisma =
-	globalForPrisma.prisma ??
+	(!isStale && existingPrisma) ? existingPrisma :
 	new PrismaClient({
 		adapter,
 	});

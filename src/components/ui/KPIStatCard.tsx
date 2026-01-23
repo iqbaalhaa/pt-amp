@@ -13,24 +13,38 @@ type Props = {
 
 export default function KPIStatCard({ title, value, delta, icon, status }: Props) {
   const color =
-    status === "success" ? "text-[var(--success)]" :
-    status === "warning" ? "text-[var(--warning)]" :
-    status === "danger" ? "text-[var(--danger)]" :
-    status === "info" ? "text-[var(--info)]" :
-    "text-[var(--brand)]";
+    status === "success" ? "text-green-600" :
+    status === "warning" ? "text-yellow-600" :
+    status === "danger" ? "text-red-600" :
+    status === "info" ? "text-blue-600" :
+    "text-gray-600";
+    
+  const bgColor = 
+    status === "success" ? "bg-green-100" :
+    status === "warning" ? "bg-yellow-100" :
+    status === "danger" ? "bg-red-100" :
+    status === "info" ? "bg-blue-100" :
+    "bg-gray-100";
 
   return (
-    <GlassCard className="p-4 md:p-6">
-      <div className="flex items-center gap-4">
-        <div className={`w-10 h-10 rounded-xl bg-red-glass flex items-center justify-center ${color}`}>
-          {icon}
-        </div>
-        <div className="flex-1">
-          <div className="text-xs uppercase tracking-wide text-secondary">{title}</div>
-          <div className="text-2xl md:text-3xl font-semibold text-primary">{value}</div>
+    <GlassCard className="p-5 flex flex-col justify-between h-full min-h-[140px]">
+      <div className="flex justify-between items-start mb-2">
+        <div className="text-sm font-medium text-gray-500 uppercase tracking-wider">{title}</div>
+        {icon && (
+          <div className={`p-2 rounded-lg ${bgColor} ${color}`}>
+            {icon}
+          </div>
+        )}
+      </div>
+      
+      <div className="mt-auto">
+        <div className="text-2xl lg:text-3xl font-bold text-gray-900 truncate" title={String(value)}>
+          {value}
         </div>
         {delta && (
-          <div className={`text-sm font-medium ${color}`}>{delta}</div>
+          <div className={`text-xs font-medium mt-1 ${color}`}>
+            {delta}
+          </div>
         )}
       </div>
     </GlassCard>
