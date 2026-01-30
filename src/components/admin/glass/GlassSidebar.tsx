@@ -29,128 +29,127 @@ type Item = { label: string; href: string; icon: React.ReactNode };
 type Group = { title: string; items: Item[] };
 
 const groups: Group[] = [
-  {
-    title: "Home",
-    items: [
-      {
-        label: "Dashboard",
-        href: "/admin",
-        icon: <DashboardIcon fontSize="small" />,
-      },
-    ],
-  },
+	{
+		title: "Home",
+		items: [
+			{
+				label: "Dashboard",
+				href: "/admin",
+				icon: <DashboardIcon fontSize="small" />,
+			},
+		],
+	},
 
-  {
-    title: "Transaksi",
-    items: [
-      {
-        label: "Pembelian",
-        href: "/admin/purchases",
-        icon: <ShoppingCartIcon fontSize="small" />,
-      },
-	  {
-        label: "Sales",
-        href: "/admin/sales",
-        icon: <ReceiptLongIcon fontSize="small" />,
-      },
-      {
-        label: "Pembukuan",
-        href: "/admin/ledger",
-        icon: <MenuBookIcon fontSize="small" />,
-      },
-    ],
-  },
+	{
+		title: "Transaksi",
+		items: [
+			{
+				label: "Pembelian",
+				href: "/admin/purchases",
+				icon: <ShoppingCartIcon fontSize="small" />,
+			},
+			{
+				label: "Penjualan",
+				href: "/admin/sales",
+				icon: <ReceiptLongIcon fontSize="small" />,
+			},
+			{
+				label: "Pembukuan",
+				href: "/admin/ledger",
+				icon: <MenuBookIcon fontSize="small" />,
+			},
+		],
+	},
 
-  {
-    title: "Produksi",
-    items: [
-      {
-        label: "Pengikisan",
-        href: "/admin/pengikisan",
-        icon: <PrecisionManufacturingIcon fontSize="small" />,
-      },
-      {
-        label: "Pemotongan",
-        href: "/admin/pemotongan",
-        icon: <ContentCutIcon fontSize="small" />,
-      },
-      {
-        label: "Penjemuran",
-        href: "/admin/penjemuran",
-        icon: <WbSunnyIcon fontSize="small" />,
-      },
-      {
-        label: "Pengemasan",
-        href: "/admin/pengemasan",
-        icon: <InventoryIcon fontSize="small" />,
-      },
-    ],
-  },
+	{
+		title: "Produksi",
+		items: [
+			{
+				label: "Pengikisan",
+				href: "/admin/pengikisan",
+				icon: <PrecisionManufacturingIcon fontSize="small" />,
+			},
+			{
+				label: "Pemotongan",
+				href: "/admin/pemotongan",
+				icon: <ContentCutIcon fontSize="small" />,
+			},
+			{
+				label: "Penjemuran",
+				href: "/admin/penjemuran",
+				icon: <WbSunnyIcon fontSize="small" />,
+			},
+			{
+				label: "Pengemasan",
+				href: "/admin/pengemasan",
+				icon: <InventoryIcon fontSize="small" />,
+			},
+		],
+	},
 
-  {
-    title: "Master Data",
-    items: [
-      {
-        label: "Pekerja",
-        href: "/admin/workers",
-        icon: <HandymanIcon fontSize="small" />,
-      },
-      {
-        label: "Products",
-        href: "/admin/products",
-        icon: <Inventory2Icon fontSize="small" />,
-      },    
-    ],
-  },
+	{
+		title: "Master Data",
+		items: [
+			{
+				label: "Pekerja",
+				href: "/admin/workers",
+				icon: <HandymanIcon fontSize="small" />,
+			},
+			{
+				label: "Products",
+				href: "/admin/products",
+				icon: <Inventory2Icon fontSize="small" />,
+			},
+		],
+	},
 
-  {
-    title: "Compro",
-    items: [
-      {
-        label: "Home",
-        href: "/admin/cms/pages/home",
-        icon: <HomeIcon fontSize="small" />,
-      },
-      {
-        label: "About Us",
-        href: "/admin/compro/about",
-        icon: <InfoIcon fontSize="small" />,
-      },
-      {
-        label: "Gallery",
-        href: "/admin/compro/gallery",
-        icon: <CollectionsIcon fontSize="small" />,
-      },
-      {
-        label: "Blog",
-        href: "/admin/compro/blog",
-        icon: <RssFeedIcon fontSize="small" />,
-      },
-      {
-        label: "Contact & Social",
-        href: "/admin/compro/contact",
-        icon: <ContactMailIcon fontSize="small" />,
-      },
-    ],
-  },
+	{
+		title: "Compro",
+		items: [
+			{
+				label: "Home",
+				href: "/admin/cms/pages/home",
+				icon: <HomeIcon fontSize="small" />,
+			},
+			{
+				label: "About Us",
+				href: "/admin/compro/about",
+				icon: <InfoIcon fontSize="small" />,
+			},
+			{
+				label: "Gallery",
+				href: "/admin/compro/gallery",
+				icon: <CollectionsIcon fontSize="small" />,
+			},
+			{
+				label: "Blog",
+				href: "/admin/compro/blog",
+				icon: <RssFeedIcon fontSize="small" />,
+			},
+			{
+				label: "Contact & Social",
+				href: "/admin/compro/contact",
+				icon: <ContactMailIcon fontSize="small" />,
+			},
+		],
+	},
 
-  {
-    title: "Settings",
-    items: [
-      {
-        label: "Users",
-        href: "/admin/users",
-        icon: <PeopleIcon fontSize="small" />,
-      },
-      {
-        label: "Settings",
-        href: "/admin/settings",
-        icon: <SettingsIcon fontSize="small" />,
-      },
-    ],
-  },
+	{
+		title: "Settings",
+		items: [
+			{
+				label: "Users",
+				href: "/admin/users",
+				icon: <PeopleIcon fontSize="small" />,
+			},
+			{
+				label: "Settings",
+				href: "/admin/settings",
+				icon: <SettingsIcon fontSize="small" />,
+			},
+		],
+	},
 ];
-
 
 export default function GlassSidebar({
 	collapsed,
@@ -173,14 +172,14 @@ export default function GlassSidebar({
 	const containerClasses = isMobile
 		? `fixed left-0 top-0 h-screen z-40 transition-transform duration-300 ease-in-out ${
 				collapsed ? "-translate-x-full" : "translate-x-0"
-		  }`
+			}`
 		: "fixed left-0 top-0 h-screen z-40";
 
 	const widthClass = isMobile
 		? "w-[260px]"
 		: collapsed
-		? "w-[76px]"
-		: "w-[260px]";
+			? "w-[76px]"
+			: "w-[260px]";
 
 	return (
 		<div className={containerClasses}>

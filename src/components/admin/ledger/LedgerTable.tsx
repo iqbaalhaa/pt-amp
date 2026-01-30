@@ -26,7 +26,9 @@ export function LedgerTable({ entries }: Props) {
           {entries.map((e) => {
             const dStr = formatDateShort(e.date);
             const typeLabel =
-              e.type === "purchase"
+              e.type === "production" && e.subType
+                ? e.subType
+                : e.type === "purchase"
                 ? "Purchase"
                 : e.type === "sale"
                 ? "Sales"

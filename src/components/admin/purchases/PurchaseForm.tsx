@@ -70,7 +70,7 @@ export default function PurchaseForm({ products }: Props) {
 	const [items, setItems] = useState<ItemRow[]>(() => {
 		return ALL_TARGETS.map((name) => {
 			const p = products.find(
-				(prod) => prod.name.toUpperCase() === name.toUpperCase()
+				(prod) => prod.name.toUpperCase() === name.toUpperCase(),
 			);
 			return { productId: p ? p.id : "", qty: "", unitCost: "" };
 		});
@@ -85,7 +85,7 @@ export default function PurchaseForm({ products }: Props) {
 
 	const updateItem = (idx: number, field: keyof ItemRow, value: string) => {
 		setItems((prev) =>
-			prev.map((row, i) => (i === idx ? { ...row, [field]: value } : row))
+			prev.map((row, i) => (i === idx ? { ...row, [field]: value } : row)),
 		);
 	};
 
@@ -97,7 +97,7 @@ export default function PurchaseForm({ products }: Props) {
 
 	const grandTotal = useMemo(
 		() => items.reduce((sum, row) => sum + lineTotal(row), 0),
-		[items]
+		[items],
 	);
 
 	const handleSubmit = async (e: React.FormEvent) => {
@@ -105,7 +105,7 @@ export default function PurchaseForm({ products }: Props) {
 		setSaving(true);
 		try {
 			const validItems = items.filter(
-				(r) => r.productId && r.qty && r.unitCost
+				(r) => r.productId && r.qty && r.unitCost,
 			);
 
 			const payload = {
@@ -138,10 +138,10 @@ export default function PurchaseForm({ products }: Props) {
 				setItems(
 					ALL_TARGETS.map((name) => {
 						const p = products.find(
-							(prod) => prod.name.toUpperCase() === name.toUpperCase()
+							(prod) => prod.name.toUpperCase() === name.toUpperCase(),
 						);
 						return { productId: p ? p.id : "", qty: "", unitCost: "" };
-					})
+					}),
 				);
 
 				router.refresh();
@@ -174,7 +174,7 @@ export default function PurchaseForm({ products }: Props) {
 			cell: (row, idx) => (
 				<TextField
 					type="number"
-					inputProps={{ step: "0.0001", style: { padding: "4px 8px" } }}
+					inputProps={{ step: "0.01", style: { padding: "4px 8px" } }}
 					placeholder="Qty"
 					size="small"
 					value={row.qty}
@@ -189,7 +189,7 @@ export default function PurchaseForm({ products }: Props) {
 			cell: (row, idx) => (
 				<TextField
 					type="number"
-					inputProps={{ step: "0.0001", style: { padding: "4px 8px" } }}
+					inputProps={{ step: "1", style: { padding: "4px 8px" } }}
 					placeholder="Harga"
 					size="small"
 					value={row.unitCost}
@@ -225,7 +225,7 @@ export default function PurchaseForm({ products }: Props) {
 			cell: (row, idx) => (
 				<TextField
 					type="number"
-					inputProps={{ step: "0.0001", style: { padding: "4px 8px" } }}
+					inputProps={{ step: "0.01", style: { padding: "4px 8px" } }}
 					placeholder="Qty"
 					size="small"
 					value={row.qty}
@@ -240,7 +240,7 @@ export default function PurchaseForm({ products }: Props) {
 			cell: (row, idx) => (
 				<TextField
 					type="number"
-					inputProps={{ step: "0.0001", style: { padding: "4px 8px" } }}
+					inputProps={{ step: "1", style: { padding: "4px 8px" } }}
 					placeholder="Harga"
 					size="small"
 					value={row.unitCost}
@@ -351,7 +351,7 @@ export default function PurchaseForm({ products }: Props) {
 				margin,
 				margin - offsetY,
 				contentW,
-				imgHeightMm
+				imgHeightMm,
 			);
 			heightLeft -= contentH;
 		}
@@ -361,7 +361,7 @@ export default function PurchaseForm({ products }: Props) {
 
 	const canExport = invoiceItems.length > 0;
 
-		return (
+	return (
 		<Box component="form" onSubmit={handleSubmit}>
 			{/* 2 kolom md+: jangan wrap */}
 			<Box

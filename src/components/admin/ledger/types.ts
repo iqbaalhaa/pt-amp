@@ -16,5 +16,6 @@ export type LedgerEntry = {
   notes: string | null;
   itemCount: number;
   productionCost?: number | null;
+  subType?: string;
 };
 
