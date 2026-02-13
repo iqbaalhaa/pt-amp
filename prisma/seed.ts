@@ -1,179 +1,587 @@
+// prisma/seed.ts
 import "dotenv/config";
-import { betterAuth } from "better-auth";
-import { prismaAdapter } from "better-auth/adapters/prisma";
-import { prisma } from "../src/lib/prisma";
-import { ProductType } from "../src/generated/prisma";
-import { seedContent } from "./seeds/content-seed";
+import { PrismaClient } from "../src/generated/prisma";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { Pool } from "pg";
+import { randomUUID } from "crypto";
+
+const connectionString = process.env.DATABASE_URL;
+if (!connectionString) {
+  console.error("DATABASE_URL is not set");
+  process.exit(1);
+}
+
+const pool = new Pool({ connectionString });
+const prisma = new PrismaClient({ adapter: new PrismaPg(pool) });
+
+const SEED_PASSWORD = process.env.SEED_PASSWORD ?? "Admin123!";
+
+// Better Auth stores password hash in Account.password (providerId="credential") and uses scrypt by default.
+// We'll use better-auth/crypto hashPassword if available.
+async function hashWithBetterAuth(password: string): Promise<string> {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const mod = await import("better-auth/crypto");
+    if (typeof mod.hashPassword !== "function") {
+      throw new Error("better-auth/crypto.hashPassword not found");
+    }
+    return await mod.hashPassword(password);
+  } catch (e) {
+    console.warn(
+      "[seed] WARNING: Cannot import better-auth/crypto hashPassword. " +
+        "Credential login may fail. Install/config Better Auth properly.",
+      e
+    );
+    // Fallback: store plain (NOT recommended). Better-auth will likely reject this.
+    return password;
+  }
+}
+
+async function ensureCredentialAccount(userId: string, passwordHash: string) {
+  const existing = await prisma.account.findFirst({
+    where: { userId, providerId: "credential" },
+    select: { id: true },
+  });
+
+  if (existing) {
+    await prisma.account.update({
+      where: { id: existing.id },
+      data: { password: passwordHash },
+    });
+    return;
+  }
+
+  await prisma.account.create({
+    data: {
+      id: randomUUID(),
+      accountId: userId, // Better Auth commonly uses accountId == userId for credentials
+      providerId: "credential",
+      userId,
+      password: passwordHash,
+    },
+  });
+}
+
+async function seedAuth() {
+  // Roles
+  const roles = [
+    { name: "ADMIN", description: "Full access" },
+    { name: "STAFF", description: "Staff access" },
+  ];
+
+  for (const r of roles) {
+    await prisma.role.upsert({
+      where: { name: r.name },
+      create: { name: r.name, description: r.description },
+      update: { description: r.description },
+    });
+  }
+
+  // Permissions (minimal + safe default)
+  const permissions = [
+    { name: "view-dashboard", description: "Access dashboard page" },
+    {
+      name: "manage-master",
+      description: "Manage master data (product/worker/type)",
+    },
+    {
+      name: "manage-transactions",
+      description: "Manage transactions (purchase/sale/production)",
+    },
+    { name: "view-reports", description: "View reports" },
+  ];
+
+  for (const p of permissions) {
+    await prisma.permission.upsert({
+      where: { name: p.name },
+      create: { name: p.name, description: p.description },
+      update: { description: p.description },
+    });
+  }
+
+  const adminRole = await prisma.role.findUnique({ where: { name: "ADMIN" } });
+  const staffRole = await prisma.role.findUnique({ where: { name: "STAFF" } });
+  if (!adminRole || !staffRole) throw new Error("Roles not found after upsert");
+
+  // Assign permissions: ADMIN gets all; STAFF gets none by default (adjust if needed)
+  const permRows = await prisma.permission.findMany({
+    where: { name: { in: permissions.map((p) => p.name) } },
+    select: { id: true, name: true },
+  });
+
+  await prisma.rolePermission.createMany({
+    data: permRows.map((p) => ({ roleId: adminRole.id, permissionId: p.id })),
+    skipDuplicates: true,
+  });
+
+  // Ensure STAFF does NOT have view-dashboard (and generally none)
+  const viewDash = permRows.find((p) => p.name === "view-dashboard");
+  if (viewDash) {
+    await prisma.rolePermission.deleteMany({
+      where: { permissionId: viewDash.id, roleId: staffRole.id },
+    });
+  }
+
+  // Users
+  const usersToSeed = [
+    {
+      email: "admin@amp.local",
+      name: "Admin",
+      roleStr: "SUPERADMIN", // deprecated column for transition
+      pivotRoleName: "ADMIN",
+      emailVerified: true,
+    },
+    ...Array.from({ length: 5 }).map((_, i) => ({
+      email: `staff${i + 1}@amp.local`,
+      name: `Staff ${i + 1}`,
+      roleStr: "STAFF",
+      pivotRoleName: "STAFF",
+      emailVerified: true,
+    })),
+  ];
+
+  const roleRecords = await prisma.role.findMany({
+    where: {
+      name: {
+        in: Array.from(new Set(usersToSeed.map((u) => u.pivotRoleName))),
+      },
+    },
+    select: { id: true, name: true },
+  });
+  const roleIdByName = new Map(roleRecords.map((r) => [r.name, r.id]));
+
+  const passwordHash = await hashWithBetterAuth(SEED_PASSWORD);
+
+  for (const u of usersToSeed) {
+    await prisma.user.upsert({
+      where: { email: u.email },
+      create: {
+        id: randomUUID(),
+        email: u.email,
+        name: u.name,
+        role: u.roleStr,
+        emailVerified: u.emailVerified,
+      },
+      update: {
+        name: u.name,
+        role: u.roleStr,
+        emailVerified: u.emailVerified,
+      },
+    });
+
+    const user = await prisma.user.findUnique({ where: { email: u.email } });
+    const roleId = roleIdByName.get(u.pivotRoleName);
+    if (!user || !roleId) continue;
+
+    await prisma.userRole.createMany({
+      data: [{ userId: user.id, roleId }],
+      skipDuplicates: true,
+    });
+
+    // Create/Update credential account password
+    await ensureCredentialAccount(user.id, passwordHash);
+  }
+
+  return { adminEmail: "admin@amp.local" };
+}
+
+async function seedMaster() {
+  // Production Types (unique by name => upsert)
+  const prodTypes = [
+    { name: "Produksi Stik", description: "Proses produksi stik" },
+    { name: "Produksi Reguler", description: "Produksi umum" },
+  ];
+  for (const t of prodTypes) {
+    await prisma.productionType.upsert({
+      where: { name: t.name },
+      create: { name: t.name, description: t.description },
+      update: { description: t.description },
+    });
+  }
+
+  // Workers (no unique => seed only if empty)
+  const workerCount = await prisma.worker.count();
+  if (workerCount === 0) {
+    await prisma.worker.createMany({
+      data: [
+        { name: "Budi Santoso", isActive: true },
+        { name: "Siti Aulia", isActive: true },
+        { name: "Rian Pratama", isActive: true },
+        { name: "Dewi Lestari", isActive: true },
+      ],
+    });
+  }
+
+  // Products (no unique => seed only if empty)
+  const productCount = await prisma.product.count();
+  if (productCount === 0) {
+    await prisma.product.createMany({
+      data: [
+        {
+          name: "Tembakau Mentah",
+          type: "raw",
+          unit: "kg",
+          description: "Bahan baku tembakau",
+          image: null,
+          isActive: true,
+        },
+        {
+          name: "Cengkeh",
+          type: "raw",
+          unit: "kg",
+          description: "Bahan campuran",
+          image: null,
+          isActive: true,
+        },
+        {
+          name: "Kertas Rokok",
+          type: "raw",
+          unit: "lembar",
+          description: "Bahan pembungkus",
+          image: null,
+          isActive: true,
+        },
+        {
+          name: "Stik 12cm",
+          type: "finished",
+          unit: "bungkus",
+          description: "Produk jadi",
+          image: null,
+          isActive: true,
+        },
+      ],
+    });
+  }
+
+  const products = await prisma.product.findMany({ orderBy: { id: "asc" } });
+  const workers = await prisma.worker.findMany({ orderBy: { id: "asc" } });
+  const productionTypes = await prisma.productionType.findMany({
+    orderBy: { id: "asc" },
+  });
+
+  if (products.length < 4)
+    throw new Error("Not enough products to seed transactions");
+  if (workers.length < 2)
+    throw new Error("Not enough workers to seed production workers");
+  if (productionTypes.length < 1)
+    throw new Error("Not enough production types");
+
+  return { products, workers, productionTypes };
+}
+
+async function seedTransactions(ctx: {
+  products: Awaited<ReturnType<typeof prisma.product.findMany>>;
+  workers: Awaited<ReturnType<typeof prisma.worker.findMany>>;
+  productionTypes: Awaited<ReturnType<typeof prisma.productionType.findMany>>;
+}) {
+  const [pTembakau, pCengkeh, pKertas, pStik] = ctx.products;
+  const prodType = ctx.productionTypes[0];
+  const worker1 = ctx.workers[0];
+  const worker2 = ctx.workers[1];
+
+  // Purchase + items (seed only if empty)
+  let purchaseId: bigint | null = null;
+  const purchaseCount = await prisma.purchase.count();
+  if (purchaseCount === 0) {
+    const purchase = await prisma.purchase.create({
+      data: {
+        supplier: "CV Sumber Makmur",
+        date: new Date("2026-02-01"),
+        status: "posted",
+        notes: "Pembelian awal untuk contoh data",
+        purchaseItems: {
+          create: [
+            { productId: pTembakau.id, qty: "50.0000", unitCost: "15000.0000" },
+            { productId: pCengkeh.id, qty: "10.0000", unitCost: "90000.0000" },
+            { productId: pKertas.id, qty: "1000.0000", unitCost: "200.0000" },
+          ],
+        },
+      },
+      select: { id: true },
+    });
+    purchaseId = purchase.id;
+  } else {
+    const any = await prisma.purchase.findFirst({ select: { id: true } });
+    purchaseId = any?.id ?? null;
+  }
+
+  // Sale + items (seed only if empty)
+  let saleId: bigint | null = null;
+  const saleCount = await prisma.sale.count();
+  if (saleCount === 0) {
+    const sale = await prisma.sale.create({
+      data: {
+        customer: "Toko Andalas",
+        date: new Date("2026-02-05"),
+        status: "posted",
+        notes: "Penjualan contoh",
+        saleItems: {
+          create: [
+            { productId: pStik.id, qty: "100.0000", unitPrice: "5000.0000" },
+          ],
+        },
+      },
+      select: { id: true },
+    });
+    saleId = sale.id;
+  } else {
+    const any = await prisma.sale.findFirst({ select: { id: true } });
+    saleId = any?.id ?? null;
+  }
+
+  // Production + inputs/outputs/workers (seed only if empty)
+  let productionId: bigint | null = null;
+  const productionCount = await prisma.production.count();
+  if (productionCount === 0) {
+    const production = await prisma.production.create({
+      data: {
+        productionTypeId: prodType.id,
+        date: new Date("2026-02-06"),
+        status: "completed",
+        notes: "Produksi contoh",
+        productionInputs: {
+          create: [
+            { productId: pTembakau.id, qty: "20.0000", unitCost: "15000.0000" },
+            { productId: pKertas.id, qty: "400.0000", unitCost: "200.0000" },
+          ],
+        },
+        productionOutputs: {
+          create: [
+            { productId: pStik.id, qty: "120.0000", unitCost: "4000.0000" },
+          ],
+        },
+        productionWorkers: {
+          create: [
+            { workerId: worker1.id, role: "Operator", hours: "8.00" },
+            { workerId: worker2.id, role: "Helper", hours: "6.50" },
+          ],
+        },
+      },
+      select: { id: true },
+    });
+    productionId = production.id;
+  } else {
+    const any = await prisma.production.findFirst({ select: { id: true } });
+    productionId = any?.id ?? null;
+  }
+
+  // Stock Movements (seed only if empty AND we have source rows)
+  const stockCount = await prisma.stockMovement.count();
+  if (stockCount === 0) {
+    // Find source rows for linking
+    const purchaseItems = await prisma.purchaseItem.findMany({
+      take: 10,
+      orderBy: { id: "asc" },
+      select: { id: true, productId: true, qty: true },
+    });
+    const saleItems = await prisma.saleItem.findMany({
+      take: 10,
+      orderBy: { id: "asc" },
+      select: { id: true, productId: true, qty: true },
+    });
+    const prodInputs = await prisma.productionInput.findMany({
+      take: 10,
+      orderBy: { id: "asc" },
+      select: { id: true, productId: true, qty: true },
+    });
+    const prodOutputs = await prisma.productionOutput.findMany({
+      take: 10,
+      orderBy: { id: "asc" },
+      select: { id: true, productId: true, qty: true },
+    });
+
+    const data: Array<{
+      productId: bigint;
+      qty: string;
+      sourceType: string;
+      sourceId: bigint;
+      displayUnit?: string | null;
+      conversionRateUsed?: string | null;
+    }> = [];
+
+    for (const it of purchaseItems) {
+      data.push({
+        productId: it.productId,
+        qty: String(it.qty), // + incoming
+        sourceType: "purchase_item",
+        sourceId: it.id,
+        displayUnit: null,
+        conversionRateUsed: null,
+      });
+    }
+    for (const it of saleItems) {
+      data.push({
+        productId: it.productId,
+        qty: `-${String(it.qty)}`, // - outgoing
+        sourceType: "sale_item",
+        sourceId: it.id,
+        displayUnit: null,
+        conversionRateUsed: null,
+      });
+    }
+    for (const it of prodInputs) {
+      data.push({
+        productId: it.productId,
+        qty: `-${String(it.qty)}`, // consumed
+        sourceType: "production_input",
+        sourceId: it.id,
+        displayUnit: null,
+        conversionRateUsed: null,
+      });
+    }
+    for (const it of prodOutputs) {
+      data.push({
+        productId: it.productId,
+        qty: String(it.qty), // produced
+        sourceType: "production_output",
+        sourceId: it.id,
+        displayUnit: null,
+        conversionRateUsed: null,
+      });
+    }
+
+    if (data.length > 0) {
+      await prisma.stockMovement.createMany({ data });
+    }
+  }
+
+  // Upah modules (seed only if empty)
+  if ((await prisma.pengikisan.count()) === 0) {
+    await prisma.pengikisan.create({
+      data: {
+        date: new Date("2026-02-07"),
+        notes: "Pengikisan contoh",
+        totalUpah: "58250.00",
+        pengikisanItems: {
+          create: [
+            {
+              nama: "Rian Pratama",
+              kaKg: "12.5000",
+              stikKg: "7.0000",
+              upahKa: "2000.00",
+              upahStik: "1500.00",
+              total: "35500.00",
+            },
+            {
+              nama: "Dewi Lestari",
+              kaKg: "8.0000",
+              stikKg: "4.5000",
+              upahKa: "2000.00",
+              upahStik: "1500.00",
+              total: "22750.00",
+            },
+          ],
+        },
+      },
+    });
+  }
+
+  if ((await prisma.penjemuran.count()) === 0) {
+    await prisma.penjemuran.create({
+      data: {
+        date: new Date("2026-02-08"),
+        notes: "Penjemuran contoh",
+        upahPerHari: "75000.00",
+        upahLemburPerJam: "15000.00",
+        totalUpah: "225000.00",
+        penjemuranItems: {
+          create: [
+            {
+              nama: "Budi Santoso",
+              hari: "2.00",
+              lemburJam: "3.00",
+              upahPerHari: "75000.00",
+              upahLemburPerJam: "15000.00",
+              total: "195000.00", // 2*75000 + 3*15000
+            },
+            {
+              nama: "Siti Aulia",
+              hari: "1.00",
+              lemburJam: "2.00",
+              upahPerHari: "75000.00",
+              upahLemburPerJam: "15000.00",
+              total: "105000.00", // 1*75000 + 2*15000
+            },
+          ],
+        },
+      },
+    });
+  }
+
+  if ((await prisma.pengemasan.count()) === 0) {
+    await prisma.pengemasan.create({
+      data: {
+        date: new Date("2026-02-09"),
+        notes: "Pengemasan contoh",
+        upahPerBungkus: "250.00",
+        totalUpah: "50000.00",
+        pengemasanItems: {
+          create: [
+            {
+              nama: "Budi Santoso",
+              bungkus: "120.00",
+              upahPerBungkus: "250.00",
+              total: "30000.00",
+            },
+            {
+              nama: "Siti Aulia",
+              bungkus: "80.00",
+              upahPerBungkus: "250.00",
+              total: "20000.00",
+            },
+          ],
+        },
+      },
+    });
+  }
+
+  if ((await prisma.pemotongan.count()) === 0) {
+    await prisma.pemotongan.create({
+      data: {
+        date: new Date("2026-02-10"),
+        notes: "Pemotongan contoh",
+        upahPerKg: "1800.00",
+        totalUpah: "54000.00",
+        pemotonganItems: {
+          create: [
+            {
+              nama: "Rian Pratama",
+              qty: "20.0000",
+              upahPerKg: "1800.00",
+              total: "36000.00",
+            },
+            {
+              nama: "Dewi Lestari",
+              qty: "10.0000",
+              upahPerKg: "1800.00",
+              total: "18000.00",
+            },
+          ],
+        },
+      },
+    });
+  }
+
+  return { purchaseId, saleId, productionId };
+}
 
 async function main() {
-	// ============================================================
-	// 0. CLEANUP DATA (Sesuai Request)
-	// ============================================================
-	console.log("🗑️ Membersihkan data lama...");
+  const { adminEmail } = await seedAuth();
+  const master = await seedMaster();
+  await seedTransactions(master);
 
-	// Hapus transaksi & mutasi stok dulu (karena ada Foreign Key)
-	await prisma.stockMovement.deleteMany();
-	
-	await prisma.productionInput.deleteMany();
-	await prisma.productionOutput.deleteMany();
-	await prisma.productionWorker.deleteMany();
-	await prisma.production.deleteMany();
-	
-	await prisma.purchaseItem.deleteMany();
-	await prisma.purchase.deleteMany();
-	
-	await prisma.saleItem.deleteMany();
-	await prisma.sale.deleteMany();
-
-	// Hapus Master Data
-	await prisma.product.deleteMany();
-	await prisma.productionType.deleteMany();
-	await prisma.worker.deleteMany();
-	// Customer model removed
-
-    // Note: CMS Content tables are NOT cleared here to preserve them if needed, 
-    // or you can add deleteMany here if you want a full reset.
-    // For now, we rely on the check in seedContent.
-	
-	console.log("✅ Data lama berhasil dihapus.");
-
-	// ============================================================
-	// 1. SEED SUPERADMIN
-	// ============================================================
-	const email = process.env.SUPERADMIN_EMAIL;
-	const password = process.env.SUPERADMIN_PASSWORD;
-	const name = process.env.SUPERADMIN_NAME ?? "Superadmin";
-
-	if (email && password) {
-		const existing = await prisma.user.findUnique({ where: { email } });
-		if (existing) {
-			if (existing.role !== "SUPERADMIN") {
-				await prisma.user.update({
-					where: { id: existing.id },
-					data: { role: "SUPERADMIN" },
-				});
-				console.log("✅ User sudah ada, role dipromosikan ke SUPERADMIN");
-			} else {
-				console.log("✅ SUPERADMIN sudah ada");
-			}
-		} else {
-			// Instance auth khusus untuk seeding
-			const seedAuth = betterAuth({
-				emailAndPassword: { enabled: true, disableSignUp: false },
-				user: {
-					additionalFields: {
-						role: {
-							type: ["SUPERADMIN", "STAFF"],
-							defaultValue: "STAFF",
-							input: false,
-						},
-					},
-				},
-				database: prismaAdapter(prisma, { provider: "postgresql" }),
-			});
-
-			await seedAuth.api.signUpEmail({
-				body: { name, email, password },
-			});
-
-			const created = await prisma.user.findUnique({ where: { email } });
-			if (created) {
-				await prisma.user.update({
-					where: { id: created.id },
-					data: { role: "SUPERADMIN" },
-				});
-				console.log("✅ SUPERADMIN dibuat:", email);
-			}
-		}
-	} else {
-		console.warn(
-			"⚠️ SUPERADMIN_EMAIL atau SUPERADMIN_PASSWORD belum di-set di .env"
-		);
-	}
-
-	// ============================================================
-	// 2. SEED MASTER DATA
-	// ============================================================
-
-	console.log("🌱 Seeding Master Data...");
-
-	// --- Production Types ---
-	const productionTypes = [
-		{ name: "Pengolahan Sawit", description: "Proses TBS menjadi CPO & Kernel" },
-		{ name: "Sortasi", description: "Sortasi buah masuk" },
-	];
-
-	for (const pt of productionTypes) {
-		await prisma.productionType.create({
-			data: { name: pt.name, description: pt.description },
-		});
-	}
-	console.log("   - Production Types seeded");
-
-	// --- Products ---
-	// 1. Asahan, 2. Patahan, 3. AAA, 4. Reject, 5. Miss Cut
-	// Each has raw and finished version.
-	const productNames = ["Asahan", "Patahan", "AAA", "Reject", "Miss Cut"];
-	const products = [];
-
-	for (const name of productNames) {
-		products.push({
-			name: name,
-			type: ProductType.raw,
-			unit: "kg",
-			description: `${name} (Bahan Baku)`,
-		});
-		products.push({
-			name: name,
-			type: ProductType.finished,
-			unit: "kg",
-			description: `${name} (Barang Jadi)`,
-		});
-	}
-
-	for (const p of products) {
-		await prisma.product.create({
-			data: {
-				name: p.name,
-				type: p.type,
-				unit: p.unit,
-				description: p.description,
-			},
-		});
-	}
-	console.log("   - Products seeded (10 items: 5 names x 2 types)");
-
-	// --- Workers ---
-	const workers = [
-		{ name: "Budi Santoso" },
-		{ name: "Siti Aminah" },
-		{ name: "Joko Anwar" },
-	];
-
-	for (const w of workers) {
-		await prisma.worker.create({
-			data: { name: w.name },
-		});
-	}
-	console.log("   - Workers seeded");
-
-	// --- Customers / Suppliers ---
-	// Customer model removed; supplier/buyer now use manual string IDs
-	console.log("   - Customers/Suppliers skipped (Customer model removed)");
-
-	// ============================================================
-	// 3. SEED CMS CONTENT
-	// ============================================================
-	await seedContent(prisma);
-
-	console.log("✅ Seeding selesai!");
+  console.log("✅ Seed completed (NON-CMS only).");
+  console.log("Login:");
+  console.log(`- admin: ${adminEmail}`);
+  console.log(`- password (all seeded users): ${SEED_PASSWORD}`);
 }
 
 main()
-	.catch((e) => {
-		console.error("❌ Seed gagal:", e);
-		process.exit(1);
-	})
-	.finally(async () => {
-		await prisma.$disconnect();
-	});
+  .catch((e) => {
+    console.error("❌ Seed failed:", e);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+    await pool.end();
+  });

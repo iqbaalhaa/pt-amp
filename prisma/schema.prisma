@@ -18,10 +18,7 @@ datasource db {
 // AUTH & USER MANAGEMENT (Keep existing)
 // =========================================================
 
-enum Role {
-  SUPERADMIN
-  STAFF
-}
+ 
 
 model User {
   id            String    @id
@@ -31,13 +28,67 @@ model User {
   image         String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
-  role          String    @default("STAFF")
+  role          String    @default("STAFF") // deprecated: will be removed after migration completes
+  userRoles     UserRole[]
   posts         Post[]
   sessions      Session[]
   accounts      Account[]
 
   @@unique([email])
   @@map("user")
+}
+
+model Role {
+  id            String       @id @default(cuid())
+  name          String       @unique
+  description   String?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  userRoles     UserRole[]
+  rolePermissions RolePermission[]
+
+  @@map("roles")
+}
+
+model Permission {
+  id            String          @id @default(cuid())
+  name          String          @unique
+  description   String?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  rolePermissions RolePermission[]
+
+  @@map("permissions")
+}
+
+model UserRole {
+  id        String  @id @default(cuid())
+  userId    String
+  roleId    String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, roleId], name: "user_role_unique")
+  @@index([userId], name: "idx_user_roles_user")
+  @@index([roleId], name: "idx_user_roles_role")
+  @@map("user_roles")
+}
+
+model RolePermission {
+  id           String     @id @default(cuid())
+  roleId       String
+  permissionId String
+  createdAt    DateTime   @default(now())
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionId], name: "role_permission_unique")
+  @@index([roleId], name: "idx_role_permissions_role")
+  @@index([permissionId], name: "idx_role_permissions_permission")
+  @@map("role_permissions")
 }
 
 model Session {

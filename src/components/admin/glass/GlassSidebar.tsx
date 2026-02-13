@@ -29,264 +29,279 @@ type Item = { label: string; href: string; icon: React.ReactNode };
 type Group = { title: string; items: Item[] };
 
 const groups: Group[] = [
-	{
-		title: "Home",
-		items: [
-			{
-				label: "Dashboard",
-				href: "/admin",
-				icon: <DashboardIcon fontSize="small" />,
-			},
-		],
-	},
+  {
+    title: "Home",
+    items: [
+      {
+        label: "Dashboard",
+        href: "/admin",
+        icon: <DashboardIcon fontSize="small" />,
+      },
+    ],
+  },
 
-	{
-		title: "Transaksi",
-		items: [
-			{
-				label: "Pembelian",
-				href: "/admin/purchases",
-				icon: <ShoppingCartIcon fontSize="small" />,
-			},
-			{
-				label: "Penjualan",
-				href: "/admin/sales",
-				icon: <ReceiptLongIcon fontSize="small" />,
-			},
-			{
-				label: "Pembukuan",
-				href: "/admin/ledger",
-				icon: <MenuBookIcon fontSize="small" />,
-			},
-		],
-	},
+  {
+    title: "Transaksi",
+    items: [
+      {
+        label: "Pembelian",
+        href: "/admin/purchases",
+        icon: <ShoppingCartIcon fontSize="small" />,
+      },
+      {
+        label: "Penjualan",
+        href: "/admin/sales",
+        icon: <ReceiptLongIcon fontSize="small" />,
+      },
+      {
+        label: "Pembukuan",
+        href: "/admin/ledger",
+        icon: <MenuBookIcon fontSize="small" />,
+      },
+    ],
+  },
 
-	{
-		title: "Produksi",
-		items: [
-			{
-				label: "Pengikisan",
-				href: "/admin/pengikisan",
-				icon: <PrecisionManufacturingIcon fontSize="small" />,
-			},
-			{
-				label: "Pemotongan",
-				href: "/admin/pemotongan",
-				icon: <ContentCutIcon fontSize="small" />,
-			},
-			{
-				label: "Penjemuran",
-				href: "/admin/penjemuran",
-				icon: <WbSunnyIcon fontSize="small" />,
-			},
-			{
-				label: "Pengemasan",
-				href: "/admin/pengemasan",
-				icon: <InventoryIcon fontSize="small" />,
-			},
-		],
-	},
+  {
+    title: "Produksi",
+    items: [
+      {
+        label: "Pengikisan",
+        href: "/admin/pengikisan",
+        icon: <PrecisionManufacturingIcon fontSize="small" />,
+      },
+      {
+        label: "Pemotongan",
+        href: "/admin/pemotongan",
+        icon: <ContentCutIcon fontSize="small" />,
+      },
+      {
+        label: "Penjemuran",
+        href: "/admin/penjemuran",
+        icon: <WbSunnyIcon fontSize="small" />,
+      },
+      {
+        label: "Pengemasan",
+        href: "/admin/pengemasan",
+        icon: <InventoryIcon fontSize="small" />,
+      },
+    ],
+  },
 
-	{
-		title: "Master Data",
-		items: [
-			{
-				label: "Pekerja",
-				href: "/admin/workers",
-				icon: <HandymanIcon fontSize="small" />,
-			},
-			{
-				label: "Products",
-				href: "/admin/products",
-				icon: <Inventory2Icon fontSize="small" />,
-			},
-		],
-	},
+  {
+    title: "Master Data",
+    items: [
+      {
+        label: "Pekerja",
+        href: "/admin/workers",
+        icon: <HandymanIcon fontSize="small" />,
+      },
+      {
+        label: "Products",
+        href: "/admin/products",
+        icon: <Inventory2Icon fontSize="small" />,
+      },
+    ],
+  },
 
-	{
-		title: "Compro",
-		items: [
-			{
-				label: "Home",
-				href: "/admin/cms/pages/home",
-				icon: <HomeIcon fontSize="small" />,
-			},
-			{
-				label: "About Us",
-				href: "/admin/compro/about",
-				icon: <InfoIcon fontSize="small" />,
-			},
-			{
-				label: "Gallery",
-				href: "/admin/compro/gallery",
-				icon: <CollectionsIcon fontSize="small" />,
-			},
-			{
-				label: "Blog",
-				href: "/admin/compro/blog",
-				icon: <RssFeedIcon fontSize="small" />,
-			},
-			{
-				label: "Contact & Social",
-				href: "/admin/compro/contact",
-				icon: <ContactMailIcon fontSize="small" />,
-			},
-		],
-	},
+  {
+    title: "Compro",
+    items: [
+      {
+        label: "Home",
+        href: "/admin/cms/pages/home",
+        icon: <HomeIcon fontSize="small" />,
+      },
+      {
+        label: "About Us",
+        href: "/admin/compro/about",
+        icon: <InfoIcon fontSize="small" />,
+      },
+      {
+        label: "Gallery",
+        href: "/admin/compro/gallery",
+        icon: <CollectionsIcon fontSize="small" />,
+      },
+      {
+        label: "Blog",
+        href: "/admin/compro/blog",
+        icon: <RssFeedIcon fontSize="small" />,
+      },
+      {
+        label: "Contact & Social",
+        href: "/admin/compro/contact",
+        icon: <ContactMailIcon fontSize="small" />,
+      },
+    ],
+  },
 
-	{
-		title: "Settings",
-		items: [
-			{
-				label: "Users",
-				href: "/admin/users",
-				icon: <PeopleIcon fontSize="small" />,
-			},
-			{
-				label: "Settings",
-				href: "/admin/settings",
-				icon: <SettingsIcon fontSize="small" />,
-			},
-		],
-	},
+  {
+    title: "Settings",
+    items: [
+      {
+        label: "Users",
+        href: "/admin/users",
+        icon: <PeopleIcon fontSize="small" />,
+      },
+      {
+        label: "Settings",
+        href: "/admin/settings",
+        icon: <SettingsIcon fontSize="small" />,
+      },
+    ],
+  },
 ];
 
 export default function GlassSidebar({
-	collapsed,
-	isMobile,
-	onToggle,
+  collapsed,
+  isMobile,
+  onToggle,
+  allowedPaths,
 }: {
-	collapsed: boolean;
-	isMobile: boolean;
-	onToggle: () => void;
+  collapsed: boolean;
+  isMobile: boolean;
+  onToggle: () => void;
+  allowedPaths?: string[];
 }) {
-	const pathname = usePathname();
-	const isActive = (href: string) => {
-		if (href === "/admin") {
-			return pathname === "/admin";
-		}
-		return pathname === href || pathname.startsWith(href + "/");
-	};
+  const pathname = usePathname();
+  const isActive = (href: string) => {
+    if (href === "/admin") {
+      return pathname === "/admin";
+    }
+    return pathname === href || pathname.startsWith(href + "/");
+  };
 
-	// Determine width/transform classes based on state
-	const containerClasses = isMobile
-		? `fixed left-0 top-0 h-screen z-40 transition-transform duration-300 ease-in-out ${
-				collapsed ? "-translate-x-full" : "translate-x-0"
-			}`
-		: "fixed left-0 top-0 h-screen z-40";
+  // Determine width/transform classes based on state
+  const containerClasses = isMobile
+    ? `fixed left-0 top-0 h-screen z-40 transition-transform duration-300 ease-in-out ${
+        collapsed ? "-translate-x-full" : "translate-x-0"
+      }`
+    : "fixed left-0 top-0 h-screen z-40";
 
-	const widthClass = isMobile
-		? "w-[260px]"
-		: collapsed
-			? "w-[76px]"
-			: "w-[260px]";
+  const widthClass = isMobile
+    ? "w-[260px]"
+    : collapsed
+    ? "w-[76px]"
+    : "w-[260px]";
 
-	return (
-		<div className={containerClasses}>
-			<div className="p-2 md:p-3 h-full">
-				<div
-					className={`glass rounded-2xl h-full shadow-soft flex flex-col transition-[width] duration-200 ease-out ${widthClass}`}
-				>
-					<div className="flex items-center gap-2 px-3 pt-3">
-						<div className="w-7 h-7 rounded-lg overflow-hidden bg-white flex items-center justify-center">
-							<img
-								src="/logoAMP.png"
-								alt="Logo PT AMP"
-								className="w-full h-full object-contain"
-							/>
-						</div>
-						<AnimatePresence initial={false}>
-							{(!collapsed || isMobile) && (
-								<motion.div
-									initial={{ opacity: 0, x: -6 }}
-									animate={{ opacity: 1, x: 0 }}
-									exit={{ opacity: 0, x: -6 }}
-									transition={{ duration: 0.2, ease: "easeOut" }}
-									className="text-sm font-semibold tracking-wide text-[var(--brand)]"
-								>
-									Aurora Mitra Perkasa
-								</motion.div>
-							)}
-						</AnimatePresence>
+  return (
+    <div className={containerClasses}>
+      <div className="p-2 md:p-3 h-full">
+        <div
+          className={`glass rounded-2xl h-full shadow-soft flex flex-col transition-[width] duration-200 ease-out ${widthClass}`}
+        >
+          <div className="flex items-center gap-2 px-3 pt-3">
+            <div className="w-7 h-7 rounded-lg overflow-hidden bg-white flex items-center justify-center">
+              <img
+                src="/logoAMP.png"
+                alt="Logo PT AMP"
+                className="w-full h-full object-contain"
+              />
+            </div>
+            <AnimatePresence initial={false}>
+              {(!collapsed || isMobile) && (
+                <motion.div
+                  initial={{ opacity: 0, x: -6 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -6 }}
+                  transition={{ duration: 0.2, ease: "easeOut" }}
+                  className="text-sm font-semibold tracking-wide text-[var(--brand)]"
+                >
+                  Aurora Mitra Perkasa
+                </motion.div>
+              )}
+            </AnimatePresence>
 
-						{!isMobile && (
-							<button
-								aria-label="Toggle sidebar"
-								className="ml-auto w-8 h-8 rounded-full glass flex items-center justify-center text-secondary hover:text-[var(--brand)] transition-transform hover:scale-105"
-								onClick={onToggle}
-							>
-								{collapsed ? (
-									<ChevronRightIcon fontSize="small" />
-								) : (
-									<ChevronLeftIcon fontSize="small" />
-								)}
-							</button>
-						)}
-					</div>
-					<div className="px-2 mt-2 overflow-y-auto no-scrollbar flex-1">
-						{groups.map((g) => (
-							<div key={g.title} className="mb-4">
-								<AnimatePresence initial={false}>
-									{(!collapsed || isMobile) && (
-										<motion.div
-											initial={{ opacity: 0, x: -6 }}
-											animate={{ opacity: 1, x: 0 }}
-											exit={{ opacity: 0, x: -6 }}
-											transition={{ duration: 0.2, ease: "easeOut" }}
-											className="px-3 py-2 text-[10px] uppercase tracking-wide text-secondary"
-										>
-											{g.title}
-										</motion.div>
-									)}
-								</AnimatePresence>
-								<div className="flex flex-col gap-1">
-									{g.items.map((it) => {
-										const isItemActive = isActive(it.href);
-										return (
-											<Link
-												key={`${g.title}-${it.label}`}
-												href={it.href}
-												className={`flex items-center gap-2 px-3 py-2 rounded-xl transition-colors ${
-													isItemActive
-														? "bg-[rgba(213,14,12,0.12)] text-[var(--brand)]"
-														: "hover:bg-[rgba(255,255,255,0.06)] text-primary"
-												}`}
-											>
-												<div
-													className={`w-6 h-6 flex items-center justify-center ${
-														isItemActive ? "text-[var(--brand)]" : "text-black"
-													}`}
-												>
-													{it.icon}
-												</div>
-												<AnimatePresence initial={false}>
-													{(!collapsed || isMobile) && (
-														<motion.span
-															initial={{ opacity: 0, x: -6 }}
-															animate={{ opacity: 1, x: 0 }}
-															exit={{ opacity: 0, x: -6 }}
-															transition={{ duration: 0.2, ease: "easeOut" }}
-															className="text-sm font-semibold"
-														>
-															{it.label}
-														</motion.span>
-													)}
-												</AnimatePresence>
-												{isItemActive && (
-													<span className="ml-auto w-1.5 h-1.5 rounded-full bg-[var(--brand)] shadow-[0_0_12px_rgba(213,14,12,0.8)]" />
-												)}
-											</Link>
-										);
-									})}
-								</div>
-							</div>
-						))}
-					</div>
-					<div className="mt-auto px-3 pb-3 text-[11px] text-secondary">
-						ERP Pt. AMP
-					</div>
-				</div>
-			</div>
-		</div>
-	);
+            {!isMobile && (
+              <button
+                aria-label="Toggle sidebar"
+                className="ml-auto w-8 h-8 rounded-full glass flex items-center justify-center text-secondary hover:text-[var(--brand)] transition-transform hover:scale-105"
+                onClick={onToggle}
+              >
+                {collapsed ? (
+                  <ChevronRightIcon fontSize="small" />
+                ) : (
+                  <ChevronLeftIcon fontSize="small" />
+                )}
+              </button>
+            )}
+          </div>
+          <div className="px-2 mt-2 overflow-y-auto no-scrollbar flex-1">
+            {groups
+              .map((g) => {
+                const filteredItems = allowedPaths
+                  ? g.items.filter((it) =>
+                      allowedPaths.some((p) => it.href.startsWith(p))
+                    )
+                  : g.items;
+                if (filteredItems.length === 0) return null as any;
+                return { title: g.title, items: filteredItems } as Group;
+              })
+              .filter((g): g is Group => Boolean(g))
+              .map((g) => (
+                <div key={g.title} className="mb-4">
+                  <AnimatePresence initial={false}>
+                    {(!collapsed || isMobile) && (
+                      <motion.div
+                        initial={{ opacity: 0, x: -6 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -6 }}
+                        transition={{ duration: 0.2, ease: "easeOut" }}
+                        className="px-3 py-2 text-[10px] uppercase tracking-wide text-secondary"
+                      >
+                        {g.title}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                  <div className="flex flex-col gap-1">
+                    {g.items.map((it) => {
+                      const isItemActive = isActive(it.href);
+                      return (
+                        <Link
+                          key={`${g.title}-${it.label}`}
+                          href={it.href}
+                          className={`flex items-center gap-2 px-3 py-2 rounded-xl transition-colors ${
+                            isItemActive
+                              ? "bg-[rgba(213,14,12,0.12)] text-[var(--brand)]"
+                              : "hover:bg-[rgba(255,255,255,0.06)] text-primary"
+                          }`}
+                        >
+                          <div
+                            className={`w-6 h-6 flex items-center justify-center ${
+                              isItemActive
+                                ? "text-[var(--brand)]"
+                                : "text-black"
+                            }`}
+                          >
+                            {it.icon}
+                          </div>
+                          <AnimatePresence initial={false}>
+                            {(!collapsed || isMobile) && (
+                              <motion.span
+                                initial={{ opacity: 0, x: -6 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: -6 }}
+                                transition={{ duration: 0.2, ease: "easeOut" }}
+                                className="text-sm font-semibold"
+                              >
+                                {it.label}
+                              </motion.span>
+                            )}
+                          </AnimatePresence>
+                          {isItemActive && (
+                            <span className="ml-auto w-1.5 h-1.5 rounded-full bg-[var(--brand)] shadow-[0_0_12px_rgba(213,14,12,0.8)]" />
+                          )}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+          </div>
+          <div className="mt-auto px-3 pb-3 text-[11px] text-secondary">
+            ERP Pt. AMP
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }

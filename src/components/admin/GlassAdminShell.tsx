@@ -3,14 +3,19 @@
 import React, { useEffect, useState } from "react";
 import GlassSidebar from "./glass/GlassSidebar";
 import GlassNavbar from "./glass/GlassNavbar";
+import { usePathname, useRouter } from "next/navigation";
 
 export default function GlassAdminShell({
 	children,
+	allowedPaths,
 }: {
 	children: React.ReactNode;
+	allowedPaths?: string[];
 }) {
 	const [collapsed, setCollapsed] = useState(false);
 	const [isMobile, setIsMobile] = useState(false);
+	const pathname = usePathname();
+	const router = useRouter();
 
 	useEffect(() => {
 		const checkMobile = () => {
@@ -28,6 +33,18 @@ export default function GlassAdminShell({
 		return () => window.removeEventListener("resize", checkMobile);
 	}, []);
 
+	// Client-side guard: if allowedPaths is provided (non-admin),
+	// redirect to /forbidden when current path is not allowed
+	useEffect(() => {
+		if (!allowedPaths) return;
+		const isAllowed = allowedPaths.some(
+			(p) => pathname === p || pathname.startsWith(p + "/")
+		);
+		if (!isAllowed) {
+			router.replace("/forbidden");
+		}
+	}, [allowedPaths, pathname, router]);
+
 	const sidebarWidth = collapsed ? (isMobile ? 0 : 92) : 284;
 
 	return (
@@ -37,6 +54,7 @@ export default function GlassAdminShell({
 				collapsed={collapsed}
 				isMobile={isMobile}
 				onToggle={() => setCollapsed((v) => !v)}
+				allowedPaths={allowedPaths}
 			/>
 			<main
 				className="pt-20 md:pt-24 pr-2 md:pr-4 transition-all duration-200"
