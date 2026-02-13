@@ -25,9 +25,11 @@ export interface Album {
 
 interface GalleryAlbumsProps {
   albums: Album[];
+  showTitle?: boolean;
+  className?: string;
 }
 
-export function GalleryAlbums({ albums }: GalleryAlbumsProps) {
+export function GalleryAlbums({ albums, showTitle = true, className }: GalleryAlbumsProps) {
   const [selectedAlbum, setSelectedAlbum] = useState<Album | null>(null);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -81,15 +83,17 @@ export function GalleryAlbums({ albums }: GalleryAlbumsProps) {
   };
 
   return (
-    <section className="py-24 bg-zinc-50 min-h-screen">
+    <section className={`min-h-screen ${className ? className : 'py-24 bg-zinc-50'}`}>
       <div className="container mx-auto px-4 md:px-6 lg:px-8">
-        <div className="text-center max-w-2xl mx-auto mb-20 animate-in fade-in slide-in-from-bottom-4 duration-700">
-          <span className="text-[var(--brand)] font-semibold tracking-wider text-sm uppercase mb-3 block">Dokumentasi</span>
-          <h1 className="text-4xl md:text-5xl font-bold mb-6 text-zinc-900 tracking-tight">Galeri Aktivitas</h1>
-          <p className="text-lg text-zinc-600 leading-relaxed">
-            Menelusuri jejak kualitas dari petani hingga pengiriman.
-          </p>
-        </div>
+        {showTitle && (
+          <div className="text-center max-w-2xl mx-auto mb-20 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <span className="text-[var(--brand)] font-semibold tracking-wider text-sm uppercase mb-3 block">Dokumentasi</span>
+            <h1 className="text-4xl md:text-5xl font-bold mb-6 text-zinc-900 tracking-tight">Galeri Aktivitas</h1>
+            <p className="text-lg text-zinc-600 leading-relaxed">
+              Menelusuri jejak kualitas dari petani hingga pengiriman.
+            </p>
+          </div>
+        )}
 
         {/* Album Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-10">

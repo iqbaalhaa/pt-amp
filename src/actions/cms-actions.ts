@@ -302,6 +302,34 @@ export async function getGalleryAlbums() {
   });
 }
 
+export async function getLatestGalleryMedia(limit: number = 6) {
+  const client: any = prisma;
+  if (!client.galleryMedia) {
+    return [];
+  }
+
+  const media = await client.galleryMedia.findMany({
+    take: limit,
+    orderBy: {
+      createdAt: "desc",
+    },
+    include: {
+      album: {
+        select: {
+          title: true,
+        },
+      },
+    },
+  });
+
+  return media.map((item: any) => ({
+    src: item.src,
+    alt: item.caption || item.album?.title || "Gallery Image",
+    category: item.album?.title || "General",
+    type: item.type,
+  }));
+}
+
 export async function createGalleryAlbum(formData: FormData) {
   const title = (formData.get("title") as string) || "";
   const description = (formData.get("description") as string) || "";

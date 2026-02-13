@@ -12,25 +12,50 @@ export function Navbar() {
 			<div className="container mx-auto px-4 md:px-6 lg:px-8">
 				<div className="flex h-16 items-center justify-between">
 					{/* Logo */}
-					<Link href="/" className="text-2xl font-bold tracking-tight text-brand hover:opacity-90 transition-opacity" style={{ color: "var(--brand)" }}>
+					<Link
+						href="/"
+						className="text-2xl font-bold tracking-tight text-brand hover:opacity-90 transition-opacity"
+						style={{ color: "var(--brand)" }}
+					>
 						PT AMP
 					</Link>
 
 					{/* Desktop Nav */}
 					<nav className="hidden md:flex items-center gap-8 text-sm font-medium">
-						<Link href="/about" className="text-zinc-600 hover:text-brand transition-colors">
+						<Link
+							href="/"
+							className="text-zinc-600 hover:text-brand transition-colors"
+						>
+							Home
+						</Link>
+						<Link
+							href="/about"
+							className="text-zinc-600 hover:text-brand transition-colors"
+						>
 							About Us
 						</Link>
-						<Link href="/products" className="text-zinc-600 hover:text-brand transition-colors">
+						<Link
+							href="/products"
+							className="text-zinc-600 hover:text-brand transition-colors"
+						>
 							Product
 						</Link>
-						<Link href="/gallery" className="text-zinc-600 hover:text-brand transition-colors">
+						<Link
+							href="/gallery"
+							className="text-zinc-600 hover:text-brand transition-colors"
+						>
 							Gallery
 						</Link>
-						<Link href="/blog" className="text-zinc-600 hover:text-brand transition-colors">
+						<Link
+							href="/blog"
+							className="text-zinc-600 hover:text-brand transition-colors"
+						>
 							Blog
 						</Link>
-						<Link href="/contact" className="text-zinc-600 hover:text-brand transition-colors">
+						<Link
+							href="/contact"
+							className="text-zinc-600 hover:text-brand transition-colors"
+						>
 							Contact
 						</Link>
 						<Link
