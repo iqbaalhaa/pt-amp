@@ -1,6 +1,15 @@
 "use client";
 
-import { Box, Paper, Stack, Typography, Button, Divider, Chip, Alert } from "@mui/material";
+import {
+  Box,
+  Paper,
+  Stack,
+  Typography,
+  Button,
+  Divider,
+  Chip,
+  Alert,
+} from "@mui/material";
 import ErrorOutlineRoundedIcon from "@mui/icons-material/ErrorOutlineRounded";
 
 export default function Error({
@@ -32,7 +41,7 @@ export default function Error({
           height: 320,
           borderRadius: "50%",
           background:
-            "radial-gradient(circle at 30% 30%, rgba(97,206,112,0.25), rgba(97,206,112,0.08) 60%, transparent 70%)",
+            "radial-gradient(circle at 30% 30%, rgba(213,14,12,0.25), rgba(213,14,12,0.08) 60%, transparent 70%)",
           filter: "blur(42px)",
           opacity: 0.18,
           top: "12%",
@@ -72,8 +81,8 @@ export default function Error({
                 alignItems: "center",
                 justifyContent: "center",
                 background:
-                  "linear-gradient(135deg, rgba(97,206,112,0.18), rgba(97,206,112,0.08))",
-                color: "#61ce70",
+                  "linear-gradient(135deg, rgba(213,14,12,0.18), rgba(213,14,12,0.08))",
+                color: "var(--brand)",
               }}
             >
               <ErrorOutlineRoundedIcon />
@@ -87,15 +96,16 @@ export default function Error({
               sx={{
                 ml: "auto",
                 fontWeight: 600,
-                bgcolor: "rgba(97,206,112,0.12)",
-                border: "1px solid rgba(97,206,112,0.35)",
+                bgcolor: "rgba(213,14,12,0.12)",
+                border: "1px solid rgba(213,14,12,0.35)",
                 color: "#1a1a1a",
               }}
             />
           </Stack>
 
           <Typography variant="body1" sx={{ color: "text.secondary" }}>
-            Maaf, sesuatu tidak berjalan sesuai rencana. Coba lagi atau kembali ke beranda.
+            Maaf, sesuatu tidak berjalan sesuai rencana. Coba lagi atau kembali
+            ke beranda.
           </Typography>
 
           {error?.message && (
@@ -131,10 +141,10 @@ export default function Error({
               sx={{
                 flex: 1,
                 py: 1.2,
-                backgroundColor: "#61ce70",
-                "&:hover": { backgroundColor: "#55c165" },
+                backgroundColor: "var(--brand)",
+                "&:hover": { opacity: 0.9 },
                 "&:focus-visible": {
-                  boxShadow: "0 0 0 3px rgba(97,206,112,0.35)",
+                  boxShadow: "0 0 0 3px rgba(213,14,12,0.35)",
                 },
               }}
             >
@@ -147,11 +157,14 @@ export default function Error({
               sx={{
                 flex: 1,
                 py: 1.2,
-                borderColor: "#61ce70",
+                borderColor: "var(--brand)",
                 color: "#1a1a1a",
-                "&:hover": { borderColor: "#55c165", bgcolor: "rgba(97,206,112,0.06)" },
+                "&:hover": {
+                  borderColor: "var(--brand)",
+                  bgcolor: "rgba(213,14,12,0.06)",
+                },
                 "&:focus-visible": {
-                  boxShadow: "0 0 0 3px rgba(97,206,112,0.25)",
+                  boxShadow: "0 0 0 3px rgba(213,14,12,0.25)",
                 },
               }}
             >
@@ -165,11 +178,14 @@ export default function Error({
               sx={{
                 flex: 1,
                 py: 1.2,
-                borderColor: "#61ce70",
+                borderColor: "var(--brand)",
                 color: "#1a1a1a",
-                "&:hover": { borderColor: "#55c165", bgcolor: "rgba(97,206,112,0.06)" },
+                "&:hover": {
+                  borderColor: "var(--brand)",
+                  bgcolor: "rgba(213,14,12,0.06)",
+                },
                 "&:focus-visible": {
-                  boxShadow: "0 0 0 3px rgba(97,206,112,0.25)",
+                  boxShadow: "0 0 0 3px rgba(213,14,12,0.25)",
                 },
               }}
             >

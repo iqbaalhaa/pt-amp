@@ -45,7 +45,6 @@ export default function ForbiddenPage() {
           backdropFilter: "blur(10px)",
         }}
       >
-        {/* subtle blob */}
         <Box
           aria-hidden
           sx={{
@@ -56,7 +55,7 @@ export default function ForbiddenPage() {
             top: -120,
             borderRadius: "50%",
             background:
-              "radial-gradient(circle at 30% 30%, rgba(97,206,112,.35), transparent 55%)",
+              "radial-gradient(circle at 30% 30%, rgba(213,14,12,.28), transparent 55%)",
             filter: "blur(2px)",
             pointerEvents: "none",
           }}
@@ -74,7 +73,8 @@ export default function ForbiddenPage() {
                 border: "1px solid",
                 borderColor: "divider",
                 background:
-                  "linear-gradient(135deg, rgba(97,206,112,.18), rgba(33,150,243,.12))",
+                  "linear-gradient(135deg, rgba(213,14,12,.18), rgba(213,14,12,.10))",
+                color: "var(--brand)",
               }}
             >
               <LockRoundedIcon />
@@ -84,7 +84,12 @@ export default function ForbiddenPage() {
               <Chip
                 label="403"
                 size="small"
-                sx={{ mb: 0.5, fontWeight: 700 }}
+                sx={{
+                  mb: 0.5,
+                  fontWeight: 700,
+                  bgcolor: "rgba(213,14,12,0.12)",
+                  border: "1px solid rgba(213,14,12,0.35)",
+                }}
               />
               <Typography variant="h5" fontWeight={800} lineHeight={1.1}>
                 Akses ditolak
@@ -118,7 +123,16 @@ export default function ForbiddenPage() {
               startIcon={<HomeRoundedIcon />}
               component={Link}
               href="/"
-              sx={{ borderRadius: 2.5, py: 1.1, fontWeight: 800 }}
+              sx={{
+                borderRadius: 2.5,
+                py: 1.1,
+                fontWeight: 800,
+                backgroundColor: "var(--brand)",
+                "&:hover": { opacity: 0.9 },
+                "&:focus-visible": {
+                  boxShadow: "0 0 0 3px rgba(213,14,12,0.35)",
+                },
+              }}
               fullWidth
             >
               Kembali ke Beranda
@@ -128,7 +142,19 @@ export default function ForbiddenPage() {
               variant="outlined"
               startIcon={<ArrowBackRoundedIcon />}
               onClick={() => history.back()}
-              sx={{ borderRadius: 2.5, py: 1.1, fontWeight: 800 }}
+              sx={{
+                borderRadius: 2.5,
+                py: 1.1,
+                fontWeight: 800,
+                borderColor: "var(--brand)",
+                "&:hover": {
+                  borderColor: "var(--brand)",
+                  bgcolor: "rgba(213,14,12,0.06)",
+                },
+                "&:focus-visible": {
+                  boxShadow: "0 0 0 3px rgba(213,14,12,0.25)",
+                },
+              }}
               fullWidth
             >
               Halaman Sebelumnya
@@ -140,7 +166,12 @@ export default function ForbiddenPage() {
             startIcon={<SupportAgentRoundedIcon />}
             component={Link}
             href="/contact"
-            sx={{ borderRadius: 2.5, fontWeight: 800 }}
+            sx={{
+              borderRadius: 2.5,
+              fontWeight: 800,
+              color: "var(--brand)",
+              "&:hover": { bgcolor: "rgba(213,14,12,0.06)" },
+            }}
           >
             Hubungi Admin / Support
           </Button>
