@@ -4,14 +4,14 @@ import ProductionForm from "@/components/admin/production/ProductionForm";
 import ProductionHistory from "@/components/admin/production/ProductionHistory";
 import { getProductions } from "@/actions/production-actions";
 import { prisma } from "@/lib/prisma";
+import type { ItemTypeDTO } from "@/actions/item-type-actions";
 
 export default async function AdminProductionPage() {
 	const productions = await getProductions();
 
-	const products = await prisma.product.findMany({
+	const itemTypes = await prisma.itemType.findMany({
 		where: { isActive: true },
 		orderBy: { name: "asc" },
-		select: { id: true, name: true, unit: true, type: true },
 	});
 
 	const workers = await prisma.worker.findMany({
@@ -26,11 +26,15 @@ export default async function AdminProductionPage() {
 		select: { id: true, name: true },
 	});
 
-	const productOptions = products.map((p) => ({
-		id: p.id.toString(),
-		name: p.name,
-		unit: p.unit,
-		type: p.type,
+	const itemTypeDTOs: ItemTypeDTO[] = itemTypes.map((t) => ({
+		id: t.id.toString(),
+		name: t.name,
+		description: t.description,
+		type: t.type,
+		image: t.image,
+		unit: t.unit,
+		isPublic: t.isPublic,
+		isActive: t.isActive,
 	}));
 
 	const workerOptions = workers.map((w) => ({
@@ -58,7 +62,7 @@ export default async function AdminProductionPage() {
 				<Grid size={{ xs: 12 }}>
 					<Paper sx={{ p: 2, borderRadius: 2 }}>
 						<ProductionForm
-							products={productOptions}
+							itemTypes={itemTypeDTOs}
 							workers={workerOptions}
 							productionTypes={typeOptions}
 						/>

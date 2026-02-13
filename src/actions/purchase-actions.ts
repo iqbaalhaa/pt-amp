@@ -2,13 +2,14 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import { TransactionStatus } from "@/generated/prisma";
+import { TransactionStatus } from "@prisma/client";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 
 export type PurchaseItemInput = {
-  productId: string;
+  itemTypeId: string;
   qty: string;
+  unitId?: string | null;
   unitCost: string;
 };
 
@@ -25,9 +26,10 @@ export async function createPurchase(input: PurchaseInput) {
     input.supplier && input.supplier !== "" ? input.supplier : null;
 
   const itemsData = input.items
-    .filter((i) => i.productId && i.qty && i.unitCost)
+    .filter((i) => i.itemTypeId && i.qty && i.unitCost)
     .map((i) => ({
-      productId: BigInt(i.productId),
+      itemTypeId: BigInt(i.itemTypeId),
+      unitId: i.unitId ? BigInt(i.unitId) : null,
       qty: i.qty,
       unitCost: i.unitCost,
     }));
@@ -58,7 +60,8 @@ export async function getPurchases() {
     include: {
       purchaseItems: {
         include: {
-          product: true,
+          itemType: true,
+          unit: true,
         },
       },
     },
@@ -72,10 +75,10 @@ export async function getPurchases() {
     notes: p.notes,
     items: p.purchaseItems.map((i) => ({
       id: i.id.toString(),
-      productName: i.product.name,
+      productName: i.itemType.name,
       qty: i.qty.toString(),
       unitCost: i.unitCost.toString(),
-      unit: i.product.unit,
+      unit: i.unit ? i.unit.name : "-",
     })),
   }));
 }
@@ -95,3 +98,4 @@ export async function revokePurchase(id: string, reason?: string) {
   revalidatePath("/admin/purchases");
   revalidatePath("/admin/ledger");
 }
+

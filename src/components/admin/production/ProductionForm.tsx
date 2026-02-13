@@ -23,29 +23,24 @@ import {
 	ProductionItemInput,
 	ProductionWorkerInput,
 } from "@/actions/production-actions";
+import type { ItemTypeDTO } from "@/actions/item-type-actions";
 import TagBadge from "@/components/TagBadge";
 import { formatRupiah } from "@/lib/currency";
-import { ProductionStatus } from "@/generated/prisma";
+import { ProductionStatus } from "@prisma/client";
 import GlassTable, { Column } from "@/components/ui/GlassTable";
 import GlassButton from "@/components/ui/GlassButton";
 
-type ProductOption = {
-	id: string;
-	name: string;
-	unit: string;
-	type: "raw" | "finished";
-};
 type WorkerOption = { id: string; name: string };
 type TypeOption = { id: string; name: string };
 
 type Props = {
-	products: ProductOption[];
+	itemTypes: ItemTypeDTO[];
 	workers: WorkerOption[];
 	productionTypes: TypeOption[];
 };
 
 export default function ProductionForm({
-	products,
+	itemTypes,
 	workers,
 	productionTypes,
 }: Props) {
@@ -66,10 +61,10 @@ export default function ProductionForm({
 	const [notes, setNotes] = useState<string>("");
 
 	const [inputs, setInputs] = useState<ProductionItemInput[]>([
-		{ productId: "", qty: "", unitCost: "" },
+		{ itemTypeId: "", qty: "", unitCost: "" },
 	]);
 	const [outputs, setOutputs] = useState<ProductionItemInput[]>([
-		{ productId: "", qty: "", unitCost: "" },
+		{ itemTypeId: "", qty: "", unitCost: "" },
 	]);
 	const [assignedWorkers, setAssignedWorkers] = useState<
 		ProductionWorkerInput[]
@@ -90,7 +85,7 @@ export default function ProductionForm({
 	const addItem = (
 		setter: React.Dispatch<React.SetStateAction<ProductionItemInput[]>>
 	) => {
-		setter((prev) => [...prev, { productId: "", qty: "", unitCost: "" }]);
+		setter((prev) => [...prev, { itemTypeId: "", qty: "", unitCost: "" }]);
 	};
 	const removeItem = (
 		setter: React.Dispatch<React.SetStateAction<ProductionItemInput[]>>,
@@ -147,10 +142,10 @@ export default function ProductionForm({
 		setSaving(true);
 		try {
 			const validInputs = inputs.filter(
-				(r) => r.productId && r.qty && r.unitCost
+				(r) => r.itemTypeId && r.qty && r.unitCost
 			);
 			const validOutputs = outputs.filter(
-				(r) => r.productId && r.qty && r.unitCost
+				(r) => r.itemTypeId && r.qty && r.unitCost
 			);
 			const validWorkers = assignedWorkers.filter((r) => r.workerId);
 
@@ -180,8 +175,8 @@ export default function ProductionForm({
 				setDate(`${yyyy}-${mm}-${dd}`);
 				setStatus("draft");
 				setNotes("");
-				setInputs([{ productId: "", qty: "", unitCost: "" }]);
-				setOutputs([{ productId: "", qty: "", unitCost: "" }]);
+				setInputs([{ itemTypeId: "", qty: "", unitCost: "" }]);
+				setOutputs([{ itemTypeId: "", qty: "", unitCost: "" }]);
 				setAssignedWorkers([{ workerId: "", role: "", hours: "" }]);
 				router.refresh();
 			} else {
@@ -200,30 +195,28 @@ export default function ProductionForm({
 
 	const inputColumns: Column<ProductionItemInput>[] = [
 		{
-			header: "Produk",
+			header: "Barang",
 			cell: (row, idx) => (
 				<TextField
 					select
 					fullWidth
 					size="small"
-					value={row.productId}
+					value={row.itemTypeId}
 					onChange={(e) =>
-						updateItem(setInputs, idx, "productId", e.target.value)
+						updateItem(setInputs, idx, "itemTypeId", e.target.value)
 					}
 					SelectProps={{
 						renderValue: (selected) => {
-							const sel = products.find((pr) => pr.id === String(selected));
+							const sel = itemTypes.find((t) => t.id === String(selected));
 							return sel ? sel.name : "";
 						},
 					}}
 				>
-					{products
-						.filter((p) => p.type === "raw")
-						.map((pr) => (
-							<MenuItem key={pr.id} value={pr.id}>
+					{itemTypes
+						.map((t) => (
+							<MenuItem key={t.id} value={t.id}>
 								<Stack direction="row" spacing={1} alignItems="center">
-									<Typography>{pr.name}</Typography>
-									<TagBadge label={pr.unit} color="info" />
+									<Typography>{t.name}</Typography>
 								</Stack>
 							</MenuItem>
 						))}
@@ -267,30 +260,28 @@ export default function ProductionForm({
 
 	const outputColumns: Column<ProductionItemInput>[] = [
 		{
-			header: "Produk",
+			header: "Barang",
 			cell: (row, idx) => (
 				<TextField
 					select
 					fullWidth
 					size="small"
-					value={row.productId}
+					value={row.itemTypeId}
 					onChange={(e) =>
-						updateItem(setOutputs, idx, "productId", e.target.value)
+						updateItem(setOutputs, idx, "itemTypeId", e.target.value)
 					}
 					SelectProps={{
 						renderValue: (selected) => {
-							const sel = products.find((pr) => pr.id === String(selected));
+							const sel = itemTypes.find((t) => t.id === String(selected));
 							return sel ? sel.name : "";
 						},
 					}}
 				>
-					{products
-						.filter((p) => p.type === "finished")
-						.map((pr) => (
-							<MenuItem key={pr.id} value={pr.id}>
+					{itemTypes
+						.map((t) => (
+							<MenuItem key={t.id} value={t.id}>
 								<Stack direction="row" spacing={1} alignItems="center">
-									<Typography>{pr.name}</Typography>
-									<TagBadge label={pr.unit} color="info" />
+									<Typography>{t.name}</Typography>
 								</Stack>
 							</MenuItem>
 						))}
@@ -550,3 +541,4 @@ export default function ProductionForm({
 		</Box>
 	);
 }
+

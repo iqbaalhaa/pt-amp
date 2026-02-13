@@ -15,7 +15,9 @@ type Props<T> = {
 	keyField?: keyof T;
 	actions?: (row: T, index: number) => React.ReactNode;
 	showNumber?: boolean;
+	startIndex?: number;
 	className?: string;
+	onRowClick?: (row: T) => void;
 };
 
 export default function GlassTable<T extends Record<string, any>>({
@@ -24,7 +26,9 @@ export default function GlassTable<T extends Record<string, any>>({
 	keyField = "id",
 	actions,
 	showNumber = true,
+	startIndex = 0,
 	className,
+	onRowClick,
 }: Props<T>) {
 	return (
 		<div
@@ -33,18 +37,18 @@ export default function GlassTable<T extends Record<string, any>>({
 			}`}
 		>
 			<div className="overflow-x-auto">
-				<table className="w-full text-sm text-left">
-					<thead className="text-xs uppercase tracking-wider text-black bg-[rgba(255,255,255,0.08)] border-b border-[var(--glass-border)]">
+				<table className="w-full text-base text-left border-collapse">
+					<thead className="text-sm uppercase tracking-wider text-black bg-[rgba(0,0,0,0.02)] border-b border-[var(--glass-border)]">
 						<tr>
 							{showNumber && (
-								<th className="px-4 py-4 font-bold w-12 text-center text-black">
+								<th className="px-4 py-5 font-bold w-16 text-center text-black">
 									#
 								</th>
 							)}
 							{columns.map((col, idx) => (
 								<th
 									key={idx}
-									className={`px-4 py-4 font-bold text-black ${
+									className={`px-4 py-5 font-bold text-black ${
 										col.className ?? ""
 									}`}
 								>
@@ -52,7 +56,7 @@ export default function GlassTable<T extends Record<string, any>>({
 								</th>
 							))}
 							{actions && (
-								<th className="px-4 py-4 text-right font-bold text-black">
+								<th className="px-4 py-5 text-right font-bold text-black w-28">
 									Actions
 								</th>
 							)}
@@ -65,7 +69,7 @@ export default function GlassTable<T extends Record<string, any>>({
 									colSpan={
 										columns.length + (actions ? 1 : 0) + (showNumber ? 1 : 0)
 									}
-									className="px-4 py-12 text-center text-[var(--text-secondary)] italic"
+									className="px-6 py-12 text-center text-[var(--text-secondary)] italic"
 								>
 									No data available
 								</td>
@@ -78,32 +82,29 @@ export default function GlassTable<T extends Record<string, any>>({
 											? String(row[keyField])
 											: `row-${rowIdx}`
 									}
-									className="hover:bg-[rgba(255,255,255,0.06)] transition-all duration-200 group"
+									onClick={() => onRowClick?.(row)}
+									className={`transition-all duration-200 group ${
+										onRowClick ? "cursor-pointer hover:bg-[rgba(213,14,12,0.02)]" : "hover:bg-[rgba(0,0,0,0.01)]"
+									}`}
 								>
 									{showNumber && (
-										<td className="px-4 py-3 text-center text-[var(--text-secondary)] font-medium">
-											{rowIdx + 1}
+										<td className="px-4 py-5 text-center text-[var(--text-secondary)] font-semibold">
+											{startIndex + rowIdx + 1}
 										</td>
 									)}
 									{columns.map((col, colIdx) => (
 										<td
 											key={colIdx}
-											className={`px-4 py-3 text-[var(--foreground)] ${
+											className={`px-4 py-5 text-[var(--foreground)] ${
 												col.className ?? ""
 											}`}
 										>
-											{col.cell
-												? col.cell(row, rowIdx)
-												: col.accessorKey
-													? String(row[col.accessorKey])
-													: null}
+											{col.cell ? col.cell(row, rowIdx) : (row[col.accessorKey!] as React.ReactNode)}
 										</td>
 									))}
 									{actions && (
-										<td className="px-4 py-3 text-right">
-											<div className="flex items-center justify-end gap-2">
-												{actions(row, rowIdx)}
-											</div>
+										<td className="px-4 py-5 text-right">
+											{actions(row, rowIdx)}
 										</td>
 									)}
 								</tr>

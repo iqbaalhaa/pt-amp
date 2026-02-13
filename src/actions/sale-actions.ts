@@ -2,12 +2,12 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import { TransactionStatus } from "@/generated/prisma";
+import { TransactionStatus } from "@prisma/client";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 
 export type SaleItemInput = {
-  productId: string;
+  itemTypeId: string;
   qty: string;
   unitPrice: string;
 };
@@ -25,9 +25,9 @@ export async function createSale(input: SaleInput) {
     input.customer && input.customer !== "" ? input.customer : null;
 
   const itemsData = input.items
-    .filter((i) => i.productId && i.qty && i.unitPrice)
+    .filter((i) => i.itemTypeId && i.qty && i.unitPrice)
     .map((i) => ({
-      productId: BigInt(i.productId),
+      itemTypeId: BigInt(i.itemTypeId),
       qty: i.qty,
       unitPrice: i.unitPrice,
     }));
@@ -58,7 +58,7 @@ export async function getSales() {
     include: {
       saleItems: {
         include: {
-          product: true,
+          itemType: true,
         },
       },
     },
@@ -72,10 +72,10 @@ export async function getSales() {
     notes: s.notes,
     items: s.saleItems.map((i) => ({
       id: i.id.toString(),
-      productName: i.product.name,
+      productName: i.itemType.name,
       qty: i.qty.toString(),
       unitPrice: i.unitPrice.toString(),
-      unit: i.product.unit,
+      unit: "-", // ItemType doesn't have direct unit relation in current schema
     })),
   }));
 }
@@ -95,3 +95,4 @@ export async function revokeSale(id: string, reason?: string) {
   revalidatePath("/admin/sales");
   revalidatePath("/admin/ledger");
 }
+

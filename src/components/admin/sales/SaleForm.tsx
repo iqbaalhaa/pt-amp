@@ -21,23 +21,23 @@ import { useRouter } from "next/navigation";
 import { createSale } from "@/actions/sale-actions";
 import TagBadge from "@/components/TagBadge";
 import { formatRupiah } from "@/lib/currency";
-import { TransactionStatus } from "@/generated/prisma";
+import { TransactionStatus } from "@prisma/client";
 import GlassTable, { Column } from "@/components/ui/GlassTable";
 import GlassButton from "@/components/ui/GlassButton";
 
-type ProductOption = { id: string; name: string; unit: string; type: "raw" | "finished" };
+import type { ItemTypeDTO } from "@/actions/item-type-actions";
 
 type Props = {
-  products: ProductOption[];
+  itemTypes: ItemTypeDTO[];
 };
 
 type ItemRow = {
-  productId: string;
+  itemTypeId: string;
   qty: string;
   unitPrice: string;
 };
 
-export default function SaleForm({ products }: Props) {
+export default function SaleForm({ itemTypes }: Props) {
   const router = useRouter();
 
   const today = new Date();
@@ -51,7 +51,7 @@ export default function SaleForm({ products }: Props) {
   const [status, setStatus] = useState<TransactionStatus>("draft");
   const [notes, setNotes] = useState<string>("");
   const [items, setItems] = useState<ItemRow[]>([
-    { productId: "", qty: "", unitPrice: "" },
+    { itemTypeId: "", qty: "", unitPrice: "" },
   ]);
   const [saving, setSaving] = useState(false);
   const [snack, setSnack] = useState<{ open: boolean; message: string; severity: "success" | "error" }>({
@@ -61,7 +61,7 @@ export default function SaleForm({ products }: Props) {
   });
 
   const addItem = () => {
-    setItems((prev) => [...prev, { productId: "", qty: "", unitPrice: "" }]);
+    setItems((prev) => [...prev, { itemTypeId: "", qty: "", unitPrice: "" }]);
   };
 
   const removeItem = (idx: number) => {
@@ -74,7 +74,7 @@ export default function SaleForm({ products }: Props) {
     );
   };
 
-  const findProduct = (id: string) => products.find((p) => p.id === id);
+  const findItemType = (id: string) => itemTypes.find((t) => t.id === id);
 
   const lineTotal = (row: ItemRow) => {
     const q = parseFloat(row.qty || "0");
@@ -88,7 +88,7 @@ export default function SaleForm({ products }: Props) {
     e.preventDefault();
     setSaving(true);
     try {
-      const validItems = items.filter((r) => r.productId && r.qty && r.unitPrice);
+      const validItems = items.filter((r) => r.itemTypeId && r.qty && r.unitPrice);
       const payload = {
         customer: customer || null,
         date,
@@ -105,7 +105,7 @@ export default function SaleForm({ products }: Props) {
       setDate(defaultDate);
       setStatus("draft");
       setNotes("");
-      setItems([{ productId: "", qty: "", unitPrice: "" }]);
+      setItems([{ itemTypeId: "", qty: "", unitPrice: "" }]);
       router.refresh();
     } catch (err) {
       console.error(err);
@@ -122,17 +122,16 @@ export default function SaleForm({ products }: Props) {
         <TextField
           select
           fullWidth
-          value={row.productId}
-          onChange={(e) => updateItem(idx, "productId", e.target.value)}
+          value={row.itemTypeId}
+          onChange={(e) => updateItem(idx, "itemTypeId", e.target.value)}
           label="Produk"
           SelectProps={{
             renderValue: (selected) => {
-              const sel = products.find((pr) => pr.id === String(selected));
+              const sel = itemTypes.find((it) => it.id === String(selected));
               if (!sel) return "";
               return (
                 <Stack direction="row" spacing={1} alignItems="center">
                   <Typography sx={{ mr: 1 }}>{sel.name}</Typography>
-                  <TagBadge label={sel.unit} color="info" />
                   <TagBadge
                     label={sel.type === "raw" ? "Raw" : "Finished"}
                     color={sel.type === "raw" ? "warning" : "success"}
@@ -142,14 +141,13 @@ export default function SaleForm({ products }: Props) {
             },
           }}
         >
-          {products.map((pr) => (
-            <MenuItem key={pr.id} value={pr.id}>
+          {itemTypes.map((it) => (
+            <MenuItem key={it.id} value={it.id}>
               <Stack direction="row" spacing={1} alignItems="center">
-                <Typography sx={{ mr: 1 }}>{pr.name}</Typography>
-                <TagBadge label={pr.unit} color="info" />
+                <Typography sx={{ mr: 1 }}>{it.name}</Typography>
                 <TagBadge
-                  label={pr.type === "raw" ? "Raw" : "Finished"}
-                  color={pr.type === "raw" ? "warning" : "success"}
+                  label={it.type === "raw" ? "Raw" : "Finished"}
+                  color={it.type === "raw" ? "warning" : "success"}
                 />
               </Stack>
             </MenuItem>
@@ -272,7 +270,7 @@ export default function SaleForm({ products }: Props) {
             variant="primary"
             disabled={
               saving ||
-              items.filter((r) => r.productId && r.qty && r.unitPrice).length === 0
+              items.filter((r) => r.itemTypeId && r.qty && r.unitPrice).length === 0
             }
           >
             <SaveIcon className="mr-2" fontSize="small" />
@@ -297,3 +295,4 @@ export default function SaleForm({ products }: Props) {
     </Box>
   );
 }
+

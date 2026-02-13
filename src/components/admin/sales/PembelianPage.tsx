@@ -3,27 +3,21 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createSale } from "@/actions/sale-actions";
-import { TransactionStatus } from "@/generated/prisma";
+import { TransactionStatus } from "@prisma/client";
 import { Invoice, type InvoiceData } from "@/components/Invoice";
 import { formatRupiah } from "@/lib/currency";
 import { useReactToPrint } from "react-to-print";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
-
-type ProductOption = {
-	id: string;
-	name: string;
-	unit: string;
-	type: "raw" | "finished";
-};
+import type { ItemTypeDTO } from "@/actions/item-type-actions";
 
 type Props = {
-	products: ProductOption[];
+	itemTypes: ItemTypeDTO[];
 };
 
 type ItemRow = {
 	id: string;
-	productId: string;
+	itemTypeId: string;
 	qty: string;
 	unitCost: string;
 };
@@ -32,7 +26,7 @@ const A6_W_MM = 105;
 const A6_H_MM = 148;
 const PRINT_MARGIN_MM = 6;
 
-export default function PembelianPage({ products }: Props) {
+export default function PembelianPage({ itemTypes }: Props) {
 	const router = useRouter();
 
 	const [ownerName, setOwnerName] = useState("");
@@ -40,9 +34,9 @@ export default function PembelianPage({ products }: Props) {
 	const [notes, setNotes] = useState("");
 	const [items, setItems] = useState<ItemRow[]>(
 		() =>
-			products.map((p, idx) => ({
+			itemTypes.map((t, idx) => ({
 				id: `row-${idx + 1}`,
-				productId: p.id,
+				itemTypeId: t.id,
 				qty: "",
 				unitCost: "",
 			})) as ItemRow[],
@@ -67,7 +61,7 @@ export default function PembelianPage({ products }: Props) {
 		);
 	};
 
-	const findProduct = (id: string) => products.find((p) => p.id === id);
+	const findItemType = (id: string) => itemTypes.find((t) => t.id === id);
 
 	const lineTotal = (row: ItemRow) => {
 		const q = parseFloat(row.qty || "0");
@@ -81,7 +75,7 @@ export default function PembelianPage({ products }: Props) {
 		[items],
 	);
 
-	const hasValidItems = items.some((r) => r.productId && r.qty && r.unitCost);
+	const hasValidItems = items.some((r) => r.itemTypeId && r.qty && r.unitCost);
 
 	const isValid = ownerName.trim().length > 0 && hasValidItems;
 
@@ -99,9 +93,9 @@ export default function PembelianPage({ products }: Props) {
 				status: "draft" as TransactionStatus,
 				notes: notes || null,
 				items: items
-					.filter((r) => r.productId && r.qty && r.unitCost)
+					.filter((r) => r.itemTypeId && r.qty && r.unitCost)
 					.map((r) => ({
-						productId: r.productId,
+						itemTypeId: r.itemTypeId,
 						qty: r.qty,
 						unitPrice: r.unitCost,
 					})),
@@ -118,9 +112,9 @@ export default function PembelianPage({ products }: Props) {
 				setOwnerName("");
 				setNotes("");
 				setItems(
-					products.map((p, idx) => ({
+					itemTypes.map((t, idx) => ({
 						id: `row-${idx + 1}`,
-						productId: p.id,
+						itemTypeId: t.id,
 						qty: "",
 						unitCost: "",
 					})),
@@ -147,19 +141,19 @@ export default function PembelianPage({ products }: Props) {
 		() =>
 			items
 				.map((row) => {
-					const product = findProduct(row.productId);
+					const itemType = findItemType(row.itemTypeId);
 					const total = lineTotal(row);
 
 					return {
-						productName: product ? product.name : "",
+						productName: itemType ? itemType.name : "",
 						qty: row.qty || "0",
-						unit: product ? product.unit : "-",
+						unit: "-",
 						price: row.unitCost || "0",
 						total: total.toString(),
 					};
 				})
 				.filter((it) => parseFloat(it.qty) > 0 || parseFloat(it.price) > 0),
-		[items, products],
+		[items, itemTypes],
 	);
 
 	const invoiceData: InvoiceData = {
@@ -316,7 +310,7 @@ export default function PembelianPage({ products }: Props) {
 							<tbody className="divide-y divide-slate-100 bg-white">
 								{items.map((row, idx) => {
 									const subtotal = lineTotal(row);
-									const product = findProduct(row.productId);
+									const itemType = findItemType(row.itemTypeId);
 
 									return (
 										<tr key={row.id} className="hover:bg-slate-50">
@@ -325,10 +319,7 @@ export default function PembelianPage({ products }: Props) {
 											</td>
 											<td className="px-3 py-1.5">
 												<div className="text-xs font-medium text-slate-900">
-													{product ? product.name : "-"}
-													<span className="ml-1 text-[10px] text-slate-500">
-														{product ? `(${product.unit})` : ""}
-													</span>
+													{itemType ? itemType.name : "-"}
 												</div>
 											</td>
 											<td className="px-3 py-1.5 text-right">
@@ -444,7 +435,7 @@ export default function PembelianPage({ products }: Props) {
 
 				{!canExport && (
 					<p className="text-[11px] text-slate-500">
-						Lengkapi nama pemilik dan minimal satu baris Qty & Harga agar nota
+						Lengkapi nama pembeli dan minimal satu baris Qty & Harga agar nota
 						bisa di-download atau dicetak.
 					</p>
 				)}
@@ -487,3 +478,4 @@ export default function PembelianPage({ products }: Props) {
 		</form>
 	);
 }
+

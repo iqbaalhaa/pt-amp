@@ -3,21 +3,16 @@ import PurchaseForm from "@/components/admin/purchases/PurchaseForm";
 import PurchaseHistory from "@/components/admin/purchases/PurchaseHistory";
 import { prisma } from "@/lib/prisma";
 import { getPurchases } from "@/actions/purchase-actions";
+import { getItemTypes } from "@/actions/item-type-actions";
+import { getUnits } from "@/actions/unit-actions";
+import { getSuppliers } from "@/actions/supplier-actions";
 
 export default async function AdminPurchasesPage() {
-	const products = await prisma.product.findMany({
-		where: { isActive: true },
-		orderBy: { name: "asc" },
-		select: { id: true, name: true, unit: true, type: true },
-	});
-	const productOptions = products.map((p) => ({
-		id: p.id.toString(),
-		name: p.name,
-		unit: p.unit,
-		type: p.type,
-	}));
-
-	// const purchases = await getPurchases();
+	const [itemTypes, units, suppliers] = await Promise.all([
+		getItemTypes(),
+		getUnits(),
+		getSuppliers(),
+	]);
 
 	return (
 		<Stack spacing={3}>
@@ -29,13 +24,9 @@ export default async function AdminPurchasesPage() {
 
 			<Box>
 				<Paper sx={{ p: 2, borderRadius: 2 }}>
-					<PurchaseForm products={productOptions} />
+					<PurchaseForm itemTypes={itemTypes} units={units} suppliers={suppliers} />
 				</Paper>
 			</Box>
-
-			{/* <Box>
-				<PurchaseHistory purchases={purchases} />
-			</Box> */}
 		</Stack>
 	);
 }

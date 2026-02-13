@@ -1,6 +1,17 @@
 "use client";
 
-const defaultGalleryItems = [
+import { Play, Maximize2, X, ChevronLeft, ChevronRight } from "lucide-react";
+import Link from "next/link";
+import { useState } from "react";
+
+interface GalleryItem {
+	src: string;
+	alt: string;
+	category: string;
+	type?: "image" | "video";
+}
+
+const defaultGalleryItems: GalleryItem[] = [
 	{
 		src: "https://images.unsplash.com/photo-1605333396915-47ed6b68a00e?q=80&w=2070&auto=format&fit=crop",
 		alt: "Proses Pengeringan",
@@ -32,18 +43,6 @@ const defaultGalleryItems = [
 		category: "Team",
 	},
 ];
-
-import { Play, Maximize2 } from "lucide-react";
-import Link from "next/link";
-import { useState } from "react";
-import { X, ChevronLeft, ChevronRight } from "lucide-react";
-
-interface GalleryItem {
-	src: string;
-	alt: string;
-	category: string;
-	type?: string;
-}
 
 interface GalleryProps {
 	limit?: number;

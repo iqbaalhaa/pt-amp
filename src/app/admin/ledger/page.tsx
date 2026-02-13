@@ -14,7 +14,7 @@ type SearchParams = {
 	type?: "purchase" | "sale" | "production";
 	status?: "draft" | "posted" | "cancelled";
 	affectStockOnly?: "true" | "false";
-	product?: string;
+	itemType?: string;
 	party?: string;
 	q?: string;
 	min?: string;
@@ -41,7 +41,7 @@ function buildQuery(params: SearchParams, extra?: Record<string, string>) {
 	setIf("type");
 	setIf("status");
 	setIf("affectStockOnly");
-	setIf("product");
+	setIf("itemType");
 	setIf("party");
 	setIf("q");
 	setIf("min");
@@ -81,10 +81,10 @@ export default async function AdminLedgerPage({
 				...(params.party
 					? { supplier: { contains: params.party, mode: "insensitive" } }
 					: {}),
-				...(params.product
+				...(params.itemType
 					? {
 							purchaseItems: {
-								some: { productId: BigInt(params.product) },
+								some: { itemTypeId: BigInt(params.itemType) },
 							},
 						}
 					: {}),
@@ -95,7 +95,7 @@ export default async function AdminLedgerPage({
 			orderBy: { date: "desc" },
 			include: {
 				purchaseItems: {
-					include: { product: true },
+					include: { itemType: true },
 				},
 			},
 		}),
@@ -107,10 +107,10 @@ export default async function AdminLedgerPage({
 				...(params.party
 					? { customer: { contains: params.party, mode: "insensitive" } }
 					: {}),
-				...(params.product
+				...(params.itemType
 					? {
 							saleItems: {
-								some: { productId: BigInt(params.product) },
+								some: { itemTypeId: BigInt(params.itemType) },
 							},
 						}
 					: {}),
@@ -121,7 +121,7 @@ export default async function AdminLedgerPage({
 			orderBy: { date: "desc" },
 			include: {
 				saleItems: {
-					include: { product: true },
+					include: { itemType: true },
 				},
 			},
 		}),
@@ -130,17 +130,17 @@ export default async function AdminLedgerPage({
 				...(start ? { date: { gte: start } } : {}),
 				...(end ? { date: { lte: end } } : {}),
 				...(params.status ? { status: params.status as any } : {}),
-				...(params.product
+				...(params.itemType
 					? {
 							OR: [
 								{
 									productionInputs: {
-										some: { productId: BigInt(params.product) },
+										some: { itemTypeId: BigInt(params.itemType) },
 									},
 								},
 								{
 									productionOutputs: {
-										some: { productId: BigInt(params.product) },
+										some: { itemTypeId: BigInt(params.itemType) },
 									},
 								},
 							],
@@ -152,8 +152,8 @@ export default async function AdminLedgerPage({
 			},
 			orderBy: { date: "desc" },
 			include: {
-				productionInputs: { include: { product: true } },
-				productionOutputs: { include: { product: true } },
+				productionInputs: { include: { itemType: true } },
+				productionOutputs: { include: { itemType: true } },
 				productionType: true,
 				productionWorkers: { include: { worker: true } },
 			},

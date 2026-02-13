@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { Inquiry, InquiryStatus } from "@/generated/prisma";
+import type { Inquiry, InquiryStatus } from "@prisma/client";
 import { updateInquiryStatus, deleteInquiry } from "@/actions/inquiry-actions";
 import { Box, Tooltip, Typography, Chip } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -239,3 +239,4 @@ export function InquiryList({ initialInquiries }: InquiryListProps) {
 		</Box>
 	);
 }
+

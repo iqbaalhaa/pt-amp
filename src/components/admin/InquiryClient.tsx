@@ -7,7 +7,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import { updateInquiryStatus, deleteInquiry } from "@/actions/inquiry-actions";
-import type { Inquiry, InquiryStatus } from "@/generated/prisma";
+import type { Inquiry, InquiryStatus } from "@prisma/client";
 import GlassTable, { Column } from "@/components/ui/GlassTable";
 import GlassButton from "@/components/ui/GlassButton";
 import StatusBadge from "@/components/ui/StatusBadge";
@@ -218,3 +218,4 @@ export default function InquiryClient({
 		</Box>
 	);
 }
+

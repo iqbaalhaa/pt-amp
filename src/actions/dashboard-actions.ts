@@ -206,10 +206,10 @@ export async function getDashboardData() {
 		include: {
 			productionType: true,
 			productionOutputs: {
-				include: { product: true },
+				include: { itemType: true },
 			},
 			productionInputs: {
-				include: { product: true },
+				include: { itemType: true },
 			},
 		},
 	});
@@ -225,11 +225,11 @@ export async function getDashboardData() {
 		// Format Input/Output string
 		const inputStr =
 			p.productionInputs
-				.map((i) => `${Number(i.qty)} ${i.product.unit} ${i.product.name}`)
+				.map((i) => `${Number(i.qty)} Kg ${i.itemType.name}`)
 				.join(", ") || "-";
 		const outputStr =
 			p.productionOutputs
-				.map((o) => `${Number(o.qty)} ${o.product.unit} ${o.product.name}`)
+				.map((o) => `${Number(o.qty)} Kg ${o.itemType.name}`)
 				.join(", ") || "-";
 
 		return {

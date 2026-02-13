@@ -10,6 +10,7 @@ import {
 	TableRow,
 	Divider,
 } from "@mui/material";
+import Image from "next/image";
 
 export interface InvoiceItem {
 	productName: string;
@@ -28,287 +29,154 @@ export interface InvoiceData {
 	notes?: string | null;
 	items: InvoiceItem[];
 	totalAmount: string;
+	inputBy?: string;
 }
 
 interface InvoiceProps {
 	data: InvoiceData;
 }
 
+// 1/2 A4 is A5 size (148mm x 210mm)
 export const Invoice = forwardRef<HTMLDivElement, InvoiceProps>(
 	({ data }, ref) => {
+		const formatRupiah = (val: string) => {
+			const n = parseFloat(val || "0");
+			return new Intl.NumberFormat("id-ID", {
+				style: "currency",
+				currency: "IDR",
+				maximumFractionDigits: 0,
+			}).format(n);
+		};
+
 		return (
 			<Box
 				ref={ref}
 				sx={{
-					p: 1,
+					p: "8mm",
 					bgcolor: "white",
 					color: "black",
-					width: "105mm",
-					height: "148mm", // FIX A6 supaya konsisten
-					overflow: "hidden", // biar tidak meleber keluar halaman
-					margin: "0",
-					fontFamily: "Arial, sans-serif",
+					width: "148mm",
+					minHeight: "210mm",
+					display: "flex",
+					flexDirection: "column",
+					margin: "0 auto",
+					fontFamily: "'Times New Roman', serif",
 					boxSizing: "border-box",
+					position: "relative",
+					border: "1px solid #eee",
 				}}
 			>
-				{/* Header */}
-				<Box sx={{ mb: 0.6, textAlign: "center" }}>
+				{/* Header with Smaller Logo and Kop */}
+				<Box sx={{ mb: 1, textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center" }}>
+					<Box sx={{ position: "relative", width: "100px", height: "40px", mb: 0.2 }}>
+						<Image 
+							src="/logoAMP.png" 
+							alt="Logo AMP" 
+							fill 
+							style={{ objectFit: "contain" }}
+							priority
+						/>
+					</Box>
 					<Typography
 						variant="h6"
 						sx={{
 							fontWeight: "bold",
-							color: "#1a237e",
 							fontSize: "9pt",
-							letterSpacing: "0.4px",
-							lineHeight: 1.15,
+							lineHeight: 1,
 						}}
 					>
-						PT AURORA MITRA PRAKARSA (AMP)
+						PT AURORA MITRA PRAKARSA
 					</Typography>
 					<Typography
 						variant="body2"
 						sx={{
-							color: "#555",
+							fontSize: "6pt",
 							fontStyle: "italic",
-							fontSize: "5.5pt",
-							mt: 0.1,
+							color: "#333",
+							lineHeight: 1
 						}}
 					>
-						(General Contractor, Supplier, Infrastructure)
+						General Contractor, Supplier, Infrastructure
 					</Typography>
-					<Divider
-						sx={{ my: 0.4, borderBottomWidth: 1.2, borderColor: "#1a237e" }}
-					/>
 				</Box>
 
-				{/* Invoice Details */}
-				<Box sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}>
+				<Divider sx={{ mb: 1.5, borderBottomWidth: 1.5, borderColor: "black" }} />
+
+				{/* Title Rata Tengah */}
+				<Box sx={{ textAlign: "center", mb: 2 }}>
+					<Typography
+						variant="h6"
+						sx={{
+							fontWeight: "bold",
+							fontSize: "12pt",
+							textDecoration: "underline",
+							mb: 0.5
+						}}
+					>
+						{data.type === "Purchase Invoice" ? "FAKTUR PEMBELIAN" : "FAKTUR PENJUALAN"}
+					</Typography>
+				</Box>
+
+				{/* Info Party & Date */}
+				<Box sx={{ mb: 2, fontSize: "9pt", display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
 					<Box>
-						<Typography
-							variant="subtitle2"
-							sx={{ fontWeight: "bold", fontSize: "7.5pt" }}
-						>
-							{data.type === "Purchase Invoice"
-								? "FAKTUR PEMBELIAN"
-								: "FAKTUR PENJUALAN"}
-						</Typography>
-						<Typography variant="body2" sx={{ fontSize: "6.5pt", mt: 0.1 }}>
-							No: {data.id}
-						</Typography>
-						<Typography variant="body2" sx={{ fontSize: "6.5pt", mt: 0.1 }}>
-							Tgl:{" "}
-							{new Date(data.date).toLocaleDateString("id-ID", {
-								day: "2-digit",
-								month: "2-digit",
-								year: "2-digit",
-							})}
-						</Typography>
+						<Box sx={{ display: "flex", mb: 0.3 }}>
+							<Box sx={{ width: "70px" }}>Tanggal</Box>
+							<Box sx={{ mr: 1 }}>:</Box>
+							<Box>{new Date(data.date).toLocaleDateString("id-ID", { day: 'numeric', month: 'long', year: 'numeric' })}</Box>
+						</Box>
+						<Box sx={{ display: "flex" }}>
+							<Box sx={{ width: "70px" }}>{data.partyType}</Box>
+							<Box sx={{ mr: 1 }}>:</Box>
+							<Box sx={{ fontWeight: "bold" }}>{data.partyName || "-"}</Box>
+						</Box>
 					</Box>
-					<Box sx={{ textAlign: "right" }}>
-						<Typography
-							variant="subtitle2"
-							sx={{ fontWeight: "bold", fontSize: "7.5pt" }}
-						>
-							{data.partyType === "Supplier" ? "Pemasok" : "Pelanggan"}:
-						</Typography>
-						<Typography variant="body2" sx={{ fontSize: "6.5pt", mt: 0.1 }}>
-							{(data.partyName || "-").toUpperCase()}
-						</Typography>
-					</Box>
+					{data.inputBy && (
+						<Box sx={{ fontSize: "8pt", fontStyle: "italic", color: "text.secondary" }}>
+							Diinput oleh: {data.inputBy}
+						</Box>
+					)}
 				</Box>
 
-				{/* Items Table */}
-				<TableContainer sx={{ mb: 0.8, border: "0.4px solid #000" }}>
-					<Table size="small" sx={{ tableLayout: "fixed" }}>
-						<TableHead sx={{ bgcolor: "#eeeeee" }}>
-							<TableRow>
-								<TableCell
-									sx={{
-										fontWeight: "bold",
-										fontSize: "6.5pt",
-										py: 0.4,
-										px: 0.4,
-										width: "40%",
-										borderBottom: "0.4px solid #000",
-										color: "black",
-									}}
-								>
-									Barang
-								</TableCell>
-								<TableCell
-									align="right"
-									sx={{
-										fontWeight: "bold",
-										fontSize: "6.5pt",
-										py: 0.4,
-										px: 0.4,
-										width: "20%",
-										borderBottom: "0.4px solid #000",
-										color: "black",
-									}}
-								>
-									Qty
-								</TableCell>
-								<TableCell
-									align="right"
-									sx={{
-										fontWeight: "bold",
-										fontSize: "6.5pt",
-										py: 0.4,
-										px: 0.4,
-										width: "20%",
-										borderBottom: "0.4px solid #000",
-										color: "black",
-									}}
-								>
-									Hrg
-								</TableCell>
-								<TableCell
-									align="right"
-									sx={{
-										fontWeight: "bold",
-										fontSize: "6.5pt",
-										py: 0.4,
-										px: 0.4,
-										width: "20%",
-										borderBottom: "0.4px solid #000",
-										color: "black",
-									}}
-								>
-									Jml
-								</TableCell>
+				{/* Table Items - Width 100% */}
+				<TableContainer sx={{ mb: 2, overflow: "visible", width: "100%" }}>
+					<Table size="small" sx={{ border: "1px solid black", width: "100%", tableLayout: "fixed" }}>
+						<TableHead>
+							<TableRow sx={{ bgcolor: "#f5f5f5" }}>
+								<TableCell sx={{ border: "1px solid black", fontWeight: "bold", fontSize: "8.5pt", textAlign: "center", py: 0.5, width: "35px" }}>No</TableCell>
+								<TableCell sx={{ border: "1px solid black", fontWeight: "bold", fontSize: "8.5pt", py: 0.5 }}>Nama Barang</TableCell>
+								<TableCell sx={{ border: "1px solid black", fontWeight: "bold", fontSize: "8.5pt", textAlign: "center", py: 0.5, width: "70px" }}>Qty</TableCell>
+								<TableCell sx={{ border: "1px solid black", fontWeight: "bold", fontSize: "8.5pt", textAlign: "right", py: 0.5, width: "90px" }}>Harga</TableCell>
+								<TableCell sx={{ border: "1px solid black", fontWeight: "bold", fontSize: "8.5pt", textAlign: "right", py: 0.5, width: "100px" }}>Total</TableCell>
 							</TableRow>
 						</TableHead>
 						<TableBody>
-							{data.items.map((item, index) => (
-								<TableRow key={index}>
-									<TableCell
-										sx={{
-											fontSize: "6.5pt",
-											py: 0.35,
-											px: 0.4,
-											wordBreak: "break-word",
-											borderBottom: "0.4px solid #e0e0e0",
-											lineHeight: 1.05,
-										}}
-									>
-										{item.productName}
-									</TableCell>
-									<TableCell
-										align="right"
-										sx={{
-											fontSize: "6.5pt",
-											py: 0.35,
-											px: 0.4,
-											borderBottom: "0.4px solid #e0e0e0",
-											lineHeight: 1.05,
-										}}
-									>
-										{parseFloat(item.qty).toLocaleString("id-ID")} {item.unit}
-									</TableCell>
-									<TableCell
-										align="right"
-										sx={{
-											fontSize: "6.5pt",
-											py: 0.35,
-											px: 0.4,
-											borderBottom: "0.4px solid #e0e0e0",
-											lineHeight: 1.05,
-										}}
-									>
-										{parseFloat(item.price).toLocaleString("id-ID")}
-									</TableCell>
-									<TableCell
-										align="right"
-										sx={{
-											fontSize: "6.5pt",
-											py: 0.35,
-											px: 0.4,
-											borderBottom: "0.4px solid #e0e0e0",
-											lineHeight: 1.05,
-										}}
-									>
-										{parseFloat(item.total).toLocaleString("id-ID")}
-									</TableCell>
+							{data.items.map((item, idx) => (
+								<TableRow key={idx}>
+									<TableCell sx={{ border: "1px solid black", fontSize: "8.5pt", textAlign: "center", py: 0.5 }}>{idx + 1}</TableCell>
+									<TableCell sx={{ border: "1px solid black", fontSize: "8.5pt", py: 0.5, wordBreak: "break-word" }}>{item.productName}</TableCell>
+									<TableCell sx={{ border: "1px solid black", fontSize: "8.5pt", textAlign: "center", py: 0.5 }}>{item.qty} {item.unit}</TableCell>
+									<TableCell sx={{ border: "1px solid black", fontSize: "8.5pt", textAlign: "right", py: 0.5 }}>{formatRupiah(item.price)}</TableCell>
+									<TableCell sx={{ border: "1px solid black", fontSize: "8.5pt", textAlign: "right", py: 0.5 }}>{formatRupiah(item.total)}</TableCell>
 								</TableRow>
 							))}
+							<TableRow>
+								<TableCell colSpan={4} sx={{ border: "1px solid black", fontWeight: "bold", fontSize: "9pt", textAlign: "right", py: 0.8 }}>TOTAL</TableCell>
+								<TableCell sx={{ border: "1px solid black", fontWeight: "bold", fontSize: "9pt", textAlign: "right", py: 0.8, bgcolor: "#f5f5f5" }}>
+									{formatRupiah(data.totalAmount)}
+								</TableCell>
+							</TableRow>
 						</TableBody>
 					</Table>
 				</TableContainer>
 
-				<Box sx={{ display: "flex", justifyContent: "flex-end", mb: 1 }}>
-					<Box sx={{ minWidth: "50%" }}>
-						<Box
-							sx={{
-								display: "flex",
-								justifyContent: "space-between",
-								borderTop: "1px solid black",
-								pt: 0.4,
-							}}
-						>
-							<Typography
-								variant="subtitle2"
-								sx={{ fontWeight: "bold", fontSize: "7.5pt" }}
-							>
-								Total:
-							</Typography>
-							<Typography
-								variant="subtitle2"
-								sx={{ fontWeight: "bold", fontSize: "7.5pt" }}
-							>
-								Rp {parseFloat(data.totalAmount).toLocaleString("id-ID")}
-							</Typography>
-						</Box>
-					</Box>
-				</Box>
-
-				{data.notes && data.notes.trim().length > 0 && (
-					<Box sx={{ mb: 0.8 }}>
-						<Typography
-							variant="subtitle2"
-							sx={{ fontWeight: "bold", fontSize: "6.5pt", mb: 0.15 }}
-						>
-							Catatan:
-						</Typography>
-						<Typography
-							variant="body2"
-							sx={{
-								fontSize: "5.5pt",
-								whiteSpace: "pre-wrap",
-								lineHeight: 1.05,
-							}}
-						>
-							{(data.notes || "").toUpperCase()}
+				{data.notes && (
+					<Box sx={{ mt: 1 }}>
+						<Typography variant="body2" sx={{ fontSize: "8pt", fontStyle: "italic" }}>
+							Catatan: {data.notes}
 						</Typography>
 					</Box>
 				)}
-
-				<Box sx={{ display: "flex", justifyContent: "space-between", mt: 1.5 }}>
-					<Box sx={{ textAlign: "center", width: "40%" }}>
-						<Typography variant="body2" sx={{ mb: 3, fontSize: "6.5pt" }}>
-							Dibuat Oleh
-						</Typography>
-						<Divider sx={{ borderColor: "black" }} />
-						<Typography
-							variant="caption"
-							sx={{ fontSize: "5.5pt", mt: 0.15, display: "block" }}
-						>
-							(Staf)
-						</Typography>
-					</Box>
-					<Box sx={{ textAlign: "center", width: "40%" }}>
-						<Typography variant="body2" sx={{ mb: 3, fontSize: "6.5pt" }}>
-							Disetujui Oleh
-						</Typography>
-						<Divider sx={{ borderColor: "black" }} />
-						<Typography
-							variant="caption"
-							sx={{ fontSize: "5.5pt", mt: 0.15, display: "block" }}
-						>
-							(Manajer)
-						</Typography>
-					</Box>
-				</Box>
 			</Box>
 		);
 	}

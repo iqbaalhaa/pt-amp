@@ -24,6 +24,13 @@ import PrecisionManufacturingIcon from "@mui/icons-material/PrecisionManufacturi
 import WbSunnyIcon from "@mui/icons-material/WbSunny";
 import InventoryIcon from "@mui/icons-material/Inventory";
 import ContentCutIcon from "@mui/icons-material/ContentCut";
+import CategoryIcon from "@mui/icons-material/Category";
+import StraightenIcon from "@mui/icons-material/Straighten";
+import LocalShippingIcon from "@mui/icons-material/LocalShipping";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import ExpandLessIcon from "@mui/icons-material/ExpandLess";
+
+import { useState, useEffect } from "react";
 
 type Item = { label: string; href: string; icon: React.ReactNode };
 type Group = { title: string; items: Item[] };
@@ -60,7 +67,16 @@ const groups: Group[] = [
       },
     ],
   },
-
+  {
+    title: "Inventaris",
+    items: [
+      {
+        label: "Stok Barang",
+        href: "/admin/inventory/stock",
+        icon: <Inventory2Icon fontSize="small" />,
+      },
+    ],
+  },
   {
     title: "Produksi",
     items: [
@@ -96,9 +112,19 @@ const groups: Group[] = [
         icon: <HandymanIcon fontSize="small" />,
       },
       {
-        label: "Products",
-        href: "/admin/products",
-        icon: <Inventory2Icon fontSize="small" />,
+        label: "Jenis Barang",
+        href: "/admin/item-types",
+        icon: <CategoryIcon fontSize="small" />,
+      },
+      {
+        label: "Satuan",
+        href: "/admin/units",
+        icon: <StraightenIcon fontSize="small" />,
+      },
+      {
+        label: "Supplier",
+        href: "/admin/suppliers",
+        icon: <LocalShippingIcon fontSize="small" />,
       },
     ],
   },
@@ -163,12 +189,35 @@ export default function GlassSidebar({
   allowedPaths?: string[];
 }) {
   const pathname = usePathname();
+
+  // State for expanded groups
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(
+    {}
+  );
+
+  const toggleGroup = (title: string) => {
+    setExpandedGroups((prev) => ({
+      ...prev,
+      [title]: !prev[title],
+    }));
+  };
+
   const isActive = (href: string) => {
     if (href === "/admin") {
       return pathname === "/admin";
     }
     return pathname === href || pathname.startsWith(href + "/");
   };
+
+  // Auto-expand group if an item within it is active
+  useEffect(() => {
+    groups.forEach((g) => {
+      const hasActiveChild = g.items.some((it) => isActive(it.href));
+      if (hasActiveChild) {
+        setExpandedGroups((prev) => ({ ...prev, [g.title]: true }));
+      }
+    });
+  }, [pathname]);
 
   // Determine width/transform classes based on state
   const containerClasses = isMobile
@@ -237,65 +286,107 @@ export default function GlassSidebar({
                 return { title: g.title, items: filteredItems } as Group;
               })
               .filter((g): g is Group => Boolean(g))
-              .map((g) => (
-                <div key={g.title} className="mb-4">
-                  <AnimatePresence initial={false}>
-                    {(!collapsed || isMobile) && (
-                      <motion.div
-                        initial={{ opacity: 0, x: -6 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -6 }}
-                        transition={{ duration: 0.2, ease: "easeOut" }}
-                        className="px-3 py-2 text-[10px] uppercase tracking-wide text-secondary"
-                      >
-                        {g.title}
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                  <div className="flex flex-col gap-1">
-                    {g.items.map((it) => {
-                      const isItemActive = isActive(it.href);
-                      return (
-                        <Link
-                          key={`${g.title}-${it.label}`}
-                          href={it.href}
-                          className={`flex items-center gap-2 px-3 py-2 rounded-xl transition-colors ${
-                            isItemActive
-                              ? "bg-[rgba(213,14,12,0.12)] text-[var(--brand)]"
-                              : "hover:bg-[rgba(255,255,255,0.06)] text-primary"
-                          }`}
-                        >
-                          <div
-                            className={`w-6 h-6 flex items-center justify-center ${
-                              isItemActive
-                                ? "text-[var(--brand)]"
-                                : "text-black"
-                            }`}
+              .map((g) => {
+                const isExpanded = expandedGroups[g.title] || false;
+                const hasActiveChild = g.items.some((it) => isActive(it.href));
+
+                return (
+                  <div key={g.title} className="mb-2">
+                    {/* Group Header (Clickable Dropdown) */}
+                    <button
+                      onClick={() => toggleGroup(g.title)}
+                      className={`w-full flex items-center gap-2 px-3 py-2 rounded-xl transition-all ${
+                        hasActiveChild
+                          ? "text-[var(--brand)] font-bold"
+                          : "text-secondary hover:bg-[rgba(255,255,255,0.06)]"
+                      }`}
+                    >
+                      <div className="w-6 h-6 flex items-center justify-center">
+                        {/* Use the icon of the first item as the group icon, or a default */}
+                        {g.items[0]?.icon}
+                      </div>
+                      <AnimatePresence initial={false}>
+                        {(!collapsed || isMobile) && (
+                          <motion.div
+                            initial={{ opacity: 0, x: -6 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -6 }}
+                            transition={{ duration: 0.2, ease: "easeOut" }}
+                            className="flex-1 text-left text-sm"
                           >
-                            {it.icon}
-                          </div>
-                          <AnimatePresence initial={false}>
-                            {(!collapsed || isMobile) && (
-                              <motion.span
-                                initial={{ opacity: 0, x: -6 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                exit={{ opacity: 0, x: -6 }}
-                                transition={{ duration: 0.2, ease: "easeOut" }}
-                                className="text-sm font-semibold"
-                              >
-                                {it.label}
-                              </motion.span>
-                            )}
-                          </AnimatePresence>
-                          {isItemActive && (
-                            <span className="ml-auto w-1.5 h-1.5 rounded-full bg-[var(--brand)] shadow-[0_0_12px_rgba(213,14,12,0.8)]" />
+                            {g.title}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                      {(!collapsed || isMobile) && (
+                        <div className="ml-auto opacity-50">
+                          {isExpanded ? (
+                            <ExpandLessIcon fontSize="inherit" />
+                          ) : (
+                            <ExpandMoreIcon fontSize="inherit" />
                           )}
-                        </Link>
-                      );
-                    })}
+                        </div>
+                      )}
+                    </button>
+
+                    {/* Dropdown Items */}
+                    <AnimatePresence initial={false}>
+                      {(isExpanded || collapsed) && (
+                        <motion.div
+                          initial={collapsed ? { height: "auto" } : { height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.2, ease: "easeInOut" }}
+                          className="overflow-hidden"
+                        >
+                          <div className={`flex flex-col gap-1 mt-1 ${!collapsed || isMobile ? "pl-6" : ""}`}>
+                            {g.items.map((it) => {
+                              const isItemActive = isActive(it.href);
+                              return (
+                                <Link
+                                  key={`${g.title}-${it.label}`}
+                                  href={it.href}
+                                  className={`flex items-center gap-2 px-3 py-2 rounded-xl transition-colors ${
+                                    isItemActive
+                                      ? "bg-[rgba(213,14,12,0.12)] text-[var(--brand)]"
+                                      : "hover:bg-[rgba(255,255,255,0.06)] text-primary"
+                                  }`}
+                                >
+                                  <div
+                                    className={`w-6 h-6 flex items-center justify-center ${
+                                      isItemActive
+                                        ? "text-[var(--brand)]"
+                                        : "text-black"
+                                    }`}
+                                  >
+                                    {it.icon}
+                                  </div>
+                                  <AnimatePresence initial={false}>
+                                    {(!collapsed || isMobile) && (
+                                      <motion.span
+                                        initial={{ opacity: 0, x: -6 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        exit={{ opacity: 0, x: -6 }}
+                                        transition={{ duration: 0.2, ease: "easeOut" }}
+                                        className="text-xs font-semibold"
+                                      >
+                                        {it.label}
+                                      </motion.span>
+                                    )}
+                                  </AnimatePresence>
+                                  {isItemActive && (
+                                    <span className="ml-auto w-1.5 h-1.5 rounded-full bg-[var(--brand)] shadow-[0_0_12px_rgba(213,14,12,0.8)]" />
+                                  )}
+                                </Link>
+                              );
+                            })}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
-                </div>
-              ))}
+                );
+              })}
           </div>
           <div className="mt-auto px-3 pb-3 text-[11px] text-secondary">
             ERP Pt. AMP

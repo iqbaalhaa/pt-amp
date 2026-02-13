@@ -6,7 +6,7 @@ import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import LinkIcon from "@mui/icons-material/Link";
-import type { SocialMedia } from "@/generated/prisma";
+import type { SocialMedia } from "@prisma/client";
 import {
 	createSocialMedia,
 	updateSocialMedia,
@@ -163,3 +163,4 @@ export function SocialMediaForm({
 		</Box>
 	);
 }
+

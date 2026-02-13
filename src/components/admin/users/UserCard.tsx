@@ -1,6 +1,6 @@
 "use client";
 
-import { User } from "@/generated/prisma";
+import { User } from "@prisma/client";
 import GlassCard from "@/components/ui/GlassCard";
 import { Avatar, Box, Chip, IconButton, Menu, MenuItem, Typography } from "@mui/material";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
@@ -124,3 +124,4 @@ export default function UserCard({ user }: UserCardProps) {
     </>
   );
 }
+

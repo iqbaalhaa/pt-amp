@@ -23,7 +23,7 @@ export default async function InvoicePrintPage({
       where: { id: BigInt(params.id) },
       include: {
         purchaseItems: {
-          include: { product: true },
+          include: { itemType: true, unit: true },
         },
       },
     });
@@ -32,9 +32,9 @@ export default async function InvoicePrintPage({
       const qty = it.qty.toString();
       const price = it.unitCost.toString();
       return {
-        productName: it.product.name,
+        productName: it.itemType.name,
         qty,
-        unit: it.product.unit,
+        unit: it.unit?.name || "Kg",
         price,
         total: (parseFloat(qty) * parseFloat(price)).toString(),
       };
@@ -57,7 +57,7 @@ export default async function InvoicePrintPage({
       where: { id: BigInt(params.id) },
       include: {
         saleItems: {
-          include: { product: true },
+          include: { itemType: true },
         },
       },
     });
@@ -66,9 +66,9 @@ export default async function InvoicePrintPage({
       const qty = it.qty.toString();
       const price = it.unitPrice.toString();
       return {
-        productName: it.product.name,
+        productName: it.itemType.name,
         qty,
-        unit: it.product.unit,
+        unit: "Kg", // SaleItem doesn't have unitId, default to Kg
         price,
         total: (parseFloat(qty) * parseFloat(price)).toString(),
       };

@@ -5,9 +5,10 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider        = "prisma-client-js"
-  previewFeatures = ["driverAdapters"]
-  output          = "../src/generated/prisma"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native"]
+  engineType    = "library"
+  output        = "../src/generated/client"
 }
 
 datasource db {
@@ -143,27 +144,6 @@ model Verification {
 // MASTER DATA (Updated)
 // =========================================================
 
-model Product {
-  id          BigInt      @id @default(autoincrement())
-  name        String
-  type        ProductType // raw, finished
-  description String?
-  image       String?
-  unit        String
-  isActive    Boolean     @default(true) @map("is_active")
-  createdAt   DateTime    @default(now()) @map("created_at")
-  updatedAt   DateTime    @updatedAt @map("updated_at")
-
-  // Relations
-  purchaseItems     PurchaseItem[]
-  saleItems         SaleItem[]
-  productionInputs  ProductionInput[]
-  productionOutputs ProductionOutput[]
-  stockMovements    StockMovement[]
-
-  @@map("products")
-}
-
 model Worker {
   id       BigInt  @id @default(autoincrement())
   name     String
@@ -185,6 +165,55 @@ model ProductionType {
   productions Production[]
 
   @@map("production_types")
+}
+
+model ItemType {
+  id          BigInt   @id @default(autoincrement())
+  name        String   @unique
+  description String?
+  type        ProductType? // raw, finished
+  image       String?
+  unit        String?      @default("kg")
+  isPublic    Boolean      @default(false) @map("is_public")
+  isActive    Boolean      @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  purchaseItems     PurchaseItem[]
+  saleItems         SaleItem[]
+  productionInputs  ProductionInput[]
+  productionOutputs ProductionOutput[]
+  stockMovements    StockMovement[]
+
+  @@map("item_types")
+}
+
+model Unit {
+  id          BigInt   @id @default(autoincrement())
+  name        String   @unique
+  description String?
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  purchaseItems     PurchaseItem[]
+
+  @@map("units")
+}
+
+model Supplier {
+  id          BigInt   @id @default(autoincrement())
+  name        String   @unique
+  address     String?
+  phone       String?
+  bankAccount String?  @map("bank_account")
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("suppliers")
 }
 
 // Reuse Customer model but update ID to BigInt to match relations
@@ -214,13 +243,15 @@ model Purchase {
 model PurchaseItem {
   id         BigInt  @id @default(autoincrement())
   purchaseId BigInt  @map("purchase_id")
-  productId  BigInt  @map("product_id")
+  itemTypeId BigInt  @map("item_type_id")
+  unitId     BigInt? @map("unit_id")
   qty        Decimal @db.Decimal(14, 4)
   unitCost   Decimal @db.Decimal(14, 4) @map("unit_cost")
 
   // Relations
-  purchase Purchase @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
-  product  Product  @relation(fields: [productId], references: [id])
+  purchase   Purchase @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
+  itemType   ItemType @relation(fields: [itemTypeId], references: [id])
+  unit       Unit?    @relation(fields: [unitId], references: [id])
 
   @@map("purchase_items")
 }
@@ -245,13 +276,13 @@ model Sale {
 model SaleItem {
   id        BigInt  @id @default(autoincrement())
   saleId    BigInt  @map("sale_id")
-  productId BigInt  @map("product_id")
+  itemTypeId BigInt @map("item_type_id")
   qty       Decimal @db.Decimal(14, 4)
   unitPrice Decimal @db.Decimal(14, 4) @map("unit_price")
 
   // Relations
-  sale    Sale    @relation(fields: [saleId], references: [id], onDelete: Cascade)
-  product Product @relation(fields: [productId], references: [id])
+  sale      Sale     @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  itemType  ItemType @relation(fields: [itemTypeId], references: [id])
 
   @@map("sale_items")
 }
@@ -279,13 +310,13 @@ model Production {
 model ProductionInput {
   id           BigInt  @id @default(autoincrement())
   productionId BigInt  @map("production_id")
-  productId    BigInt  @map("product_id")
+  itemTypeId   BigInt  @map("item_type_id")
   qty          Decimal @db.Decimal(14, 4)
   unitCost     Decimal @db.Decimal(14, 4) @map("unit_cost")
 
   // Relations
   production Production @relation(fields: [productionId], references: [id], onDelete: Cascade)
-  product    Product    @relation(fields: [productId], references: [id])
+  itemType   ItemType   @relation(fields: [itemTypeId], references: [id])
 
   @@map("production_inputs")
 }
@@ -293,13 +324,13 @@ model ProductionInput {
 model ProductionOutput {
   id           BigInt  @id @default(autoincrement())
   productionId BigInt  @map("production_id")
-  productId    BigInt  @map("product_id")
+  itemTypeId   BigInt  @map("item_type_id")
   qty          Decimal @db.Decimal(14, 4)
   unitCost     Decimal @db.Decimal(14, 4) @map("unit_cost")
 
   // Relations
   production Production @relation(fields: [productionId], references: [id], onDelete: Cascade)
-  product    Product    @relation(fields: [productId], references: [id])
+  itemType   ItemType   @relation(fields: [itemTypeId], references: [id])
 
   @@map("production_outputs")
 }
@@ -321,7 +352,7 @@ model ProductionWorker {
 // 5. MUTASI STOK
 model StockMovement {
   id         BigInt   @id @default(autoincrement())
-  productId  BigInt   @map("product_id")
+  itemTypeId BigInt   @map("item_type_id")
   qty        Decimal  @db.Decimal(14, 4)
   sourceType String   @map("source_type") // purchase_item, sale_item, production_input, production_output
   sourceId   BigInt   @map("source_id")
@@ -330,9 +361,9 @@ model StockMovement {
   createdAt  DateTime @default(now()) @map("created_at")
 
   // Relations
-  product Product @relation(fields: [productId], references: [id])
+  itemType ItemType @relation(fields: [itemTypeId], references: [id])
 
-  @@index([productId], name: "idx_stock_movements_product")
+  @@index([itemTypeId], name: "idx_stock_movements_item_type")
   @@index([sourceType, sourceId], name: "idx_stock_movements_source")
   @@map("stock_movements")
 }

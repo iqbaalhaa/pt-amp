@@ -6,7 +6,7 @@ import { createUser, updateUser } from "@/actions/user-actions";
 import Modal from "@/components/ui/Modal";
 import GlassButton from "@/components/ui/GlassButton";
 import { TextField, FormControl, InputLabel, Select, MenuItem, CircularProgress, Alert, Stack } from "@mui/material";
-import { User } from "@/generated/prisma";
+import { User } from "@prisma/client";
 
 interface UserModalProps {
   isOpen: boolean;
@@ -151,3 +151,4 @@ export default function UserModal({ isOpen, onClose, user }: UserModalProps) {
     </Modal>
   );
 }
+

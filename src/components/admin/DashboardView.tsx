@@ -101,7 +101,7 @@ export default function DashboardView({ data }: Props) {
 					title="Biaya Penjemuran"
 					value={formatRupiah(kpi.totalDrying)}
 					delta="Bulan Ini"
-					status="neutral"
+					status="info"
 				/>
 				<KPIStatCard
 					title="Total Penjualan"

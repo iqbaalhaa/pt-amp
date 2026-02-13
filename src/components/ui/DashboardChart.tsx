@@ -152,7 +152,7 @@ export default function DashboardChart({
 				backgroundColor:
 					type === "bar"
 						? color
-						: (context: ScriptableContext<"line">) => {
+						: (context: any) => {
 								const ctx = context.chart.ctx;
 								const gradient = ctx.createLinearGradient(0, 0, 0, height);
 								gradient.addColorStop(0, `rgba(${rgbColor}, 0.25)`);

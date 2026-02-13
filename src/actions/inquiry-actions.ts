@@ -2,7 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import { InquiryStatus } from "@/generated/prisma";
+import { InquiryStatus } from "@prisma/client";
 
 export async function getInquiries() {
   return await prisma.inquiry.findMany({
@@ -47,3 +47,4 @@ export async function deleteInquiry(id: string) {
 
   revalidatePath("/admin/inquiries");
 }
+

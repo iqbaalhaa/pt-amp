@@ -1,18 +1,9 @@
 // prisma/seed.ts
 import "dotenv/config";
-import { PrismaClient } from "../src/generated/prisma";
-import { PrismaPg } from "@prisma/adapter-pg";
-import { Pool } from "pg";
+import { PrismaClient } from "@prisma/client";
 import { randomUUID } from "crypto";
 
-const connectionString = process.env.DATABASE_URL;
-if (!connectionString) {
-  console.error("DATABASE_URL is not set");
-  process.exit(1);
-}
-
-const pool = new Pool({ connectionString });
-const prisma = new PrismaClient({ adapter: new PrismaPg(pool) });
+const prisma = new PrismaClient();
 
 const SEED_PASSWORD = process.env.SEED_PASSWORD ?? "Admin123!";
 
@@ -65,7 +56,8 @@ async function ensureCredentialAccount(userId: string, passwordHash: string) {
 async function seedAuth() {
   // Roles
   const roles = [
-    { name: "ADMIN", description: "Full access" },
+    { name: "SUPERADMIN", description: "Super Admin with full access" },
+    { name: "ADMIN", description: "Administrator access" },
     { name: "STAFF", description: "Staff access" },
   ];
 
@@ -199,6 +191,55 @@ async function seedMaster() {
     });
   }
 
+  // Item Types (dynamic labels for purchase)
+  const itemTypesList = [
+    { name: "ASALAN", type: "raw" as const },
+    { name: "PATAHAN", type: "raw" as const },
+    { name: "AAA", type: "finished" as const },
+    { name: "AA", type: "finished" as const },
+    { name: "RIJECT", type: "raw" as const },
+    { name: "MISS CUT", type: "raw" as const },
+    { name: "KF", type: "raw" as const },
+    { name: "KS", type: "raw" as const },
+    { name: "KA", type: "raw" as const },
+    { name: "KTP", type: "raw" as const },
+    { name: "KB", type: "raw" as const },
+    { name: "KC", type: "raw" as const },
+    { name: "Tembakau Mentah", type: "raw" as const, unit: "kg" },
+    { name: "Cengkeh", type: "raw" as const, unit: "kg" },
+    { name: "Kertas Rokok", type: "raw" as const, unit: "lembar" },
+    { name: "Stik 12cm", type: "finished" as const, unit: "bungkus" },
+  ];
+  for (const item of itemTypesList) {
+    await prisma.itemType.upsert({
+      where: { name: item.name },
+      create: { 
+        name: item.name, 
+        type: item.type,
+        unit: item.unit || "kg",
+        isActive: true,
+        isPublic: true 
+      },
+      update: { 
+        type: item.type,
+        unit: item.unit || "kg",
+        isActive: true 
+      },
+    });
+  }
+
+  const itemTypes = await prisma.itemType.findMany({ orderBy: { id: "asc" } });
+
+  // Units
+  const units = ["GRAM", "KG", "TON", "BUAH", "LEMBAR", "BUNGKUS"];
+  for (const name of units) {
+    await prisma.unit.upsert({
+      where: { name },
+      create: { name, isActive: true },
+      update: { isActive: true },
+    });
+  }
+
   // Workers (no unique => seed only if empty)
   const workerCount = await prisma.worker.count();
   if (workerCount === 0) {
@@ -212,69 +253,27 @@ async function seedMaster() {
     });
   }
 
-  // Products (no unique => seed only if empty)
-  const productCount = await prisma.product.count();
-  if (productCount === 0) {
-    await prisma.product.createMany({
-      data: [
-        {
-          name: "Tembakau Mentah",
-          type: "raw",
-          unit: "kg",
-          description: "Bahan baku tembakau",
-          image: null,
-          isActive: true,
-        },
-        {
-          name: "Cengkeh",
-          type: "raw",
-          unit: "kg",
-          description: "Bahan campuran",
-          image: null,
-          isActive: true,
-        },
-        {
-          name: "Kertas Rokok",
-          type: "raw",
-          unit: "lembar",
-          description: "Bahan pembungkus",
-          image: null,
-          isActive: true,
-        },
-        {
-          name: "Stik 12cm",
-          type: "finished",
-          unit: "bungkus",
-          description: "Produk jadi",
-          image: null,
-          isActive: true,
-        },
-      ],
-    });
-  }
-
-  const products = await prisma.product.findMany({ orderBy: { id: "asc" } });
   const workers = await prisma.worker.findMany({ orderBy: { id: "asc" } });
   const productionTypes = await prisma.productionType.findMany({
     orderBy: { id: "asc" },
   });
 
-  if (products.length < 4)
-    throw new Error("Not enough products to seed transactions");
+  if (itemTypes.length < 4)
+    throw new Error("Not enough item types to seed transactions");
   if (workers.length < 2)
     throw new Error("Not enough workers to seed production workers");
   if (productionTypes.length < 1)
     throw new Error("Not enough production types");
 
-  return { products, workers, productionTypes };
+  return { itemTypes, workers, productionTypes };
 }
 
 async function seedTransactions(ctx: {
-  products: Awaited<ReturnType<typeof prisma.product.findMany>>;
+  itemTypes: Awaited<ReturnType<typeof prisma.itemType.findMany>>;
   workers: Awaited<ReturnType<typeof prisma.worker.findMany>>;
   productionTypes: Awaited<ReturnType<typeof prisma.productionType.findMany>>;
 }) {
-  const [pTembakau, pCengkeh, pKertas, pStik] = ctx.products;
+  const [itAsalan, itPatahan, itAAA] = ctx.itemTypes;
   const prodType = ctx.productionTypes[0];
   const worker1 = ctx.workers[0];
   const worker2 = ctx.workers[1];
@@ -291,9 +290,9 @@ async function seedTransactions(ctx: {
         notes: "Pembelian awal untuk contoh data",
         purchaseItems: {
           create: [
-            { productId: pTembakau.id, qty: "50.0000", unitCost: "15000.0000" },
-            { productId: pCengkeh.id, qty: "10.0000", unitCost: "90000.0000" },
-            { productId: pKertas.id, qty: "1000.0000", unitCost: "200.0000" },
+            { itemTypeId: itAsalan.id, qty: "50.0000", unitCost: "15000.0000" },
+            { itemTypeId: itPatahan.id, qty: "10.0000", unitCost: "90000.0000" },
+            { itemTypeId: itAAA.id, qty: "1000.0000", unitCost: "200.0000" },
           ],
         },
       },
@@ -317,7 +316,7 @@ async function seedTransactions(ctx: {
         notes: "Penjualan contoh",
         saleItems: {
           create: [
-            { productId: pStik.id, qty: "100.0000", unitPrice: "5000.0000" },
+            { itemTypeId: itAsalan.id, qty: "100.0000", unitPrice: "5000.0000" },
           ],
         },
       },
@@ -341,13 +340,13 @@ async function seedTransactions(ctx: {
         notes: "Produksi contoh",
         productionInputs: {
           create: [
-            { productId: pTembakau.id, qty: "20.0000", unitCost: "15000.0000" },
-            { productId: pKertas.id, qty: "400.0000", unitCost: "200.0000" },
+            { itemTypeId: itAsalan.id, qty: "20.0000", unitCost: "15000.0000" },
+            { itemTypeId: itAAA.id, qty: "400.0000", unitCost: "200.0000" },
           ],
         },
         productionOutputs: {
           create: [
-            { productId: pStik.id, qty: "120.0000", unitCost: "4000.0000" },
+            { itemTypeId: itPatahan.id, qty: "120.0000", unitCost: "4000.0000" },
           ],
         },
         productionWorkers: {
@@ -372,26 +371,26 @@ async function seedTransactions(ctx: {
     const purchaseItems = await prisma.purchaseItem.findMany({
       take: 10,
       orderBy: { id: "asc" },
-      select: { id: true, productId: true, qty: true },
+      select: { id: true, itemTypeId: true, qty: true },
     });
     const saleItems = await prisma.saleItem.findMany({
       take: 10,
       orderBy: { id: "asc" },
-      select: { id: true, productId: true, qty: true },
+      select: { id: true, itemTypeId: true, qty: true },
     });
     const prodInputs = await prisma.productionInput.findMany({
       take: 10,
       orderBy: { id: "asc" },
-      select: { id: true, productId: true, qty: true },
+      select: { id: true, itemTypeId: true, qty: true },
     });
     const prodOutputs = await prisma.productionOutput.findMany({
       take: 10,
       orderBy: { id: "asc" },
-      select: { id: true, productId: true, qty: true },
+      select: { id: true, itemTypeId: true, qty: true },
     });
 
     const data: Array<{
-      productId: bigint;
+      itemTypeId: bigint;
       qty: string;
       sourceType: string;
       sourceId: bigint;
@@ -401,7 +400,7 @@ async function seedTransactions(ctx: {
 
     for (const it of purchaseItems) {
       data.push({
-        productId: it.productId,
+        itemTypeId: it.itemTypeId,
         qty: String(it.qty), // + incoming
         sourceType: "purchase_item",
         sourceId: it.id,
@@ -411,7 +410,7 @@ async function seedTransactions(ctx: {
     }
     for (const it of saleItems) {
       data.push({
-        productId: it.productId,
+        itemTypeId: it.itemTypeId,
         qty: `-${String(it.qty)}`, // - outgoing
         sourceType: "sale_item",
         sourceId: it.id,
@@ -421,7 +420,7 @@ async function seedTransactions(ctx: {
     }
     for (const it of prodInputs) {
       data.push({
-        productId: it.productId,
+        itemTypeId: it.itemTypeId,
         qty: `-${String(it.qty)}`, // consumed
         sourceType: "production_input",
         sourceId: it.id,
@@ -431,7 +430,7 @@ async function seedTransactions(ctx: {
     }
     for (const it of prodOutputs) {
       data.push({
-        productId: it.productId,
+        itemTypeId: it.itemTypeId,
         qty: String(it.qty), // produced
         sourceType: "production_output",
         sourceId: it.id,
@@ -583,5 +582,4 @@ main()
   })
   .finally(async () => {
     await prisma.$disconnect();
-    await pool.end();
   });

@@ -6,17 +6,23 @@ import {
 	Stack,
 	Typography,
 	TextField,
+	MenuItem,
 	Snackbar,
 	Alert,
 	Divider,
+	Autocomplete,
+	CircularProgress,
+	createFilterOptions,
 } from "@mui/material";
 import SaveIcon from "@mui/icons-material/Save";
 import PrintIcon from "@mui/icons-material/Print";
 import DownloadIcon from "@mui/icons-material/Download";
+import AddIcon from "@mui/icons-material/Add";
+import DeleteIcon from "@mui/icons-material/Delete";
 import { useRouter } from "next/navigation";
 import { createPurchase } from "@/actions/purchase-actions";
 import { formatRupiah } from "@/lib/currency";
-import { TransactionStatus } from "@/generated/prisma";
+import { TransactionStatus } from "@prisma/client";
 import GlassTable, { Column } from "@/components/ui/GlassTable";
 import GlassButton from "@/components/ui/GlassButton";
 import { Invoice, InvoiceData } from "@/components/Invoice";
@@ -24,40 +30,75 @@ import { Invoice, InvoiceData } from "@/components/Invoice";
 import { useReactToPrint } from "react-to-print";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
+import { type ItemTypeDTO, quickCreateItemType } from "@/actions/item-type-actions";
+import { type UnitDTO, quickCreateUnit } from "@/actions/unit-actions";
+import { type SupplierDTO, quickCreateSupplier } from "@/actions/supplier-actions";
+import SuccessModal from "./SuccessModal";
+import { authClient } from "@/lib/auth-client";
 
-type ProductOption = {
-	id: string;
-	name: string;
-	unit: string;
-	type: "raw" | "finished";
-};
+const filter = createFilterOptions<ItemTypeDTO>();
+const unitFilter = createFilterOptions<UnitDTO>();
+const supplierFilter = createFilterOptions<SupplierDTO>();
 
 type Props = {
-	products: ProductOption[];
+	itemTypes: ItemTypeDTO[];
+	units: UnitDTO[];
+	suppliers: SupplierDTO[];
 };
 
 type ItemRow = {
-	productId: string;
+	id: string; // internal client-side id for keys
+	itemTypeId: string;
 	qty: string;
 	unitCost: string;
+	unitId?: string | null;
 };
 
-const PRODUCTS_1 = ["ASALAN", "PATAHAN", "AAA", "AA", "RIJECT", "MISS CUT"];
-const PRODUCTS_2 = ["KF", "KS", "KA", "KTP", "KB", "KC"];
-const ALL_TARGETS = [...PRODUCTS_1, ...PRODUCTS_2];
-
-// A6 portrait: 105mm × 148mm
-const A6_W_MM = 105;
-const A6_H_MM = 148;
-const PRINT_MARGIN_MM = 6;
-
-export default function PurchaseForm({ products }: Props) {
+export default function PurchaseForm({ itemTypes, units: initialUnits, suppliers: initialSuppliers }: Props) {
 	const router = useRouter();
 
-	const [supplier, setSupplier] = useState<string>("");
+	const [localItemTypes, setLocalItemTypes] = useState<ItemTypeDTO[]>(itemTypes);
+	const [localUnits, setLocalUnits] = useState<UnitDTO[]>(initialUnits);
+	const [localSuppliers, setLocalSuppliers] = useState<SupplierDTO[]>(initialSuppliers);
+
+	useEffect(() => {
+		setLocalItemTypes(itemTypes);
+	}, [itemTypes]);
+
+	useEffect(() => {
+		setLocalUnits(initialUnits);
+	}, [initialUnits]);
+
+	useEffect(() => {
+		setLocalSuppliers(initialSuppliers);
+	}, [initialSuppliers]);
+
+	const activeItemTypes = useMemo(() => {
+		return localItemTypes.filter((t) => t.isActive);
+	}, [localItemTypes]);
+
+	const activeUnits = useMemo(() => {
+		return localUnits.filter((u) => u.isActive);
+	}, [localUnits]);
+
+	const activeSuppliers = useMemo(() => {
+		return localSuppliers.filter((s) => s.isActive);
+	}, [localSuppliers]);
+
+	const [supplierId, setSupplierId] = useState<string>("");
 	const [date, setDate] = useState<string>("");
 	const [status, setStatus] = useState<TransactionStatus>("draft");
 	const [notes, setNotes] = useState<string>("");
+	const [creatingItemType, setCreatingItemType] = useState(false);
+	const [creatingUnit, setCreatingUnit] = useState(false);
+	const [creatingSupplier, setCreatingSupplier] = useState(false);
+	const [showSuccessModal, setShowSuccessModal] = useState(false);
+	const { data: session } = authClient.useSession();
+
+	// A5 (1/2 A4) portrait: 148mm × 210mm
+	const A5_W_MM = 148;
+	const A5_H_MM = 210;
+	const PRINT_MARGIN_MM = 10;
 
 	useEffect(() => {
 		const today = new Date();
@@ -67,14 +108,9 @@ export default function PurchaseForm({ products }: Props) {
 		setDate(`${yyyy}-${mm}-${dd}`);
 	}, []);
 
-	const [items, setItems] = useState<ItemRow[]>(() => {
-		return ALL_TARGETS.map((name) => {
-			const p = products.find(
-				(prod) => prod.name.toUpperCase() === name.toUpperCase(),
-			);
-			return { productId: p ? p.id : "", qty: "", unitCost: "" };
-		});
-	});
+	const [items, setItems] = useState<ItemRow[]>([
+		{ id: Math.random().toString(), itemTypeId: "", qty: "", unitCost: "", unitId: "" }
+	]);
 
 	const [saving, setSaving] = useState(false);
 	const [snack, setSnack] = useState<{
@@ -83,9 +119,21 @@ export default function PurchaseForm({ products }: Props) {
 		severity: "success" | "error";
 	}>({ open: false, message: "", severity: "success" });
 
-	const updateItem = (idx: number, field: keyof ItemRow, value: string) => {
+	const addItem = () => {
+		setItems(prev => [
+			...prev,
+			{ id: Math.random().toString(), itemTypeId: "", qty: "", unitCost: "", unitId: "" }
+		]);
+	};
+
+	const removeItem = (id: string) => {
+		if (items.length <= 1) return;
+		setItems(prev => prev.filter(it => it.id !== id));
+	};
+
+	const updateItem = (id: string, field: keyof ItemRow, value: string) => {
 		setItems((prev) =>
-			prev.map((row, i) => (i === idx ? { ...row, [field]: value } : row)),
+			prev.map((row) => (row.id === id ? { ...row, [field]: value } : row)),
 		);
 	};
 
@@ -102,48 +150,42 @@ export default function PurchaseForm({ products }: Props) {
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
+		
+		if (!supplierId) {
+			setSnack({
+				open: true,
+				message: "Nama Pemilik Barang (Supplier) wajib diisi",
+				severity: "error",
+			});
+			return;
+		}
+
 		setSaving(true);
 		try {
 			const validItems = items.filter(
-				(r) => r.productId && r.qty && r.unitCost,
+				(r) => r.itemTypeId && r.qty && r.unitCost,
 			);
 
+			if (validItems.length === 0) {
+				setSnack({
+					open: true,
+					message: "Mohon isi minimal satu item dengan lengkap",
+					severity: "error",
+				});
+				return;
+			}
+
 			const payload = {
-				supplier: supplier || null,
+				supplier: localSuppliers.find(s => s.id === supplierId)?.name || null,
 				date,
 				status,
 				notes: notes || null,
-				items: validItems,
+				items: validItems.map(({ id, ...rest }) => rest),
 			};
 
 			const res = await createPurchase(payload);
 			if (res && res.success) {
-				setSnack({
-					open: true,
-					message: "Purchase berhasil dibuat",
-					severity: "success",
-				});
-
-				setSupplier("");
-
-				const today = new Date();
-				const yyyy = today.getFullYear();
-				const mm = String(today.getMonth() + 1).padStart(2, "0");
-				const dd = String(today.getDate()).padStart(2, "0");
-				setDate(`${yyyy}-${mm}-${dd}`);
-
-				setStatus("draft");
-				setNotes("");
-
-				setItems(
-					ALL_TARGETS.map((name) => {
-						const p = products.find(
-							(prod) => prod.name.toUpperCase() === name.toUpperCase(),
-						);
-						return { productId: p ? p.id : "", qty: "", unitCost: "" };
-					}),
-				);
-
+				setShowSuccessModal(true);
 				router.refresh();
 			} else {
 				setSnack({
@@ -152,33 +194,172 @@ export default function PurchaseForm({ products }: Props) {
 					severity: "error",
 				});
 			}
-		} catch {
+		} catch (error) {
+			console.error("Save error:", error);
 			setSnack({ open: true, message: "Terjadi kesalahan", severity: "error" });
 		} finally {
 			setSaving(false);
 		}
 	};
 
-	const columns1: Column<ItemRow>[] = [
+	const columns: Column<ItemRow>[] = [
 		{
 			header: "Nama Barang",
-			cell: (_row, idx) => (
-				<Typography sx={{ fontWeight: 500, fontSize: "0.875rem" }}>
-					{PRODUCTS_1[idx]}
-				</Typography>
+			cell: (row) => (
+				<Autocomplete
+					value={activeItemTypes.find(it => it.id === row.itemTypeId) || null}
+					onChange={async (event, newValue) => {
+						if (typeof newValue === 'string') {
+							// Should not happen with current config
+						} else if (newValue && (newValue as any).inputValue) {
+							// Create new item type
+							setCreatingItemType(true);
+							try {
+								const newIt = await quickCreateItemType((newValue as any).inputValue);
+								setLocalItemTypes(prev => [...prev, newIt]);
+								updateItem(row.id, "itemTypeId", newIt.id);
+								setSnack({ open: true, message: `Barang "${newIt.name}" berhasil ditambahkan`, severity: "success" });
+							} catch (err) {
+								setSnack({ open: true, message: "Gagal menambahkan barang baru", severity: "error" });
+							} finally {
+								setCreatingItemType(false);
+							}
+						} else {
+							updateItem(row.id, "itemTypeId", newValue?.id || "");
+						}
+					}}
+					filterOptions={(options, params) => {
+						const filtered = filter(options, params);
+						const { inputValue } = params;
+						const isExisting = options.some((option) => inputValue.toLowerCase() === option.name.toLowerCase());
+						if (inputValue !== '' && !isExisting) {
+							filtered.push({
+								inputValue,
+								name: `Tambah "${inputValue}"`,
+							} as any);
+						}
+						return filtered;
+					}}
+					selectOnFocus
+					clearOnBlur
+					handleHomeEndKeys
+					options={activeItemTypes}
+					getOptionLabel={(option) => {
+						if (typeof option === 'string') return option;
+						if ((option as any).inputValue) return (option as any).inputValue;
+						return option.name;
+					}}
+					renderOption={(props, option) => {
+						const { key, ...optionProps } = props as any;
+						return (
+							<li key={key} {...optionProps}>
+								{option.name}
+							</li>
+						);
+					}}
+					size="small"
+					fullWidth
+					renderInput={(params) => (
+						<TextField 
+							{...params} 
+							placeholder="Pilih/Cari Barang"
+							InputProps={{
+								...params.InputProps,
+								endAdornment: (
+									<>
+										{creatingItemType ? <CircularProgress color="inherit" size={20} /> : null}
+										{params.InputProps.endAdornment}
+									</>
+								),
+							}}
+						/>
+					)}
+				/>
 			),
-			className: "min-w-[120px]",
+			className: "min-w-[200px]",
+		},
+		{
+			header: "Satuan",
+			cell: (row) => (
+				<Autocomplete
+					value={activeUnits.find(u => u.id === row.unitId) || null}
+					onChange={async (event, newValue) => {
+						if (newValue && (newValue as any).inputValue) {
+							setCreatingUnit(true);
+							try {
+								const newUnit = await quickCreateUnit((newValue as any).inputValue);
+								setLocalUnits(prev => [...prev, newUnit]);
+								updateItem(row.id, "unitId", newUnit.id);
+								setSnack({ open: true, message: `Satuan "${newUnit.name}" berhasil ditambahkan`, severity: "success" });
+							} catch (err) {
+								setSnack({ open: true, message: "Gagal menambahkan satuan baru", severity: "error" });
+							} finally {
+								setCreatingUnit(false);
+							}
+						} else {
+							updateItem(row.id, "unitId", newValue?.id || "");
+						}
+					}}
+					filterOptions={(options, params) => {
+						const filtered = unitFilter(options, params);
+						const { inputValue } = params;
+						const isExisting = options.some((option) => inputValue.toLowerCase() === option.name.toLowerCase());
+						if (inputValue !== '' && !isExisting) {
+							filtered.push({
+								inputValue,
+								name: `Tambah "${inputValue}"`,
+							} as any);
+						}
+						return filtered;
+					}}
+					selectOnFocus
+					clearOnBlur
+					handleHomeEndKeys
+					options={activeUnits}
+					getOptionLabel={(option) => {
+						if (typeof option === 'string') return option;
+						if ((option as any).inputValue) return (option as any).inputValue;
+						return option.name;
+					}}
+					renderOption={(props, option) => {
+						const { key, ...optionProps } = props as any;
+						return (
+							<li key={key} {...optionProps}>
+								{option.name}
+							</li>
+						);
+					}}
+					size="small"
+					fullWidth
+					renderInput={(params) => (
+						<TextField 
+							{...params} 
+							placeholder="Pilih Satuan"
+							InputProps={{
+								...params.InputProps,
+								endAdornment: (
+									<>
+										{creatingUnit ? <CircularProgress color="inherit" size={20} /> : null}
+										{params.InputProps.endAdornment}
+									</>
+								),
+							}}
+						/>
+					)}
+				/>
+			),
+			className: "min-w-[150px]",
 		},
 		{
 			header: "Banyaknya",
-			cell: (row, idx) => (
+			cell: (row) => (
 				<TextField
 					type="number"
 					inputProps={{ step: "0.01", style: { padding: "4px 8px" } }}
 					placeholder="Qty"
 					size="small"
 					value={row.qty}
-					onChange={(e) => updateItem(idx, "qty", e.target.value)}
+					onChange={(e) => updateItem(row.id, "qty", e.target.value)}
 					fullWidth
 				/>
 			),
@@ -186,14 +367,14 @@ export default function PurchaseForm({ products }: Props) {
 		},
 		{
 			header: "Harga Satuan",
-			cell: (row, idx) => (
+			cell: (row) => (
 				<TextField
 					type="number"
 					inputProps={{ step: "1", style: { padding: "4px 8px" } }}
 					placeholder="Harga"
 					size="small"
 					value={row.unitCost}
-					onChange={(e) => updateItem(idx, "unitCost", e.target.value)}
+					onChange={(e) => updateItem(row.id, "unitCost", e.target.value)}
 					fullWidth
 				/>
 			),
@@ -202,95 +383,60 @@ export default function PurchaseForm({ products }: Props) {
 		{
 			header: "Jumlah",
 			cell: (row) => (
-				<Typography sx={{ fontSize: "0.875rem" }}>
+				<Typography sx={{ fontSize: "0.875rem", fontWeight: 600 }}>
 					{formatRupiah(lineTotal(row), 0)}
 				</Typography>
 			),
 			className: "min-w-[100px]",
 		},
-	];
-
-	const columns2: Column<ItemRow>[] = [
 		{
-			header: "Nama Barang",
-			cell: (_row, idx) => (
-				<Typography sx={{ fontWeight: 500, fontSize: "0.875rem" }}>
-					{PRODUCTS_2[idx]}
-				</Typography>
-			),
-			className: "min-w-[120px]",
-		},
-		{
-			header: "Banyaknya",
-			cell: (row, idx) => (
-				<TextField
-					type="number"
-					inputProps={{ step: "0.01", style: { padding: "4px 8px" } }}
-					placeholder="Qty"
-					size="small"
-					value={row.qty}
-					onChange={(e) => updateItem(idx + 6, "qty", e.target.value)}
-					fullWidth
-				/>
-			),
-			className: "min-w-[80px]",
-		},
-		{
-			header: "Harga Satuan",
-			cell: (row, idx) => (
-				<TextField
-					type="number"
-					inputProps={{ step: "1", style: { padding: "4px 8px" } }}
-					placeholder="Harga"
-					size="small"
-					value={row.unitCost}
-					onChange={(e) => updateItem(idx + 6, "unitCost", e.target.value)}
-					fullWidth
-				/>
-			),
-			className: "min-w-[100px]",
-		},
-		{
-			header: "Jumlah",
+			header: "",
 			cell: (row) => (
-				<Typography sx={{ fontSize: "0.875rem" }}>
-					{formatRupiah(lineTotal(row), 0)}
-				</Typography>
+				<GlassButton 
+					variant="danger" 
+					size="small" 
+					onClick={() => removeItem(row.id)}
+					disabled={items.length <= 1}
+					sx={{ minWidth: 0, p: 0.5 }}
+				>
+					<DeleteIcon fontSize="small" />
+				</GlassButton>
 			),
-			className: "min-w-[100px]",
-		},
+			className: "w-[40px]",
+		}
 	];
 
 	// ---------- INVOICE DATA ----------
 	const invoiceItems = useMemo(() => {
 		return items
-			.map((item, idx) => {
-				const product = products.find((p) => p.id === item.productId);
-				const hardcodedName = ALL_TARGETS[idx];
+			.map((item) => {
+				const it = localItemTypes.find((t) => t.id === item.itemTypeId);
+				const unit = localUnits.find((u) => u.id === item.unitId);
 				const q = parseFloat(item.qty || "0");
 				const c = parseFloat(item.unitCost || "0");
 				const total = isFinite(q * c) ? q * c : 0;
 
 				return {
-					productName: product ? product.name : hardcodedName,
+					productName: it ? it.name : "-",
 					qty: item.qty || "0",
-					unit: product ? product.unit : "-",
+					unit: unit ? unit.name : "-",
 					price: item.unitCost || "0",
 					total: total.toString(),
 				};
 			})
 			.filter((it) => parseFloat(it.qty) > 0 || parseFloat(it.price) > 0);
-	}, [items, products]);
+	}, [items, localItemTypes, localUnits]);
 
 	const invoiceData: InvoiceData = {
 		id: "DRAFT",
 		date: date || new Date().toISOString().split("T")[0],
-		partyName: supplier,
+		partyName: localSuppliers.find(s => s.id === supplierId)?.name || "",
 		partyType: "Supplier",
 		type: "Purchase Invoice",
 		notes: notes || null,
 		items: invoiceItems,
 		totalAmount: grandTotal.toString(),
+		inputBy: session?.user?.name || "Admin",
 	};
 
 	// ---------- PRINT & DOWNLOAD (NODE KHUSUS, TANPA SCALE) ----------
@@ -317,15 +463,15 @@ export default function PurchaseForm({ products }: Props) {
 
 		const imgData = canvas.toDataURL("image/png");
 
-		// PDF A6
+		// PDF 1/2 A4 (A5)
 		const pdf = new jsPDF({
 			orientation: "p",
 			unit: "mm",
-			format: [A6_W_MM, A6_H_MM],
+			format: [A5_W_MM, A5_H_MM],
 		});
 
-		const pageW = A6_W_MM;
-		const pageH = A6_H_MM;
+		const pageW = A5_W_MM;
+		const pageH = A5_H_MM;
 		const margin = PRINT_MARGIN_MM;
 
 		const contentW = pageW - margin * 2;
@@ -361,8 +507,21 @@ export default function PurchaseForm({ products }: Props) {
 
 	const canExport = invoiceItems.length > 0;
 
+	const handleNewPurchase = () => {
+		setSupplierId("");
+		setNotes("");
+		setItems([{ id: Math.random().toString(), itemTypeId: "", qty: "", unitCost: "", unitId: "" }]);
+		setShowSuccessModal(false);
+	};
+
 	return (
 		<Box component="form" onSubmit={handleSubmit}>
+			<SuccessModal 
+				open={showSuccessModal} 
+				onClose={() => setShowSuccessModal(false)}
+				onDownload={handleDownloadPdf}
+				onNewPurchase={handleNewPurchase}
+			/>
 			{/* 2 kolom md+: jangan wrap */}
 			<Box
 				sx={{
@@ -376,11 +535,72 @@ export default function PurchaseForm({ products }: Props) {
 				<Box sx={{ flex: 1, minWidth: 0 }}>
 					<Stack spacing={3}>
 						<Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-							<TextField
+							<Autocomplete
+								value={activeSuppliers.find(s => s.id === supplierId) || null}
+								onChange={async (event, newValue) => {
+									if (newValue && (newValue as any).inputValue) {
+										setCreatingSupplier(true);
+										try {
+											const newSup = await quickCreateSupplier((newValue as any).inputValue);
+											setLocalSuppliers(prev => [...prev, newSup]);
+											setSupplierId(newSup.id);
+											setSnack({ open: true, message: `Supplier "${newSup.name}" berhasil ditambahkan`, severity: "success" });
+										} catch (err) {
+											setSnack({ open: true, message: "Gagal menambahkan supplier baru", severity: "error" });
+										} finally {
+											setCreatingSupplier(false);
+										}
+									} else {
+										setSupplierId(newValue?.id || "");
+									}
+								}}
+								filterOptions={(options, params) => {
+									const filtered = supplierFilter(options, params);
+									const { inputValue } = params;
+									const isExisting = options.some((option) => inputValue.toLowerCase() === option.name.toLowerCase());
+									if (inputValue !== '' && !isExisting) {
+										filtered.push({
+											inputValue,
+											name: `Tambah "${inputValue}"`,
+										} as any);
+									}
+									return filtered;
+								}}
+								selectOnFocus
+								clearOnBlur
+								handleHomeEndKeys
+								options={activeSuppliers}
+								getOptionLabel={(option) => {
+									if (typeof option === 'string') return option;
+									if ((option as any).inputValue) return (option as any).inputValue;
+									return option.name;
+								}}
+								renderOption={(props, option) => {
+									const { key, ...optionProps } = props as any;
+									return (
+										<li key={key} {...optionProps}>
+											{option.name}
+										</li>
+									);
+								}}
 								fullWidth
-								label="Nama Pemilik Barang"
-								value={supplier}
-								onChange={(e) => setSupplier(e.target.value)}
+								renderInput={(params) => (
+									<TextField 
+										{...params} 
+										required
+										label="Nama Pemilik Barang"
+										placeholder="Pilih/Cari Supplier"
+										InputProps={{
+											...params.InputProps,
+											endAdornment: (
+												<>
+													{creatingSupplier ? <CircularProgress color="inherit" size={20} /> : null}
+													{params.InputProps.endAdornment}
+												</>
+											),
+										}}
+									/>
+								)}
 							/>
 							<Box
 								sx={{
@@ -409,16 +629,18 @@ export default function PurchaseForm({ products }: Props) {
 						<Box>
 							<Box sx={{ mb: 2 }}>
 								<Box sx={{ overflowX: "auto" }}>
-									<GlassTable columns={columns1} data={items.slice(0, 6)} />
-								</Box>
-							</Box>
-							<Box sx={{ mb: 2 }}>
-								<Box sx={{ overflowX: "auto" }}>
-									<GlassTable columns={columns2} data={items.slice(6, 12)} />
+									<GlassTable
+										columns={columns}
+										data={items}
+									/>
 								</Box>
 							</Box>
 
-							<Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}>
+							<Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mt: 2 }}>
+								<GlassButton type="button" variant="secondary" onClick={addItem} size="small">
+									<AddIcon className="mr-1" fontSize="small" />
+									Tambah Baris
+								</GlassButton>
 								<Typography variant="h6" sx={{ fontWeight: 700 }}>
 									Total: {formatRupiah(grandTotal, 0)}
 								</Typography>
@@ -428,7 +650,7 @@ export default function PurchaseForm({ products }: Props) {
 						<Box sx={{ display: "flex", justifyContent: "flex-end" }}>
 							<GlassButton type="submit" variant="primary" disabled={saving}>
 								<SaveIcon className="mr-2" fontSize="small" />
-								Simpan Purchase
+								Simpan Pembelian
 							</GlassButton>
 						</Box>
 					</Stack>
@@ -445,7 +667,7 @@ export default function PurchaseForm({ products }: Props) {
 					<Box sx={{ position: { md: "sticky" }, top: { md: 20 } }}>
 						<Stack spacing={1.5}>
 							<Typography variant="h6" sx={{ fontWeight: 700 }}>
-								Preview Nota (A6)
+								Preview Nota (1/2 A4)
 							</Typography>
 
 							<Stack direction="row" spacing={1}>
@@ -490,7 +712,7 @@ export default function PurchaseForm({ products }: Props) {
 									sx={{
 										width: "100%",
 										maxWidth: 360,
-										aspectRatio: `${A6_W_MM} / ${A6_H_MM}`,
+										aspectRatio: `${A5_W_MM} / ${A5_H_MM}`,
 										overflow: "hidden",
 										display: "flex",
 										justifyContent: "center",
@@ -498,12 +720,12 @@ export default function PurchaseForm({ products }: Props) {
 										bgcolor: "white",
 									}}
 								>
-									{/* Invoice asli 105mm, kita scale supaya muat */}
+									{/* Invoice asli scale supaya muat */}
 									<Box
 										sx={{
 											transform: "scale(0.75)",
 											transformOrigin: "top center",
-											width: `${A6_W_MM}mm`,
+											width: `${A5_W_MM}mm`,
 										}}
 									>
 										<Invoice data={invoiceData} />
@@ -511,11 +733,7 @@ export default function PurchaseForm({ products }: Props) {
 								</Box>
 							</Box>
 
-							{!canExport && (
-								<Typography variant="caption" color="text.secondary">
-									Isi qty/harga dulu supaya nota bisa di-download / dicetak.
-								</Typography>
-							)}
+								
 						</Stack>
 					</Box>
 				</Box>
@@ -527,7 +745,7 @@ export default function PurchaseForm({ products }: Props) {
 					position: "fixed",
 					left: "-10000px",
 					top: 0,
-					width: `${A6_W_MM}mm`,
+					width: `${A5_W_MM}mm`,
 					bgcolor: "white",
 					zIndex: -1,
 				}}
@@ -552,3 +770,4 @@ export default function PurchaseForm({ products }: Props) {
 		</Box>
 	);
 }
+

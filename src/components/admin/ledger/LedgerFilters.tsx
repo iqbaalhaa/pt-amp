@@ -9,7 +9,7 @@ type LedgerFilterParams = {
   type?: "purchase" | "sale" | "production";
   status?: "draft" | "posted" | "cancelled";
   affectStockOnly?: "true" | "false";
-  product?: string;
+  itemType?: string;
   party?: string;
   q?: string;
   min?: string;
@@ -167,15 +167,15 @@ export function LedgerFilters({ params }: Props) {
         </div>
         <div className="flex flex-col gap-1">
           <label className="text-[11px] font-medium text-slate-600">
-            Produk (ID)
+            Item Type (ID)
           </label>
           <input
             type="text"
-            defaultValue={params.product ?? ""}
+            defaultValue={params.itemType ?? ""}
             onChange={(e) =>
-              updateSearchParam("product", e.target.value || null)
+              updateSearchParam("itemType", e.target.value || null)
             }
-            placeholder="ID produk"
+            placeholder="ID item type"
             className="w-full rounded-md border border-slate-200 px-2 py-1.5 text-xs text-slate-900 shadow-sm focus:border-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-400"
           />
         </div>

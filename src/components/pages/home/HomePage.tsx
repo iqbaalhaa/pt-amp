@@ -2,7 +2,7 @@ import { Navbar } from "@/components/Navbar";
 import { HeroCarousel, HeroSlide } from "@/components/HeroCarousel";
 import { GalleryAlbums } from "@/components/GalleryAlbums";
 import { ContactForm } from "@/components/ContactForm";
-import { getProducts } from "@/actions/product-actions";
+import { getPublicItemTypes } from "@/actions/item-type-actions";
 import { latestPosts } from "@/lib/blog";
 import Link from "next/link";
 import {
@@ -16,7 +16,7 @@ import { DynamicIcon } from "@/components/DynamicIcon";
 export default async function HomePage() {
 	const [allProducts, homePage, slides, featureCards, posts, allAlbums] =
 		await Promise.all([
-			getProducts(),
+			getPublicItemTypes(),
 			getHomePageData(),
 			getHeroSlides(),
 			getFeatureCards("HOME_ABOUT"),
