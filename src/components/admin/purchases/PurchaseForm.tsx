@@ -394,10 +394,9 @@ export default function PurchaseForm({ itemTypes, units: initialUnits, suppliers
 			cell: (row) => (
 				<GlassButton 
 					variant="danger" 
-					size="small" 
+					size="sm" 
 					onClick={() => removeItem(row.id)}
 					disabled={items.length <= 1}
-					sx={{ minWidth: 0, p: 0.5 }}
 				>
 					<DeleteIcon fontSize="small" />
 				</GlassButton>
@@ -637,7 +636,7 @@ export default function PurchaseForm({ itemTypes, units: initialUnits, suppliers
 							</Box>
 
 							<Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mt: 2 }}>
-								<GlassButton type="button" variant="secondary" onClick={addItem} size="small">
+								<GlassButton type="button" variant="secondary" onClick={addItem} size="sm">
 									<AddIcon className="mr-1" fontSize="small" />
 									Tambah Baris
 								</GlassButton>
