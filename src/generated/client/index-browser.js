@@ -249,6 +249,8 @@ exports.Prisma.PurchaseScalarFieldEnum = {
   date: 'date',
   status: 'status',
   notes: 'notes',
+  createdById: 'createdById',
+  createdByName: 'createdByName',
   revokedAt: 'revokedAt',
   revokedById: 'revokedById',
   revokeReason: 'revokeReason'
@@ -269,6 +271,8 @@ exports.Prisma.SaleScalarFieldEnum = {
   date: 'date',
   status: 'status',
   notes: 'notes',
+  createdById: 'createdById',
+  createdByName: 'createdByName',
   revokedAt: 'revokedAt',
   revokedById: 'revokedById',
   revokeReason: 'revokeReason'

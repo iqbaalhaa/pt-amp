@@ -11,6 +11,7 @@ export type LedgerEntry = {
   status: LedgerStatus;
   reference: string;
   counterparty: string | null;
+  createdByName?: string | null;
   total: number | null;
   stockImpact: StockImpact;
   notes: string | null;
@@ -18,4 +19,3 @@ export type LedgerEntry = {
   productionCost?: number | null;
   subType?: string;
 };
-

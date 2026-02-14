@@ -42,6 +42,7 @@ export function LedgerFilters({ params }: Props) {
       }
       current.set("page", "1");
       const qs = current.toString();
+      if (qs === searchParams?.toString()) return;
       router.replace(qs ? `${pathname}?${qs}` : pathname);
     },
     [router, pathname, searchParams],

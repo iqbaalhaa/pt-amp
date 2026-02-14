@@ -19660,6 +19660,8 @@ export namespace Prisma {
     date: Date | null
     status: $Enums.TransactionStatus | null
     notes: string | null
+    createdById: string | null
+    createdByName: string | null
     revokedAt: Date | null
     revokedById: string | null
     revokeReason: string | null
@@ -19671,6 +19673,8 @@ export namespace Prisma {
     date: Date | null
     status: $Enums.TransactionStatus | null
     notes: string | null
+    createdById: string | null
+    createdByName: string | null
     revokedAt: Date | null
     revokedById: string | null
     revokeReason: string | null
@@ -19682,6 +19686,8 @@ export namespace Prisma {
     date: number
     status: number
     notes: number
+    createdById: number
+    createdByName: number
     revokedAt: number
     revokedById: number
     revokeReason: number
@@ -19703,6 +19709,8 @@ export namespace Prisma {
     date?: true
     status?: true
     notes?: true
+    createdById?: true
+    createdByName?: true
     revokedAt?: true
     revokedById?: true
     revokeReason?: true
@@ -19714,6 +19722,8 @@ export namespace Prisma {
     date?: true
     status?: true
     notes?: true
+    createdById?: true
+    createdByName?: true
     revokedAt?: true
     revokedById?: true
     revokeReason?: true
@@ -19725,6 +19735,8 @@ export namespace Prisma {
     date?: true
     status?: true
     notes?: true
+    createdById?: true
+    createdByName?: true
     revokedAt?: true
     revokedById?: true
     revokeReason?: true
@@ -19823,6 +19835,8 @@ export namespace Prisma {
     date: Date
     status: $Enums.TransactionStatus
     notes: string | null
+    createdById: string | null
+    createdByName: string | null
     revokedAt: Date | null
     revokedById: string | null
     revokeReason: string | null
@@ -19853,6 +19867,8 @@ export namespace Prisma {
     date?: boolean
     status?: boolean
     notes?: boolean
+    createdById?: boolean
+    createdByName?: boolean
     revokedAt?: boolean
     revokedById?: boolean
     revokeReason?: boolean
@@ -19866,6 +19882,8 @@ export namespace Prisma {
     date?: boolean
     status?: boolean
     notes?: boolean
+    createdById?: boolean
+    createdByName?: boolean
     revokedAt?: boolean
     revokedById?: boolean
     revokeReason?: boolean
@@ -19877,6 +19895,8 @@ export namespace Prisma {
     date?: boolean
     status?: boolean
     notes?: boolean
+    createdById?: boolean
+    createdByName?: boolean
     revokedAt?: boolean
     revokedById?: boolean
     revokeReason?: boolean
@@ -19888,12 +19908,14 @@ export namespace Prisma {
     date?: boolean
     status?: boolean
     notes?: boolean
+    createdById?: boolean
+    createdByName?: boolean
     revokedAt?: boolean
     revokedById?: boolean
     revokeReason?: boolean
   }
 
-  export type PurchaseOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "supplier" | "date" | "status" | "notes" | "revokedAt" | "revokedById" | "revokeReason", ExtArgs["result"]["purchase"]>
+  export type PurchaseOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "supplier" | "date" | "status" | "notes" | "createdById" | "createdByName" | "revokedAt" | "revokedById" | "revokeReason", ExtArgs["result"]["purchase"]>
   export type PurchaseInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     purchaseItems?: boolean | Purchase$purchaseItemsArgs<ExtArgs>
     _count?: boolean | PurchaseCountOutputTypeDefaultArgs<ExtArgs>
@@ -19912,6 +19934,8 @@ export namespace Prisma {
       date: Date
       status: $Enums.TransactionStatus
       notes: string | null
+      createdById: string | null
+      createdByName: string | null
       revokedAt: Date | null
       revokedById: string | null
       revokeReason: string | null
@@ -20344,6 +20368,8 @@ export namespace Prisma {
     readonly date: FieldRef<"Purchase", 'DateTime'>
     readonly status: FieldRef<"Purchase", 'TransactionStatus'>
     readonly notes: FieldRef<"Purchase", 'String'>
+    readonly createdById: FieldRef<"Purchase", 'String'>
+    readonly createdByName: FieldRef<"Purchase", 'String'>
     readonly revokedAt: FieldRef<"Purchase", 'DateTime'>
     readonly revokedById: FieldRef<"Purchase", 'String'>
     readonly revokeReason: FieldRef<"Purchase", 'String'>
@@ -21963,6 +21989,8 @@ export namespace Prisma {
     date: Date | null
     status: $Enums.TransactionStatus | null
     notes: string | null
+    createdById: string | null
+    createdByName: string | null
     revokedAt: Date | null
     revokedById: string | null
     revokeReason: string | null
@@ -21974,6 +22002,8 @@ export namespace Prisma {
     date: Date | null
     status: $Enums.TransactionStatus | null
     notes: string | null
+    createdById: string | null
+    createdByName: string | null
     revokedAt: Date | null
     revokedById: string | null
     revokeReason: string | null
@@ -21985,6 +22015,8 @@ export namespace Prisma {
     date: number
     status: number
     notes: number
+    createdById: number
+    createdByName: number
     revokedAt: number
     revokedById: number
     revokeReason: number
@@ -22006,6 +22038,8 @@ export namespace Prisma {
     date?: true
     status?: true
     notes?: true
+    createdById?: true
+    createdByName?: true
     revokedAt?: true
     revokedById?: true
     revokeReason?: true
@@ -22017,6 +22051,8 @@ export namespace Prisma {
     date?: true
     status?: true
     notes?: true
+    createdById?: true
+    createdByName?: true
     revokedAt?: true
     revokedById?: true
     revokeReason?: true
@@ -22028,6 +22064,8 @@ export namespace Prisma {
     date?: true
     status?: true
     notes?: true
+    createdById?: true
+    createdByName?: true
     revokedAt?: true
     revokedById?: true
     revokeReason?: true
@@ -22126,6 +22164,8 @@ export namespace Prisma {
     date: Date
     status: $Enums.TransactionStatus
     notes: string | null
+    createdById: string | null
+    createdByName: string | null
     revokedAt: Date | null
     revokedById: string | null
     revokeReason: string | null
@@ -22156,6 +22196,8 @@ export namespace Prisma {
     date?: boolean
     status?: boolean
     notes?: boolean
+    createdById?: boolean
+    createdByName?: boolean
     revokedAt?: boolean
     revokedById?: boolean
     revokeReason?: boolean
@@ -22169,6 +22211,8 @@ export namespace Prisma {
     date?: boolean
     status?: boolean
     notes?: boolean
+    createdById?: boolean
+    createdByName?: boolean
     revokedAt?: boolean
     revokedById?: boolean
     revokeReason?: boolean
@@ -22180,6 +22224,8 @@ export namespace Prisma {
     date?: boolean
     status?: boolean
     notes?: boolean
+    createdById?: boolean
+    createdByName?: boolean
     revokedAt?: boolean
     revokedById?: boolean
     revokeReason?: boolean
@@ -22191,12 +22237,14 @@ export namespace Prisma {
     date?: boolean
     status?: boolean
     notes?: boolean
+    createdById?: boolean
+    createdByName?: boolean
     revokedAt?: boolean
     revokedById?: boolean
     revokeReason?: boolean
   }
 
-  export type SaleOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "customer" | "date" | "status" | "notes" | "revokedAt" | "revokedById" | "revokeReason", ExtArgs["result"]["sale"]>
+  export type SaleOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "customer" | "date" | "status" | "notes" | "createdById" | "createdByName" | "revokedAt" | "revokedById" | "revokeReason", ExtArgs["result"]["sale"]>
   export type SaleInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     saleItems?: boolean | Sale$saleItemsArgs<ExtArgs>
     _count?: boolean | SaleCountOutputTypeDefaultArgs<ExtArgs>
@@ -22215,6 +22263,8 @@ export namespace Prisma {
       date: Date
       status: $Enums.TransactionStatus
       notes: string | null
+      createdById: string | null
+      createdByName: string | null
       revokedAt: Date | null
       revokedById: string | null
       revokeReason: string | null
@@ -22647,6 +22697,8 @@ export namespace Prisma {
     readonly date: FieldRef<"Sale", 'DateTime'>
     readonly status: FieldRef<"Sale", 'TransactionStatus'>
     readonly notes: FieldRef<"Sale", 'String'>
+    readonly createdById: FieldRef<"Sale", 'String'>
+    readonly createdByName: FieldRef<"Sale", 'String'>
     readonly revokedAt: FieldRef<"Sale", 'DateTime'>
     readonly revokedById: FieldRef<"Sale", 'String'>
     readonly revokeReason: FieldRef<"Sale", 'String'>
@@ -51989,6 +52041,8 @@ export namespace Prisma {
     date: 'date',
     status: 'status',
     notes: 'notes',
+    createdById: 'createdById',
+    createdByName: 'createdByName',
     revokedAt: 'revokedAt',
     revokedById: 'revokedById',
     revokeReason: 'revokeReason'
@@ -52015,6 +52069,8 @@ export namespace Prisma {
     date: 'date',
     status: 'status',
     notes: 'notes',
+    createdById: 'createdById',
+    createdByName: 'createdByName',
     revokedAt: 'revokedAt',
     revokedById: 'revokedById',
     revokeReason: 'revokeReason'
@@ -53381,6 +53437,8 @@ export namespace Prisma {
     date?: DateTimeFilter<"Purchase"> | Date | string
     status?: EnumTransactionStatusFilter<"Purchase"> | $Enums.TransactionStatus
     notes?: StringNullableFilter<"Purchase"> | string | null
+    createdById?: StringNullableFilter<"Purchase"> | string | null
+    createdByName?: StringNullableFilter<"Purchase"> | string | null
     revokedAt?: DateTimeNullableFilter<"Purchase"> | Date | string | null
     revokedById?: StringNullableFilter<"Purchase"> | string | null
     revokeReason?: StringNullableFilter<"Purchase"> | string | null
@@ -53393,6 +53451,8 @@ export namespace Prisma {
     date?: SortOrder
     status?: SortOrder
     notes?: SortOrderInput | SortOrder
+    createdById?: SortOrderInput | SortOrder
+    createdByName?: SortOrderInput | SortOrder
     revokedAt?: SortOrderInput | SortOrder
     revokedById?: SortOrderInput | SortOrder
     revokeReason?: SortOrderInput | SortOrder
@@ -53408,6 +53468,8 @@ export namespace Prisma {
     date?: DateTimeFilter<"Purchase"> | Date | string
     status?: EnumTransactionStatusFilter<"Purchase"> | $Enums.TransactionStatus
     notes?: StringNullableFilter<"Purchase"> | string | null
+    createdById?: StringNullableFilter<"Purchase"> | string | null
+    createdByName?: StringNullableFilter<"Purchase"> | string | null
     revokedAt?: DateTimeNullableFilter<"Purchase"> | Date | string | null
     revokedById?: StringNullableFilter<"Purchase"> | string | null
     revokeReason?: StringNullableFilter<"Purchase"> | string | null
@@ -53420,6 +53482,8 @@ export namespace Prisma {
     date?: SortOrder
     status?: SortOrder
     notes?: SortOrderInput | SortOrder
+    createdById?: SortOrderInput | SortOrder
+    createdByName?: SortOrderInput | SortOrder
     revokedAt?: SortOrderInput | SortOrder
     revokedById?: SortOrderInput | SortOrder
     revokeReason?: SortOrderInput | SortOrder
@@ -53439,6 +53503,8 @@ export namespace Prisma {
     date?: DateTimeWithAggregatesFilter<"Purchase"> | Date | string
     status?: EnumTransactionStatusWithAggregatesFilter<"Purchase"> | $Enums.TransactionStatus
     notes?: StringNullableWithAggregatesFilter<"Purchase"> | string | null
+    createdById?: StringNullableWithAggregatesFilter<"Purchase"> | string | null
+    createdByName?: StringNullableWithAggregatesFilter<"Purchase"> | string | null
     revokedAt?: DateTimeNullableWithAggregatesFilter<"Purchase"> | Date | string | null
     revokedById?: StringNullableWithAggregatesFilter<"Purchase"> | string | null
     revokeReason?: StringNullableWithAggregatesFilter<"Purchase"> | string | null
@@ -53521,6 +53587,8 @@ export namespace Prisma {
     date?: DateTimeFilter<"Sale"> | Date | string
     status?: EnumTransactionStatusFilter<"Sale"> | $Enums.TransactionStatus
     notes?: StringNullableFilter<"Sale"> | string | null
+    createdById?: StringNullableFilter<"Sale"> | string | null
+    createdByName?: StringNullableFilter<"Sale"> | string | null
     revokedAt?: DateTimeNullableFilter<"Sale"> | Date | string | null
     revokedById?: StringNullableFilter<"Sale"> | string | null
     revokeReason?: StringNullableFilter<"Sale"> | string | null
@@ -53533,6 +53601,8 @@ export namespace Prisma {
     date?: SortOrder
     status?: SortOrder
     notes?: SortOrderInput | SortOrder
+    createdById?: SortOrderInput | SortOrder
+    createdByName?: SortOrderInput | SortOrder
     revokedAt?: SortOrderInput | SortOrder
     revokedById?: SortOrderInput | SortOrder
     revokeReason?: SortOrderInput | SortOrder
@@ -53548,6 +53618,8 @@ export namespace Prisma {
     date?: DateTimeFilter<"Sale"> | Date | string
     status?: EnumTransactionStatusFilter<"Sale"> | $Enums.TransactionStatus
     notes?: StringNullableFilter<"Sale"> | string | null
+    createdById?: StringNullableFilter<"Sale"> | string | null
+    createdByName?: StringNullableFilter<"Sale"> | string | null
     revokedAt?: DateTimeNullableFilter<"Sale"> | Date | string | null
     revokedById?: StringNullableFilter<"Sale"> | string | null
     revokeReason?: StringNullableFilter<"Sale"> | string | null
@@ -53560,6 +53632,8 @@ export namespace Prisma {
     date?: SortOrder
     status?: SortOrder
     notes?: SortOrderInput | SortOrder
+    createdById?: SortOrderInput | SortOrder
+    createdByName?: SortOrderInput | SortOrder
     revokedAt?: SortOrderInput | SortOrder
     revokedById?: SortOrderInput | SortOrder
     revokeReason?: SortOrderInput | SortOrder
@@ -53579,6 +53653,8 @@ export namespace Prisma {
     date?: DateTimeWithAggregatesFilter<"Sale"> | Date | string
     status?: EnumTransactionStatusWithAggregatesFilter<"Sale"> | $Enums.TransactionStatus
     notes?: StringNullableWithAggregatesFilter<"Sale"> | string | null
+    createdById?: StringNullableWithAggregatesFilter<"Sale"> | string | null
+    createdByName?: StringNullableWithAggregatesFilter<"Sale"> | string | null
     revokedAt?: DateTimeNullableWithAggregatesFilter<"Sale"> | Date | string | null
     revokedById?: StringNullableWithAggregatesFilter<"Sale"> | string | null
     revokeReason?: StringNullableWithAggregatesFilter<"Sale"> | string | null
@@ -56169,6 +56245,8 @@ export namespace Prisma {
     date: Date | string
     status: $Enums.TransactionStatus
     notes?: string | null
+    createdById?: string | null
+    createdByName?: string | null
     revokedAt?: Date | string | null
     revokedById?: string | null
     revokeReason?: string | null
@@ -56181,6 +56259,8 @@ export namespace Prisma {
     date: Date | string
     status: $Enums.TransactionStatus
     notes?: string | null
+    createdById?: string | null
+    createdByName?: string | null
     revokedAt?: Date | string | null
     revokedById?: string | null
     revokeReason?: string | null
@@ -56193,6 +56273,8 @@ export namespace Prisma {
     date?: DateTimeFieldUpdateOperationsInput | Date | string
     status?: EnumTransactionStatusFieldUpdateOperationsInput | $Enums.TransactionStatus
     notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdById?: NullableStringFieldUpdateOperationsInput | string | null
+    createdByName?: NullableStringFieldUpdateOperationsInput | string | null
     revokedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     revokedById?: NullableStringFieldUpdateOperationsInput | string | null
     revokeReason?: NullableStringFieldUpdateOperationsInput | string | null
@@ -56205,6 +56287,8 @@ export namespace Prisma {
     date?: DateTimeFieldUpdateOperationsInput | Date | string
     status?: EnumTransactionStatusFieldUpdateOperationsInput | $Enums.TransactionStatus
     notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdById?: NullableStringFieldUpdateOperationsInput | string | null
+    createdByName?: NullableStringFieldUpdateOperationsInput | string | null
     revokedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     revokedById?: NullableStringFieldUpdateOperationsInput | string | null
     revokeReason?: NullableStringFieldUpdateOperationsInput | string | null
@@ -56217,6 +56301,8 @@ export namespace Prisma {
     date: Date | string
     status: $Enums.TransactionStatus
     notes?: string | null
+    createdById?: string | null
+    createdByName?: string | null
     revokedAt?: Date | string | null
     revokedById?: string | null
     revokeReason?: string | null
@@ -56228,6 +56314,8 @@ export namespace Prisma {
     date?: DateTimeFieldUpdateOperationsInput | Date | string
     status?: EnumTransactionStatusFieldUpdateOperationsInput | $Enums.TransactionStatus
     notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdById?: NullableStringFieldUpdateOperationsInput | string | null
+    createdByName?: NullableStringFieldUpdateOperationsInput | string | null
     revokedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     revokedById?: NullableStringFieldUpdateOperationsInput | string | null
     revokeReason?: NullableStringFieldUpdateOperationsInput | string | null
@@ -56239,6 +56327,8 @@ export namespace Prisma {
     date?: DateTimeFieldUpdateOperationsInput | Date | string
     status?: EnumTransactionStatusFieldUpdateOperationsInput | $Enums.TransactionStatus
     notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdById?: NullableStringFieldUpdateOperationsInput | string | null
+    createdByName?: NullableStringFieldUpdateOperationsInput | string | null
     revokedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     revokedById?: NullableStringFieldUpdateOperationsInput | string | null
     revokeReason?: NullableStringFieldUpdateOperationsInput | string | null
@@ -56310,6 +56400,8 @@ export namespace Prisma {
     date: Date | string
     status: $Enums.TransactionStatus
     notes?: string | null
+    createdById?: string | null
+    createdByName?: string | null
     revokedAt?: Date | string | null
     revokedById?: string | null
     revokeReason?: string | null
@@ -56322,6 +56414,8 @@ export namespace Prisma {
     date: Date | string
     status: $Enums.TransactionStatus
     notes?: string | null
+    createdById?: string | null
+    createdByName?: string | null
     revokedAt?: Date | string | null
     revokedById?: string | null
     revokeReason?: string | null
@@ -56334,6 +56428,8 @@ export namespace Prisma {
     date?: DateTimeFieldUpdateOperationsInput | Date | string
     status?: EnumTransactionStatusFieldUpdateOperationsInput | $Enums.TransactionStatus
     notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdById?: NullableStringFieldUpdateOperationsInput | string | null
+    createdByName?: NullableStringFieldUpdateOperationsInput | string | null
     revokedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     revokedById?: NullableStringFieldUpdateOperationsInput | string | null
     revokeReason?: NullableStringFieldUpdateOperationsInput | string | null
@@ -56346,6 +56442,8 @@ export namespace Prisma {
     date?: DateTimeFieldUpdateOperationsInput | Date | string
     status?: EnumTransactionStatusFieldUpdateOperationsInput | $Enums.TransactionStatus
     notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdById?: NullableStringFieldUpdateOperationsInput | string | null
+    createdByName?: NullableStringFieldUpdateOperationsInput | string | null
     revokedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     revokedById?: NullableStringFieldUpdateOperationsInput | string | null
     revokeReason?: NullableStringFieldUpdateOperationsInput | string | null
@@ -56358,6 +56456,8 @@ export namespace Prisma {
     date: Date | string
     status: $Enums.TransactionStatus
     notes?: string | null
+    createdById?: string | null
+    createdByName?: string | null
     revokedAt?: Date | string | null
     revokedById?: string | null
     revokeReason?: string | null
@@ -56369,6 +56469,8 @@ export namespace Prisma {
     date?: DateTimeFieldUpdateOperationsInput | Date | string
     status?: EnumTransactionStatusFieldUpdateOperationsInput | $Enums.TransactionStatus
     notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdById?: NullableStringFieldUpdateOperationsInput | string | null
+    createdByName?: NullableStringFieldUpdateOperationsInput | string | null
     revokedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     revokedById?: NullableStringFieldUpdateOperationsInput | string | null
     revokeReason?: NullableStringFieldUpdateOperationsInput | string | null
@@ -56380,6 +56482,8 @@ export namespace Prisma {
     date?: DateTimeFieldUpdateOperationsInput | Date | string
     status?: EnumTransactionStatusFieldUpdateOperationsInput | $Enums.TransactionStatus
     notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdById?: NullableStringFieldUpdateOperationsInput | string | null
+    createdByName?: NullableStringFieldUpdateOperationsInput | string | null
     revokedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     revokedById?: NullableStringFieldUpdateOperationsInput | string | null
     revokeReason?: NullableStringFieldUpdateOperationsInput | string | null
@@ -58874,6 +58978,8 @@ export namespace Prisma {
     date?: SortOrder
     status?: SortOrder
     notes?: SortOrder
+    createdById?: SortOrder
+    createdByName?: SortOrder
     revokedAt?: SortOrder
     revokedById?: SortOrder
     revokeReason?: SortOrder
@@ -58889,6 +58995,8 @@ export namespace Prisma {
     date?: SortOrder
     status?: SortOrder
     notes?: SortOrder
+    createdById?: SortOrder
+    createdByName?: SortOrder
     revokedAt?: SortOrder
     revokedById?: SortOrder
     revokeReason?: SortOrder
@@ -58900,6 +59008,8 @@ export namespace Prisma {
     date?: SortOrder
     status?: SortOrder
     notes?: SortOrder
+    createdById?: SortOrder
+    createdByName?: SortOrder
     revokedAt?: SortOrder
     revokedById?: SortOrder
     revokeReason?: SortOrder
@@ -59039,6 +59149,8 @@ export namespace Prisma {
     date?: SortOrder
     status?: SortOrder
     notes?: SortOrder
+    createdById?: SortOrder
+    createdByName?: SortOrder
     revokedAt?: SortOrder
     revokedById?: SortOrder
     revokeReason?: SortOrder
@@ -59054,6 +59166,8 @@ export namespace Prisma {
     date?: SortOrder
     status?: SortOrder
     notes?: SortOrder
+    createdById?: SortOrder
+    createdByName?: SortOrder
     revokedAt?: SortOrder
     revokedById?: SortOrder
     revokeReason?: SortOrder
@@ -59065,6 +59179,8 @@ export namespace Prisma {
     date?: SortOrder
     status?: SortOrder
     notes?: SortOrder
+    createdById?: SortOrder
+    createdByName?: SortOrder
     revokedAt?: SortOrder
     revokedById?: SortOrder
     revokeReason?: SortOrder
@@ -63436,6 +63552,8 @@ export namespace Prisma {
     date: Date | string
     status: $Enums.TransactionStatus
     notes?: string | null
+    createdById?: string | null
+    createdByName?: string | null
     revokedAt?: Date | string | null
     revokedById?: string | null
     revokeReason?: string | null
@@ -63447,6 +63565,8 @@ export namespace Prisma {
     date: Date | string
     status: $Enums.TransactionStatus
     notes?: string | null
+    createdById?: string | null
+    createdByName?: string | null
     revokedAt?: Date | string | null
     revokedById?: string | null
     revokeReason?: string | null
@@ -63536,6 +63656,8 @@ export namespace Prisma {
     date?: DateTimeFieldUpdateOperationsInput | Date | string
     status?: EnumTransactionStatusFieldUpdateOperationsInput | $Enums.TransactionStatus
     notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdById?: NullableStringFieldUpdateOperationsInput | string | null
+    createdByName?: NullableStringFieldUpdateOperationsInput | string | null
     revokedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     revokedById?: NullableStringFieldUpdateOperationsInput | string | null
     revokeReason?: NullableStringFieldUpdateOperationsInput | string | null
@@ -63547,6 +63669,8 @@ export namespace Prisma {
     date?: DateTimeFieldUpdateOperationsInput | Date | string
     status?: EnumTransactionStatusFieldUpdateOperationsInput | $Enums.TransactionStatus
     notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdById?: NullableStringFieldUpdateOperationsInput | string | null
+    createdByName?: NullableStringFieldUpdateOperationsInput | string | null
     revokedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     revokedById?: NullableStringFieldUpdateOperationsInput | string | null
     revokeReason?: NullableStringFieldUpdateOperationsInput | string | null
@@ -63672,6 +63796,8 @@ export namespace Prisma {
     date: Date | string
     status: $Enums.TransactionStatus
     notes?: string | null
+    createdById?: string | null
+    createdByName?: string | null
     revokedAt?: Date | string | null
     revokedById?: string | null
     revokeReason?: string | null
@@ -63683,6 +63809,8 @@ export namespace Prisma {
     date: Date | string
     status: $Enums.TransactionStatus
     notes?: string | null
+    createdById?: string | null
+    createdByName?: string | null
     revokedAt?: Date | string | null
     revokedById?: string | null
     revokeReason?: string | null
@@ -63749,6 +63877,8 @@ export namespace Prisma {
     date?: DateTimeFieldUpdateOperationsInput | Date | string
     status?: EnumTransactionStatusFieldUpdateOperationsInput | $Enums.TransactionStatus
     notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdById?: NullableStringFieldUpdateOperationsInput | string | null
+    createdByName?: NullableStringFieldUpdateOperationsInput | string | null
     revokedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     revokedById?: NullableStringFieldUpdateOperationsInput | string | null
     revokeReason?: NullableStringFieldUpdateOperationsInput | string | null
@@ -63760,6 +63890,8 @@ export namespace Prisma {
     date?: DateTimeFieldUpdateOperationsInput | Date | string
     status?: EnumTransactionStatusFieldUpdateOperationsInput | $Enums.TransactionStatus
     notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdById?: NullableStringFieldUpdateOperationsInput | string | null
+    createdByName?: NullableStringFieldUpdateOperationsInput | string | null
     revokedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     revokedById?: NullableStringFieldUpdateOperationsInput | string | null
     revokeReason?: NullableStringFieldUpdateOperationsInput | string | null

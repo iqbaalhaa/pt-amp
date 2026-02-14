@@ -5,16 +5,16 @@
 
 */
 -- AlterTable
-ALTER TABLE "item_types" ADD COLUMN     "image" TEXT,
-ADD COLUMN     "is_public" BOOLEAN NOT NULL DEFAULT false,
-ADD COLUMN     "type" "ProductType",
-ADD COLUMN     "unit" TEXT DEFAULT 'kg';
+ALTER TABLE "item_types" ADD COLUMN IF NOT EXISTS "image" TEXT,
+ADD COLUMN IF NOT EXISTS "is_public" BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN IF NOT EXISTS "type" "ProductType",
+ADD COLUMN IF NOT EXISTS "unit" TEXT DEFAULT 'kg';
 
 -- DropTable
-DROP TABLE "products";
+DROP TABLE IF EXISTS "products";
 
 -- CreateTable
-CREATE TABLE "suppliers" (
+CREATE TABLE IF NOT EXISTS "suppliers" (
     "id" BIGSERIAL NOT NULL,
     "name" TEXT NOT NULL,
     "address" TEXT,
@@ -28,4 +28,4 @@ CREATE TABLE "suppliers" (
 );
 
 -- CreateIndex
-CREATE UNIQUE INDEX "suppliers_name_key" ON "suppliers"("name");
+CREATE UNIQUE INDEX IF NOT EXISTS "suppliers_name_key" ON "suppliers"("name");

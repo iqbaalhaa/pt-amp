@@ -230,6 +230,8 @@ model Purchase {
   date       DateTime          @db.Date
   status     TransactionStatus // draft, posted, cancelled
   notes      String?
+  createdById   String?        @map("created_by_id")
+  createdByName String?        @map("created_by_name")
   revokedAt    DateTime?      @map("revoked_at")
   revokedById  String?        @map("revoked_by_id")
   revokeReason String?        @map("revoke_reason")
@@ -263,6 +265,8 @@ model Sale {
   date       DateTime          @db.Date
   status     TransactionStatus // draft, posted, cancelled
   notes      String?
+  createdById   String?        @map("created_by_id")
+  createdByName String?        @map("created_by_name")
   revokedAt    DateTime?      @map("revoked_at")
   revokedById  String?        @map("revoked_by_id")
   revokeReason String?        @map("revoke_reason")

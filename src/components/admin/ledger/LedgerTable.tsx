@@ -1,59 +1,59 @@
 import { LedgerEntry } from "./types";
 import { formatDateShort, toCurrency } from "./formatters";
 import { LedgerActions } from "./LedgerActions";
+import { useMemo } from "react";
 
 type Props = {
   entries: LedgerEntry[];
+  selectedIds?: string[];
+  onToggle?: (id: string) => void;
+  onToggleAll?: (ids: string[]) => void;
 };
 
-export function LedgerTable({ entries }: Props) {
+export function LedgerTable({ entries, selectedIds = [], onToggle, onToggleAll }: Props) {
+  const currentIds = useMemo(() => entries.map((e) => e.id), [entries]);
+  const allSelected = currentIds.length > 0 && currentIds.every((id) => selectedIds.includes(id));
   return (
     <div className="max-h-[56vh] overflow-auto">
       <table className="min-w-full border-collapse text-left text-xs">
         <thead className="sticky top-0 z-10 bg-slate-50 text-[11px] uppercase tracking-wide text-slate-500">
           <tr>
+            <th className="px-3 py-2">
+              {onToggleAll ? (
+                <input
+                  type="checkbox"
+                  checked={allSelected}
+                  onChange={(e) => onToggleAll(e.target.checked ? currentIds : [])}
+                />
+              ) : null}
+            </th>
             <th className="px-3 py-2">Tanggal</th>
-            <th className="px-3 py-2">Jenis</th>
-            <th className="px-3 py-2">No Dokumen</th>
-            <th className="px-3 py-2">Worker/Supplier/Customer</th>
+            <th className="px-3 py-2">Petugas</th>
+            <th className="px-3 py-2">Supplier/Customer</th>
             <th className="px-3 py-2">Total (Rp)</th>
-            <th className="px-3 py-2">Stock</th>
             <th className="px-3 py-2">Status</th>
-            <th className="px-3 py-2 text-right">Actions</th>
+            <th className="px-3 py-2 text-right">Aksi</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-100">
           {entries.map((e) => {
             const dStr = formatDateShort(e.date);
-            const typeLabel =
-              e.type === "production" && e.subType
-                ? e.subType
-                : e.type === "purchase"
-                ? "Purchase"
-                : e.type === "sale"
-                ? "Sales"
-                : "Processing";
             return (
               <tr key={`${e.type}-${e.id}`} className="hover:bg-slate-50">
+                <td className="px-3 py-2">
+                  {onToggle ? (
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.includes(e.id)}
+                      onChange={() => onToggle(e.id)}
+                    />
+                  ) : null}
+                </td>
                 <td className="px-3 py-2">{dStr}</td>
-                <td className="px-3 py-2">{typeLabel}</td>
-                <td className="px-3 py-2">{e.reference}</td>
+                <td className="px-3 py-2">{e.createdByName || "-"}</td>
                 <td className="px-3 py-2">{e.counterparty || "-"}</td>
                 <td className="px-3 py-2">
                   {e.total != null ? toCurrency(e.total) : "-"}
-                </td>
-                <td className="px-3 py-2">
-                  <span
-                    className={`rounded-md px-2 py-0.5 text-[10px] font-medium ${
-                      e.stockImpact === "IN"
-                        ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100"
-                        : e.stockImpact === "OUT"
-                        ? "bg-red-50 text-red-700 ring-1 ring-red-100"
-                        : "bg-slate-100 text-slate-700 ring-1 ring-slate-200"
-                    }`}
-                  >
-                    {e.stockImpact}
-                  </span>
                 </td>
                 <td className="px-3 py-2">{e.status.toUpperCase()}</td>
                 <td className="px-3 py-2 text-right">
@@ -67,4 +67,3 @@ export function LedgerTable({ entries }: Props) {
     </div>
   );
 }
-
