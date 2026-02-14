@@ -12,7 +12,8 @@ import {
 type SearchParams = {
 	start?: string;
 	end?: string;
-	type?: "purchase" | "sale" | "production";
+	type?: "purchase" | "sale" | "production" | "invoice";
+	subType?: string;
 	status?: "draft" | "posted" | "cancelled";
 	affectStockOnly?: "true" | "false";
 	itemType?: string;
@@ -23,6 +24,7 @@ type SearchParams = {
 	page?: string;
 	size?: string;
 	selected?: string;
+	id?: string;
 };
 
 function parseDateRange(params: SearchParams) {
@@ -65,22 +67,28 @@ export default async function AdminLedgerPage({
 	const params = (await searchParams) ?? {};
 	const { start, end } = parseDateRange(params);
 
-	const [
-		purchases,
-		sales,
-		productions,
-		pengikisanList,
-		pemotonganList,
-		penjemuranList,
-		pengemasanList,
-	] = await Promise.all([
+  const [
+    purchases,
+    sales,
+    productions,
+    pengikisanList,
+    pemotonganList,
+    penjemuranList,
+    pengemasanList,
+  ] = await Promise.all([
 		prisma.purchase.findMany({
 			where: {
+        ...(params.id ? { id: BigInt(params.id) } : {}),
 				...(start ? { date: { gte: start } } : {}),
 				...(end ? { date: { lte: end } } : {}),
 				...(params.status ? { status: params.status } : {}),
 				...(params.party
-					? { supplier: { contains: params.party, mode: "insensitive" } }
+					? {
+							OR: [
+								{ supplier: { contains: params.party, mode: "insensitive" } },
+								{ createdByName: { contains: params.party, mode: "insensitive" } },
+							],
+						}
 					: {}),
 				...(params.itemType
 					? {
@@ -96,17 +104,23 @@ export default async function AdminLedgerPage({
 			orderBy: { date: "desc" },
 			include: {
 				purchaseItems: {
-					include: { itemType: true },
+					include: { itemType: true, unit: true },
 				},
 			},
 		}),
 		prisma.sale.findMany({
 			where: {
+        ...(params.id ? { id: BigInt(params.id) } : {}),
 				...(start ? { date: { gte: start } } : {}),
 				...(end ? { date: { lte: end } } : {}),
 				...(params.status ? { status: params.status } : {}),
 				...(params.party
-					? { customer: { contains: params.party, mode: "insensitive" } }
+					? {
+							OR: [
+								{ customer: { contains: params.party, mode: "insensitive" } },
+								{ createdByName: { contains: params.party, mode: "insensitive" } },
+							],
+						}
 					: {}),
 				...(params.itemType
 					? {
@@ -131,6 +145,13 @@ export default async function AdminLedgerPage({
 				...(start ? { date: { gte: start } } : {}),
 				...(end ? { date: { lte: end } } : {}),
 				...(params.status ? { status: params.status as any } : {}),
+				...(params.party
+					? {
+							productionWorkers: {
+								some: { worker: { name: { contains: params.party, mode: "insensitive" } } },
+							},
+						}
+					: {}),
 				...(params.itemType
 					? {
 							OR: [
@@ -192,7 +213,7 @@ export default async function AdminLedgerPage({
 			orderBy: { date: "desc" },
 			include: { penjemuranItems: true },
 		}),
-		prisma.pengemasan.findMany({
+    prisma.pengemasan.findMany({
 			where: {
 				...(start ? { date: { gte: start } } : {}),
 				...(end ? { date: { lte: end } } : {}),
@@ -202,8 +223,136 @@ export default async function AdminLedgerPage({
 			},
 			orderBy: { date: "desc" },
 			include: { pengemasanItems: true },
-		}),
+    }),
 	]);
+  const anyPrisma = prisma as any;
+  let expenses: Array<{
+    id: bigint;
+    date: Date;
+    status: any;
+    createdByName: string | null;
+    notes: string | null;
+    items: Array<{ purpose: string; amount: any }>;
+  }> = [];
+  if (anyPrisma?.expense?.findMany) {
+    expenses = await prisma.expense.findMany({
+      where: {
+        ...(params.id ? { id: BigInt(params.id) } : {}),
+        ...(start ? { date: { gte: start } } : {}),
+        ...(end ? { date: { lte: end } } : {}),
+        ...(params.status ? { status: params.status } : {}),
+        ...(params.party
+          ? {
+              OR: [
+                { createdByName: { contains: params.party, mode: "insensitive" } },
+              ],
+            }
+          : {}),
+        ...(params.q
+          ? { OR: [{ notes: { contains: params.q, mode: "insensitive" } }] }
+          : {}),
+      },
+      orderBy: { date: "desc" },
+      include: { items: true },
+    }) as any;
+  } else {
+    // Fallback to raw SQL aggregation (without per-line details)
+    const whereClauses: string[] = [];
+    const paramsArr: any[] = [];
+    if (params.id) {
+      whereClauses.push(`e."id" = $${paramsArr.length + 1}::bigint`);
+      paramsArr.push(params.id);
+    }
+    if (start) {
+      whereClauses.push(`e."date" >= $${paramsArr.length + 1}::date`);
+      paramsArr.push(start.toISOString().slice(0, 10));
+    }
+    if (end) {
+      whereClauses.push(`e."date" <= $${paramsArr.length + 1}::date`);
+      paramsArr.push(end.toISOString().slice(0, 10));
+    }
+    if (params.status) {
+      whereClauses.push(`e."status" = $${paramsArr.length + 1}::text`);
+      paramsArr.push(params.status);
+    }
+    if (params.party) {
+      whereClauses.push(`e."created_by_name" ILIKE '%' || $${paramsArr.length + 1} || '%'`);
+      paramsArr.push(params.party);
+    }
+    if (params.q) {
+      whereClauses.push(`e."notes" ILIKE '%' || $${paramsArr.length + 1} || '%'`);
+      paramsArr.push(params.q);
+    }
+    const whereSql = whereClauses.length > 0 ? `WHERE ${whereClauses.join(" AND ")}` : "";
+    const headers =
+      await prisma.$queryRawUnsafe<Array<{ id: bigint; date: Date; status: string; created_by_name: string | null; notes: string | null; total: string; item_count: string }>>(
+        `
+        SELECT e."id", e."date", e."status", e."created_by_name", e."notes",
+               COALESCE(SUM(i."amount"), 0) AS total,
+               COUNT(i."id") AS item_count
+        FROM "public"."expenses" e
+        LEFT JOIN "public"."expense_items" i ON i."expense_id" = e."id"
+        ${whereSql}
+        GROUP BY e."id", e."date", e."status", e."created_by_name", e."notes"
+        ORDER BY e."date" DESC
+        `,
+        ...paramsArr
+      );
+    // Build minimal expense objects without line details
+    expenses = headers.map((h) => ({
+      id: h.id,
+      date: h.date,
+      status: h.status,
+      createdByName: h.created_by_name,
+      notes: h.notes,
+      // simpan total agregat untuk dipakai saat items tidak dimuat
+      total: h.total,
+      items: [],
+    })) as any;
+  }
+
+	// Build filter option lists
+	const partySet = new Set<string>();
+	purchases.forEach((p) => {
+		if (p.supplier) partySet.add(p.supplier);
+		if (p.createdByName) partySet.add(p.createdByName);
+	});
+	sales.forEach((s) => {
+		if (s.customer) partySet.add(s.customer);
+		if (s.createdByName) partySet.add(s.createdByName);
+	});
+	productions.forEach((pr) => {
+		pr.productionWorkers.forEach((pw) => {
+			if (pw.worker?.name) partySet.add(pw.worker.name);
+		});
+	});
+  expenses.forEach((e) => {
+    if (e.createdByName) partySet.add(e.createdByName);
+  });
+	const partyOptions = Array.from(partySet).sort((a, b) => a.localeCompare(b));
+
+	const itemTypeMap = new Map<string, string>();
+	purchases.forEach((p) =>
+		p.purchaseItems.forEach((it) => {
+			if (it.itemType) itemTypeMap.set(it.itemType.id.toString(), it.itemType.name);
+		}),
+	);
+	sales.forEach((s) =>
+		s.saleItems.forEach((it) => {
+			if (it.itemType) itemTypeMap.set(it.itemType.id.toString(), it.itemType.name);
+		}),
+	);
+	productions.forEach((pr) => {
+		pr.productionInputs.forEach((it) => {
+			if (it.itemType) itemTypeMap.set(it.itemType.id.toString(), it.itemType.name);
+		});
+		pr.productionOutputs.forEach((it) => {
+			if (it.itemType) itemTypeMap.set(it.itemType.id.toString(), it.itemType.name);
+		});
+	});
+	const itemTypeOptions = Array.from(itemTypeMap.entries())
+		.map(([id, name]) => ({ id, name }))
+		.sort((a, b) => a.name.localeCompare(b.name));
 
 	const purchaseEntries: LedgerEntry[] = purchases.map((p) => {
 		const total =
@@ -226,6 +375,18 @@ export default async function AdminLedgerPage({
 			stockImpact: "IN",
 			notes: p.notes,
 			itemCount: p.purchaseItems.length,
+			lines: p.purchaseItems.map((it) => {
+				const qty = parseFloat(it.qty.toString());
+				const price = parseFloat(it.unitCost.toString());
+				const subtotal = (isFinite(qty) ? qty : 0) * (isFinite(price) ? price : 0);
+				return {
+					name: it.itemType?.name ?? `Item ${it.itemTypeId.toString()}`,
+					qty: isFinite(qty) ? qty : 0,
+					unit: it.unit?.name ?? null,
+					price: isFinite(price) ? price : 0,
+					subtotal,
+				};
+			}),
 		};
 	});
 
@@ -250,6 +411,18 @@ export default async function AdminLedgerPage({
 			stockImpact: "OUT",
 			notes: s.notes,
 			itemCount: s.saleItems.length,
+			lines: s.saleItems.map((it) => {
+				const qty = parseFloat(it.qty.toString());
+				const price = parseFloat(it.unitPrice.toString());
+				const subtotal = (isFinite(qty) ? qty : 0) * (isFinite(price) ? price : 0);
+				return {
+					name: it.itemType?.name ?? `Item ${it.itemTypeId.toString()}`,
+					qty: isFinite(qty) ? qty : 0,
+					unit: null,
+					price: isFinite(price) ? price : 0,
+					subtotal,
+				};
+			}),
 		};
 	});
 
@@ -281,6 +454,42 @@ export default async function AdminLedgerPage({
 			subType: pr.productionType?.name ?? "Production",
 		};
 	});
+
+  const expenseEntries: LedgerEntry[] = expenses.map((e) => {
+    const derivedTotal =
+      (e.items && e.items.length > 0)
+        ? e.items.reduce((sum, it) => {
+            const a = parseFloat(it.amount.toString());
+            return sum + (isFinite(a) ? a : 0);
+          }, 0)
+        : parseFloat((e as any).total || "0");
+    const total = isFinite(derivedTotal) ? derivedTotal : 0;
+    const totalValue = total > 0 ? total : null;
+    return {
+      id: e.id.toString(),
+      type: "invoice",
+      date: e.date.toISOString(),
+      status: e.status as any,
+      reference: e.id.toString(),
+      counterparty: e.createdByName || "Expense",
+      createdByName: e.createdByName || null,
+      total: totalValue,
+      stockImpact: "NEUTRAL",
+      notes: e.notes,
+      itemCount: e.items.length,
+      lines: e.items.map((it) => {
+        const price = parseFloat(it.amount.toString());
+        const subtotal = isFinite(price) ? price : 0;
+        return {
+          name: it.purpose,
+          qty: 0,
+          unit: "",
+          price: isFinite(price) ? price : 0,
+          subtotal,
+        };
+      }),
+    };
+  });
 
 	const pengikisanEntries: LedgerEntry[] = pengikisanList.map((p) => ({
 		id: `pengikisan-${p.id}`,
@@ -350,9 +559,10 @@ export default async function AdminLedgerPage({
 		...pengemasanEntries,
 	];
 
-	let filteredPurchases: LedgerEntry[] = purchaseEntries;
-	let filteredSales: LedgerEntry[] = saleEntries;
-	let filteredProductions: LedgerEntry[] = allProductions;
+  let filteredPurchases: LedgerEntry[] = purchaseEntries;
+  let filteredSales: LedgerEntry[] = saleEntries;
+  let filteredProductions: LedgerEntry[] = allProductions;
+  let filteredExpenses: LedgerEntry[] = expenseEntries;
 
 	// Filter productions to only include known types
 	const knownProductionTypes = [
@@ -371,10 +581,11 @@ export default async function AdminLedgerPage({
 	}
 
 	const typeFilter = params.type;
-	if (typeFilter) {
+  if (typeFilter) {
 		if (typeFilter !== "purchase") filteredPurchases = [];
 		if (typeFilter !== "sale") filteredSales = [];
-		if (typeFilter !== "production") filteredProductions = [];
+    if (typeFilter !== "production") filteredProductions = [];
+    if (typeFilter !== "invoice") filteredExpenses = [];
 	}
 
 	const min = params.min ? parseFloat(params.min) : undefined;
@@ -394,27 +605,30 @@ export default async function AdminLedgerPage({
 		});
 	};
 
-	filteredPurchases = applyAmountFilter(filteredPurchases, (e) => e.total);
-	filteredSales = applyAmountFilter(filteredSales, (e) => e.total);
+  filteredPurchases = applyAmountFilter(filteredPurchases, (e) => e.total);
+  filteredSales = applyAmountFilter(filteredSales, (e) => e.total);
 	filteredProductions = applyAmountFilter(
 		filteredProductions,
 		(e) => e.productionCost ?? null,
 	);
+  filteredExpenses = applyAmountFilter(filteredExpenses, (e) => e.total);
 
 	const sortEntries = (list: LedgerEntry[]) =>
 		[...list].sort((a, b) =>
 			a.date < b.date ? 1 : a.date > b.date ? -1 : a.type.localeCompare(b.type),
 		);
 
-	const sortedPurchases = sortEntries(filteredPurchases);
-	const sortedSales = sortEntries(filteredSales);
-	const sortedProductions = sortEntries(filteredProductions);
+  const sortedPurchases = sortEntries(filteredPurchases);
+  const sortedSales = sortEntries(filteredSales);
+  const sortedProductions = sortEntries(filteredProductions);
+  const sortedExpenses = sortEntries(filteredExpenses);
 
-	const purchaseCount = sortedPurchases.length;
-	const saleCount = sortedSales.length;
-	const productionCount = sortedProductions.length;
+  const purchaseCount = sortedPurchases.length;
+  const saleCount = sortedSales.length;
+  const productionCount = sortedProductions.length;
+  const expenseCount = sortedExpenses.length;
 
-	const purchaseNominal = sortedPurchases.reduce(
+  const purchaseNominal = sortedPurchases.reduce(
 		(sum, e) => sum + (e.total ?? 0),
 		0,
 	);
@@ -423,6 +637,7 @@ export default async function AdminLedgerPage({
 		(sum, e) => sum + (e.productionCost ?? 0),
 		0,
 	);
+  const expenseNominal = sortedExpenses.reduce((sum, e) => sum + (e.total ?? 0), 0);
 
 	// Group productions by subType
 	const productionGroups: Record<string, LedgerEntry[]> = {};
@@ -443,7 +658,7 @@ export default async function AdminLedgerPage({
 		return a.localeCompare(b);
 	});
 
-	const totalCount = purchaseCount + saleCount + productionCount;
+  const totalCount = purchaseCount + saleCount + productionCount + expenseCount;
 	const summaryTotalTransaksi = totalCount;
 	const summaryTotalNominal = purchaseNominal + saleNominal;
 	const breakdown = {
@@ -472,7 +687,7 @@ export default async function AdminLedgerPage({
 			</section>
 
 			<section className="mb-4 rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-100">
-				<LedgerFilters params={params} />
+				<LedgerFilters params={params} partyOptions={partyOptions} itemTypeOptions={itemTypeOptions} />
 			</section>
 
 			<section className="mb-4">
@@ -504,6 +719,19 @@ export default async function AdminLedgerPage({
                 entries={sortedSales}
                 totalCount={saleCount}
                 totalNominal={saleNominal}
+              />
+            </section>
+          );
+        }
+        if (typeParam === "invoice") {
+          return (
+            <section className="mb-4">
+              <LedgerSection
+                title="Invoice"
+                type="invoice"
+                entries={sortedExpenses}
+                totalCount={expenseCount}
+                totalNominal={expenseNominal}
               />
             </section>
           );

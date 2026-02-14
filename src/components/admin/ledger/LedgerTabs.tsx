@@ -5,6 +5,7 @@
  type TabKey =
    | "purchase"
    | "sale"
+   | "invoice"
    | "production:Pengikisan"
    | "production:Pemotongan"
    | "production:Penjemuran"
@@ -13,6 +14,7 @@
  const TABS: { key: TabKey; label: string }[] = [
    { key: "purchase", label: "Pembelian" },
    { key: "sale", label: "Penjualan" },
+  { key: "invoice", label: "Invoice" },
    { key: "production:Pengikisan", label: "Pengikisan" },
    { key: "production:Pemotongan", label: "Pemotongan" },
    { key: "production:Penjemuran", label: "Penjemuran" },

@@ -2,35 +2,46 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { Autocomplete, TextField } from "@mui/material";
 
 type LedgerFilterParams = {
   start?: string;
   end?: string;
-  type?: "purchase" | "sale" | "production";
-  status?: "draft" | "posted" | "cancelled";
-  affectStockOnly?: "true" | "false";
   itemType?: string;
   party?: string;
-  q?: string;
-  min?: string;
-  max?: string;
   page?: string;
-  size?: string;
 };
 
 type Props = {
   params: LedgerFilterParams;
+  partyOptions?: string[];
+  itemTypeOptions?: Array<{ id: string; name: string }>;
 };
 
-export function LedgerFilters({ params }: Props) {
+export function LedgerFilters({ params, partyOptions = [], itemTypeOptions = [] }: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
   const [party, setParty] = useState(params.party ?? "");
-  const [q, setQ] = useState(params.q ?? "");
-  const [min, setMin] = useState(params.min ?? "");
-  const [max, setMax] = useState(params.max ?? "");
+  const [itemType, setItemType] = useState(params.itemType ?? "");
+  const [month, setMonth] = useState<string>(() => {
+    if (params.start && params.end) {
+      const s = new Date(params.start);
+      const e = new Date(params.end);
+      if (s.getFullYear() === e.getFullYear() && s.getMonth() === e.getMonth()) {
+        return String(s.getMonth() + 1).padStart(2, "0");
+      }
+    }
+    return "";
+  });
+  const [year, setYear] = useState<string>(() => {
+    if (params.start) {
+      const s = new Date(params.start);
+      return String(s.getFullYear());
+    }
+    return "";
+  });
 
   const updateSearchParam = useCallback(
     (key: string, value: string | null) => {
@@ -57,31 +68,63 @@ export function LedgerFilters({ params }: Props) {
 
   useEffect(() => {
     const handle = setTimeout(() => {
-      updateSearchParam("q", q.trim() || null);
+      updateSearchParam("itemType", itemType.trim() || null);
     }, 400);
     return () => clearTimeout(handle);
-  }, [q, updateSearchParam]);
+  }, [itemType, updateSearchParam]);
 
   useEffect(() => {
-    const handle = setTimeout(() => {
-      updateSearchParam("min", min.trim() || null);
-    }, 400);
-    return () => clearTimeout(handle);
-  }, [min, updateSearchParam]);
-
-  useEffect(() => {
-    const handle = setTimeout(() => {
-      updateSearchParam("max", max.trim() || null);
-    }, 400);
-    return () => clearTimeout(handle);
-  }, [max, updateSearchParam]);
+    if (!month || !year) return;
+    const m = parseInt(month, 10);
+    const y = parseInt(year, 10);
+    if (!isFinite(m) || !isFinite(y)) return;
+    const start = new Date(y, m - 1, 1);
+    const end = new Date(y, m, 0);
+    const toISO = (d: Date) => d.toISOString().slice(0, 10);
+    updateSearchParam("start", toISO(start));
+    updateSearchParam("end", toISO(end));
+  }, [month, year, updateSearchParam]);
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="grid gap-3 md:grid-cols-5">
+      <div className="grid gap-3 md:grid-cols-6">
         <div className="flex flex-col gap-1">
           <label className="text-[11px] font-medium text-slate-600">
-            Tanggal mulai
+            Bulan
+          </label>
+          <select
+            value={month}
+            onChange={(e) => setMonth(e.target.value)}
+            className="w-full rounded-md border border-slate-200 bg-white px-2 py-1.5 text-xs text-slate-900 shadow-sm focus:border-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-400"
+          >
+            <option value="">Semua</option>
+            {Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, "0")).map((m) => (
+              <option key={m} value={m}>{m}</option>
+            ))}
+          </select>
+        </div>
+        <div className="flex flex-col gap-1">
+          <label className="text-[11px] font-medium text-slate-600">
+            Tahun
+          </label>
+          <select
+            value={year}
+            onChange={(e) => setYear(e.target.value)}
+            className="w-full rounded-md border border-slate-200 bg-white px-2 py-1.5 text-xs text-slate-900 shadow-sm focus:border-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-400"
+          >
+            <option value="">Semua</option>
+            {(() => {
+              const now = new Date().getFullYear();
+              const years = Array.from({ length: 6 }, (_, i) => String(now - 4 + i));
+              return years;
+            })().map((y) => (
+              <option key={y} value={y}>{y}</option>
+            ))}
+          </select>
+        </div>
+        <div className="flex flex-col gap-1">
+          <label className="text-[11px] font-medium text-slate-600">
+            Tanggal awal
           </label>
           <input
             type="date"
@@ -103,135 +146,32 @@ export function LedgerFilters({ params }: Props) {
         </div>
         <div className="flex flex-col gap-1">
           <label className="text-[11px] font-medium text-slate-600">
-            Jenis transaksi
+            Pekerja / Customer
           </label>
-          <select
-            defaultValue={params.type ?? ""}
-            onChange={(e) =>
-              updateSearchParam("type", e.target.value || null)
-            }
-            className="w-full rounded-md border border-slate-200 bg-white px-2 py-1.5 text-xs text-slate-900 shadow-sm focus:border-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-400"
-          >
-            <option value="">Semua</option>
-            <option value="purchase">Purchase</option>
-            <option value="sale">Sales</option>
-            <option value="production">Processing</option>
-          </select>
-        </div>
-        <div className="flex flex-col gap-1">
-          <label className="text-[11px] font-medium text-slate-600">
-            Status
-          </label>
-          <select
-            defaultValue={params.status ?? ""}
-            onChange={(e) =>
-              updateSearchParam("status", e.target.value || null)
-            }
-            className="w-full rounded-md border border-slate-200 bg-white px-2 py-1.5 text-xs text-slate-900 shadow-sm focus:border-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-400"
-          >
-            <option value="">Semua</option>
-            <option value="draft">Draft</option>
-            <option value="posted">Posted</option>
-            <option value="cancelled">Cancelled</option>
-          </select>
-        </div>
-        <div className="flex items-end">
-          <label className="inline-flex items-center gap-2 text-[11px] font-medium text-slate-700">
-            <input
-              type="checkbox"
-              defaultChecked={params.affectStockOnly === "true"}
-              onChange={(e) =>
-                updateSearchParam(
-                  "affectStockOnly",
-                  e.target.checked ? "true" : null,
-                )
-              }
-              className="h-3.5 w-3.5 rounded border-slate-300 text-slate-700 focus:ring-slate-400"
-            />
-            Hanya yang mengubah stok
-          </label>
-        </div>
-      </div>
-
-      <div className="grid gap-3 md:grid-cols-4">
-        <div className="flex flex-col gap-1">
-          <label className="text-[11px] font-medium text-slate-600">
-            Worker / Supplier / Customer
-          </label>
-          <input
-            type="text"
+          <Autocomplete
+            freeSolo
+            options={partyOptions}
             value={party}
-            onChange={(e) => setParty(e.target.value)}
-            placeholder="Nama pihak terkait"
-            className="w-full rounded-md border border-slate-200 px-2 py-1.5 text-xs text-slate-900 shadow-sm focus:border-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-400"
+            onChange={(_e, v) => setParty(v ?? "")}
+            onInputChange={(_e, v) => setParty(v)}
+            renderInput={(params) => (
+              <TextField {...params} size="small" placeholder="Ketik nama pihak terkait" />
+            )}
           />
         </div>
         <div className="flex flex-col gap-1">
           <label className="text-[11px] font-medium text-slate-600">
-            Item Type (ID)
+            Jenis barang
           </label>
-          <input
-            type="text"
-            defaultValue={params.itemType ?? ""}
-            onChange={(e) =>
-              updateSearchParam("itemType", e.target.value || null)
-            }
-            placeholder="ID item type"
-            className="w-full rounded-md border border-slate-200 px-2 py-1.5 text-xs text-slate-900 shadow-sm focus:border-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-400"
+          <Autocomplete
+            options={itemTypeOptions}
+            getOptionLabel={(opt) => opt.name}
+            value={itemTypeOptions.find((it) => it.id === itemType) ?? null}
+            onChange={(_e, v) => setItemType(v?.id ?? "")}
+            renderInput={(params) => (
+              <TextField {...params} size="small" placeholder="Cari jenis barang" />
+            )}
           />
-        </div>
-        <div className="flex flex-col gap-1">
-          <label className="text-[11px] font-medium text-slate-600">
-            Pencarian bebas
-          </label>
-          <input
-            type="text"
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="Catatan / referensi"
-            className="w-full rounded-md border border-slate-200 px-2 py-1.5 text-xs text-slate-900 shadow-sm focus:border-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-400"
-          />
-        </div>
-        <div className="grid grid-cols-3 gap-2">
-          <div className="flex flex-col gap-1">
-            <label className="text-[11px] font-medium text-slate-600">
-              Min (Rp)
-            </label>
-            <input
-              type="number"
-              min={0}
-              value={min}
-              onChange={(e) => setMin(e.target.value)}
-              className="w-full rounded-md border border-slate-200 px-2 py-1.5 text-xs text-slate-900 shadow-sm focus:border-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-400"
-            />
-          </div>
-          <div className="flex flex-col gap-1">
-            <label className="text-[11px] font-medium text-slate-600">
-              Max (Rp)
-            </label>
-            <input
-              type="number"
-              min={0}
-              value={max}
-              onChange={(e) => setMax(e.target.value)}
-              className="w-full rounded-md border border-slate-200 px-2 py-1.5 text-xs text-slate-900 shadow-sm focus:border-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-400"
-            />
-          </div>
-          <div className="flex flex-col gap-1">
-            <label className="text-[11px] font-medium text-slate-600">
-              Baris/hal
-            </label>
-            <input
-              type="number"
-              min={10}
-              max={100}
-              defaultValue={params.size ?? "20"}
-              onChange={(e) =>
-                updateSearchParam("size", e.target.value || null)
-              }
-              className="w-full rounded-md border border-slate-200 px-2 py-1.5 text-xs text-slate-900 shadow-sm focus:border-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-400"
-            />
-          </div>
         </div>
       </div>
     </div>

@@ -524,6 +524,25 @@ exports.Prisma.GalleryMediaScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.ExpenseScalarFieldEnum = {
+  id: 'id',
+  date: 'date',
+  status: 'status',
+  notes: 'notes',
+  createdById: 'createdById',
+  createdByName: 'createdByName',
+  revokedAt: 'revokedAt',
+  revokedById: 'revokedById',
+  revokeReason: 'revokeReason'
+};
+
+exports.Prisma.ExpenseItemScalarFieldEnum = {
+  id: 'id',
+  expenseId: 'expenseId',
+  purpose: 'purpose',
+  amount: 'amount'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -603,7 +622,9 @@ exports.Prisma.ModelName = {
   AboutPoint: 'AboutPoint',
   FeatureCard: 'FeatureCard',
   GalleryAlbum: 'GalleryAlbum',
-  GalleryMedia: 'GalleryMedia'
+  GalleryMedia: 'GalleryMedia',
+  Expense: 'Expense',
+  ExpenseItem: 'ExpenseItem'
 };
 
 /**

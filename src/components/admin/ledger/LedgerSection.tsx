@@ -10,6 +10,13 @@ import GlassDialog from "@/components/ui/GlassDialog";
 import { TextField } from "@mui/material";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
+import DownloadIcon from "@mui/icons-material/Download";
+import UploadIcon from "@mui/icons-material/Upload";
+import * as XLSX from "xlsx";
+import { quickCreateItemType } from "@/actions/item-type-actions";
+import { quickCreateUnit } from "@/actions/unit-actions";
+import { createPurchase } from "@/actions/purchase-actions";
+import { quickCreateSupplier } from "@/actions/supplier-actions";
 
 type Props = {
   title: string;
@@ -20,8 +27,6 @@ type Props = {
   extraHeaderContent?: ReactNode;
 };
 
-const PAGE_SIZE = 5;
-
 export function LedgerSection({
   title,
   type,
@@ -31,14 +36,29 @@ export function LedgerSection({
   extraHeaderContent,
 }: Props) {
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState<number | "all">(10);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [openApprove, setOpenApprove] = useState(false);
   const [openReject, setOpenReject] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
+  const [openView, setOpenView] = useState(false);
+  const [selectedEntry, setSelectedEntry] = useState<LedgerEntry | null>(null);
+  const [openMass, setOpenMass] = useState(false);
+  const [massBusy, setMassBusy] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
+  const [massReport, setMassReport] = useState<{
+    success: number;
+    failed: number;
+    errors: { row: number; reason: string }[];
+  } | null>(null);
+  type MassRow = { supplier: string; item: string; unit: string; qty: number; price: number; _row: number };
+  const [massRows, setMassRows] = useState<MassRow[] | null>(null);
 
-  const totalPages = Math.ceil(entries.length / PAGE_SIZE);
-  const startIdx = (page - 1) * PAGE_SIZE;
-  const currentEntries = entries.slice(startIdx, startIdx + PAGE_SIZE);
+  const totalPages =
+    pageSize === "all" ? 1 : Math.max(1, Math.ceil(entries.length / pageSize));
+  const startIdx = pageSize === "all" ? 0 : (page - 1) * pageSize;
+  const currentEntries =
+    pageSize === "all" ? entries : entries.slice(startIdx, startIdx + pageSize);
   const currentIds = useMemo(() => currentEntries.map((e) => e.id), [currentEntries]);
   const draftSelectedIds = useMemo(
     () => selectedIds.filter((id) => currentEntries.find((e) => e.id === id && e.status === "draft")),
@@ -66,6 +86,9 @@ export function LedgerSection({
       for (const id of draftSelectedIds) await approvePurchase(id);
     } else if (type === "sale") {
       for (const id of draftSelectedIds) await approveSale(id);
+    } else if (type === "invoice") {
+      const { approveExpense } = await import("@/actions/expense-actions");
+      for (const id of draftSelectedIds) await approveExpense(id);
     }
     setSelectedIds([]);
     setOpenApprove(false);
@@ -80,10 +103,120 @@ export function LedgerSection({
     } else if (type === "sale") {
       const { revokeSale } = await import("@/actions/sale-actions");
       for (const id of draftSelectedIds) await revokeSale(id, rejectReason.trim());
+    } else if (type === "invoice") {
+      const { revokeExpense } = await import("@/actions/expense-actions");
+      for (const id of draftSelectedIds) await revokeExpense(id, rejectReason.trim());
     }
     setSelectedIds([]);
     setRejectReason("");
     setOpenReject(false);
+  };
+
+  const handleMassUpload = async (file: File) => {
+    setMassBusy(true);
+    setMassReport(null);
+    setMassRows(null);
+    try {
+      const buf = await file.arrayBuffer();
+      const wb = XLSX.read(buf, { type: "array" });
+      const sheet = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json<any[]>(sheet, { header: 1 }) as any[][];
+      const data = rows.slice(1); // skip header
+
+      const valid: MassRow[] = [];
+      const errors: { row: number; reason: string }[] = [];
+
+      data.forEach((cols, idx) => {
+        const rowNum = idx + 2; // 1-based including header
+        const c0 = (cols?.[0] ?? "").toString();
+        const c1 = (cols?.[1] ?? "").toString();
+        const c2 = (cols?.[2] ?? "").toString();
+        const c3 = (cols?.[3] ?? "").toString();
+        const c4 = (cols?.[4] ?? "").toString();
+        const isBlank = [c0, c1, c2, c3, c4].every((v) => v.trim() === "");
+        if (isBlank) return;
+        const supplier = c0.trim().toUpperCase();
+        const item = c1.trim().toUpperCase();
+        const unit = c2.trim().toUpperCase();
+        const qtyRaw = c3;
+        const priceRaw = c4;
+        const qty = parseFloat(qtyRaw.replace(/[^0-9.\-]/g, ""));
+        const price = parseFloat(priceRaw.replace(/[^0-9.\-]/g, ""));
+
+        if (!supplier) {
+          errors.push({ row: rowNum, reason: "supplier kosong" });
+          return;
+        }
+        if (!item) {
+          errors.push({ row: rowNum, reason: "nama barang kosong" });
+          return;
+        }
+        if (!isFinite(qty)) {
+          errors.push({ row: rowNum, reason: "qty harus angka" });
+          return;
+        }
+        if (!isFinite(price)) {
+          errors.push({ row: rowNum, reason: "harga harus angka" });
+          return;
+        }
+        valid.push({ supplier, item, unit, qty, price, _row: rowNum });
+      });
+
+      setMassRows(valid);
+      setMassReport({
+        success: valid.length,
+        failed: errors.length,
+        errors,
+      });
+    } catch (_err) {
+      setMassReport({
+        success: 0,
+        failed: 1,
+        errors: [{ row: 0, reason: "Gagal memproses file XLSX" }],
+      });
+    } finally {
+      setMassBusy(false);
+    }
+  };
+
+  const handleMassCommit = async () => {
+    if (!massRows || massRows.length === 0) return;
+    setMassBusy(true);
+    try {
+      const bySupplier = new Map<string, MassRow[]>();
+      massRows.forEach((r) => {
+        const arr = bySupplier.get(r.supplier) ?? [];
+        arr.push(r);
+        bySupplier.set(r.supplier, arr);
+      });
+      for (const supplier of bySupplier.keys()) {
+        await quickCreateSupplier(supplier);
+      }
+      for (const [supplier, items] of bySupplier.entries()) {
+        const itemInputs = [];
+        for (const r of items) {
+          const it = await quickCreateItemType(r.item);
+          const u = r.unit ? await quickCreateUnit(r.unit) : null;
+          itemInputs.push({
+            itemTypeId: it.id,
+            qty: String(r.qty),
+            unitId: u ? u.id : undefined,
+            unitCost: String(r.price),
+          });
+        }
+        await createPurchase({
+          supplier,
+          date: new Date().toISOString().slice(0, 10),
+          status: "draft",
+          notes: null,
+          items: itemInputs,
+        });
+      }
+      setOpenMass(false);
+      setMassRows(null);
+    } finally {
+      setMassBusy(false);
+    }
   };
 
   return (
@@ -100,8 +233,78 @@ export function LedgerSection({
             Total nominal: {toCurrency(totalNominal)}
           </span>
           {extraHeaderContent}
-          {(type === "purchase" || type === "sale") && (
+          {(type === "purchase" || type === "sale" || type === "invoice") && (
             <div className="flex items-center gap-2">
+              {type === "purchase" && (
+                <button
+                  onClick={() => setOpenMass(true)}
+                  className="flex items-center gap-1 rounded-md bg-indigo-600 px-2 py-1 text-[11px] text-white hover:bg-indigo-700"
+                >
+                  <UploadIcon fontSize="small" />
+                  Input Massal
+                </button>
+              )}
+              <button
+                onClick={() => {
+                  const style = `
+                    <style>
+                      @page { size: A4; margin: 20mm; }
+                      body { font-family: Arial, sans-serif; color: #0f172a; }
+                      .header { display: flex; align-items: center; gap: 12px; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; margin-bottom: 12px; }
+                      .header img { height: 40px; }
+                      .title { font-size: 16px; font-weight: 700; }
+                      .meta { font-size: 12px; color: #475569; }
+                      table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+                      th, td { border: 1px solid #e2e8f0; padding: 6px 8px; font-size: 12px; }
+                      th { background: #f8fafc; text-align: left; }
+                      tfoot td { font-weight: 700; }
+                    </style>
+                  `;
+                  const rows = entries.map((e) => ({
+                    Tanggal: new Date(e.date).toLocaleString(),
+                    Jenis: e.type,
+                    Status: e.status.toUpperCase(),
+                    Pihak: e.counterparty ?? "-",
+                    Total: e.total != null ? toCurrency(e.total) : "-",
+                    Catatan: e.notes ?? "-",
+                  }));
+                  const headers = ["Tanggal","Jenis","Status","Pihak","Total","Catatan"];
+                  const tableHead = `<tr>${headers.map(h => `<th>${h}</th>`).join("")}</tr>`;
+                  const tableBody = rows.map(r => `<tr>${headers.map(h => `<td>${(r as any)[h]}</td>`).join("")}</tr>`).join("");
+                  const totalSum = entries.reduce((s, e) => s + (e.total ?? 0), 0);
+                  const html = `
+                    <html>
+                    <head>${style}</head>
+                    <body>
+                      <div class="header">
+                        <img src="/logoAMP.png" alt="Logo" />
+                        <div>
+                          <div class="title">Laporan ${type === "purchase" ? "Pembelian" : "Penjualan"}</div>
+                          <div class="meta">Dibuat: ${new Date().toLocaleString()}</div>
+                        </div>
+                      </div>
+                      <table>
+                        <thead>${tableHead}</thead>
+                        <tbody>${tableBody}</tbody>
+                        <tfoot><tr><td colspan="4">Total</td><td>${toCurrency(totalSum)}</td><td></td></tr></tfoot>
+                      </table>
+                    </body>
+                    </html>
+                  `;
+                  const win = window.open("", "_blank");
+                  if (win) {
+                    win.document.open();
+                    win.document.write(html);
+                    win.document.close();
+                    setTimeout(() => win.print(), 300);
+                  }
+                }}
+                className="flex items-center gap-1 rounded-md bg-blue-600 px-2 py-1 text-[11px] text-white hover:bg-blue-700"
+                title="Download PDF"
+              >
+                <DownloadIcon fontSize="small" />
+                PDF
+              </button>
               <button
                 onClick={() => setOpenApprove(true)}
                 disabled={draftSelectedIds.length === 0}
@@ -142,24 +345,53 @@ export function LedgerSection({
             toggleAll(ids);
           }
         }}
+        onView={(entry) => {
+          setSelectedEntry(entry);
+          setOpenView(true);
+        }}
       />
       
-      {totalPages > 1 && (
+      {entries.length > 0 && (
         <div className="flex items-center justify-between border-t border-slate-100 px-3 py-2">
-          <div className="text-[11px] text-slate-500">
-            Halaman {page} dari {totalPages}
+          <div className="flex items-center gap-3">
+            <div className="text-[11px] text-slate-500">
+              Halaman {page} dari {totalPages}
+            </div>
+            <div className="flex items-center gap-1">
+              <span className="text-[11px] text-slate-500">Tampilkan</span>
+              <select
+                value={pageSize === "all" ? "all" : String(pageSize)}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  if (v === "all") {
+                    setPageSize("all");
+                    setPage(1);
+                  } else {
+                    const n = parseInt(v, 10);
+                    setPageSize(isNaN(n) ? 10 : n);
+                    setPage(1);
+                  }
+                }}
+                className="rounded-md border border-slate-200 px-2 py-1 text-[11px] font-medium text-slate-700 bg-white"
+              >
+                <option value="10">10</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+                <option value="all">Semua</option>
+              </select>
+            </div>
           </div>
           <div className="flex gap-2">
             <button
               onClick={handlePrev}
-              disabled={page === 1}
+              disabled={page === 1 || totalPages <= 1}
               className="rounded-md border border-slate-200 px-2 py-1 text-[11px] font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-50"
             >
               Previous
             </button>
             <button
               onClick={handleNext}
-              disabled={page === totalPages}
+              disabled={page === totalPages || totalPages <= 1}
               className="rounded-md border border-slate-200 px-2 py-1 text-[11px] font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-50"
             >
               Next
@@ -168,19 +400,53 @@ export function LedgerSection({
         </div>
       )}
 
-      <GlassDialog open={openApprove} title="Konfirmasi Persetujuan" onClose={() => setOpenApprove(false)} actions={[
-        { label: "Batal", onClick: () => setOpenApprove(false) },
-        { label: "Setujui", onClick: handleApproveMass, variant: "primary" },
-      ]}>
+      <GlassDialog
+        open={openApprove}
+        title="Konfirmasi Persetujuan"
+        onClose={() => setOpenApprove(false)}
+        actions={
+          <>
+            <button
+              onClick={() => setOpenApprove(false)}
+              className="rounded-md bg-slate-100 px-3 py-1 text-[12px] text-slate-800 hover:bg-slate-200"
+            >
+              Batal
+            </button>
+            <button
+              onClick={handleApproveMass}
+              className="rounded-md bg-emerald-600 px-3 py-1 text-[12px] text-white hover:bg-emerald-700"
+            >
+              Setujui
+            </button>
+          </>
+        }
+      >
         <div className="text-sm text-slate-700">
           Anda akan menyetujui {draftSelectedIds.length} transaksi (status draft). Lanjutkan?
         </div>
       </GlassDialog>
 
-      <GlassDialog open={openReject} title="Konfirmasi Penolakan" onClose={() => setOpenReject(false)} actions={[
-        { label: "Batal", onClick: () => setOpenReject(false) },
-        { label: "Tolak", onClick: handleRejectMass, variant: "danger" },
-      ]}>
+      <GlassDialog
+        open={openReject}
+        title="Konfirmasi Penolakan"
+        onClose={() => setOpenReject(false)}
+        actions={
+          <>
+            <button
+              onClick={() => setOpenReject(false)}
+              className="rounded-md bg-slate-100 px-3 py-1 text-[12px] text-slate-800 hover:bg-slate-200"
+            >
+              Batal
+            </button>
+            <button
+              onClick={handleRejectMass}
+              className="rounded-md bg-red-600 px-3 py-1 text-[12px] text-white hover:bg-red-700"
+            >
+              Tolak
+            </button>
+          </>
+        }
+      >
         <div className="flex flex-col gap-2">
           <div className="text-sm text-slate-700">
             Anda akan menolak {draftSelectedIds.length} transaksi (status draft).
@@ -193,6 +459,254 @@ export function LedgerSection({
           />
         </div>
       </GlassDialog>
+
+      <GlassDialog
+        open={openView}
+        title="Detail Transaksi"
+        onClose={() => setOpenView(false)}
+        fullWidth
+        maxWidth="lg"
+        actions={
+          <>
+            <button
+              onClick={() => setOpenView(false)}
+              className="rounded-md bg-slate-100 px-3 py-1 text-[12px] text-slate-800 hover:bg-slate-200"
+            >
+              Tutup
+            </button>
+          </>
+        }
+      >
+        {selectedEntry ? (
+          <div className="grid gap-3 text-sm">
+            <div className="space-y-1">
+              <div><span className="font-medium">Tanggal:</span> {new Date(selectedEntry.date).toLocaleString()}</div>
+              <div><span className="font-medium">Supplier:</span> {selectedEntry.counterparty || "-"}</div>
+              <div><span className="font-medium">Catatan:</span> {selectedEntry.notes || "-"}</div>
+            </div>
+            <div className="overflow-auto">
+              {selectedEntry.lines && selectedEntry.lines.length > 0 ? (
+                <table className="w-full border-collapse text-xs">
+                  <thead>
+                    <tr className="bg-slate-50 text-slate-700">
+                      <th className="border border-slate-200 px-2 py-1 text-left w-10">#</th>
+                      <th className="border border-slate-200 px-2 py-1 text-left">Barang</th>
+                      <th className="border border-slate-200 px-2 py-1 text-left">Qty - Satuan</th>
+                      <th className="border border-slate-200 px-2 py-1 text-right">Harga</th>
+                      <th className="border border-slate-200 px-2 py-1 text-right">Subtotal</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {selectedEntry.lines.map((ln, idx) => (
+                      <tr key={idx}>
+                        <td className="border border-slate-200 px-2 py-1">{idx + 1}</td>
+                        <td className="border border-slate-200 px-2 py-1">{ln.name}</td>
+                        <td className="border border-slate-200 px-2 py-1">{ln.qty} {ln.unit ?? ""}</td>
+                        <td className="border border-slate-200 px-2 py-1 text-right">{toCurrency(ln.price)}</td>
+                        <td className="border border-slate-200 px-2 py-1 text-right">{toCurrency(ln.subtotal)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot>
+                    <tr>
+                      <td className="border border-slate-200 px-2 py-1 font-semibold" colSpan={4}>Total</td>
+                      <td className="border border-slate-200 px-2 py-1 text-right font-semibold">
+                        {toCurrency(selectedEntry.lines.reduce((s, l) => s + l.subtotal, 0))}
+                      </td>
+                    </tr>
+                  </tfoot>
+                </table>
+              ) : (
+                <div className="text-xs text-slate-500">Tidak ada item</div>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="text-sm text-slate-600">Tidak ada data</div>
+        )}
+      </GlassDialog>
+
+      {type === "purchase" && (
+        <GlassDialog
+          open={openMass}
+          title="Input Massal Pembelian"
+          onClose={() => !massBusy && setOpenMass(false)}
+          fullWidth
+          maxWidth="lg"
+          actions={
+            <>
+              <button
+                onClick={() => {
+                  const ws = XLSX.utils.aoa_to_sheet([
+                    ["nama suplier", "nama barang", "satuan", "qty", "harga"],
+                  ]);
+                  const wb = XLSX.utils.book_new();
+                  XLSX.utils.book_append_sheet(wb, ws, "Template");
+                  const out = XLSX.write(wb, { type: "array", bookType: "xlsx" });
+                  const blob = new Blob([out], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement("a");
+                  a.href = url;
+                  a.download = "template-pembelian.xlsx";
+                  a.click();
+                  URL.revokeObjectURL(url);
+                }}
+                className="rounded-md bg-blue-600 px-3 py-1 text-[12px] text-white hover:bg-blue-700"
+              >
+                Download Template (XLSX)
+              </button>
+              <button
+                onClick={handleMassCommit}
+                disabled={massBusy || !massRows || massRows.length === 0}
+                className={`rounded-md px-3 py-1 text-[12px] ${
+                  massBusy || !massRows || massRows.length === 0
+                    ? "bg-emerald-100 text-emerald-400 cursor-not-allowed"
+                    : "bg-emerald-600 text-white hover:bg-emerald-700"
+                }`}
+                title="Masukkan data hasil preview ke database"
+              >
+                Masukkan ke Database
+              </button>
+              <button
+                onClick={() => setOpenMass(false)}
+                disabled={massBusy}
+                className="rounded-md bg-slate-100 px-3 py-1 text-[12px] text-slate-800 hover:bg-slate-200 disabled:opacity-50"
+              >
+                Tutup
+              </button>
+            </>
+          }
+        >
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+            <div className="rounded-md border border-slate-200 p-3">
+              <div className="font-medium mb-2">Unduh Template</div>
+              <p className="text-xs text-slate-600 mb-3">Format kolom: nama suplier | nama barang | satuan | qty | harga</p>
+              <button
+                onClick={() => {
+                  const ws = XLSX.utils.aoa_to_sheet([
+                    ["nama suplier", "nama barang", "satuan", "qty", "harga"],
+                  ]);
+                  const wb = XLSX.utils.book_new();
+                  XLSX.utils.book_append_sheet(wb, ws, "Template");
+                  const out = XLSX.write(wb, { type: "array", bookType: "xlsx" });
+                  const blob = new Blob([out], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement("a");
+                  a.href = url;
+                  a.download = "template-pembelian.xlsx";
+                  a.click();
+                  URL.revokeObjectURL(url);
+                }}
+                className="rounded-md bg-blue-600 px-3 py-1 text-[12px] text-white hover:bg-blue-700"
+              >
+                Download Template (XLSX)
+              </button>
+            </div>
+            <div
+              className={`rounded-md border border-dashed p-3 flex flex-col items-center justify-center gap-2 transition-colors ${
+                dragOver ? "border-indigo-400 bg-indigo-50" : "border-slate-300"
+              }`}
+              onDragOver={(e) => {
+                e.preventDefault();
+                setDragOver(true);
+              }}
+              onDragLeave={() => setDragOver(false)}
+              onDrop={async (e) => {
+                e.preventDefault();
+                setDragOver(false);
+                const file = e.dataTransfer.files?.[0];
+                if (!file) return;
+                await handleMassUpload(file);
+              }}
+            >
+              <div className="font-medium">Drop atau klik untuk upload</div>
+              <div className="text-xs text-slate-600">Terima .xlsx</div>
+              <input
+                id="mass-upload-input"
+                type="file"
+                accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                className="hidden"
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  await handleMassUpload(file);
+                }}
+              />
+              <button
+                onClick={() => document.getElementById("mass-upload-input")?.click()}
+                className="rounded-md border border-slate-300 px-3 py-1 text-[12px] hover:bg-slate-50"
+              >
+                Pilih File XLSX
+              </button>
+            </div>
+            {massReport && (
+              <div className="md:col-span-2 rounded-md border border-slate-200 p-3">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="text-sm font-medium">Ringkasan Upload</div>
+                  <div className="text-xs text-slate-600">
+                    Berhasil: <span className="font-semibold text-emerald-700">{massReport.success}</span> &nbsp;|&nbsp; 
+                    Gagal: <span className="font-semibold text-rose-700">{massReport.failed}</span>
+                  </div>
+                </div>
+                {massReport.errors.length > 0 ? (
+                  <table className="w-full text-xs border border-slate-200">
+                    <thead className="bg-slate-50">
+                      <tr>
+                        <th className="border border-slate-200 px-2 py-1 w-20">Baris</th>
+                        <th className="border border-slate-200 px-2 py-1">Penyebab</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {massReport.errors.map((e, i) => (
+                        <tr key={i}>
+                          <td className="border border-slate-200 px-2 py-1 text-center">{e.row}</td>
+                          <td className="border border-slate-200 px-2 py-1">{e.reason}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                ) : (
+                  <div className="text-xs text-emerald-700">Semua baris berhasil diproses.</div>
+                )}
+              </div>
+            )}
+            {massRows && massRows.length > 0 && (
+              <div className="md:col-span-2 rounded-md border border-slate-200 p-3">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="text-sm font-medium">Preview Data</div>
+                  <div className="text-xs text-slate-600">Total baris valid: {massRows.length}</div>
+                </div>
+                <div className="max-h-72 overflow-auto">
+                  <table className="w-full text-xs border border-slate-200">
+                    <thead className="bg-slate-50">
+                      <tr>
+                        <th className="border border-slate-200 px-2 py-1">Supplier</th>
+                        <th className="border border-slate-200 px-2 py-1">Nama Barang</th>
+                        <th className="border border-slate-200 px-2 py-1">Satuan</th>
+                        <th className="border border-slate-200 px-2 py-1 text-right">Qty</th>
+                        <th className="border border-slate-200 px-2 py-1 text-right">Harga</th>
+                        <th className="border border-slate-200 px-2 py-1 w-20 text-center">Baris</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {massRows.map((r, i) => (
+                        <tr key={i}>
+                          <td className="border border-slate-200 px-2 py-1">{r.supplier}</td>
+                          <td className="border border-slate-200 px-2 py-1">{r.item}</td>
+                          <td className="border border-slate-200 px-2 py-1">{r.unit}</td>
+                          <td className="border border-slate-200 px-2 py-1 text-right">{r.qty}</td>
+                          <td className="border border-slate-200 px-2 py-1 text-right">{r.price}</td>
+                          <td className="border border-slate-200 px-2 py-1 text-center">{r._row}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </div>
+        </GlassDialog>
+      )}
     </section>
   );
 }

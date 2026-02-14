@@ -86,7 +86,9 @@ export async function getInventorySummary(): Promise<InventoryItemDTO[]> {
     })
   );
 
-  return results.sort((a, b) => a.itemTypeName.localeCompare(b.itemTypeName));
+  return results
+    .filter((r) => r.totalQty > 0)
+    .sort((a, b) => a.itemTypeName.localeCompare(b.itemTypeName));
 }
 
 export async function getInventoryItemSummary(itemTypeId: string): Promise<InventoryItemDTO | null> {
@@ -141,6 +143,16 @@ export async function getInventoryItemSummary(itemTypeId: string): Promise<Inven
 
 export type StockMovementDTO = {
   id: string;
+  date: string;
+  type: string;
+  reference: string;
+  qty: number;
+  sourceType: string;
+  sourceId: string;
+};
+
+export type InventoryHistoryDTO = {
+  id: string;
   purchaseId: string;
   date: string;
   supplier: string | null;
@@ -149,16 +161,6 @@ export type StockMovementDTO = {
   total: number;
   unit: string | null;
   createdBy: string | null;
-};
-
-export type StockMovementDTO = {
-  id: string;
-  date: string;
-  type: string;
-  reference: string;
-  qty: number;
-  sourceType: string;
-  sourceId: string;
 };
 
 export async function getProductStockMovements(itemTypeId: string): Promise<StockMovementDTO[]> {

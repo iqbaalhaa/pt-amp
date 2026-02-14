@@ -8,9 +8,10 @@ type Props = {
   selectedIds?: string[];
   onToggle?: (id: string) => void;
   onToggleAll?: (ids: string[]) => void;
+  onView?: (entry: LedgerEntry) => void;
 };
 
-export function LedgerTable({ entries, selectedIds = [], onToggle, onToggleAll }: Props) {
+export function LedgerTable({ entries, selectedIds = [], onToggle, onToggleAll, onView }: Props) {
   const currentIds = useMemo(() => entries.map((e) => e.id), [entries]);
   const allSelected = currentIds.length > 0 && currentIds.every((id) => selectedIds.includes(id));
   return (
@@ -57,7 +58,7 @@ export function LedgerTable({ entries, selectedIds = [], onToggle, onToggleAll }
                 </td>
                 <td className="px-3 py-2">{e.status.toUpperCase()}</td>
                 <td className="px-3 py-2 text-right">
-                  <LedgerActions id={e.id} type={e.type} status={e.status} />
+                  <LedgerActions id={e.id} type={e.type} status={e.status} entry={e} onView={onView} />
                 </td>
               </tr>
             );

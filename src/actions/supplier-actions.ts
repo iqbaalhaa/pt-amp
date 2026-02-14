@@ -49,12 +49,52 @@ export async function createSupplier(formData: FormData) {
 }
 
 export async function quickCreateSupplier(name: string) {
-	const supplier = await prisma.supplier.create({
-		data: {
-			name,
-			isActive: true,
+	const normalizedName = name.trim().toUpperCase();
+	// Cari existing case-insensitive
+	const existing = await prisma.supplier.findFirst({
+		where: {
+			name: {
+				equals: normalizedName,
+				mode: "insensitive",
+			},
 		},
 	});
+
+	let supplier;
+	if (existing) {
+		supplier = await prisma.supplier.update({
+			where: { id: existing.id },
+			data: {
+				// Hindari update name untuk mencegah bentrok unique index
+				// (mungkin ada duplikat beda kasus). Cukup aktifkan kembali.
+				isActive: true,
+			},
+		});
+	} else {
+		try {
+			supplier = await prisma.supplier.create({
+				data: {
+					name: normalizedName,
+					isActive: true,
+				},
+			});
+		} catch (err: any) {
+			// Tangani race condition/unik constraint
+			const fallback = await prisma.supplier.findFirst({
+				where: {
+					name: {
+						equals: normalizedName,
+						mode: "insensitive",
+					},
+				},
+			});
+			if (fallback) {
+				supplier = fallback;
+			} else {
+				throw err;
+			}
+		}
+	}
 
 	revalidatePath("/admin/suppliers");
 	revalidatePath("/admin/purchases");

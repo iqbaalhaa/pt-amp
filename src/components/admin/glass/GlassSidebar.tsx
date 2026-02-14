@@ -27,6 +27,8 @@ import ContentCutIcon from "@mui/icons-material/ContentCut";
 import CategoryIcon from "@mui/icons-material/Category";
 import StraightenIcon from "@mui/icons-material/Straighten";
 import LocalShippingIcon from "@mui/icons-material/LocalShipping";
+import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
+import RequestQuoteIcon from "@mui/icons-material/RequestQuote";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 
@@ -61,6 +63,11 @@ const groups: Group[] = [
         icon: <ReceiptLongIcon fontSize="small" />,
       },
       {
+        label: "Invoice Expense",
+        href: "/admin/expenses",
+        icon: <RequestQuoteIcon fontSize="small" />,
+      },
+      {
         label: "Pembukuan",
         href: "/admin/ledger",
         icon: <MenuBookIcon fontSize="small" />,
@@ -74,6 +81,11 @@ const groups: Group[] = [
         label: "Stok Barang",
         href: "/admin/inventory/stock",
         icon: <Inventory2Icon fontSize="small" />,
+      },
+      {
+        label: "Kas & Saldo",
+        href: "/admin/cash",
+        icon: <AccountBalanceWalletIcon fontSize="small" />,
       },
     ],
   },
@@ -102,6 +114,7 @@ const groups: Group[] = [
       },
     ],
   },
+
 
   {
     title: "Master Data",

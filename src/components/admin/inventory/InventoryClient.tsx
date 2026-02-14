@@ -44,7 +44,7 @@ export default function InventoryClient({ initialData }: { initialData: Inventor
           <span className="font-black text-zinc-900 text-base">
             {row.totalQty.toLocaleString("id-ID")}
           </span>
-          <span className="text-[10px] text-zinc-400 font-bold uppercase">Unit</span>
+          <span className="text-[10px] text-zinc-400 font-bold uppercase">Satuan</span>
         </div>
       ),
     },

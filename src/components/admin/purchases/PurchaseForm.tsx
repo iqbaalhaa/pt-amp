@@ -278,6 +278,22 @@ export default function PurchaseForm({ itemTypes, units: initialUnits, suppliers
 			),
 			className: "min-w-[200px]",
 		},
+		// Reordered: Banyaknya appears before Satuan
+		{
+			header: "Banyaknya",
+			cell: (row) => (
+				<TextField
+					type="number"
+					inputProps={{ step: "0.01", style: { padding: "4px 8px" } }}
+					placeholder="Qty"
+					size="small"
+					value={row.qty}
+					onChange={(e) => updateItem(row.id, "qty", e.target.value)}
+					fullWidth
+				/>
+			),
+			className: "min-w-[80px]",
+		},
 		{
 			header: "Satuan",
 			cell: (row) => (
@@ -349,21 +365,6 @@ export default function PurchaseForm({ itemTypes, units: initialUnits, suppliers
 				/>
 			),
 			className: "min-w-[150px]",
-		},
-		{
-			header: "Banyaknya",
-			cell: (row) => (
-				<TextField
-					type="number"
-					inputProps={{ step: "0.01", style: { padding: "4px 8px" } }}
-					placeholder="Qty"
-					size="small"
-					value={row.qty}
-					onChange={(e) => updateItem(row.id, "qty", e.target.value)}
-					fullWidth
-				/>
-			),
-			className: "min-w-[80px]",
 		},
 		{
 			header: "Harga Satuan",
@@ -636,7 +637,7 @@ export default function PurchaseForm({ itemTypes, units: initialUnits, suppliers
 							</Box>
 
 							<Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mt: 2 }}>
-								<GlassButton type="button" variant="secondary" onClick={addItem} size="sm">
+								<GlassButton type="button" variant="warning" onClick={addItem} size="sm">
 									<AddIcon className="mr-1" fontSize="small" />
 									Tambah Baris
 								</GlassButton>

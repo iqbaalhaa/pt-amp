@@ -7,7 +7,6 @@ export default defineConfig({
   migrations: {
     seed: "tsx ./prisma/seed.ts",
   },
-  earlyAccess: true,
   datasource: {
     url: process.env.DATABASE_URL,
   },

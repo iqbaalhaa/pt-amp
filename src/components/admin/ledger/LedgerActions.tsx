@@ -13,19 +13,22 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import PrintIcon from "@mui/icons-material/Print";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
+import { LedgerEntry } from "./types";
 
 type Props = {
   id: string;
-  type: "purchase" | "sale" | "production";
+  type: "purchase" | "sale" | "production" | "invoice";
   status: "draft" | "posted" | "cancelled";
+  entry?: LedgerEntry;
+  onView?: (entry: LedgerEntry) => void;
 };
 
-export function LedgerActions({ id, type, status }: Props) {
+export function LedgerActions({ id, type, status, entry, onView }: Props) {
   const router = useRouter();
-  const canPrint = type === "purchase" || type === "sale";
+  const canPrint = type === "purchase" || type === "sale" || type === "invoice";
   const isCancelled = status === "cancelled";
-  const canApprove = status === "draft" && (type === "purchase" || type === "sale");
-  const canReject = status === "draft" && !isCancelled && (type === "purchase" || type === "sale");
+  const canApprove = status === "draft" && (type === "purchase" || type === "sale" || type === "invoice");
+  const canReject = status === "draft" && !isCancelled && (type === "purchase" || type === "sale" || type === "invoice");
   const [openApprove, setOpenApprove] = useState(false);
   const [openReject, setOpenReject] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
@@ -38,8 +41,11 @@ export function LedgerActions({ id, type, status }: Props) {
         await revokePurchase(id, reason);
       } else if (type === "sale") {
         await revokeSale(id, reason);
-      } else {
+      } else if (type === "production") {
         await revokeProduction(id, reason);
+      } else if (type === "invoice") {
+        const { revokeExpense } = await import("@/actions/expense-actions");
+        await revokeExpense(id, reason);
       }
       setOpenReject(false);
       setRejectReason("");
@@ -56,6 +62,9 @@ export function LedgerActions({ id, type, status }: Props) {
         await approvePurchase(id);
       } else if (type === "sale") {
         await approveSale(id);
+      } else if (type === "invoice") {
+        const { approveExpense } = await import("@/actions/expense-actions");
+        await approveExpense(id);
       }
       setOpenApprove(false);
       router.refresh();
@@ -65,6 +74,10 @@ export function LedgerActions({ id, type, status }: Props) {
   };
 
   const handleView = () => {
+    if (entry && onView) {
+      onView(entry);
+      return;
+    }
     const search = new URLSearchParams(window.location.search);
     search.set("selected", id);
     router.replace(`${window.location.pathname}?${search.toString()}`);
@@ -87,7 +100,11 @@ export function LedgerActions({ id, type, status }: Props) {
         </button>
       )}
       <Link
-        href={canPrint ? `/admin/invoice/print?type=${type}&id=${id}` : "#"}
+        href={
+          canPrint
+            ? `/admin/invoice/print?type=${type === "invoice" ? "expense" : type}&id=${id}`
+            : "#"
+        }
         aria-disabled={!canPrint}
         className={`flex items-center gap-1 rounded-md px-2 py-1 text-[11px] ${
           canPrint
@@ -110,10 +127,22 @@ export function LedgerActions({ id, type, status }: Props) {
         open={openApprove}
         title="Konfirmasi Persetujuan"
         onClose={() => setOpenApprove(false)}
-        actions={[
-          { label: "Batal", onClick: () => setOpenApprove(false) },
-          { label: "Setujui", onClick: handleApprove, variant: "primary" },
-        ]}
+        actions={
+          <>
+            <button
+              onClick={() => setOpenApprove(false)}
+              className="rounded-md bg-slate-100 px-3 py-1 text-[12px] text-slate-800 hover:bg-slate-200"
+            >
+              Batal
+            </button>
+            <button
+              onClick={handleApprove}
+              className="rounded-md bg-emerald-600 px-3 py-1 text-[12px] text-white hover:bg-emerald-700"
+            >
+              Setujui
+            </button>
+          </>
+        }
       >
         <div className="text-sm text-slate-700">
           Status transaksi akan diubah menjadi POSTED. Lanjutkan?
@@ -124,10 +153,22 @@ export function LedgerActions({ id, type, status }: Props) {
         open={openReject}
         title="Konfirmasi Penolakan"
         onClose={() => setOpenReject(false)}
-        actions={[
-          { label: "Batal", onClick: () => setOpenReject(false) },
-          { label: "Tolak", onClick: handleRejectConfirm, variant: "danger" },
-        ]}
+        actions={
+          <>
+            <button
+              onClick={() => setOpenReject(false)}
+              className="rounded-md bg-slate-100 px-3 py-1 text-[12px] text-slate-800 hover:bg-slate-200"
+            >
+              Batal
+            </button>
+            <button
+              onClick={handleRejectConfirm}
+              className="rounded-md bg-red-600 px-3 py-1 text-[12px] text-white hover:bg-red-700"
+            >
+              Tolak
+            </button>
+          </>
+        }
       >
         <div className="flex flex-col gap-2">
           <div className="text-sm text-slate-700">

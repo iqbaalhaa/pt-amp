@@ -1,8 +1,16 @@
-export type LedgerEntryType = "purchase" | "sale" | "production";
+export type LedgerEntryType = "purchase" | "sale" | "production" | "invoice";
 
 export type LedgerStatus = "draft" | "posted" | "cancelled";
 
 export type StockImpact = "IN" | "OUT" | "NEUTRAL";
+
+export type LedgerLine = {
+  name: string;
+  qty: number;
+  unit?: string | null;
+  price: number;
+  subtotal: number;
+};
 
 export type LedgerEntry = {
   id: string;
@@ -18,4 +26,5 @@ export type LedgerEntry = {
   itemCount: number;
   productionCost?: number | null;
   subType?: string;
+  lines?: LedgerLine[];
 };

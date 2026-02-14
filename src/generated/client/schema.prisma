@@ -646,6 +646,37 @@ model GalleryMedia {
 }
 
 // =========================================================
+// EXPENSES
+// =========================================================
+
+model Expense {
+  id            BigInt            @id @default(autoincrement())
+  date          DateTime          @db.Date
+  status        TransactionStatus @default(draft)
+  notes         String?
+  createdById   String?           @map("created_by_id")
+  createdByName String?           @map("created_by_name")
+  revokedAt     DateTime?         @map("revoked_at")
+  revokedById   String?           @map("revoked_by_id")
+  revokeReason  String?           @map("revoke_reason")
+
+  items ExpenseItem[]
+
+  @@map("expenses")
+}
+
+model ExpenseItem {
+  id        BigInt  @id @default(autoincrement())
+  expenseId BigInt  @map("expense_id")
+  purpose   String
+  amount    Decimal @db.Decimal(14, 4)
+
+  expense Expense @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+
+  @@map("expense_items")
+}
+
+// =========================================================
 // ENUMS
 // =========================================================
 

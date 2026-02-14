@@ -34,11 +34,12 @@ export interface InvoiceData {
 
 interface InvoiceProps {
 	data: InvoiceData;
+	hideQty?: boolean;
 }
 
 // 1/2 A4 is A5 size (148mm x 210mm)
 export const Invoice = forwardRef<HTMLDivElement, InvoiceProps>(
-	({ data }, ref) => {
+	({ data, hideQty }, ref) => {
 		const formatRupiah = (val: string) => {
 			const n = parseFloat(val || "0");
 			return new Intl.NumberFormat("id-ID", {
@@ -145,7 +146,9 @@ export const Invoice = forwardRef<HTMLDivElement, InvoiceProps>(
 							<TableRow sx={{ bgcolor: "#f5f5f5" }}>
 								<TableCell sx={{ border: "1px solid black", fontWeight: "bold", fontSize: "8.5pt", textAlign: "center", py: 0.5, width: "35px" }}>No</TableCell>
 								<TableCell sx={{ border: "1px solid black", fontWeight: "bold", fontSize: "8.5pt", py: 0.5 }}>Nama Barang</TableCell>
-								<TableCell sx={{ border: "1px solid black", fontWeight: "bold", fontSize: "8.5pt", textAlign: "center", py: 0.5, width: "70px" }}>Qty</TableCell>
+								{!hideQty && (
+									<TableCell sx={{ border: "1px solid black", fontWeight: "bold", fontSize: "8.5pt", textAlign: "center", py: 0.5, width: "70px" }}>Qty</TableCell>
+								)}
 								<TableCell sx={{ border: "1px solid black", fontWeight: "bold", fontSize: "8.5pt", textAlign: "right", py: 0.5, width: "90px" }}>Harga</TableCell>
 								<TableCell sx={{ border: "1px solid black", fontWeight: "bold", fontSize: "8.5pt", textAlign: "right", py: 0.5, width: "100px" }}>Total</TableCell>
 							</TableRow>
@@ -155,13 +158,17 @@ export const Invoice = forwardRef<HTMLDivElement, InvoiceProps>(
 								<TableRow key={idx}>
 									<TableCell sx={{ border: "1px solid black", fontSize: "8.5pt", textAlign: "center", py: 0.5 }}>{idx + 1}</TableCell>
 									<TableCell sx={{ border: "1px solid black", fontSize: "8.5pt", py: 0.5, wordBreak: "break-word" }}>{item.productName}</TableCell>
-									<TableCell sx={{ border: "1px solid black", fontSize: "8.5pt", textAlign: "center", py: 0.5 }}>{item.qty} {item.unit}</TableCell>
+									{!hideQty && (
+										<TableCell sx={{ border: "1px solid black", fontSize: "8.5pt", textAlign: "center", py: 0.5 }}>
+											{item.qty} {item.unit}
+										</TableCell>
+									)}
 									<TableCell sx={{ border: "1px solid black", fontSize: "8.5pt", textAlign: "right", py: 0.5 }}>{formatRupiah(item.price)}</TableCell>
 									<TableCell sx={{ border: "1px solid black", fontSize: "8.5pt", textAlign: "right", py: 0.5 }}>{formatRupiah(item.total)}</TableCell>
 								</TableRow>
 							))}
 							<TableRow>
-								<TableCell colSpan={4} sx={{ border: "1px solid black", fontWeight: "bold", fontSize: "9pt", textAlign: "right", py: 0.8 }}>TOTAL</TableCell>
+								<TableCell colSpan={hideQty ? 3 : 4} sx={{ border: "1px solid black", fontWeight: "bold", fontSize: "9pt", textAlign: "right", py: 0.8 }}>TOTAL</TableCell>
 								<TableCell sx={{ border: "1px solid black", fontWeight: "bold", fontSize: "9pt", textAlign: "right", py: 0.8, bgcolor: "#f5f5f5" }}>
 									{formatRupiah(data.totalAmount)}
 								</TableCell>
