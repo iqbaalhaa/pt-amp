@@ -1,9 +1,14 @@
 // prisma/seed.ts
 import "dotenv/config";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from "../src/generated/client";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { Pool } from "pg";
 import { randomUUID } from "crypto";
 
-const prisma = new PrismaClient();
+const connectionString = process.env.DATABASE_URL;
+const pool = new Pool({ connectionString });
+const adapter = new PrismaPg(pool);
+const prisma = new PrismaClient({ adapter });
 
 const SEED_PASSWORD = process.env.SEED_PASSWORD ?? "Admin123!";
 
@@ -213,17 +218,17 @@ async function seedMaster() {
   for (const item of itemTypesList) {
     await prisma.itemType.upsert({
       where: { name: item.name },
-      create: { 
-        name: item.name, 
+      create: {
+        name: item.name,
         type: item.type,
         unit: item.unit || "kg",
         isActive: true,
-        isPublic: true 
+        isPublic: true,
       },
-      update: { 
+      update: {
         type: item.type,
         unit: item.unit || "kg",
-        isActive: true 
+        isActive: true,
       },
     });
   }
@@ -291,7 +296,11 @@ async function seedTransactions(ctx: {
         purchaseItems: {
           create: [
             { itemTypeId: itAsalan.id, qty: "50.0000", unitCost: "15000.0000" },
-            { itemTypeId: itPatahan.id, qty: "10.0000", unitCost: "90000.0000" },
+            {
+              itemTypeId: itPatahan.id,
+              qty: "10.0000",
+              unitCost: "90000.0000",
+            },
             { itemTypeId: itAAA.id, qty: "1000.0000", unitCost: "200.0000" },
           ],
         },
@@ -316,7 +325,11 @@ async function seedTransactions(ctx: {
         notes: "Penjualan contoh",
         saleItems: {
           create: [
-            { itemTypeId: itAsalan.id, qty: "100.0000", unitPrice: "5000.0000" },
+            {
+              itemTypeId: itAsalan.id,
+              qty: "100.0000",
+              unitPrice: "5000.0000",
+            },
           ],
         },
       },
@@ -346,7 +359,11 @@ async function seedTransactions(ctx: {
         },
         productionOutputs: {
           create: [
-            { itemTypeId: itPatahan.id, qty: "120.0000", unitCost: "4000.0000" },
+            {
+              itemTypeId: itPatahan.id,
+              qty: "120.0000",
+              unitCost: "4000.0000",
+            },
           ],
         },
         productionWorkers: {
