@@ -59,3 +59,37 @@ export async function createPengikisan(input: PengikisanInput) {
 
 	return { success: true, id: String(pengikisan.id) };
 }
+
+export async function getPengikisanHistory() {
+	const data = await prisma.pengikisan.findMany({
+		orderBy: { date: "desc" },
+		include: {
+			pengikisanItems: true,
+		},
+	});
+
+	return data.map((item) => ({
+		id: String(item.id),
+		date: item.date,
+		notes: item.notes,
+		totalUpah: parseFloat(item.totalUpah || "0"),
+		items: item.pengikisanItems.map((sub) => ({
+			nama: sub.nama,
+			kaKg: parseFloat(sub.kaKg || "0"),
+			stikKg: parseFloat(sub.stikKg || "0"),
+			total: parseFloat(sub.total || "0"),
+		})),
+	}));
+}
+
+export async function deletePengikisan(id: string) {
+	try {
+		await prisma.pengikisan.delete({
+			where: { id: parseInt(id) },
+		});
+		return { success: true };
+	} catch (error) {
+		console.error("Error deleting pengikisan:", error);
+		return { success: false, error: "Gagal menghapus data" };
+	}
+}

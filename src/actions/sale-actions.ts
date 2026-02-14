@@ -95,4 +95,3 @@ export async function revokeSale(id: string, reason?: string) {
   revalidatePath("/admin/sales");
   revalidatePath("/admin/ledger");
 }
-

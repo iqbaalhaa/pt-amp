@@ -164,6 +164,16 @@ export type Pemotongan = $Result.DefaultSelection<Prisma.$PemotonganPayload>
  */
 export type PemotonganItem = $Result.DefaultSelection<Prisma.$PemotonganItemPayload>
 /**
+ * Model ProduksiLainnya
+ * 
+ */
+export type ProduksiLainnya = $Result.DefaultSelection<Prisma.$ProduksiLainnyaPayload>
+/**
+ * Model ProduksiLainnyaItem
+ * 
+ */
+export type ProduksiLainnyaItem = $Result.DefaultSelection<Prisma.$ProduksiLainnyaItemPayload>
+/**
  * Model Inquiry
  * 
  */
@@ -696,6 +706,26 @@ export class PrismaClient<
     * ```
     */
   get pemotonganItem(): Prisma.PemotonganItemDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.produksiLainnya`: Exposes CRUD operations for the **ProduksiLainnya** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more ProduksiLainnyas
+    * const produksiLainnyas = await prisma.produksiLainnya.findMany()
+    * ```
+    */
+  get produksiLainnya(): Prisma.ProduksiLainnyaDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.produksiLainnyaItem`: Exposes CRUD operations for the **ProduksiLainnyaItem** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more ProduksiLainnyaItems
+    * const produksiLainnyaItems = await prisma.produksiLainnyaItem.findMany()
+    * ```
+    */
+  get produksiLainnyaItem(): Prisma.ProduksiLainnyaItemDelegate<ExtArgs, ClientOptions>;
 
   /**
    * `prisma.inquiry`: Exposes CRUD operations for the **Inquiry** model.
@@ -1280,6 +1310,8 @@ export namespace Prisma {
     PengemasanItem: 'PengemasanItem',
     Pemotongan: 'Pemotongan',
     PemotonganItem: 'PemotonganItem',
+    ProduksiLainnya: 'ProduksiLainnya',
+    ProduksiLainnyaItem: 'ProduksiLainnyaItem',
     Inquiry: 'Inquiry',
     Post: 'Post',
     ContactInfo: 'ContactInfo',
@@ -1307,7 +1339,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "user" | "role" | "permission" | "userRole" | "rolePermission" | "session" | "account" | "verification" | "worker" | "productionType" | "itemType" | "unit" | "supplier" | "purchase" | "purchaseItem" | "sale" | "saleItem" | "production" | "productionInput" | "productionOutput" | "productionWorker" | "stockMovement" | "pengikisan" | "pengikisanItem" | "penjemuran" | "penjemuranItem" | "pengemasan" | "pengemasanItem" | "pemotongan" | "pemotonganItem" | "inquiry" | "post" | "contactInfo" | "socialMedia" | "heroSlide" | "heroButton" | "homePage" | "aboutPage" | "aboutPoint" | "featureCard" | "galleryAlbum" | "galleryMedia"
+      modelProps: "user" | "role" | "permission" | "userRole" | "rolePermission" | "session" | "account" | "verification" | "worker" | "productionType" | "itemType" | "unit" | "supplier" | "purchase" | "purchaseItem" | "sale" | "saleItem" | "production" | "productionInput" | "productionOutput" | "productionWorker" | "stockMovement" | "pengikisan" | "pengikisanItem" | "penjemuran" | "penjemuranItem" | "pengemasan" | "pengemasanItem" | "pemotongan" | "pemotonganItem" | "produksiLainnya" | "produksiLainnyaItem" | "inquiry" | "post" | "contactInfo" | "socialMedia" | "heroSlide" | "heroButton" | "homePage" | "aboutPage" | "aboutPoint" | "featureCard" | "galleryAlbum" | "galleryMedia"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -3531,6 +3563,154 @@ export namespace Prisma {
           }
         }
       }
+      ProduksiLainnya: {
+        payload: Prisma.$ProduksiLainnyaPayload<ExtArgs>
+        fields: Prisma.ProduksiLainnyaFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.ProduksiLainnyaFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProduksiLainnyaPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.ProduksiLainnyaFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProduksiLainnyaPayload>
+          }
+          findFirst: {
+            args: Prisma.ProduksiLainnyaFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProduksiLainnyaPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.ProduksiLainnyaFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProduksiLainnyaPayload>
+          }
+          findMany: {
+            args: Prisma.ProduksiLainnyaFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProduksiLainnyaPayload>[]
+          }
+          create: {
+            args: Prisma.ProduksiLainnyaCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProduksiLainnyaPayload>
+          }
+          createMany: {
+            args: Prisma.ProduksiLainnyaCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.ProduksiLainnyaCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProduksiLainnyaPayload>[]
+          }
+          delete: {
+            args: Prisma.ProduksiLainnyaDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProduksiLainnyaPayload>
+          }
+          update: {
+            args: Prisma.ProduksiLainnyaUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProduksiLainnyaPayload>
+          }
+          deleteMany: {
+            args: Prisma.ProduksiLainnyaDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.ProduksiLainnyaUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.ProduksiLainnyaUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProduksiLainnyaPayload>[]
+          }
+          upsert: {
+            args: Prisma.ProduksiLainnyaUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProduksiLainnyaPayload>
+          }
+          aggregate: {
+            args: Prisma.ProduksiLainnyaAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateProduksiLainnya>
+          }
+          groupBy: {
+            args: Prisma.ProduksiLainnyaGroupByArgs<ExtArgs>
+            result: $Utils.Optional<ProduksiLainnyaGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.ProduksiLainnyaCountArgs<ExtArgs>
+            result: $Utils.Optional<ProduksiLainnyaCountAggregateOutputType> | number
+          }
+        }
+      }
+      ProduksiLainnyaItem: {
+        payload: Prisma.$ProduksiLainnyaItemPayload<ExtArgs>
+        fields: Prisma.ProduksiLainnyaItemFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.ProduksiLainnyaItemFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProduksiLainnyaItemPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.ProduksiLainnyaItemFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProduksiLainnyaItemPayload>
+          }
+          findFirst: {
+            args: Prisma.ProduksiLainnyaItemFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProduksiLainnyaItemPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.ProduksiLainnyaItemFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProduksiLainnyaItemPayload>
+          }
+          findMany: {
+            args: Prisma.ProduksiLainnyaItemFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProduksiLainnyaItemPayload>[]
+          }
+          create: {
+            args: Prisma.ProduksiLainnyaItemCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProduksiLainnyaItemPayload>
+          }
+          createMany: {
+            args: Prisma.ProduksiLainnyaItemCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.ProduksiLainnyaItemCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProduksiLainnyaItemPayload>[]
+          }
+          delete: {
+            args: Prisma.ProduksiLainnyaItemDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProduksiLainnyaItemPayload>
+          }
+          update: {
+            args: Prisma.ProduksiLainnyaItemUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProduksiLainnyaItemPayload>
+          }
+          deleteMany: {
+            args: Prisma.ProduksiLainnyaItemDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.ProduksiLainnyaItemUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.ProduksiLainnyaItemUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProduksiLainnyaItemPayload>[]
+          }
+          upsert: {
+            args: Prisma.ProduksiLainnyaItemUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProduksiLainnyaItemPayload>
+          }
+          aggregate: {
+            args: Prisma.ProduksiLainnyaItemAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateProduksiLainnyaItem>
+          }
+          groupBy: {
+            args: Prisma.ProduksiLainnyaItemGroupByArgs<ExtArgs>
+            result: $Utils.Optional<ProduksiLainnyaItemGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.ProduksiLainnyaItemCountArgs<ExtArgs>
+            result: $Utils.Optional<ProduksiLainnyaItemCountAggregateOutputType> | number
+          }
+        }
+      }
       Inquiry: {
         payload: Prisma.$InquiryPayload<ExtArgs>
         fields: Prisma.InquiryFieldRefs
@@ -4557,6 +4737,8 @@ export namespace Prisma {
     pengemasanItem?: PengemasanItemOmit
     pemotongan?: PemotonganOmit
     pemotonganItem?: PemotonganItemOmit
+    produksiLainnya?: ProduksiLainnyaOmit
+    produksiLainnyaItem?: ProduksiLainnyaItemOmit
     inquiry?: InquiryOmit
     post?: PostOmit
     contactInfo?: ContactInfoOmit
@@ -5165,6 +5347,37 @@ export namespace Prisma {
    */
   export type PemotonganCountOutputTypeCountPemotonganItemsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: PemotonganItemWhereInput
+  }
+
+
+  /**
+   * Count Type ProduksiLainnyaCountOutputType
+   */
+
+  export type ProduksiLainnyaCountOutputType = {
+    produksiLainnyaItems: number
+  }
+
+  export type ProduksiLainnyaCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    produksiLainnyaItems?: boolean | ProduksiLainnyaCountOutputTypeCountProduksiLainnyaItemsArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * ProduksiLainnyaCountOutputType without action
+   */
+  export type ProduksiLainnyaCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProduksiLainnyaCountOutputType
+     */
+    select?: ProduksiLainnyaCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * ProduksiLainnyaCountOutputType without action
+   */
+  export type ProduksiLainnyaCountOutputTypeCountProduksiLainnyaItemsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ProduksiLainnyaItemWhereInput
   }
 
 
@@ -38909,6 +39122,2248 @@ export namespace Prisma {
 
 
   /**
+   * Model ProduksiLainnya
+   */
+
+  export type AggregateProduksiLainnya = {
+    _count: ProduksiLainnyaCountAggregateOutputType | null
+    _avg: ProduksiLainnyaAvgAggregateOutputType | null
+    _sum: ProduksiLainnyaSumAggregateOutputType | null
+    _min: ProduksiLainnyaMinAggregateOutputType | null
+    _max: ProduksiLainnyaMaxAggregateOutputType | null
+  }
+
+  export type ProduksiLainnyaAvgAggregateOutputType = {
+    id: number | null
+    totalBiaya: Decimal | null
+  }
+
+  export type ProduksiLainnyaSumAggregateOutputType = {
+    id: bigint | null
+    totalBiaya: Decimal | null
+  }
+
+  export type ProduksiLainnyaMinAggregateOutputType = {
+    id: bigint | null
+    date: Date | null
+    notes: string | null
+    totalBiaya: Decimal | null
+  }
+
+  export type ProduksiLainnyaMaxAggregateOutputType = {
+    id: bigint | null
+    date: Date | null
+    notes: string | null
+    totalBiaya: Decimal | null
+  }
+
+  export type ProduksiLainnyaCountAggregateOutputType = {
+    id: number
+    date: number
+    notes: number
+    totalBiaya: number
+    _all: number
+  }
+
+
+  export type ProduksiLainnyaAvgAggregateInputType = {
+    id?: true
+    totalBiaya?: true
+  }
+
+  export type ProduksiLainnyaSumAggregateInputType = {
+    id?: true
+    totalBiaya?: true
+  }
+
+  export type ProduksiLainnyaMinAggregateInputType = {
+    id?: true
+    date?: true
+    notes?: true
+    totalBiaya?: true
+  }
+
+  export type ProduksiLainnyaMaxAggregateInputType = {
+    id?: true
+    date?: true
+    notes?: true
+    totalBiaya?: true
+  }
+
+  export type ProduksiLainnyaCountAggregateInputType = {
+    id?: true
+    date?: true
+    notes?: true
+    totalBiaya?: true
+    _all?: true
+  }
+
+  export type ProduksiLainnyaAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ProduksiLainnya to aggregate.
+     */
+    where?: ProduksiLainnyaWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ProduksiLainnyas to fetch.
+     */
+    orderBy?: ProduksiLainnyaOrderByWithRelationInput | ProduksiLainnyaOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: ProduksiLainnyaWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ProduksiLainnyas from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ProduksiLainnyas.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned ProduksiLainnyas
+    **/
+    _count?: true | ProduksiLainnyaCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: ProduksiLainnyaAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: ProduksiLainnyaSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: ProduksiLainnyaMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: ProduksiLainnyaMaxAggregateInputType
+  }
+
+  export type GetProduksiLainnyaAggregateType<T extends ProduksiLainnyaAggregateArgs> = {
+        [P in keyof T & keyof AggregateProduksiLainnya]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateProduksiLainnya[P]>
+      : GetScalarType<T[P], AggregateProduksiLainnya[P]>
+  }
+
+
+
+
+  export type ProduksiLainnyaGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ProduksiLainnyaWhereInput
+    orderBy?: ProduksiLainnyaOrderByWithAggregationInput | ProduksiLainnyaOrderByWithAggregationInput[]
+    by: ProduksiLainnyaScalarFieldEnum[] | ProduksiLainnyaScalarFieldEnum
+    having?: ProduksiLainnyaScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: ProduksiLainnyaCountAggregateInputType | true
+    _avg?: ProduksiLainnyaAvgAggregateInputType
+    _sum?: ProduksiLainnyaSumAggregateInputType
+    _min?: ProduksiLainnyaMinAggregateInputType
+    _max?: ProduksiLainnyaMaxAggregateInputType
+  }
+
+  export type ProduksiLainnyaGroupByOutputType = {
+    id: bigint
+    date: Date
+    notes: string | null
+    totalBiaya: Decimal | null
+    _count: ProduksiLainnyaCountAggregateOutputType | null
+    _avg: ProduksiLainnyaAvgAggregateOutputType | null
+    _sum: ProduksiLainnyaSumAggregateOutputType | null
+    _min: ProduksiLainnyaMinAggregateOutputType | null
+    _max: ProduksiLainnyaMaxAggregateOutputType | null
+  }
+
+  type GetProduksiLainnyaGroupByPayload<T extends ProduksiLainnyaGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<ProduksiLainnyaGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof ProduksiLainnyaGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], ProduksiLainnyaGroupByOutputType[P]>
+            : GetScalarType<T[P], ProduksiLainnyaGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type ProduksiLainnyaSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    date?: boolean
+    notes?: boolean
+    totalBiaya?: boolean
+    produksiLainnyaItems?: boolean | ProduksiLainnya$produksiLainnyaItemsArgs<ExtArgs>
+    _count?: boolean | ProduksiLainnyaCountOutputTypeDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["produksiLainnya"]>
+
+  export type ProduksiLainnyaSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    date?: boolean
+    notes?: boolean
+    totalBiaya?: boolean
+  }, ExtArgs["result"]["produksiLainnya"]>
+
+  export type ProduksiLainnyaSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    date?: boolean
+    notes?: boolean
+    totalBiaya?: boolean
+  }, ExtArgs["result"]["produksiLainnya"]>
+
+  export type ProduksiLainnyaSelectScalar = {
+    id?: boolean
+    date?: boolean
+    notes?: boolean
+    totalBiaya?: boolean
+  }
+
+  export type ProduksiLainnyaOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "date" | "notes" | "totalBiaya", ExtArgs["result"]["produksiLainnya"]>
+  export type ProduksiLainnyaInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    produksiLainnyaItems?: boolean | ProduksiLainnya$produksiLainnyaItemsArgs<ExtArgs>
+    _count?: boolean | ProduksiLainnyaCountOutputTypeDefaultArgs<ExtArgs>
+  }
+  export type ProduksiLainnyaIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
+  export type ProduksiLainnyaIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
+
+  export type $ProduksiLainnyaPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "ProduksiLainnya"
+    objects: {
+      produksiLainnyaItems: Prisma.$ProduksiLainnyaItemPayload<ExtArgs>[]
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: bigint
+      date: Date
+      notes: string | null
+      totalBiaya: Prisma.Decimal | null
+    }, ExtArgs["result"]["produksiLainnya"]>
+    composites: {}
+  }
+
+  type ProduksiLainnyaGetPayload<S extends boolean | null | undefined | ProduksiLainnyaDefaultArgs> = $Result.GetResult<Prisma.$ProduksiLainnyaPayload, S>
+
+  type ProduksiLainnyaCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<ProduksiLainnyaFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: ProduksiLainnyaCountAggregateInputType | true
+    }
+
+  export interface ProduksiLainnyaDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['ProduksiLainnya'], meta: { name: 'ProduksiLainnya' } }
+    /**
+     * Find zero or one ProduksiLainnya that matches the filter.
+     * @param {ProduksiLainnyaFindUniqueArgs} args - Arguments to find a ProduksiLainnya
+     * @example
+     * // Get one ProduksiLainnya
+     * const produksiLainnya = await prisma.produksiLainnya.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends ProduksiLainnyaFindUniqueArgs>(args: SelectSubset<T, ProduksiLainnyaFindUniqueArgs<ExtArgs>>): Prisma__ProduksiLainnyaClient<$Result.GetResult<Prisma.$ProduksiLainnyaPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one ProduksiLainnya that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {ProduksiLainnyaFindUniqueOrThrowArgs} args - Arguments to find a ProduksiLainnya
+     * @example
+     * // Get one ProduksiLainnya
+     * const produksiLainnya = await prisma.produksiLainnya.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends ProduksiLainnyaFindUniqueOrThrowArgs>(args: SelectSubset<T, ProduksiLainnyaFindUniqueOrThrowArgs<ExtArgs>>): Prisma__ProduksiLainnyaClient<$Result.GetResult<Prisma.$ProduksiLainnyaPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first ProduksiLainnya that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ProduksiLainnyaFindFirstArgs} args - Arguments to find a ProduksiLainnya
+     * @example
+     * // Get one ProduksiLainnya
+     * const produksiLainnya = await prisma.produksiLainnya.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends ProduksiLainnyaFindFirstArgs>(args?: SelectSubset<T, ProduksiLainnyaFindFirstArgs<ExtArgs>>): Prisma__ProduksiLainnyaClient<$Result.GetResult<Prisma.$ProduksiLainnyaPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first ProduksiLainnya that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ProduksiLainnyaFindFirstOrThrowArgs} args - Arguments to find a ProduksiLainnya
+     * @example
+     * // Get one ProduksiLainnya
+     * const produksiLainnya = await prisma.produksiLainnya.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends ProduksiLainnyaFindFirstOrThrowArgs>(args?: SelectSubset<T, ProduksiLainnyaFindFirstOrThrowArgs<ExtArgs>>): Prisma__ProduksiLainnyaClient<$Result.GetResult<Prisma.$ProduksiLainnyaPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more ProduksiLainnyas that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ProduksiLainnyaFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all ProduksiLainnyas
+     * const produksiLainnyas = await prisma.produksiLainnya.findMany()
+     * 
+     * // Get first 10 ProduksiLainnyas
+     * const produksiLainnyas = await prisma.produksiLainnya.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const produksiLainnyaWithIdOnly = await prisma.produksiLainnya.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends ProduksiLainnyaFindManyArgs>(args?: SelectSubset<T, ProduksiLainnyaFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProduksiLainnyaPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a ProduksiLainnya.
+     * @param {ProduksiLainnyaCreateArgs} args - Arguments to create a ProduksiLainnya.
+     * @example
+     * // Create one ProduksiLainnya
+     * const ProduksiLainnya = await prisma.produksiLainnya.create({
+     *   data: {
+     *     // ... data to create a ProduksiLainnya
+     *   }
+     * })
+     * 
+     */
+    create<T extends ProduksiLainnyaCreateArgs>(args: SelectSubset<T, ProduksiLainnyaCreateArgs<ExtArgs>>): Prisma__ProduksiLainnyaClient<$Result.GetResult<Prisma.$ProduksiLainnyaPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many ProduksiLainnyas.
+     * @param {ProduksiLainnyaCreateManyArgs} args - Arguments to create many ProduksiLainnyas.
+     * @example
+     * // Create many ProduksiLainnyas
+     * const produksiLainnya = await prisma.produksiLainnya.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends ProduksiLainnyaCreateManyArgs>(args?: SelectSubset<T, ProduksiLainnyaCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many ProduksiLainnyas and returns the data saved in the database.
+     * @param {ProduksiLainnyaCreateManyAndReturnArgs} args - Arguments to create many ProduksiLainnyas.
+     * @example
+     * // Create many ProduksiLainnyas
+     * const produksiLainnya = await prisma.produksiLainnya.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many ProduksiLainnyas and only return the `id`
+     * const produksiLainnyaWithIdOnly = await prisma.produksiLainnya.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends ProduksiLainnyaCreateManyAndReturnArgs>(args?: SelectSubset<T, ProduksiLainnyaCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProduksiLainnyaPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a ProduksiLainnya.
+     * @param {ProduksiLainnyaDeleteArgs} args - Arguments to delete one ProduksiLainnya.
+     * @example
+     * // Delete one ProduksiLainnya
+     * const ProduksiLainnya = await prisma.produksiLainnya.delete({
+     *   where: {
+     *     // ... filter to delete one ProduksiLainnya
+     *   }
+     * })
+     * 
+     */
+    delete<T extends ProduksiLainnyaDeleteArgs>(args: SelectSubset<T, ProduksiLainnyaDeleteArgs<ExtArgs>>): Prisma__ProduksiLainnyaClient<$Result.GetResult<Prisma.$ProduksiLainnyaPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one ProduksiLainnya.
+     * @param {ProduksiLainnyaUpdateArgs} args - Arguments to update one ProduksiLainnya.
+     * @example
+     * // Update one ProduksiLainnya
+     * const produksiLainnya = await prisma.produksiLainnya.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends ProduksiLainnyaUpdateArgs>(args: SelectSubset<T, ProduksiLainnyaUpdateArgs<ExtArgs>>): Prisma__ProduksiLainnyaClient<$Result.GetResult<Prisma.$ProduksiLainnyaPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more ProduksiLainnyas.
+     * @param {ProduksiLainnyaDeleteManyArgs} args - Arguments to filter ProduksiLainnyas to delete.
+     * @example
+     * // Delete a few ProduksiLainnyas
+     * const { count } = await prisma.produksiLainnya.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends ProduksiLainnyaDeleteManyArgs>(args?: SelectSubset<T, ProduksiLainnyaDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ProduksiLainnyas.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ProduksiLainnyaUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many ProduksiLainnyas
+     * const produksiLainnya = await prisma.produksiLainnya.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends ProduksiLainnyaUpdateManyArgs>(args: SelectSubset<T, ProduksiLainnyaUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ProduksiLainnyas and returns the data updated in the database.
+     * @param {ProduksiLainnyaUpdateManyAndReturnArgs} args - Arguments to update many ProduksiLainnyas.
+     * @example
+     * // Update many ProduksiLainnyas
+     * const produksiLainnya = await prisma.produksiLainnya.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more ProduksiLainnyas and only return the `id`
+     * const produksiLainnyaWithIdOnly = await prisma.produksiLainnya.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends ProduksiLainnyaUpdateManyAndReturnArgs>(args: SelectSubset<T, ProduksiLainnyaUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProduksiLainnyaPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one ProduksiLainnya.
+     * @param {ProduksiLainnyaUpsertArgs} args - Arguments to update or create a ProduksiLainnya.
+     * @example
+     * // Update or create a ProduksiLainnya
+     * const produksiLainnya = await prisma.produksiLainnya.upsert({
+     *   create: {
+     *     // ... data to create a ProduksiLainnya
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the ProduksiLainnya we want to update
+     *   }
+     * })
+     */
+    upsert<T extends ProduksiLainnyaUpsertArgs>(args: SelectSubset<T, ProduksiLainnyaUpsertArgs<ExtArgs>>): Prisma__ProduksiLainnyaClient<$Result.GetResult<Prisma.$ProduksiLainnyaPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of ProduksiLainnyas.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ProduksiLainnyaCountArgs} args - Arguments to filter ProduksiLainnyas to count.
+     * @example
+     * // Count the number of ProduksiLainnyas
+     * const count = await prisma.produksiLainnya.count({
+     *   where: {
+     *     // ... the filter for the ProduksiLainnyas we want to count
+     *   }
+     * })
+    **/
+    count<T extends ProduksiLainnyaCountArgs>(
+      args?: Subset<T, ProduksiLainnyaCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], ProduksiLainnyaCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a ProduksiLainnya.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ProduksiLainnyaAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends ProduksiLainnyaAggregateArgs>(args: Subset<T, ProduksiLainnyaAggregateArgs>): Prisma.PrismaPromise<GetProduksiLainnyaAggregateType<T>>
+
+    /**
+     * Group by ProduksiLainnya.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ProduksiLainnyaGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends ProduksiLainnyaGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: ProduksiLainnyaGroupByArgs['orderBy'] }
+        : { orderBy?: ProduksiLainnyaGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, ProduksiLainnyaGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetProduksiLainnyaGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the ProduksiLainnya model
+   */
+  readonly fields: ProduksiLainnyaFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for ProduksiLainnya.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__ProduksiLainnyaClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    produksiLainnyaItems<T extends ProduksiLainnya$produksiLainnyaItemsArgs<ExtArgs> = {}>(args?: Subset<T, ProduksiLainnya$produksiLainnyaItemsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProduksiLainnyaItemPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the ProduksiLainnya model
+   */
+  interface ProduksiLainnyaFieldRefs {
+    readonly id: FieldRef<"ProduksiLainnya", 'BigInt'>
+    readonly date: FieldRef<"ProduksiLainnya", 'DateTime'>
+    readonly notes: FieldRef<"ProduksiLainnya", 'String'>
+    readonly totalBiaya: FieldRef<"ProduksiLainnya", 'Decimal'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * ProduksiLainnya findUnique
+   */
+  export type ProduksiLainnyaFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProduksiLainnya
+     */
+    select?: ProduksiLainnyaSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProduksiLainnya
+     */
+    omit?: ProduksiLainnyaOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProduksiLainnyaInclude<ExtArgs> | null
+    /**
+     * Filter, which ProduksiLainnya to fetch.
+     */
+    where: ProduksiLainnyaWhereUniqueInput
+  }
+
+  /**
+   * ProduksiLainnya findUniqueOrThrow
+   */
+  export type ProduksiLainnyaFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProduksiLainnya
+     */
+    select?: ProduksiLainnyaSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProduksiLainnya
+     */
+    omit?: ProduksiLainnyaOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProduksiLainnyaInclude<ExtArgs> | null
+    /**
+     * Filter, which ProduksiLainnya to fetch.
+     */
+    where: ProduksiLainnyaWhereUniqueInput
+  }
+
+  /**
+   * ProduksiLainnya findFirst
+   */
+  export type ProduksiLainnyaFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProduksiLainnya
+     */
+    select?: ProduksiLainnyaSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProduksiLainnya
+     */
+    omit?: ProduksiLainnyaOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProduksiLainnyaInclude<ExtArgs> | null
+    /**
+     * Filter, which ProduksiLainnya to fetch.
+     */
+    where?: ProduksiLainnyaWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ProduksiLainnyas to fetch.
+     */
+    orderBy?: ProduksiLainnyaOrderByWithRelationInput | ProduksiLainnyaOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ProduksiLainnyas.
+     */
+    cursor?: ProduksiLainnyaWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ProduksiLainnyas from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ProduksiLainnyas.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ProduksiLainnyas.
+     */
+    distinct?: ProduksiLainnyaScalarFieldEnum | ProduksiLainnyaScalarFieldEnum[]
+  }
+
+  /**
+   * ProduksiLainnya findFirstOrThrow
+   */
+  export type ProduksiLainnyaFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProduksiLainnya
+     */
+    select?: ProduksiLainnyaSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProduksiLainnya
+     */
+    omit?: ProduksiLainnyaOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProduksiLainnyaInclude<ExtArgs> | null
+    /**
+     * Filter, which ProduksiLainnya to fetch.
+     */
+    where?: ProduksiLainnyaWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ProduksiLainnyas to fetch.
+     */
+    orderBy?: ProduksiLainnyaOrderByWithRelationInput | ProduksiLainnyaOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ProduksiLainnyas.
+     */
+    cursor?: ProduksiLainnyaWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ProduksiLainnyas from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ProduksiLainnyas.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ProduksiLainnyas.
+     */
+    distinct?: ProduksiLainnyaScalarFieldEnum | ProduksiLainnyaScalarFieldEnum[]
+  }
+
+  /**
+   * ProduksiLainnya findMany
+   */
+  export type ProduksiLainnyaFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProduksiLainnya
+     */
+    select?: ProduksiLainnyaSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProduksiLainnya
+     */
+    omit?: ProduksiLainnyaOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProduksiLainnyaInclude<ExtArgs> | null
+    /**
+     * Filter, which ProduksiLainnyas to fetch.
+     */
+    where?: ProduksiLainnyaWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ProduksiLainnyas to fetch.
+     */
+    orderBy?: ProduksiLainnyaOrderByWithRelationInput | ProduksiLainnyaOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing ProduksiLainnyas.
+     */
+    cursor?: ProduksiLainnyaWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ProduksiLainnyas from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ProduksiLainnyas.
+     */
+    skip?: number
+    distinct?: ProduksiLainnyaScalarFieldEnum | ProduksiLainnyaScalarFieldEnum[]
+  }
+
+  /**
+   * ProduksiLainnya create
+   */
+  export type ProduksiLainnyaCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProduksiLainnya
+     */
+    select?: ProduksiLainnyaSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProduksiLainnya
+     */
+    omit?: ProduksiLainnyaOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProduksiLainnyaInclude<ExtArgs> | null
+    /**
+     * The data needed to create a ProduksiLainnya.
+     */
+    data: XOR<ProduksiLainnyaCreateInput, ProduksiLainnyaUncheckedCreateInput>
+  }
+
+  /**
+   * ProduksiLainnya createMany
+   */
+  export type ProduksiLainnyaCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many ProduksiLainnyas.
+     */
+    data: ProduksiLainnyaCreateManyInput | ProduksiLainnyaCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * ProduksiLainnya createManyAndReturn
+   */
+  export type ProduksiLainnyaCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProduksiLainnya
+     */
+    select?: ProduksiLainnyaSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProduksiLainnya
+     */
+    omit?: ProduksiLainnyaOmit<ExtArgs> | null
+    /**
+     * The data used to create many ProduksiLainnyas.
+     */
+    data: ProduksiLainnyaCreateManyInput | ProduksiLainnyaCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * ProduksiLainnya update
+   */
+  export type ProduksiLainnyaUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProduksiLainnya
+     */
+    select?: ProduksiLainnyaSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProduksiLainnya
+     */
+    omit?: ProduksiLainnyaOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProduksiLainnyaInclude<ExtArgs> | null
+    /**
+     * The data needed to update a ProduksiLainnya.
+     */
+    data: XOR<ProduksiLainnyaUpdateInput, ProduksiLainnyaUncheckedUpdateInput>
+    /**
+     * Choose, which ProduksiLainnya to update.
+     */
+    where: ProduksiLainnyaWhereUniqueInput
+  }
+
+  /**
+   * ProduksiLainnya updateMany
+   */
+  export type ProduksiLainnyaUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update ProduksiLainnyas.
+     */
+    data: XOR<ProduksiLainnyaUpdateManyMutationInput, ProduksiLainnyaUncheckedUpdateManyInput>
+    /**
+     * Filter which ProduksiLainnyas to update
+     */
+    where?: ProduksiLainnyaWhereInput
+    /**
+     * Limit how many ProduksiLainnyas to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * ProduksiLainnya updateManyAndReturn
+   */
+  export type ProduksiLainnyaUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProduksiLainnya
+     */
+    select?: ProduksiLainnyaSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProduksiLainnya
+     */
+    omit?: ProduksiLainnyaOmit<ExtArgs> | null
+    /**
+     * The data used to update ProduksiLainnyas.
+     */
+    data: XOR<ProduksiLainnyaUpdateManyMutationInput, ProduksiLainnyaUncheckedUpdateManyInput>
+    /**
+     * Filter which ProduksiLainnyas to update
+     */
+    where?: ProduksiLainnyaWhereInput
+    /**
+     * Limit how many ProduksiLainnyas to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * ProduksiLainnya upsert
+   */
+  export type ProduksiLainnyaUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProduksiLainnya
+     */
+    select?: ProduksiLainnyaSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProduksiLainnya
+     */
+    omit?: ProduksiLainnyaOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProduksiLainnyaInclude<ExtArgs> | null
+    /**
+     * The filter to search for the ProduksiLainnya to update in case it exists.
+     */
+    where: ProduksiLainnyaWhereUniqueInput
+    /**
+     * In case the ProduksiLainnya found by the `where` argument doesn't exist, create a new ProduksiLainnya with this data.
+     */
+    create: XOR<ProduksiLainnyaCreateInput, ProduksiLainnyaUncheckedCreateInput>
+    /**
+     * In case the ProduksiLainnya was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<ProduksiLainnyaUpdateInput, ProduksiLainnyaUncheckedUpdateInput>
+  }
+
+  /**
+   * ProduksiLainnya delete
+   */
+  export type ProduksiLainnyaDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProduksiLainnya
+     */
+    select?: ProduksiLainnyaSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProduksiLainnya
+     */
+    omit?: ProduksiLainnyaOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProduksiLainnyaInclude<ExtArgs> | null
+    /**
+     * Filter which ProduksiLainnya to delete.
+     */
+    where: ProduksiLainnyaWhereUniqueInput
+  }
+
+  /**
+   * ProduksiLainnya deleteMany
+   */
+  export type ProduksiLainnyaDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ProduksiLainnyas to delete
+     */
+    where?: ProduksiLainnyaWhereInput
+    /**
+     * Limit how many ProduksiLainnyas to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * ProduksiLainnya.produksiLainnyaItems
+   */
+  export type ProduksiLainnya$produksiLainnyaItemsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProduksiLainnyaItem
+     */
+    select?: ProduksiLainnyaItemSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProduksiLainnyaItem
+     */
+    omit?: ProduksiLainnyaItemOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProduksiLainnyaItemInclude<ExtArgs> | null
+    where?: ProduksiLainnyaItemWhereInput
+    orderBy?: ProduksiLainnyaItemOrderByWithRelationInput | ProduksiLainnyaItemOrderByWithRelationInput[]
+    cursor?: ProduksiLainnyaItemWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: ProduksiLainnyaItemScalarFieldEnum | ProduksiLainnyaItemScalarFieldEnum[]
+  }
+
+  /**
+   * ProduksiLainnya without action
+   */
+  export type ProduksiLainnyaDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProduksiLainnya
+     */
+    select?: ProduksiLainnyaSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProduksiLainnya
+     */
+    omit?: ProduksiLainnyaOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProduksiLainnyaInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model ProduksiLainnyaItem
+   */
+
+  export type AggregateProduksiLainnyaItem = {
+    _count: ProduksiLainnyaItemCountAggregateOutputType | null
+    _avg: ProduksiLainnyaItemAvgAggregateOutputType | null
+    _sum: ProduksiLainnyaItemSumAggregateOutputType | null
+    _min: ProduksiLainnyaItemMinAggregateOutputType | null
+    _max: ProduksiLainnyaItemMaxAggregateOutputType | null
+  }
+
+  export type ProduksiLainnyaItemAvgAggregateOutputType = {
+    id: number | null
+    produksiLainnyaId: number | null
+    upah: Decimal | null
+    qty: Decimal | null
+    total: Decimal | null
+  }
+
+  export type ProduksiLainnyaItemSumAggregateOutputType = {
+    id: bigint | null
+    produksiLainnyaId: bigint | null
+    upah: Decimal | null
+    qty: Decimal | null
+    total: Decimal | null
+  }
+
+  export type ProduksiLainnyaItemMinAggregateOutputType = {
+    id: bigint | null
+    produksiLainnyaId: bigint | null
+    namaPekerja: string | null
+    namaPekerjaan: string | null
+    upah: Decimal | null
+    qty: Decimal | null
+    satuan: string | null
+    total: Decimal | null
+  }
+
+  export type ProduksiLainnyaItemMaxAggregateOutputType = {
+    id: bigint | null
+    produksiLainnyaId: bigint | null
+    namaPekerja: string | null
+    namaPekerjaan: string | null
+    upah: Decimal | null
+    qty: Decimal | null
+    satuan: string | null
+    total: Decimal | null
+  }
+
+  export type ProduksiLainnyaItemCountAggregateOutputType = {
+    id: number
+    produksiLainnyaId: number
+    namaPekerja: number
+    namaPekerjaan: number
+    upah: number
+    qty: number
+    satuan: number
+    total: number
+    _all: number
+  }
+
+
+  export type ProduksiLainnyaItemAvgAggregateInputType = {
+    id?: true
+    produksiLainnyaId?: true
+    upah?: true
+    qty?: true
+    total?: true
+  }
+
+  export type ProduksiLainnyaItemSumAggregateInputType = {
+    id?: true
+    produksiLainnyaId?: true
+    upah?: true
+    qty?: true
+    total?: true
+  }
+
+  export type ProduksiLainnyaItemMinAggregateInputType = {
+    id?: true
+    produksiLainnyaId?: true
+    namaPekerja?: true
+    namaPekerjaan?: true
+    upah?: true
+    qty?: true
+    satuan?: true
+    total?: true
+  }
+
+  export type ProduksiLainnyaItemMaxAggregateInputType = {
+    id?: true
+    produksiLainnyaId?: true
+    namaPekerja?: true
+    namaPekerjaan?: true
+    upah?: true
+    qty?: true
+    satuan?: true
+    total?: true
+  }
+
+  export type ProduksiLainnyaItemCountAggregateInputType = {
+    id?: true
+    produksiLainnyaId?: true
+    namaPekerja?: true
+    namaPekerjaan?: true
+    upah?: true
+    qty?: true
+    satuan?: true
+    total?: true
+    _all?: true
+  }
+
+  export type ProduksiLainnyaItemAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ProduksiLainnyaItem to aggregate.
+     */
+    where?: ProduksiLainnyaItemWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ProduksiLainnyaItems to fetch.
+     */
+    orderBy?: ProduksiLainnyaItemOrderByWithRelationInput | ProduksiLainnyaItemOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: ProduksiLainnyaItemWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ProduksiLainnyaItems from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ProduksiLainnyaItems.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned ProduksiLainnyaItems
+    **/
+    _count?: true | ProduksiLainnyaItemCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: ProduksiLainnyaItemAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: ProduksiLainnyaItemSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: ProduksiLainnyaItemMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: ProduksiLainnyaItemMaxAggregateInputType
+  }
+
+  export type GetProduksiLainnyaItemAggregateType<T extends ProduksiLainnyaItemAggregateArgs> = {
+        [P in keyof T & keyof AggregateProduksiLainnyaItem]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateProduksiLainnyaItem[P]>
+      : GetScalarType<T[P], AggregateProduksiLainnyaItem[P]>
+  }
+
+
+
+
+  export type ProduksiLainnyaItemGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ProduksiLainnyaItemWhereInput
+    orderBy?: ProduksiLainnyaItemOrderByWithAggregationInput | ProduksiLainnyaItemOrderByWithAggregationInput[]
+    by: ProduksiLainnyaItemScalarFieldEnum[] | ProduksiLainnyaItemScalarFieldEnum
+    having?: ProduksiLainnyaItemScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: ProduksiLainnyaItemCountAggregateInputType | true
+    _avg?: ProduksiLainnyaItemAvgAggregateInputType
+    _sum?: ProduksiLainnyaItemSumAggregateInputType
+    _min?: ProduksiLainnyaItemMinAggregateInputType
+    _max?: ProduksiLainnyaItemMaxAggregateInputType
+  }
+
+  export type ProduksiLainnyaItemGroupByOutputType = {
+    id: bigint
+    produksiLainnyaId: bigint
+    namaPekerja: string
+    namaPekerjaan: string
+    upah: Decimal
+    qty: Decimal
+    satuan: string
+    total: Decimal
+    _count: ProduksiLainnyaItemCountAggregateOutputType | null
+    _avg: ProduksiLainnyaItemAvgAggregateOutputType | null
+    _sum: ProduksiLainnyaItemSumAggregateOutputType | null
+    _min: ProduksiLainnyaItemMinAggregateOutputType | null
+    _max: ProduksiLainnyaItemMaxAggregateOutputType | null
+  }
+
+  type GetProduksiLainnyaItemGroupByPayload<T extends ProduksiLainnyaItemGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<ProduksiLainnyaItemGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof ProduksiLainnyaItemGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], ProduksiLainnyaItemGroupByOutputType[P]>
+            : GetScalarType<T[P], ProduksiLainnyaItemGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type ProduksiLainnyaItemSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    produksiLainnyaId?: boolean
+    namaPekerja?: boolean
+    namaPekerjaan?: boolean
+    upah?: boolean
+    qty?: boolean
+    satuan?: boolean
+    total?: boolean
+    produksiLainnya?: boolean | ProduksiLainnyaDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["produksiLainnyaItem"]>
+
+  export type ProduksiLainnyaItemSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    produksiLainnyaId?: boolean
+    namaPekerja?: boolean
+    namaPekerjaan?: boolean
+    upah?: boolean
+    qty?: boolean
+    satuan?: boolean
+    total?: boolean
+    produksiLainnya?: boolean | ProduksiLainnyaDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["produksiLainnyaItem"]>
+
+  export type ProduksiLainnyaItemSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    produksiLainnyaId?: boolean
+    namaPekerja?: boolean
+    namaPekerjaan?: boolean
+    upah?: boolean
+    qty?: boolean
+    satuan?: boolean
+    total?: boolean
+    produksiLainnya?: boolean | ProduksiLainnyaDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["produksiLainnyaItem"]>
+
+  export type ProduksiLainnyaItemSelectScalar = {
+    id?: boolean
+    produksiLainnyaId?: boolean
+    namaPekerja?: boolean
+    namaPekerjaan?: boolean
+    upah?: boolean
+    qty?: boolean
+    satuan?: boolean
+    total?: boolean
+  }
+
+  export type ProduksiLainnyaItemOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "produksiLainnyaId" | "namaPekerja" | "namaPekerjaan" | "upah" | "qty" | "satuan" | "total", ExtArgs["result"]["produksiLainnyaItem"]>
+  export type ProduksiLainnyaItemInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    produksiLainnya?: boolean | ProduksiLainnyaDefaultArgs<ExtArgs>
+  }
+  export type ProduksiLainnyaItemIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    produksiLainnya?: boolean | ProduksiLainnyaDefaultArgs<ExtArgs>
+  }
+  export type ProduksiLainnyaItemIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    produksiLainnya?: boolean | ProduksiLainnyaDefaultArgs<ExtArgs>
+  }
+
+  export type $ProduksiLainnyaItemPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "ProduksiLainnyaItem"
+    objects: {
+      produksiLainnya: Prisma.$ProduksiLainnyaPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: bigint
+      produksiLainnyaId: bigint
+      namaPekerja: string
+      namaPekerjaan: string
+      upah: Prisma.Decimal
+      qty: Prisma.Decimal
+      satuan: string
+      total: Prisma.Decimal
+    }, ExtArgs["result"]["produksiLainnyaItem"]>
+    composites: {}
+  }
+
+  type ProduksiLainnyaItemGetPayload<S extends boolean | null | undefined | ProduksiLainnyaItemDefaultArgs> = $Result.GetResult<Prisma.$ProduksiLainnyaItemPayload, S>
+
+  type ProduksiLainnyaItemCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<ProduksiLainnyaItemFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: ProduksiLainnyaItemCountAggregateInputType | true
+    }
+
+  export interface ProduksiLainnyaItemDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['ProduksiLainnyaItem'], meta: { name: 'ProduksiLainnyaItem' } }
+    /**
+     * Find zero or one ProduksiLainnyaItem that matches the filter.
+     * @param {ProduksiLainnyaItemFindUniqueArgs} args - Arguments to find a ProduksiLainnyaItem
+     * @example
+     * // Get one ProduksiLainnyaItem
+     * const produksiLainnyaItem = await prisma.produksiLainnyaItem.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends ProduksiLainnyaItemFindUniqueArgs>(args: SelectSubset<T, ProduksiLainnyaItemFindUniqueArgs<ExtArgs>>): Prisma__ProduksiLainnyaItemClient<$Result.GetResult<Prisma.$ProduksiLainnyaItemPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one ProduksiLainnyaItem that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {ProduksiLainnyaItemFindUniqueOrThrowArgs} args - Arguments to find a ProduksiLainnyaItem
+     * @example
+     * // Get one ProduksiLainnyaItem
+     * const produksiLainnyaItem = await prisma.produksiLainnyaItem.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends ProduksiLainnyaItemFindUniqueOrThrowArgs>(args: SelectSubset<T, ProduksiLainnyaItemFindUniqueOrThrowArgs<ExtArgs>>): Prisma__ProduksiLainnyaItemClient<$Result.GetResult<Prisma.$ProduksiLainnyaItemPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first ProduksiLainnyaItem that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ProduksiLainnyaItemFindFirstArgs} args - Arguments to find a ProduksiLainnyaItem
+     * @example
+     * // Get one ProduksiLainnyaItem
+     * const produksiLainnyaItem = await prisma.produksiLainnyaItem.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends ProduksiLainnyaItemFindFirstArgs>(args?: SelectSubset<T, ProduksiLainnyaItemFindFirstArgs<ExtArgs>>): Prisma__ProduksiLainnyaItemClient<$Result.GetResult<Prisma.$ProduksiLainnyaItemPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first ProduksiLainnyaItem that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ProduksiLainnyaItemFindFirstOrThrowArgs} args - Arguments to find a ProduksiLainnyaItem
+     * @example
+     * // Get one ProduksiLainnyaItem
+     * const produksiLainnyaItem = await prisma.produksiLainnyaItem.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends ProduksiLainnyaItemFindFirstOrThrowArgs>(args?: SelectSubset<T, ProduksiLainnyaItemFindFirstOrThrowArgs<ExtArgs>>): Prisma__ProduksiLainnyaItemClient<$Result.GetResult<Prisma.$ProduksiLainnyaItemPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more ProduksiLainnyaItems that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ProduksiLainnyaItemFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all ProduksiLainnyaItems
+     * const produksiLainnyaItems = await prisma.produksiLainnyaItem.findMany()
+     * 
+     * // Get first 10 ProduksiLainnyaItems
+     * const produksiLainnyaItems = await prisma.produksiLainnyaItem.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const produksiLainnyaItemWithIdOnly = await prisma.produksiLainnyaItem.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends ProduksiLainnyaItemFindManyArgs>(args?: SelectSubset<T, ProduksiLainnyaItemFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProduksiLainnyaItemPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a ProduksiLainnyaItem.
+     * @param {ProduksiLainnyaItemCreateArgs} args - Arguments to create a ProduksiLainnyaItem.
+     * @example
+     * // Create one ProduksiLainnyaItem
+     * const ProduksiLainnyaItem = await prisma.produksiLainnyaItem.create({
+     *   data: {
+     *     // ... data to create a ProduksiLainnyaItem
+     *   }
+     * })
+     * 
+     */
+    create<T extends ProduksiLainnyaItemCreateArgs>(args: SelectSubset<T, ProduksiLainnyaItemCreateArgs<ExtArgs>>): Prisma__ProduksiLainnyaItemClient<$Result.GetResult<Prisma.$ProduksiLainnyaItemPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many ProduksiLainnyaItems.
+     * @param {ProduksiLainnyaItemCreateManyArgs} args - Arguments to create many ProduksiLainnyaItems.
+     * @example
+     * // Create many ProduksiLainnyaItems
+     * const produksiLainnyaItem = await prisma.produksiLainnyaItem.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends ProduksiLainnyaItemCreateManyArgs>(args?: SelectSubset<T, ProduksiLainnyaItemCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many ProduksiLainnyaItems and returns the data saved in the database.
+     * @param {ProduksiLainnyaItemCreateManyAndReturnArgs} args - Arguments to create many ProduksiLainnyaItems.
+     * @example
+     * // Create many ProduksiLainnyaItems
+     * const produksiLainnyaItem = await prisma.produksiLainnyaItem.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many ProduksiLainnyaItems and only return the `id`
+     * const produksiLainnyaItemWithIdOnly = await prisma.produksiLainnyaItem.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends ProduksiLainnyaItemCreateManyAndReturnArgs>(args?: SelectSubset<T, ProduksiLainnyaItemCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProduksiLainnyaItemPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a ProduksiLainnyaItem.
+     * @param {ProduksiLainnyaItemDeleteArgs} args - Arguments to delete one ProduksiLainnyaItem.
+     * @example
+     * // Delete one ProduksiLainnyaItem
+     * const ProduksiLainnyaItem = await prisma.produksiLainnyaItem.delete({
+     *   where: {
+     *     // ... filter to delete one ProduksiLainnyaItem
+     *   }
+     * })
+     * 
+     */
+    delete<T extends ProduksiLainnyaItemDeleteArgs>(args: SelectSubset<T, ProduksiLainnyaItemDeleteArgs<ExtArgs>>): Prisma__ProduksiLainnyaItemClient<$Result.GetResult<Prisma.$ProduksiLainnyaItemPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one ProduksiLainnyaItem.
+     * @param {ProduksiLainnyaItemUpdateArgs} args - Arguments to update one ProduksiLainnyaItem.
+     * @example
+     * // Update one ProduksiLainnyaItem
+     * const produksiLainnyaItem = await prisma.produksiLainnyaItem.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends ProduksiLainnyaItemUpdateArgs>(args: SelectSubset<T, ProduksiLainnyaItemUpdateArgs<ExtArgs>>): Prisma__ProduksiLainnyaItemClient<$Result.GetResult<Prisma.$ProduksiLainnyaItemPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more ProduksiLainnyaItems.
+     * @param {ProduksiLainnyaItemDeleteManyArgs} args - Arguments to filter ProduksiLainnyaItems to delete.
+     * @example
+     * // Delete a few ProduksiLainnyaItems
+     * const { count } = await prisma.produksiLainnyaItem.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends ProduksiLainnyaItemDeleteManyArgs>(args?: SelectSubset<T, ProduksiLainnyaItemDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ProduksiLainnyaItems.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ProduksiLainnyaItemUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many ProduksiLainnyaItems
+     * const produksiLainnyaItem = await prisma.produksiLainnyaItem.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends ProduksiLainnyaItemUpdateManyArgs>(args: SelectSubset<T, ProduksiLainnyaItemUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ProduksiLainnyaItems and returns the data updated in the database.
+     * @param {ProduksiLainnyaItemUpdateManyAndReturnArgs} args - Arguments to update many ProduksiLainnyaItems.
+     * @example
+     * // Update many ProduksiLainnyaItems
+     * const produksiLainnyaItem = await prisma.produksiLainnyaItem.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more ProduksiLainnyaItems and only return the `id`
+     * const produksiLainnyaItemWithIdOnly = await prisma.produksiLainnyaItem.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends ProduksiLainnyaItemUpdateManyAndReturnArgs>(args: SelectSubset<T, ProduksiLainnyaItemUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProduksiLainnyaItemPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one ProduksiLainnyaItem.
+     * @param {ProduksiLainnyaItemUpsertArgs} args - Arguments to update or create a ProduksiLainnyaItem.
+     * @example
+     * // Update or create a ProduksiLainnyaItem
+     * const produksiLainnyaItem = await prisma.produksiLainnyaItem.upsert({
+     *   create: {
+     *     // ... data to create a ProduksiLainnyaItem
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the ProduksiLainnyaItem we want to update
+     *   }
+     * })
+     */
+    upsert<T extends ProduksiLainnyaItemUpsertArgs>(args: SelectSubset<T, ProduksiLainnyaItemUpsertArgs<ExtArgs>>): Prisma__ProduksiLainnyaItemClient<$Result.GetResult<Prisma.$ProduksiLainnyaItemPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of ProduksiLainnyaItems.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ProduksiLainnyaItemCountArgs} args - Arguments to filter ProduksiLainnyaItems to count.
+     * @example
+     * // Count the number of ProduksiLainnyaItems
+     * const count = await prisma.produksiLainnyaItem.count({
+     *   where: {
+     *     // ... the filter for the ProduksiLainnyaItems we want to count
+     *   }
+     * })
+    **/
+    count<T extends ProduksiLainnyaItemCountArgs>(
+      args?: Subset<T, ProduksiLainnyaItemCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], ProduksiLainnyaItemCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a ProduksiLainnyaItem.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ProduksiLainnyaItemAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends ProduksiLainnyaItemAggregateArgs>(args: Subset<T, ProduksiLainnyaItemAggregateArgs>): Prisma.PrismaPromise<GetProduksiLainnyaItemAggregateType<T>>
+
+    /**
+     * Group by ProduksiLainnyaItem.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ProduksiLainnyaItemGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends ProduksiLainnyaItemGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: ProduksiLainnyaItemGroupByArgs['orderBy'] }
+        : { orderBy?: ProduksiLainnyaItemGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, ProduksiLainnyaItemGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetProduksiLainnyaItemGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the ProduksiLainnyaItem model
+   */
+  readonly fields: ProduksiLainnyaItemFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for ProduksiLainnyaItem.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__ProduksiLainnyaItemClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    produksiLainnya<T extends ProduksiLainnyaDefaultArgs<ExtArgs> = {}>(args?: Subset<T, ProduksiLainnyaDefaultArgs<ExtArgs>>): Prisma__ProduksiLainnyaClient<$Result.GetResult<Prisma.$ProduksiLainnyaPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the ProduksiLainnyaItem model
+   */
+  interface ProduksiLainnyaItemFieldRefs {
+    readonly id: FieldRef<"ProduksiLainnyaItem", 'BigInt'>
+    readonly produksiLainnyaId: FieldRef<"ProduksiLainnyaItem", 'BigInt'>
+    readonly namaPekerja: FieldRef<"ProduksiLainnyaItem", 'String'>
+    readonly namaPekerjaan: FieldRef<"ProduksiLainnyaItem", 'String'>
+    readonly upah: FieldRef<"ProduksiLainnyaItem", 'Decimal'>
+    readonly qty: FieldRef<"ProduksiLainnyaItem", 'Decimal'>
+    readonly satuan: FieldRef<"ProduksiLainnyaItem", 'String'>
+    readonly total: FieldRef<"ProduksiLainnyaItem", 'Decimal'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * ProduksiLainnyaItem findUnique
+   */
+  export type ProduksiLainnyaItemFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProduksiLainnyaItem
+     */
+    select?: ProduksiLainnyaItemSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProduksiLainnyaItem
+     */
+    omit?: ProduksiLainnyaItemOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProduksiLainnyaItemInclude<ExtArgs> | null
+    /**
+     * Filter, which ProduksiLainnyaItem to fetch.
+     */
+    where: ProduksiLainnyaItemWhereUniqueInput
+  }
+
+  /**
+   * ProduksiLainnyaItem findUniqueOrThrow
+   */
+  export type ProduksiLainnyaItemFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProduksiLainnyaItem
+     */
+    select?: ProduksiLainnyaItemSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProduksiLainnyaItem
+     */
+    omit?: ProduksiLainnyaItemOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProduksiLainnyaItemInclude<ExtArgs> | null
+    /**
+     * Filter, which ProduksiLainnyaItem to fetch.
+     */
+    where: ProduksiLainnyaItemWhereUniqueInput
+  }
+
+  /**
+   * ProduksiLainnyaItem findFirst
+   */
+  export type ProduksiLainnyaItemFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProduksiLainnyaItem
+     */
+    select?: ProduksiLainnyaItemSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProduksiLainnyaItem
+     */
+    omit?: ProduksiLainnyaItemOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProduksiLainnyaItemInclude<ExtArgs> | null
+    /**
+     * Filter, which ProduksiLainnyaItem to fetch.
+     */
+    where?: ProduksiLainnyaItemWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ProduksiLainnyaItems to fetch.
+     */
+    orderBy?: ProduksiLainnyaItemOrderByWithRelationInput | ProduksiLainnyaItemOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ProduksiLainnyaItems.
+     */
+    cursor?: ProduksiLainnyaItemWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ProduksiLainnyaItems from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ProduksiLainnyaItems.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ProduksiLainnyaItems.
+     */
+    distinct?: ProduksiLainnyaItemScalarFieldEnum | ProduksiLainnyaItemScalarFieldEnum[]
+  }
+
+  /**
+   * ProduksiLainnyaItem findFirstOrThrow
+   */
+  export type ProduksiLainnyaItemFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProduksiLainnyaItem
+     */
+    select?: ProduksiLainnyaItemSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProduksiLainnyaItem
+     */
+    omit?: ProduksiLainnyaItemOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProduksiLainnyaItemInclude<ExtArgs> | null
+    /**
+     * Filter, which ProduksiLainnyaItem to fetch.
+     */
+    where?: ProduksiLainnyaItemWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ProduksiLainnyaItems to fetch.
+     */
+    orderBy?: ProduksiLainnyaItemOrderByWithRelationInput | ProduksiLainnyaItemOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ProduksiLainnyaItems.
+     */
+    cursor?: ProduksiLainnyaItemWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ProduksiLainnyaItems from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ProduksiLainnyaItems.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ProduksiLainnyaItems.
+     */
+    distinct?: ProduksiLainnyaItemScalarFieldEnum | ProduksiLainnyaItemScalarFieldEnum[]
+  }
+
+  /**
+   * ProduksiLainnyaItem findMany
+   */
+  export type ProduksiLainnyaItemFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProduksiLainnyaItem
+     */
+    select?: ProduksiLainnyaItemSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProduksiLainnyaItem
+     */
+    omit?: ProduksiLainnyaItemOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProduksiLainnyaItemInclude<ExtArgs> | null
+    /**
+     * Filter, which ProduksiLainnyaItems to fetch.
+     */
+    where?: ProduksiLainnyaItemWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ProduksiLainnyaItems to fetch.
+     */
+    orderBy?: ProduksiLainnyaItemOrderByWithRelationInput | ProduksiLainnyaItemOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing ProduksiLainnyaItems.
+     */
+    cursor?: ProduksiLainnyaItemWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ProduksiLainnyaItems from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ProduksiLainnyaItems.
+     */
+    skip?: number
+    distinct?: ProduksiLainnyaItemScalarFieldEnum | ProduksiLainnyaItemScalarFieldEnum[]
+  }
+
+  /**
+   * ProduksiLainnyaItem create
+   */
+  export type ProduksiLainnyaItemCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProduksiLainnyaItem
+     */
+    select?: ProduksiLainnyaItemSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProduksiLainnyaItem
+     */
+    omit?: ProduksiLainnyaItemOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProduksiLainnyaItemInclude<ExtArgs> | null
+    /**
+     * The data needed to create a ProduksiLainnyaItem.
+     */
+    data: XOR<ProduksiLainnyaItemCreateInput, ProduksiLainnyaItemUncheckedCreateInput>
+  }
+
+  /**
+   * ProduksiLainnyaItem createMany
+   */
+  export type ProduksiLainnyaItemCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many ProduksiLainnyaItems.
+     */
+    data: ProduksiLainnyaItemCreateManyInput | ProduksiLainnyaItemCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * ProduksiLainnyaItem createManyAndReturn
+   */
+  export type ProduksiLainnyaItemCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProduksiLainnyaItem
+     */
+    select?: ProduksiLainnyaItemSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProduksiLainnyaItem
+     */
+    omit?: ProduksiLainnyaItemOmit<ExtArgs> | null
+    /**
+     * The data used to create many ProduksiLainnyaItems.
+     */
+    data: ProduksiLainnyaItemCreateManyInput | ProduksiLainnyaItemCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProduksiLainnyaItemIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * ProduksiLainnyaItem update
+   */
+  export type ProduksiLainnyaItemUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProduksiLainnyaItem
+     */
+    select?: ProduksiLainnyaItemSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProduksiLainnyaItem
+     */
+    omit?: ProduksiLainnyaItemOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProduksiLainnyaItemInclude<ExtArgs> | null
+    /**
+     * The data needed to update a ProduksiLainnyaItem.
+     */
+    data: XOR<ProduksiLainnyaItemUpdateInput, ProduksiLainnyaItemUncheckedUpdateInput>
+    /**
+     * Choose, which ProduksiLainnyaItem to update.
+     */
+    where: ProduksiLainnyaItemWhereUniqueInput
+  }
+
+  /**
+   * ProduksiLainnyaItem updateMany
+   */
+  export type ProduksiLainnyaItemUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update ProduksiLainnyaItems.
+     */
+    data: XOR<ProduksiLainnyaItemUpdateManyMutationInput, ProduksiLainnyaItemUncheckedUpdateManyInput>
+    /**
+     * Filter which ProduksiLainnyaItems to update
+     */
+    where?: ProduksiLainnyaItemWhereInput
+    /**
+     * Limit how many ProduksiLainnyaItems to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * ProduksiLainnyaItem updateManyAndReturn
+   */
+  export type ProduksiLainnyaItemUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProduksiLainnyaItem
+     */
+    select?: ProduksiLainnyaItemSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProduksiLainnyaItem
+     */
+    omit?: ProduksiLainnyaItemOmit<ExtArgs> | null
+    /**
+     * The data used to update ProduksiLainnyaItems.
+     */
+    data: XOR<ProduksiLainnyaItemUpdateManyMutationInput, ProduksiLainnyaItemUncheckedUpdateManyInput>
+    /**
+     * Filter which ProduksiLainnyaItems to update
+     */
+    where?: ProduksiLainnyaItemWhereInput
+    /**
+     * Limit how many ProduksiLainnyaItems to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProduksiLainnyaItemIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * ProduksiLainnyaItem upsert
+   */
+  export type ProduksiLainnyaItemUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProduksiLainnyaItem
+     */
+    select?: ProduksiLainnyaItemSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProduksiLainnyaItem
+     */
+    omit?: ProduksiLainnyaItemOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProduksiLainnyaItemInclude<ExtArgs> | null
+    /**
+     * The filter to search for the ProduksiLainnyaItem to update in case it exists.
+     */
+    where: ProduksiLainnyaItemWhereUniqueInput
+    /**
+     * In case the ProduksiLainnyaItem found by the `where` argument doesn't exist, create a new ProduksiLainnyaItem with this data.
+     */
+    create: XOR<ProduksiLainnyaItemCreateInput, ProduksiLainnyaItemUncheckedCreateInput>
+    /**
+     * In case the ProduksiLainnyaItem was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<ProduksiLainnyaItemUpdateInput, ProduksiLainnyaItemUncheckedUpdateInput>
+  }
+
+  /**
+   * ProduksiLainnyaItem delete
+   */
+  export type ProduksiLainnyaItemDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProduksiLainnyaItem
+     */
+    select?: ProduksiLainnyaItemSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProduksiLainnyaItem
+     */
+    omit?: ProduksiLainnyaItemOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProduksiLainnyaItemInclude<ExtArgs> | null
+    /**
+     * Filter which ProduksiLainnyaItem to delete.
+     */
+    where: ProduksiLainnyaItemWhereUniqueInput
+  }
+
+  /**
+   * ProduksiLainnyaItem deleteMany
+   */
+  export type ProduksiLainnyaItemDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ProduksiLainnyaItems to delete
+     */
+    where?: ProduksiLainnyaItemWhereInput
+    /**
+     * Limit how many ProduksiLainnyaItems to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * ProduksiLainnyaItem without action
+   */
+  export type ProduksiLainnyaItemDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProduksiLainnyaItem
+     */
+    select?: ProduksiLainnyaItemSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProduksiLainnyaItem
+     */
+    omit?: ProduksiLainnyaItemOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProduksiLainnyaItemInclude<ExtArgs> | null
+  }
+
+
+  /**
    * Model Inquiry
    */
 
@@ -52191,6 +54646,30 @@ export namespace Prisma {
   export type PemotonganItemScalarFieldEnum = (typeof PemotonganItemScalarFieldEnum)[keyof typeof PemotonganItemScalarFieldEnum]
 
 
+  export const ProduksiLainnyaScalarFieldEnum: {
+    id: 'id',
+    date: 'date',
+    notes: 'notes',
+    totalBiaya: 'totalBiaya'
+  };
+
+  export type ProduksiLainnyaScalarFieldEnum = (typeof ProduksiLainnyaScalarFieldEnum)[keyof typeof ProduksiLainnyaScalarFieldEnum]
+
+
+  export const ProduksiLainnyaItemScalarFieldEnum: {
+    id: 'id',
+    produksiLainnyaId: 'produksiLainnyaId',
+    namaPekerja: 'namaPekerja',
+    namaPekerjaan: 'namaPekerjaan',
+    upah: 'upah',
+    qty: 'qty',
+    satuan: 'satuan',
+    total: 'total'
+  };
+
+  export type ProduksiLainnyaItemScalarFieldEnum = (typeof ProduksiLainnyaItemScalarFieldEnum)[keyof typeof ProduksiLainnyaItemScalarFieldEnum]
+
+
   export const InquiryScalarFieldEnum: {
     id: 'id',
     name: 'name',
@@ -54471,6 +56950,130 @@ export namespace Prisma {
     qty?: DecimalWithAggregatesFilter<"PemotonganItem"> | Decimal | DecimalJsLike | number | string
     upahPerKg?: DecimalWithAggregatesFilter<"PemotonganItem"> | Decimal | DecimalJsLike | number | string
     total?: DecimalWithAggregatesFilter<"PemotonganItem"> | Decimal | DecimalJsLike | number | string
+  }
+
+  export type ProduksiLainnyaWhereInput = {
+    AND?: ProduksiLainnyaWhereInput | ProduksiLainnyaWhereInput[]
+    OR?: ProduksiLainnyaWhereInput[]
+    NOT?: ProduksiLainnyaWhereInput | ProduksiLainnyaWhereInput[]
+    id?: BigIntFilter<"ProduksiLainnya"> | bigint | number
+    date?: DateTimeFilter<"ProduksiLainnya"> | Date | string
+    notes?: StringNullableFilter<"ProduksiLainnya"> | string | null
+    totalBiaya?: DecimalNullableFilter<"ProduksiLainnya"> | Decimal | DecimalJsLike | number | string | null
+    produksiLainnyaItems?: ProduksiLainnyaItemListRelationFilter
+  }
+
+  export type ProduksiLainnyaOrderByWithRelationInput = {
+    id?: SortOrder
+    date?: SortOrder
+    notes?: SortOrderInput | SortOrder
+    totalBiaya?: SortOrderInput | SortOrder
+    produksiLainnyaItems?: ProduksiLainnyaItemOrderByRelationAggregateInput
+  }
+
+  export type ProduksiLainnyaWhereUniqueInput = Prisma.AtLeast<{
+    id?: bigint | number
+    AND?: ProduksiLainnyaWhereInput | ProduksiLainnyaWhereInput[]
+    OR?: ProduksiLainnyaWhereInput[]
+    NOT?: ProduksiLainnyaWhereInput | ProduksiLainnyaWhereInput[]
+    date?: DateTimeFilter<"ProduksiLainnya"> | Date | string
+    notes?: StringNullableFilter<"ProduksiLainnya"> | string | null
+    totalBiaya?: DecimalNullableFilter<"ProduksiLainnya"> | Decimal | DecimalJsLike | number | string | null
+    produksiLainnyaItems?: ProduksiLainnyaItemListRelationFilter
+  }, "id">
+
+  export type ProduksiLainnyaOrderByWithAggregationInput = {
+    id?: SortOrder
+    date?: SortOrder
+    notes?: SortOrderInput | SortOrder
+    totalBiaya?: SortOrderInput | SortOrder
+    _count?: ProduksiLainnyaCountOrderByAggregateInput
+    _avg?: ProduksiLainnyaAvgOrderByAggregateInput
+    _max?: ProduksiLainnyaMaxOrderByAggregateInput
+    _min?: ProduksiLainnyaMinOrderByAggregateInput
+    _sum?: ProduksiLainnyaSumOrderByAggregateInput
+  }
+
+  export type ProduksiLainnyaScalarWhereWithAggregatesInput = {
+    AND?: ProduksiLainnyaScalarWhereWithAggregatesInput | ProduksiLainnyaScalarWhereWithAggregatesInput[]
+    OR?: ProduksiLainnyaScalarWhereWithAggregatesInput[]
+    NOT?: ProduksiLainnyaScalarWhereWithAggregatesInput | ProduksiLainnyaScalarWhereWithAggregatesInput[]
+    id?: BigIntWithAggregatesFilter<"ProduksiLainnya"> | bigint | number
+    date?: DateTimeWithAggregatesFilter<"ProduksiLainnya"> | Date | string
+    notes?: StringNullableWithAggregatesFilter<"ProduksiLainnya"> | string | null
+    totalBiaya?: DecimalNullableWithAggregatesFilter<"ProduksiLainnya"> | Decimal | DecimalJsLike | number | string | null
+  }
+
+  export type ProduksiLainnyaItemWhereInput = {
+    AND?: ProduksiLainnyaItemWhereInput | ProduksiLainnyaItemWhereInput[]
+    OR?: ProduksiLainnyaItemWhereInput[]
+    NOT?: ProduksiLainnyaItemWhereInput | ProduksiLainnyaItemWhereInput[]
+    id?: BigIntFilter<"ProduksiLainnyaItem"> | bigint | number
+    produksiLainnyaId?: BigIntFilter<"ProduksiLainnyaItem"> | bigint | number
+    namaPekerja?: StringFilter<"ProduksiLainnyaItem"> | string
+    namaPekerjaan?: StringFilter<"ProduksiLainnyaItem"> | string
+    upah?: DecimalFilter<"ProduksiLainnyaItem"> | Decimal | DecimalJsLike | number | string
+    qty?: DecimalFilter<"ProduksiLainnyaItem"> | Decimal | DecimalJsLike | number | string
+    satuan?: StringFilter<"ProduksiLainnyaItem"> | string
+    total?: DecimalFilter<"ProduksiLainnyaItem"> | Decimal | DecimalJsLike | number | string
+    produksiLainnya?: XOR<ProduksiLainnyaScalarRelationFilter, ProduksiLainnyaWhereInput>
+  }
+
+  export type ProduksiLainnyaItemOrderByWithRelationInput = {
+    id?: SortOrder
+    produksiLainnyaId?: SortOrder
+    namaPekerja?: SortOrder
+    namaPekerjaan?: SortOrder
+    upah?: SortOrder
+    qty?: SortOrder
+    satuan?: SortOrder
+    total?: SortOrder
+    produksiLainnya?: ProduksiLainnyaOrderByWithRelationInput
+  }
+
+  export type ProduksiLainnyaItemWhereUniqueInput = Prisma.AtLeast<{
+    id?: bigint | number
+    AND?: ProduksiLainnyaItemWhereInput | ProduksiLainnyaItemWhereInput[]
+    OR?: ProduksiLainnyaItemWhereInput[]
+    NOT?: ProduksiLainnyaItemWhereInput | ProduksiLainnyaItemWhereInput[]
+    produksiLainnyaId?: BigIntFilter<"ProduksiLainnyaItem"> | bigint | number
+    namaPekerja?: StringFilter<"ProduksiLainnyaItem"> | string
+    namaPekerjaan?: StringFilter<"ProduksiLainnyaItem"> | string
+    upah?: DecimalFilter<"ProduksiLainnyaItem"> | Decimal | DecimalJsLike | number | string
+    qty?: DecimalFilter<"ProduksiLainnyaItem"> | Decimal | DecimalJsLike | number | string
+    satuan?: StringFilter<"ProduksiLainnyaItem"> | string
+    total?: DecimalFilter<"ProduksiLainnyaItem"> | Decimal | DecimalJsLike | number | string
+    produksiLainnya?: XOR<ProduksiLainnyaScalarRelationFilter, ProduksiLainnyaWhereInput>
+  }, "id">
+
+  export type ProduksiLainnyaItemOrderByWithAggregationInput = {
+    id?: SortOrder
+    produksiLainnyaId?: SortOrder
+    namaPekerja?: SortOrder
+    namaPekerjaan?: SortOrder
+    upah?: SortOrder
+    qty?: SortOrder
+    satuan?: SortOrder
+    total?: SortOrder
+    _count?: ProduksiLainnyaItemCountOrderByAggregateInput
+    _avg?: ProduksiLainnyaItemAvgOrderByAggregateInput
+    _max?: ProduksiLainnyaItemMaxOrderByAggregateInput
+    _min?: ProduksiLainnyaItemMinOrderByAggregateInput
+    _sum?: ProduksiLainnyaItemSumOrderByAggregateInput
+  }
+
+  export type ProduksiLainnyaItemScalarWhereWithAggregatesInput = {
+    AND?: ProduksiLainnyaItemScalarWhereWithAggregatesInput | ProduksiLainnyaItemScalarWhereWithAggregatesInput[]
+    OR?: ProduksiLainnyaItemScalarWhereWithAggregatesInput[]
+    NOT?: ProduksiLainnyaItemScalarWhereWithAggregatesInput | ProduksiLainnyaItemScalarWhereWithAggregatesInput[]
+    id?: BigIntWithAggregatesFilter<"ProduksiLainnyaItem"> | bigint | number
+    produksiLainnyaId?: BigIntWithAggregatesFilter<"ProduksiLainnyaItem"> | bigint | number
+    namaPekerja?: StringWithAggregatesFilter<"ProduksiLainnyaItem"> | string
+    namaPekerjaan?: StringWithAggregatesFilter<"ProduksiLainnyaItem"> | string
+    upah?: DecimalWithAggregatesFilter<"ProduksiLainnyaItem"> | Decimal | DecimalJsLike | number | string
+    qty?: DecimalWithAggregatesFilter<"ProduksiLainnyaItem"> | Decimal | DecimalJsLike | number | string
+    satuan?: StringWithAggregatesFilter<"ProduksiLainnyaItem"> | string
+    total?: DecimalWithAggregatesFilter<"ProduksiLainnyaItem"> | Decimal | DecimalJsLike | number | string
   }
 
   export type InquiryWhereInput = {
@@ -57281,6 +59884,135 @@ export namespace Prisma {
     total?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
   }
 
+  export type ProduksiLainnyaCreateInput = {
+    id?: bigint | number
+    date: Date | string
+    notes?: string | null
+    totalBiaya?: Decimal | DecimalJsLike | number | string | null
+    produksiLainnyaItems?: ProduksiLainnyaItemCreateNestedManyWithoutProduksiLainnyaInput
+  }
+
+  export type ProduksiLainnyaUncheckedCreateInput = {
+    id?: bigint | number
+    date: Date | string
+    notes?: string | null
+    totalBiaya?: Decimal | DecimalJsLike | number | string | null
+    produksiLainnyaItems?: ProduksiLainnyaItemUncheckedCreateNestedManyWithoutProduksiLainnyaInput
+  }
+
+  export type ProduksiLainnyaUpdateInput = {
+    id?: BigIntFieldUpdateOperationsInput | bigint | number
+    date?: DateTimeFieldUpdateOperationsInput | Date | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    totalBiaya?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    produksiLainnyaItems?: ProduksiLainnyaItemUpdateManyWithoutProduksiLainnyaNestedInput
+  }
+
+  export type ProduksiLainnyaUncheckedUpdateInput = {
+    id?: BigIntFieldUpdateOperationsInput | bigint | number
+    date?: DateTimeFieldUpdateOperationsInput | Date | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    totalBiaya?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    produksiLainnyaItems?: ProduksiLainnyaItemUncheckedUpdateManyWithoutProduksiLainnyaNestedInput
+  }
+
+  export type ProduksiLainnyaCreateManyInput = {
+    id?: bigint | number
+    date: Date | string
+    notes?: string | null
+    totalBiaya?: Decimal | DecimalJsLike | number | string | null
+  }
+
+  export type ProduksiLainnyaUpdateManyMutationInput = {
+    id?: BigIntFieldUpdateOperationsInput | bigint | number
+    date?: DateTimeFieldUpdateOperationsInput | Date | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    totalBiaya?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+  }
+
+  export type ProduksiLainnyaUncheckedUpdateManyInput = {
+    id?: BigIntFieldUpdateOperationsInput | bigint | number
+    date?: DateTimeFieldUpdateOperationsInput | Date | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    totalBiaya?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+  }
+
+  export type ProduksiLainnyaItemCreateInput = {
+    id?: bigint | number
+    namaPekerja: string
+    namaPekerjaan: string
+    upah: Decimal | DecimalJsLike | number | string
+    qty: Decimal | DecimalJsLike | number | string
+    satuan: string
+    total: Decimal | DecimalJsLike | number | string
+    produksiLainnya: ProduksiLainnyaCreateNestedOneWithoutProduksiLainnyaItemsInput
+  }
+
+  export type ProduksiLainnyaItemUncheckedCreateInput = {
+    id?: bigint | number
+    produksiLainnyaId: bigint | number
+    namaPekerja: string
+    namaPekerjaan: string
+    upah: Decimal | DecimalJsLike | number | string
+    qty: Decimal | DecimalJsLike | number | string
+    satuan: string
+    total: Decimal | DecimalJsLike | number | string
+  }
+
+  export type ProduksiLainnyaItemUpdateInput = {
+    id?: BigIntFieldUpdateOperationsInput | bigint | number
+    namaPekerja?: StringFieldUpdateOperationsInput | string
+    namaPekerjaan?: StringFieldUpdateOperationsInput | string
+    upah?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    qty?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    satuan?: StringFieldUpdateOperationsInput | string
+    total?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    produksiLainnya?: ProduksiLainnyaUpdateOneRequiredWithoutProduksiLainnyaItemsNestedInput
+  }
+
+  export type ProduksiLainnyaItemUncheckedUpdateInput = {
+    id?: BigIntFieldUpdateOperationsInput | bigint | number
+    produksiLainnyaId?: BigIntFieldUpdateOperationsInput | bigint | number
+    namaPekerja?: StringFieldUpdateOperationsInput | string
+    namaPekerjaan?: StringFieldUpdateOperationsInput | string
+    upah?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    qty?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    satuan?: StringFieldUpdateOperationsInput | string
+    total?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+  }
+
+  export type ProduksiLainnyaItemCreateManyInput = {
+    id?: bigint | number
+    produksiLainnyaId: bigint | number
+    namaPekerja: string
+    namaPekerjaan: string
+    upah: Decimal | DecimalJsLike | number | string
+    qty: Decimal | DecimalJsLike | number | string
+    satuan: string
+    total: Decimal | DecimalJsLike | number | string
+  }
+
+  export type ProduksiLainnyaItemUpdateManyMutationInput = {
+    id?: BigIntFieldUpdateOperationsInput | bigint | number
+    namaPekerja?: StringFieldUpdateOperationsInput | string
+    namaPekerjaan?: StringFieldUpdateOperationsInput | string
+    upah?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    qty?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    satuan?: StringFieldUpdateOperationsInput | string
+    total?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+  }
+
+  export type ProduksiLainnyaItemUncheckedUpdateManyInput = {
+    id?: BigIntFieldUpdateOperationsInput | bigint | number
+    produksiLainnyaId?: BigIntFieldUpdateOperationsInput | bigint | number
+    namaPekerja?: StringFieldUpdateOperationsInput | string
+    namaPekerjaan?: StringFieldUpdateOperationsInput | string
+    upah?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    qty?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    satuan?: StringFieldUpdateOperationsInput | string
+    total?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+  }
+
   export type InquiryCreateInput = {
     id?: string
     name: string
@@ -59784,6 +62516,101 @@ export namespace Prisma {
     total?: SortOrder
   }
 
+  export type ProduksiLainnyaItemListRelationFilter = {
+    every?: ProduksiLainnyaItemWhereInput
+    some?: ProduksiLainnyaItemWhereInput
+    none?: ProduksiLainnyaItemWhereInput
+  }
+
+  export type ProduksiLainnyaItemOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type ProduksiLainnyaCountOrderByAggregateInput = {
+    id?: SortOrder
+    date?: SortOrder
+    notes?: SortOrder
+    totalBiaya?: SortOrder
+  }
+
+  export type ProduksiLainnyaAvgOrderByAggregateInput = {
+    id?: SortOrder
+    totalBiaya?: SortOrder
+  }
+
+  export type ProduksiLainnyaMaxOrderByAggregateInput = {
+    id?: SortOrder
+    date?: SortOrder
+    notes?: SortOrder
+    totalBiaya?: SortOrder
+  }
+
+  export type ProduksiLainnyaMinOrderByAggregateInput = {
+    id?: SortOrder
+    date?: SortOrder
+    notes?: SortOrder
+    totalBiaya?: SortOrder
+  }
+
+  export type ProduksiLainnyaSumOrderByAggregateInput = {
+    id?: SortOrder
+    totalBiaya?: SortOrder
+  }
+
+  export type ProduksiLainnyaScalarRelationFilter = {
+    is?: ProduksiLainnyaWhereInput
+    isNot?: ProduksiLainnyaWhereInput
+  }
+
+  export type ProduksiLainnyaItemCountOrderByAggregateInput = {
+    id?: SortOrder
+    produksiLainnyaId?: SortOrder
+    namaPekerja?: SortOrder
+    namaPekerjaan?: SortOrder
+    upah?: SortOrder
+    qty?: SortOrder
+    satuan?: SortOrder
+    total?: SortOrder
+  }
+
+  export type ProduksiLainnyaItemAvgOrderByAggregateInput = {
+    id?: SortOrder
+    produksiLainnyaId?: SortOrder
+    upah?: SortOrder
+    qty?: SortOrder
+    total?: SortOrder
+  }
+
+  export type ProduksiLainnyaItemMaxOrderByAggregateInput = {
+    id?: SortOrder
+    produksiLainnyaId?: SortOrder
+    namaPekerja?: SortOrder
+    namaPekerjaan?: SortOrder
+    upah?: SortOrder
+    qty?: SortOrder
+    satuan?: SortOrder
+    total?: SortOrder
+  }
+
+  export type ProduksiLainnyaItemMinOrderByAggregateInput = {
+    id?: SortOrder
+    produksiLainnyaId?: SortOrder
+    namaPekerja?: SortOrder
+    namaPekerjaan?: SortOrder
+    upah?: SortOrder
+    qty?: SortOrder
+    satuan?: SortOrder
+    total?: SortOrder
+  }
+
+  export type ProduksiLainnyaItemSumOrderByAggregateInput = {
+    id?: SortOrder
+    produksiLainnyaId?: SortOrder
+    upah?: SortOrder
+    qty?: SortOrder
+    total?: SortOrder
+  }
+
   export type EnumInquiryStatusFilter<$PrismaModel = never> = {
     equals?: $Enums.InquiryStatus | EnumInquiryStatusFieldRefInput<$PrismaModel>
     in?: $Enums.InquiryStatus[] | ListEnumInquiryStatusFieldRefInput<$PrismaModel>
@@ -61667,6 +64494,62 @@ export namespace Prisma {
     upsert?: PemotonganUpsertWithoutPemotonganItemsInput
     connect?: PemotonganWhereUniqueInput
     update?: XOR<XOR<PemotonganUpdateToOneWithWhereWithoutPemotonganItemsInput, PemotonganUpdateWithoutPemotonganItemsInput>, PemotonganUncheckedUpdateWithoutPemotonganItemsInput>
+  }
+
+  export type ProduksiLainnyaItemCreateNestedManyWithoutProduksiLainnyaInput = {
+    create?: XOR<ProduksiLainnyaItemCreateWithoutProduksiLainnyaInput, ProduksiLainnyaItemUncheckedCreateWithoutProduksiLainnyaInput> | ProduksiLainnyaItemCreateWithoutProduksiLainnyaInput[] | ProduksiLainnyaItemUncheckedCreateWithoutProduksiLainnyaInput[]
+    connectOrCreate?: ProduksiLainnyaItemCreateOrConnectWithoutProduksiLainnyaInput | ProduksiLainnyaItemCreateOrConnectWithoutProduksiLainnyaInput[]
+    createMany?: ProduksiLainnyaItemCreateManyProduksiLainnyaInputEnvelope
+    connect?: ProduksiLainnyaItemWhereUniqueInput | ProduksiLainnyaItemWhereUniqueInput[]
+  }
+
+  export type ProduksiLainnyaItemUncheckedCreateNestedManyWithoutProduksiLainnyaInput = {
+    create?: XOR<ProduksiLainnyaItemCreateWithoutProduksiLainnyaInput, ProduksiLainnyaItemUncheckedCreateWithoutProduksiLainnyaInput> | ProduksiLainnyaItemCreateWithoutProduksiLainnyaInput[] | ProduksiLainnyaItemUncheckedCreateWithoutProduksiLainnyaInput[]
+    connectOrCreate?: ProduksiLainnyaItemCreateOrConnectWithoutProduksiLainnyaInput | ProduksiLainnyaItemCreateOrConnectWithoutProduksiLainnyaInput[]
+    createMany?: ProduksiLainnyaItemCreateManyProduksiLainnyaInputEnvelope
+    connect?: ProduksiLainnyaItemWhereUniqueInput | ProduksiLainnyaItemWhereUniqueInput[]
+  }
+
+  export type ProduksiLainnyaItemUpdateManyWithoutProduksiLainnyaNestedInput = {
+    create?: XOR<ProduksiLainnyaItemCreateWithoutProduksiLainnyaInput, ProduksiLainnyaItemUncheckedCreateWithoutProduksiLainnyaInput> | ProduksiLainnyaItemCreateWithoutProduksiLainnyaInput[] | ProduksiLainnyaItemUncheckedCreateWithoutProduksiLainnyaInput[]
+    connectOrCreate?: ProduksiLainnyaItemCreateOrConnectWithoutProduksiLainnyaInput | ProduksiLainnyaItemCreateOrConnectWithoutProduksiLainnyaInput[]
+    upsert?: ProduksiLainnyaItemUpsertWithWhereUniqueWithoutProduksiLainnyaInput | ProduksiLainnyaItemUpsertWithWhereUniqueWithoutProduksiLainnyaInput[]
+    createMany?: ProduksiLainnyaItemCreateManyProduksiLainnyaInputEnvelope
+    set?: ProduksiLainnyaItemWhereUniqueInput | ProduksiLainnyaItemWhereUniqueInput[]
+    disconnect?: ProduksiLainnyaItemWhereUniqueInput | ProduksiLainnyaItemWhereUniqueInput[]
+    delete?: ProduksiLainnyaItemWhereUniqueInput | ProduksiLainnyaItemWhereUniqueInput[]
+    connect?: ProduksiLainnyaItemWhereUniqueInput | ProduksiLainnyaItemWhereUniqueInput[]
+    update?: ProduksiLainnyaItemUpdateWithWhereUniqueWithoutProduksiLainnyaInput | ProduksiLainnyaItemUpdateWithWhereUniqueWithoutProduksiLainnyaInput[]
+    updateMany?: ProduksiLainnyaItemUpdateManyWithWhereWithoutProduksiLainnyaInput | ProduksiLainnyaItemUpdateManyWithWhereWithoutProduksiLainnyaInput[]
+    deleteMany?: ProduksiLainnyaItemScalarWhereInput | ProduksiLainnyaItemScalarWhereInput[]
+  }
+
+  export type ProduksiLainnyaItemUncheckedUpdateManyWithoutProduksiLainnyaNestedInput = {
+    create?: XOR<ProduksiLainnyaItemCreateWithoutProduksiLainnyaInput, ProduksiLainnyaItemUncheckedCreateWithoutProduksiLainnyaInput> | ProduksiLainnyaItemCreateWithoutProduksiLainnyaInput[] | ProduksiLainnyaItemUncheckedCreateWithoutProduksiLainnyaInput[]
+    connectOrCreate?: ProduksiLainnyaItemCreateOrConnectWithoutProduksiLainnyaInput | ProduksiLainnyaItemCreateOrConnectWithoutProduksiLainnyaInput[]
+    upsert?: ProduksiLainnyaItemUpsertWithWhereUniqueWithoutProduksiLainnyaInput | ProduksiLainnyaItemUpsertWithWhereUniqueWithoutProduksiLainnyaInput[]
+    createMany?: ProduksiLainnyaItemCreateManyProduksiLainnyaInputEnvelope
+    set?: ProduksiLainnyaItemWhereUniqueInput | ProduksiLainnyaItemWhereUniqueInput[]
+    disconnect?: ProduksiLainnyaItemWhereUniqueInput | ProduksiLainnyaItemWhereUniqueInput[]
+    delete?: ProduksiLainnyaItemWhereUniqueInput | ProduksiLainnyaItemWhereUniqueInput[]
+    connect?: ProduksiLainnyaItemWhereUniqueInput | ProduksiLainnyaItemWhereUniqueInput[]
+    update?: ProduksiLainnyaItemUpdateWithWhereUniqueWithoutProduksiLainnyaInput | ProduksiLainnyaItemUpdateWithWhereUniqueWithoutProduksiLainnyaInput[]
+    updateMany?: ProduksiLainnyaItemUpdateManyWithWhereWithoutProduksiLainnyaInput | ProduksiLainnyaItemUpdateManyWithWhereWithoutProduksiLainnyaInput[]
+    deleteMany?: ProduksiLainnyaItemScalarWhereInput | ProduksiLainnyaItemScalarWhereInput[]
+  }
+
+  export type ProduksiLainnyaCreateNestedOneWithoutProduksiLainnyaItemsInput = {
+    create?: XOR<ProduksiLainnyaCreateWithoutProduksiLainnyaItemsInput, ProduksiLainnyaUncheckedCreateWithoutProduksiLainnyaItemsInput>
+    connectOrCreate?: ProduksiLainnyaCreateOrConnectWithoutProduksiLainnyaItemsInput
+    connect?: ProduksiLainnyaWhereUniqueInput
+  }
+
+  export type ProduksiLainnyaUpdateOneRequiredWithoutProduksiLainnyaItemsNestedInput = {
+    create?: XOR<ProduksiLainnyaCreateWithoutProduksiLainnyaItemsInput, ProduksiLainnyaUncheckedCreateWithoutProduksiLainnyaItemsInput>
+    connectOrCreate?: ProduksiLainnyaCreateOrConnectWithoutProduksiLainnyaItemsInput
+    upsert?: ProduksiLainnyaUpsertWithoutProduksiLainnyaItemsInput
+    connect?: ProduksiLainnyaWhereUniqueInput
+    update?: XOR<XOR<ProduksiLainnyaUpdateToOneWithWhereWithoutProduksiLainnyaItemsInput, ProduksiLainnyaUpdateWithoutProduksiLainnyaItemsInput>, ProduksiLainnyaUncheckedUpdateWithoutProduksiLainnyaItemsInput>
   }
 
   export type EnumInquiryStatusFieldUpdateOperationsInput = {
@@ -64890,6 +67773,110 @@ export namespace Prisma {
     upahPerKg?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
   }
 
+  export type ProduksiLainnyaItemCreateWithoutProduksiLainnyaInput = {
+    id?: bigint | number
+    namaPekerja: string
+    namaPekerjaan: string
+    upah: Decimal | DecimalJsLike | number | string
+    qty: Decimal | DecimalJsLike | number | string
+    satuan: string
+    total: Decimal | DecimalJsLike | number | string
+  }
+
+  export type ProduksiLainnyaItemUncheckedCreateWithoutProduksiLainnyaInput = {
+    id?: bigint | number
+    namaPekerja: string
+    namaPekerjaan: string
+    upah: Decimal | DecimalJsLike | number | string
+    qty: Decimal | DecimalJsLike | number | string
+    satuan: string
+    total: Decimal | DecimalJsLike | number | string
+  }
+
+  export type ProduksiLainnyaItemCreateOrConnectWithoutProduksiLainnyaInput = {
+    where: ProduksiLainnyaItemWhereUniqueInput
+    create: XOR<ProduksiLainnyaItemCreateWithoutProduksiLainnyaInput, ProduksiLainnyaItemUncheckedCreateWithoutProduksiLainnyaInput>
+  }
+
+  export type ProduksiLainnyaItemCreateManyProduksiLainnyaInputEnvelope = {
+    data: ProduksiLainnyaItemCreateManyProduksiLainnyaInput | ProduksiLainnyaItemCreateManyProduksiLainnyaInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type ProduksiLainnyaItemUpsertWithWhereUniqueWithoutProduksiLainnyaInput = {
+    where: ProduksiLainnyaItemWhereUniqueInput
+    update: XOR<ProduksiLainnyaItemUpdateWithoutProduksiLainnyaInput, ProduksiLainnyaItemUncheckedUpdateWithoutProduksiLainnyaInput>
+    create: XOR<ProduksiLainnyaItemCreateWithoutProduksiLainnyaInput, ProduksiLainnyaItemUncheckedCreateWithoutProduksiLainnyaInput>
+  }
+
+  export type ProduksiLainnyaItemUpdateWithWhereUniqueWithoutProduksiLainnyaInput = {
+    where: ProduksiLainnyaItemWhereUniqueInput
+    data: XOR<ProduksiLainnyaItemUpdateWithoutProduksiLainnyaInput, ProduksiLainnyaItemUncheckedUpdateWithoutProduksiLainnyaInput>
+  }
+
+  export type ProduksiLainnyaItemUpdateManyWithWhereWithoutProduksiLainnyaInput = {
+    where: ProduksiLainnyaItemScalarWhereInput
+    data: XOR<ProduksiLainnyaItemUpdateManyMutationInput, ProduksiLainnyaItemUncheckedUpdateManyWithoutProduksiLainnyaInput>
+  }
+
+  export type ProduksiLainnyaItemScalarWhereInput = {
+    AND?: ProduksiLainnyaItemScalarWhereInput | ProduksiLainnyaItemScalarWhereInput[]
+    OR?: ProduksiLainnyaItemScalarWhereInput[]
+    NOT?: ProduksiLainnyaItemScalarWhereInput | ProduksiLainnyaItemScalarWhereInput[]
+    id?: BigIntFilter<"ProduksiLainnyaItem"> | bigint | number
+    produksiLainnyaId?: BigIntFilter<"ProduksiLainnyaItem"> | bigint | number
+    namaPekerja?: StringFilter<"ProduksiLainnyaItem"> | string
+    namaPekerjaan?: StringFilter<"ProduksiLainnyaItem"> | string
+    upah?: DecimalFilter<"ProduksiLainnyaItem"> | Decimal | DecimalJsLike | number | string
+    qty?: DecimalFilter<"ProduksiLainnyaItem"> | Decimal | DecimalJsLike | number | string
+    satuan?: StringFilter<"ProduksiLainnyaItem"> | string
+    total?: DecimalFilter<"ProduksiLainnyaItem"> | Decimal | DecimalJsLike | number | string
+  }
+
+  export type ProduksiLainnyaCreateWithoutProduksiLainnyaItemsInput = {
+    id?: bigint | number
+    date: Date | string
+    notes?: string | null
+    totalBiaya?: Decimal | DecimalJsLike | number | string | null
+  }
+
+  export type ProduksiLainnyaUncheckedCreateWithoutProduksiLainnyaItemsInput = {
+    id?: bigint | number
+    date: Date | string
+    notes?: string | null
+    totalBiaya?: Decimal | DecimalJsLike | number | string | null
+  }
+
+  export type ProduksiLainnyaCreateOrConnectWithoutProduksiLainnyaItemsInput = {
+    where: ProduksiLainnyaWhereUniqueInput
+    create: XOR<ProduksiLainnyaCreateWithoutProduksiLainnyaItemsInput, ProduksiLainnyaUncheckedCreateWithoutProduksiLainnyaItemsInput>
+  }
+
+  export type ProduksiLainnyaUpsertWithoutProduksiLainnyaItemsInput = {
+    update: XOR<ProduksiLainnyaUpdateWithoutProduksiLainnyaItemsInput, ProduksiLainnyaUncheckedUpdateWithoutProduksiLainnyaItemsInput>
+    create: XOR<ProduksiLainnyaCreateWithoutProduksiLainnyaItemsInput, ProduksiLainnyaUncheckedCreateWithoutProduksiLainnyaItemsInput>
+    where?: ProduksiLainnyaWhereInput
+  }
+
+  export type ProduksiLainnyaUpdateToOneWithWhereWithoutProduksiLainnyaItemsInput = {
+    where?: ProduksiLainnyaWhereInput
+    data: XOR<ProduksiLainnyaUpdateWithoutProduksiLainnyaItemsInput, ProduksiLainnyaUncheckedUpdateWithoutProduksiLainnyaItemsInput>
+  }
+
+  export type ProduksiLainnyaUpdateWithoutProduksiLainnyaItemsInput = {
+    id?: BigIntFieldUpdateOperationsInput | bigint | number
+    date?: DateTimeFieldUpdateOperationsInput | Date | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    totalBiaya?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+  }
+
+  export type ProduksiLainnyaUncheckedUpdateWithoutProduksiLainnyaItemsInput = {
+    id?: BigIntFieldUpdateOperationsInput | bigint | number
+    date?: DateTimeFieldUpdateOperationsInput | Date | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    totalBiaya?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+  }
+
   export type UserCreateWithoutPostsInput = {
     id: string
     name: string
@@ -66087,6 +69074,46 @@ export namespace Prisma {
     nama?: StringFieldUpdateOperationsInput | string
     qty?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     upahPerKg?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    total?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+  }
+
+  export type ProduksiLainnyaItemCreateManyProduksiLainnyaInput = {
+    id?: bigint | number
+    namaPekerja: string
+    namaPekerjaan: string
+    upah: Decimal | DecimalJsLike | number | string
+    qty: Decimal | DecimalJsLike | number | string
+    satuan: string
+    total: Decimal | DecimalJsLike | number | string
+  }
+
+  export type ProduksiLainnyaItemUpdateWithoutProduksiLainnyaInput = {
+    id?: BigIntFieldUpdateOperationsInput | bigint | number
+    namaPekerja?: StringFieldUpdateOperationsInput | string
+    namaPekerjaan?: StringFieldUpdateOperationsInput | string
+    upah?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    qty?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    satuan?: StringFieldUpdateOperationsInput | string
+    total?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+  }
+
+  export type ProduksiLainnyaItemUncheckedUpdateWithoutProduksiLainnyaInput = {
+    id?: BigIntFieldUpdateOperationsInput | bigint | number
+    namaPekerja?: StringFieldUpdateOperationsInput | string
+    namaPekerjaan?: StringFieldUpdateOperationsInput | string
+    upah?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    qty?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    satuan?: StringFieldUpdateOperationsInput | string
+    total?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+  }
+
+  export type ProduksiLainnyaItemUncheckedUpdateManyWithoutProduksiLainnyaInput = {
+    id?: BigIntFieldUpdateOperationsInput | bigint | number
+    namaPekerja?: StringFieldUpdateOperationsInput | string
+    namaPekerjaan?: StringFieldUpdateOperationsInput | string
+    upah?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    qty?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    satuan?: StringFieldUpdateOperationsInput | string
     total?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
   }
 

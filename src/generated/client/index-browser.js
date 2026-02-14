@@ -400,6 +400,24 @@ exports.Prisma.PemotonganItemScalarFieldEnum = {
   total: 'total'
 };
 
+exports.Prisma.ProduksiLainnyaScalarFieldEnum = {
+  id: 'id',
+  date: 'date',
+  notes: 'notes',
+  totalBiaya: 'totalBiaya'
+};
+
+exports.Prisma.ProduksiLainnyaItemScalarFieldEnum = {
+  id: 'id',
+  produksiLainnyaId: 'produksiLainnyaId',
+  namaPekerja: 'namaPekerja',
+  namaPekerjaan: 'namaPekerjaan',
+  upah: 'upah',
+  qty: 'qty',
+  satuan: 'satuan',
+  total: 'total'
+};
+
 exports.Prisma.InquiryScalarFieldEnum = {
   id: 'id',
   name: 'name',
@@ -588,6 +606,8 @@ exports.Prisma.ModelName = {
   PengemasanItem: 'PengemasanItem',
   Pemotongan: 'Pemotongan',
   PemotonganItem: 'PemotonganItem',
+  ProduksiLainnya: 'ProduksiLainnya',
+  ProduksiLainnyaItem: 'ProduksiLainnyaItem',
   Inquiry: 'Inquiry',
   Post: 'Post',
   ContactInfo: 'ContactInfo',

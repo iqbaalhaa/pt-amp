@@ -66,3 +66,37 @@ export async function createPenjemuran(input: PenjemuranInput) {
 
 	return { success: true, id: String(penjemuran.id) };
 }
+
+export async function getPenjemuranHistory() {
+	const data = await prisma.penjemuran.findMany({
+		orderBy: { date: "desc" },
+		include: {
+			penjemuranItems: true,
+		},
+	});
+
+	return data.map((item) => ({
+		id: String(item.id),
+		date: item.date,
+		notes: item.notes,
+		totalUpah: parseFloat(item.totalUpah || "0"),
+		items: item.penjemuranItems.map((sub) => ({
+			nama: sub.nama,
+			hari: parseFloat(sub.hari || "0"),
+			lemburJam: parseFloat(sub.lemburJam || "0"),
+			total: parseFloat(sub.total || "0"),
+		})),
+	}));
+}
+
+export async function deletePenjemuran(id: string) {
+	try {
+		await prisma.penjemuran.delete({
+			where: { id: parseInt(id) },
+		});
+		return { success: true };
+	} catch (error) {
+		console.error("Error deleting penjemuran:", error);
+		return { success: false, error: "Gagal menghapus data" };
+	}
+}

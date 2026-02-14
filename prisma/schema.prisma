@@ -476,6 +476,33 @@ model PemotonganItem {
   @@map("pemotongan_items")
 }
 
+// 10. PRODUKSI LAINNYA
+model ProduksiLainnya {
+  id         BigInt   @id @default(autoincrement())
+  date       DateTime @db.Date
+  notes      String?
+  totalBiaya Decimal? @db.Decimal(14, 2) @map("total_biaya")
+
+  produksiLainnyaItems ProduksiLainnyaItem[]
+
+  @@map("produksi_lainnya")
+}
+
+model ProduksiLainnyaItem {
+  id                BigInt          @id @default(autoincrement())
+  produksiLainnyaId BigInt          @map("produksi_lainnya_id")
+  namaPekerja       String          @map("nama_pekerja")
+  namaPekerjaan     String          @map("nama_pekerjaan")
+  upah              Decimal         @db.Decimal(14, 2)
+  qty               Decimal         @db.Decimal(14, 4)
+  satuan            String
+  total             Decimal         @db.Decimal(14, 2)
+
+  produksiLainnya ProduksiLainnya @relation(fields: [produksiLainnyaId], references: [id], onDelete: Cascade)
+
+  @@map("produksi_lainnya_items")
+}
+
 // =========================================================
 // CMS / WEBSITE (Keep existing)
 // =========================================================
