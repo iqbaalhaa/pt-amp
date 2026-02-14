@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { LedgerFilters } from "@/components/admin/ledger/LedgerFilters";
 import { LedgerSection } from "@/components/admin/ledger/LedgerSection";
+import { LedgerTabs } from "@/components/admin/ledger/LedgerTabs";
 import { ProductionCostSummary } from "@/components/admin/ledger/ProductionCostSummary";
 import { LedgerEntry } from "@/components/admin/ledger/types";
 import {
@@ -213,13 +214,14 @@ export default async function AdminLedgerPage({
 				return sum + (isFinite(v) ? v : 0);
 			}, 0) || 0;
 		const totalValue = total > 0 ? total : null;
-		return {
+    return {
 			id: p.id.toString(),
 			type: "purchase",
 			date: p.date.toISOString(),
 			status: p.status,
 			reference: p.id.toString(),
 			counterparty: p.supplier,
+      createdByName: p.createdByName || null,
 			total: totalValue,
 			stockImpact: "IN",
 			notes: p.notes,
@@ -236,13 +238,14 @@ export default async function AdminLedgerPage({
 				return sum + (isFinite(v) ? v : 0);
 			}, 0) || 0;
 		const totalValue = total > 0 ? total : null;
-		return {
+    return {
 			id: s.id.toString(),
 			type: "sale",
 			date: s.date.toISOString(),
 			status: s.status,
 			reference: s.id.toString(),
 			counterparty: s.customer,
+      createdByName: s.createdByName || null,
 			total: totalValue,
 			stockImpact: "OUT",
 			notes: s.notes,
@@ -473,66 +476,56 @@ export default async function AdminLedgerPage({
 			</section>
 
 			<section className="mb-4">
-				<div className="flex flex-wrap gap-2">
-					<span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-800">
-						Total transaksi: {summaryTotalTransaksi}
-					</span>
-					<span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-800">
-						Total nominal: {toCurrency(summaryTotalNominal)}
-					</span>
-					<span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-800">
-						Purchase: {breakdown.purchase}
-					</span>
-					<span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-800">
-						Sales: {breakdown.sale}
-					</span>
-					<span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-800">
-						Processing: {breakdown.production}
-					</span>
-				</div>
+        <LedgerTabs />
 			</section>
 
-			<section className="mb-4">
-				<LedgerSection
-					title="Pembelian"
-					type="purchase"
-					entries={sortedPurchases}
-					totalCount={purchaseCount}
-					totalNominal={purchaseNominal}
-				/>
-			</section>
-
-			<section className="mb-4">
-				<LedgerSection
-					title="Penjualan"
-					type="sale"
-					entries={sortedSales}
-					totalCount={saleCount}
-					totalNominal={saleNominal}
-				/>
-			</section>
-
-			{allProductionTypes.map((type) => {
-				const items = productionGroups[type] || [];
-				const count = items.length;
-				const nominal = items.reduce(
-					(sum, e) => sum + (e.productionCost || 0),
-					0,
-				);
-
-				return (
-					<section key={type} className="mb-4">
-						<LedgerSection
-							title={type}
-							type="production"
-							entries={items}
-							totalCount={count}
-							totalNominal={nominal}
-							extraHeaderContent={<ProductionCostSummary totalCost={nominal} />}
-						/>
-					</section>
-				);
-			})}
+      {(() => {
+        const typeParam = params.type ?? "purchase";
+        const subTypeParam = params.subType ?? null;
+        if (typeParam === "purchase") {
+          return (
+            <section className="mb-4">
+              <LedgerSection
+                title="Rekap transaksi & pergerakan stok dari data yang terekam"
+                type="purchase"
+                entries={sortedPurchases}
+                totalCount={purchaseCount}
+                totalNominal={purchaseNominal}
+              />
+            </section>
+          );
+        }
+        if (typeParam === "sale") {
+          return (
+            <section className="mb-4">
+              <LedgerSection
+                title="Penjualan"
+                type="sale"
+                entries={sortedSales}
+                totalCount={saleCount}
+                totalNominal={saleNominal}
+              />
+            </section>
+          );
+        }
+        // production
+        const type = subTypeParam ?? "Pengikisan";
+        const items = productionGroups[type] || [];
+        const count = items.length;
+        const nominal = items.reduce((sum, e) => sum + (e.productionCost || 0), 0);
+        return (
+          <section className="mb-4">
+            <LedgerSection
+              title={type}
+              type="production"
+              entries={items}
+              totalCount={count}
+              totalNominal={nominal}
+              extraHeaderContent={<ProductionCostSummary totalCost={nominal} />}
+            />
+          </section>
+        );
+      })()}
 
 			{selected && (
 				<section className="mt-4 rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-100">

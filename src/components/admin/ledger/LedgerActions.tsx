@@ -5,6 +5,14 @@ import { useRouter } from "next/navigation";
 import { revokePurchase } from "@/actions/purchase-actions";
 import { revokeSale } from "@/actions/sale-actions";
 import { revokeProduction } from "@/actions/production-actions";
+import { approvePurchase } from "@/actions/purchase-actions";
+import { approveSale } from "@/actions/sale-actions";
+import GlassDialog from "@/components/ui/GlassDialog";
+import { useState } from "react";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import PrintIcon from "@mui/icons-material/Print";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import CancelIcon from "@mui/icons-material/Cancel";
 
 type Props = {
   id: string;
@@ -16,56 +24,124 @@ export function LedgerActions({ id, type, status }: Props) {
   const router = useRouter();
   const canPrint = type === "purchase" || type === "sale";
   const isCancelled = status === "cancelled";
+  const canApprove = status === "draft" && (type === "purchase" || type === "sale");
+  const canReject = status === "draft" && !isCancelled && (type === "purchase" || type === "sale");
+  const [openApprove, setOpenApprove] = useState(false);
+  const [openReject, setOpenReject] = useState(false);
+  const [rejectReason, setRejectReason] = useState("");
 
-  const handleRevoke = async () => {
-    if (isCancelled) return;
-    const ok = confirm("Batalkan transaksi ini? Status akan menjadi CANCELLED.");
-    if (!ok) return;
-    const reason = prompt("Alasan pembatalan (wajib diisi):", "");
-    if (!reason || reason.trim().length === 0) {
-      alert("Alasan wajib diisi.");
-      return;
-    }
+  const handleRejectConfirm = async () => {
+    const reason = rejectReason.trim();
+    if (!reason) return;
     try {
       if (type === "purchase") {
-        await revokePurchase(id, reason.trim());
+        await revokePurchase(id, reason);
       } else if (type === "sale") {
-        await revokeSale(id, reason.trim());
+        await revokeSale(id, reason);
       } else {
-        await revokeProduction(id, reason.trim());
+        await revokeProduction(id, reason);
       }
+      setOpenReject(false);
+      setRejectReason("");
       router.refresh();
     } catch (e) {
       console.error(e);
-      alert("Gagal membatalkan transaksi.");
     }
+  };
+
+  const handleApprove = async () => {
+    if (!canApprove) return;
+    try {
+      if (type === "purchase") {
+        await approvePurchase(id);
+      } else if (type === "sale") {
+        await approveSale(id);
+      }
+      setOpenApprove(false);
+      router.refresh();
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleView = () => {
+    const search = new URLSearchParams(window.location.search);
+    search.set("selected", id);
+    router.replace(`${window.location.pathname}?${search.toString()}`);
   };
 
   return (
     <div className="flex justify-end gap-2">
+      <button
+        onClick={handleView}
+        className="flex items-center gap-1 rounded-md bg-slate-100 px-2 py-1 text-[11px] text-slate-800 hover:bg-slate-200"
+      >
+        <VisibilityIcon fontSize="small" /> Lihat
+      </button>
+      {canApprove && (
+        <button
+          onClick={() => setOpenApprove(true)}
+          className="flex items-center gap-1 rounded-md bg-emerald-600 px-2 py-1 text-[11px] text-white hover:bg-emerald-700"
+        >
+          <CheckCircleIcon fontSize="small" /> Setujui
+        </button>
+      )}
       <Link
         href={canPrint ? `/admin/invoice/print?type=${type}&id=${id}` : "#"}
         aria-disabled={!canPrint}
-        className={`rounded-md px-2 py-1 text-[11px] ${
+        className={`flex items-center gap-1 rounded-md px-2 py-1 text-[11px] ${
           canPrint
             ? "bg-slate-100 text-slate-800 hover:bg-slate-200"
             : "bg-slate-50 text-slate-400 cursor-not-allowed"
         }`}
       >
-        Print Invoice
+        <PrintIcon fontSize="small" /> Print Invoice
       </Link>
-      <button
-        onClick={handleRevoke}
-        disabled={isCancelled}
-        className={`rounded-md px-2 py-1 text-[11px] ${
-          isCancelled
-            ? "bg-red-100 text-red-400 cursor-not-allowed"
-            : "bg-red-600 text-white hover:bg-red-700"
-        }`}
+      {canReject && (
+        <button
+          onClick={() => setOpenReject(true)}
+          className="flex items-center gap-1 rounded-md bg-red-600 px-2 py-1 text-[11px] text-white hover:bg-red-700"
+        >
+          <CancelIcon fontSize="small" /> Tolak
+        </button>
+      )}
+
+      <GlassDialog
+        open={openApprove}
+        title="Konfirmasi Persetujuan"
+        onClose={() => setOpenApprove(false)}
+        actions={[
+          { label: "Batal", onClick: () => setOpenApprove(false) },
+          { label: "Setujui", onClick: handleApprove, variant: "primary" },
+        ]}
       >
-        Revoke
-      </button>
+        <div className="text-sm text-slate-700">
+          Status transaksi akan diubah menjadi POSTED. Lanjutkan?
+        </div>
+      </GlassDialog>
+
+      <GlassDialog
+        open={openReject}
+        title="Konfirmasi Penolakan"
+        onClose={() => setOpenReject(false)}
+        actions={[
+          { label: "Batal", onClick: () => setOpenReject(false) },
+          { label: "Tolak", onClick: handleRejectConfirm, variant: "danger" },
+        ]}
+      >
+        <div className="flex flex-col gap-2">
+          <div className="text-sm text-slate-700">
+            Status transaksi akan diubah menjadi CANCELLED.
+          </div>
+          <input
+            type="text"
+            placeholder="Alasan penolakan (wajib)"
+            value={rejectReason}
+            onChange={(e) => setRejectReason(e.target.value)}
+            className="rounded-md border border-slate-200 px-2 py-1 text-sm"
+          />
+        </div>
+      </GlassDialog>
     </div>
   );
 }
-
