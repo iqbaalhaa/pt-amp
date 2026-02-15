@@ -485,7 +485,7 @@ export default async function AdminLedgerPage({
       status: pr.status as any,
       reference: pr.id.toString(),
       counterparty: workerNames || "-",
-      total: null,
+      total: costValue,
       stockImpact: "NEUTRAL",
       notes: pr.notes,
       itemCount,
@@ -530,65 +530,89 @@ export default async function AdminLedgerPage({
     };
   });
 
-  const pengikisanEntries: LedgerEntry[] = pengikisanList.map((p) => ({
-    id: `pengikisan-${p.id}`,
-    type: "production",
-    date: p.date.toISOString(),
-    status: "completed" as any,
-    reference: `PK-${p.id}`,
-    counterparty: "-",
-    total: null,
-    stockImpact: "NEUTRAL",
-    notes: p.notes,
-    itemCount: p.pengikisanItems.length,
-    productionCost: parseFloat(p.totalUpah?.toString() || "0"),
-    subType: "Pengikisan",
-  }));
+  const pengikisanEntries: LedgerEntry[] = pengikisanList.map((p) => {
+    const total = parseFloat(p.totalUpah?.toString() || "0");
+    const names = Array.from(
+      new Set(p.pengikisanItems.map((i) => i.nama))
+    ).join(", ");
+    return {
+      id: `pengikisan-${p.id}`,
+      type: "production",
+      date: p.date.toISOString(),
+      status: "completed" as any,
+      reference: `PK-${p.id}`,
+      counterparty: names || "-",
+      total: total > 0 ? total : null,
+      stockImpact: "NEUTRAL",
+      notes: p.notes,
+      itemCount: p.pengikisanItems.length,
+      productionCost: total,
+      subType: "Pengikisan",
+    };
+  });
 
-  const pemotonganEntries: LedgerEntry[] = pemotonganList.map((p) => ({
-    id: `pemotongan-${p.id}`,
-    type: "production",
-    date: p.date.toISOString(),
-    status: "completed" as any,
-    reference: `PM-${p.id}`,
-    counterparty: "-",
-    total: null,
-    stockImpact: "NEUTRAL",
-    notes: p.notes,
-    itemCount: p.pemotonganItems.length,
-    productionCost: parseFloat(p.totalUpah?.toString() || "0"),
-    subType: "Pemotongan",
-  }));
+  const pemotonganEntries: LedgerEntry[] = pemotonganList.map((p) => {
+    const total = parseFloat(p.totalUpah?.toString() || "0");
+    const names = Array.from(
+      new Set(p.pemotonganItems.map((i) => i.nama))
+    ).join(", ");
+    return {
+      id: `pemotongan-${p.id}`,
+      type: "production",
+      date: p.date.toISOString(),
+      status: "completed" as any,
+      reference: `PM-${p.id}`,
+      counterparty: names || "-",
+      total: total > 0 ? total : null,
+      stockImpact: "NEUTRAL",
+      notes: p.notes,
+      itemCount: p.pemotonganItems.length,
+      productionCost: total,
+      subType: "Pemotongan",
+    };
+  });
 
-  const penjemuranEntries: LedgerEntry[] = penjemuranList.map((p) => ({
-    id: `penjemuran-${p.id}`,
-    type: "production",
-    date: p.date.toISOString(),
-    status: "completed" as any,
-    reference: `PJ-${p.id}`,
-    counterparty: "-",
-    total: null,
-    stockImpact: "NEUTRAL",
-    notes: p.notes,
-    itemCount: p.penjemuranItems.length,
-    productionCost: parseFloat(p.totalUpah?.toString() || "0"),
-    subType: "Penjemuran",
-  }));
+  const penjemuranEntries: LedgerEntry[] = penjemuranList.map((p) => {
+    const total = parseFloat(p.totalUpah?.toString() || "0");
+    const names = Array.from(
+      new Set(p.penjemuranItems.map((i) => i.nama))
+    ).join(", ");
+    return {
+      id: `penjemuran-${p.id}`,
+      type: "production",
+      date: p.date.toISOString(),
+      status: "completed" as any,
+      reference: `PJ-${p.id}`,
+      counterparty: names || "-",
+      total: total > 0 ? total : null,
+      stockImpact: "NEUTRAL",
+      notes: p.notes,
+      itemCount: p.penjemuranItems.length,
+      productionCost: total,
+      subType: "Penjemuran",
+    };
+  });
 
-  const pengemasanEntries: LedgerEntry[] = pengemasanList.map((p) => ({
-    id: `pengemasan-${p.id}`,
-    type: "production",
-    date: p.date.toISOString(),
-    status: "completed" as any,
-    reference: `PG-${p.id}`,
-    counterparty: "-",
-    total: null,
-    stockImpact: "NEUTRAL",
-    notes: p.notes,
-    itemCount: p.pengemasanItems.length,
-    productionCost: parseFloat(p.totalUpah?.toString() || "0"),
-    subType: "Pengemasan",
-  }));
+  const pengemasanEntries: LedgerEntry[] = pengemasanList.map((p) => {
+    const total = parseFloat(p.totalUpah?.toString() || "0");
+    const names = Array.from(
+      new Set(p.pengemasanItems.map((i) => i.nama))
+    ).join(", ");
+    return {
+      id: `pengemasan-${p.id}`,
+      type: "production",
+      date: p.date.toISOString(),
+      status: "completed" as any,
+      reference: `PG-${p.id}`,
+      counterparty: names || "-",
+      total: total > 0 ? total : null,
+      stockImpact: "NEUTRAL",
+      notes: p.notes,
+      itemCount: p.pengemasanItems.length,
+      productionCost: total,
+      subType: "Pengemasan",
+    };
+  });
 
   const allProductions = [
     ...productionEntries,

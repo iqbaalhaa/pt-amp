@@ -75,7 +75,7 @@ export function LedgerTable({
             </th>
             {renderHeader("Tanggal", "date")}
             {renderHeader("Petugas", "createdByName")}
-            {renderHeader("Supplier/Customer", "counterparty")}
+            {renderHeader("Pihak", "counterparty")}
             {renderHeader("Total (Rp)", "total")}
             {renderHeader("Status", "status")}
             <th className="px-3 py-2 text-right">Aksi</th>
