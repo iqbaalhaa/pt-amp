@@ -54,3 +54,11 @@ export async function createPemotongan(input: PemotonganInput) {
 
 	return { success: true, id: String(pemotongan.id) };
 }
+
+export async function deletePemotongan(id: string) {
+	await prisma.pemotongan.delete({
+		where: { id: BigInt(id) },
+	});
+	revalidatePath("/admin/pemotongan");
+	revalidatePath("/admin/ledger");
+}

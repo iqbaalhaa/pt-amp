@@ -53,5 +53,13 @@
  	});
  
  	return { success: true, id: String(pengemasan.id) };
- }
+}
+
+export async function deletePengemasan(id: string) {
+	await prisma.pengemasan.delete({
+		where: { id: BigInt(id) },
+	});
+	revalidatePath("/admin/pengemasan");
+	revalidatePath("/admin/ledger");
+}
  

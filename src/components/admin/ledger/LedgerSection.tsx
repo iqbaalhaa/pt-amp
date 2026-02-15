@@ -51,24 +51,91 @@ export function LedgerSection({
     failed: number;
     errors: { row: number; reason: string }[];
   } | null>(null);
-  type MassRow = { supplier: string; item: string; unit: string; qty: number; price: number; _row: number };
+  type MassRow = {
+    date: string;
+    supplier: string;
+    item: string;
+    unit: string;
+    qty: number;
+    price: number;
+    _row: number;
+  };
   const [massRows, setMassRows] = useState<MassRow[] | null>(null);
+  const [sortColumn, setSortColumn] = useState<keyof LedgerEntry>("date");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
+
+  const sortedEntries = useMemo(() => {
+    const sorted = [...entries].sort((a, b) => {
+      const aVal = a[sortColumn];
+      const bVal = b[sortColumn];
+
+      if (aVal === bVal) return 0;
+      if (aVal === null || aVal === undefined) return 1; // nulls last
+      if (bVal === null || bVal === undefined) return -1;
+
+      if (aVal < bVal) return sortDirection === "asc" ? -1 : 1;
+      if (aVal > bVal) return sortDirection === "asc" ? 1 : -1;
+      return 0;
+    });
+    return sorted;
+  }, [entries, sortColumn, sortDirection]);
 
   const totalPages =
-    pageSize === "all" ? 1 : Math.max(1, Math.ceil(entries.length / pageSize));
+    pageSize === "all"
+      ? 1
+      : Math.max(1, Math.ceil(sortedEntries.length / pageSize));
   const startIdx = pageSize === "all" ? 0 : (page - 1) * pageSize;
   const currentEntries =
-    pageSize === "all" ? entries : entries.slice(startIdx, startIdx + pageSize);
-  const currentIds = useMemo(() => currentEntries.map((e) => e.id), [currentEntries]);
+    pageSize === "all"
+      ? sortedEntries
+      : sortedEntries.slice(startIdx, startIdx + pageSize);
+  const currentIds = useMemo(
+    () => currentEntries.map((e) => e.id),
+    [currentEntries]
+  );
+
+  const handleSort = (column: keyof LedgerEntry) => {
+    if (sortColumn === column) {
+      setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
+    } else {
+      setSortColumn(column);
+      setSortDirection("asc");
+    }
+    setPage(1);
+  };
+
   const draftSelectedIds = useMemo(
-    () => selectedIds.filter((id) => currentEntries.find((e) => e.id === id && e.status === "draft")),
+    () =>
+      selectedIds.filter((id) =>
+        currentEntries.find((e) => e.id === id && e.status === "draft")
+      ),
     [selectedIds, currentEntries]
+  );
+  const cancellableSelectedIds = useMemo(
+    () =>
+      selectedIds.filter((id) => {
+        const entry = currentEntries.find((e) => e.id === id);
+        return entry && entry.status !== "cancelled";
+      }),
+    [selectedIds, currentEntries]
+  );
+
+  const totalSum = useMemo(
+    () =>
+      currentEntries.reduce(
+        (acc, curr) =>
+          acc + (curr.status === "cancelled" ? 0 : curr.total ?? 0),
+        0
+      ),
+    [currentEntries]
   );
 
   const handlePrev = () => setPage((p) => Math.max(1, p - 1));
   const handleNext = () => setPage((p) => Math.min(totalPages, p + 1));
   const toggleId = (id: string) =>
-    setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
   const toggleAll = (ids: string[]) =>
     setSelectedIds((prev) => {
       const set = new Set(prev);
@@ -95,17 +162,48 @@ export function LedgerSection({
   };
 
   const handleRejectMass = async () => {
-    if (draftSelectedIds.length === 0 || rejectReason.trim().length === 0) return;
+    if (cancellableSelectedIds.length === 0 || rejectReason.trim().length === 0)
+      return;
     // reuse single reject from LedgerActions via server actions:
     if (type === "purchase") {
       const { revokePurchase } = await import("@/actions/purchase-actions");
-      for (const id of draftSelectedIds) await revokePurchase(id, rejectReason.trim());
+      for (const id of cancellableSelectedIds)
+        await revokePurchase(id, rejectReason.trim());
     } else if (type === "sale") {
       const { revokeSale } = await import("@/actions/sale-actions");
-      for (const id of draftSelectedIds) await revokeSale(id, rejectReason.trim());
+      for (const id of cancellableSelectedIds)
+        await revokeSale(id, rejectReason.trim());
     } else if (type === "invoice") {
       const { revokeExpense } = await import("@/actions/expense-actions");
-      for (const id of draftSelectedIds) await revokeExpense(id, rejectReason.trim());
+      for (const id of cancellableSelectedIds)
+        await revokeExpense(id, rejectReason.trim());
+    } else if (type === "production") {
+      const { revokeProduction } = await import("@/actions/production-actions");
+      for (const id of cancellableSelectedIds) {
+        if (id.startsWith("pengikisan-")) {
+          const { deletePengikisan } = await import(
+            "@/actions/pengikisan-actions"
+          );
+          await deletePengikisan(id.replace("pengikisan-", ""));
+        } else if (id.startsWith("pemotongan-")) {
+          const { deletePemotongan } = await import(
+            "@/actions/pemotongan-actions"
+          );
+          await deletePemotongan(id.replace("pemotongan-", ""));
+        } else if (id.startsWith("penjemuran-")) {
+          const { deletePenjemuran } = await import(
+            "@/actions/penjemuran-actions"
+          );
+          await deletePenjemuran(id.replace("penjemuran-", ""));
+        } else if (id.startsWith("pengemasan-")) {
+          const { deletePengemasan } = await import(
+            "@/actions/pengemasan-actions"
+          );
+          await deletePengemasan(id.replace("pengemasan-", ""));
+        } else {
+          await revokeProduction(id, rejectReason.trim());
+        }
+      }
     }
     setSelectedIds([]);
     setRejectReason("");
@@ -118,9 +216,13 @@ export function LedgerSection({
     setMassRows(null);
     try {
       const buf = await file.arrayBuffer();
-      const wb = XLSX.read(buf, { type: "array" });
+      const wb = XLSX.read(buf, { type: "array", cellDates: true });
       const sheet = wb.Sheets[wb.SheetNames[0]];
-      const rows = XLSX.utils.sheet_to_json<any[]>(sheet, { header: 1 }) as any[][];
+      const rows = XLSX.utils.sheet_to_json<any[]>(sheet, {
+        header: 1,
+        raw: false,
+        dateNF: "yyyy-mm-dd",
+      }) as any[][];
       const data = rows.slice(1); // skip header
 
       const valid: MassRow[] = [];
@@ -128,20 +230,69 @@ export function LedgerSection({
 
       data.forEach((cols, idx) => {
         const rowNum = idx + 2; // 1-based including header
-        const c0 = (cols?.[0] ?? "").toString();
-        const c1 = (cols?.[1] ?? "").toString();
-        const c2 = (cols?.[2] ?? "").toString();
-        const c3 = (cols?.[3] ?? "").toString();
-        const c4 = (cols?.[4] ?? "").toString();
-        const isBlank = [c0, c1, c2, c3, c4].every((v) => v.trim() === "");
+
+        let dateStr = "";
+        const rawC0 = cols?.[0];
+        const c0String = (rawC0 ?? "").toString();
+
+        if (rawC0 instanceof Date) {
+          try {
+            dateStr = rawC0.toISOString().slice(0, 10);
+          } catch {
+            dateStr = "";
+          }
+        } else {
+          dateStr = c0String.trim();
+
+          // Handle potential Excel serial number
+          if (
+            !isNaN(Number(dateStr)) &&
+            Number(dateStr) > 20000 &&
+            Number(dateStr) < 60000
+          ) {
+            const serial = Number(dateStr);
+            // Excel base date correction
+            const d = new Date(Math.round((serial - 25569) * 86400 * 1000));
+            dateStr = d.toISOString().slice(0, 10);
+          }
+        }
+
+        const c1 = (cols?.[1] ?? "").toString(); // Supplier
+        const c2 = (cols?.[2] ?? "").toString(); // Item
+        const c3 = (cols?.[3] ?? "").toString(); // Unit
+        const c4 = (cols?.[4] ?? "").toString(); // Qty
+        const c5 = (cols?.[5] ?? "").toString(); // Price
+        const isBlank = [c0String, c1, c2, c3, c4, c5].every(
+          (v) => v.trim() === ""
+        );
         if (isBlank) return;
-        const supplier = c0.trim().toUpperCase();
-        const item = c1.trim().toUpperCase();
-        const unit = c2.trim().toUpperCase();
-        const qtyRaw = c3;
-        const priceRaw = c4;
+
+        const supplier = c1.trim().toUpperCase();
+        const item = c2.trim().toUpperCase();
+        const unit = c3.trim().toUpperCase();
+        const qtyRaw = c4;
+        const priceRaw = c5;
         const qty = parseFloat(qtyRaw.replace(/[^0-9.\-]/g, ""));
         const price = parseFloat(priceRaw.replace(/[^0-9.\-]/g, ""));
+
+        if (!dateStr) {
+          errors.push({ row: rowNum, reason: "tanggal kosong" });
+          return;
+        }
+        const d = new Date(dateStr);
+        if (isNaN(d.getTime())) {
+          errors.push({ row: rowNum, reason: "format tanggal salah" });
+          return;
+        }
+        const year = d.getFullYear();
+        if (year < 2000 || year > 2100) {
+          errors.push({
+            row: rowNum,
+            reason: `tahun tidak valid (${year})`,
+          });
+          return;
+        }
+        const date = d.toISOString().slice(0, 10);
 
         if (!supplier) {
           errors.push({ row: rowNum, reason: "supplier kosong" });
@@ -159,7 +310,7 @@ export function LedgerSection({
           errors.push({ row: rowNum, reason: "harga harus angka" });
           return;
         }
-        valid.push({ supplier, item, unit, qty, price, _row: rowNum });
+        valid.push({ date, supplier, item, unit, qty, price, _row: rowNum });
       });
 
       setMassRows(valid);
@@ -183,16 +334,19 @@ export function LedgerSection({
     if (!massRows || massRows.length === 0) return;
     setMassBusy(true);
     try {
-      const bySupplier = new Map<string, MassRow[]>();
+      const byKey = new Map<string, MassRow[]>();
       massRows.forEach((r) => {
-        const arr = bySupplier.get(r.supplier) ?? [];
+        const key = JSON.stringify({ s: r.supplier, d: r.date });
+        const arr = byKey.get(key) ?? [];
         arr.push(r);
-        bySupplier.set(r.supplier, arr);
+        byKey.set(key, arr);
       });
-      for (const supplier of bySupplier.keys()) {
-        await quickCreateSupplier(supplier);
+      const uniqueSuppliers = new Set(massRows.map((r) => r.supplier));
+      for (const s of uniqueSuppliers) {
+        await quickCreateSupplier(s);
       }
-      for (const [supplier, items] of bySupplier.entries()) {
+      for (const [key, items] of byKey.entries()) {
+        const { s: supplier, d: date } = JSON.parse(key);
         const itemInputs = [];
         for (const r of items) {
           const it = await quickCreateItemType(r.item);
@@ -206,7 +360,7 @@ export function LedgerSection({
         }
         await createPurchase({
           supplier,
-          date: new Date().toISOString().slice(0, 10),
+          date,
           status: "draft",
           notes: null,
           items: itemInputs,
@@ -233,7 +387,10 @@ export function LedgerSection({
             Total nominal: {toCurrency(totalNominal)}
           </span>
           {extraHeaderContent}
-          {(type === "purchase" || type === "sale" || type === "invoice") && (
+          {(type === "purchase" ||
+            type === "sale" ||
+            type === "invoice" ||
+            type === "production") && (
             <div className="flex items-center gap-2">
               {type === "purchase" && (
                 <button
@@ -260,7 +417,7 @@ export function LedgerSection({
                       tfoot td { font-weight: 700; }
                     </style>
                   `;
-                  const rows = entries.map((e) => ({
+                  const rows = sortedEntries.map((e) => ({
                     Tanggal: new Date(e.date).toLocaleString(),
                     Jenis: e.type,
                     Status: e.status.toUpperCase(),
@@ -268,10 +425,36 @@ export function LedgerSection({
                     Total: e.total != null ? toCurrency(e.total) : "-",
                     Catatan: e.notes ?? "-",
                   }));
-                  const headers = ["Tanggal","Jenis","Status","Pihak","Total","Catatan"];
-                  const tableHead = `<tr>${headers.map(h => `<th>${h}</th>`).join("")}</tr>`;
-                  const tableBody = rows.map(r => `<tr>${headers.map(h => `<td>${(r as any)[h]}</td>`).join("")}</tr>`).join("");
-                  const totalSum = entries.reduce((s, e) => s + (e.total ?? 0), 0);
+                  const headers = [
+                    "Tanggal",
+                    "Jenis",
+                    "Status",
+                    "Pihak",
+                    "Total",
+                    "Catatan",
+                  ];
+                  const tableHead = `<tr>${headers
+                    .map((h) => `<th>${h}</th>`)
+                    .join("")}</tr>`;
+                  const tableBody = rows
+                    .map(
+                      (r) =>
+                        `<tr>${headers
+                          .map((h) => `<td>${(r as any)[h]}</td>`)
+                          .join("")}</tr>`
+                    )
+                    .join("");
+                  const totalSum = sortedEntries.reduce(
+                    (s, e) => s + (e.status === "cancelled" ? 0 : e.total ?? 0),
+                    0
+                  );
+                  const titleMap: Record<string, string> = {
+                    purchase: "Pembelian",
+                    sale: "Penjualan",
+                    invoice: "Invoice",
+                    production: "Produksi",
+                  };
+                  const reportTitle = titleMap[type] || "Laporan";
                   const html = `
                     <html>
                     <head>${style}</head>
@@ -279,14 +462,16 @@ export function LedgerSection({
                       <div class="header">
                         <img src="/logoAMP.png" alt="Logo" />
                         <div>
-                          <div class="title">Laporan ${type === "purchase" ? "Pembelian" : "Penjualan"}</div>
+                          <div class="title">Laporan ${reportTitle}</div>
                           <div class="meta">Dibuat: ${new Date().toLocaleString()}</div>
                         </div>
                       </div>
                       <table>
                         <thead>${tableHead}</thead>
                         <tbody>${tableBody}</tbody>
-                        <tfoot><tr><td colspan="4">Total</td><td>${toCurrency(totalSum)}</td><td></td></tr></tfoot>
+                        <tfoot><tr><td colspan="4">Total</td><td>${toCurrency(
+                          totalSum
+                        )}</td><td></td></tr></tfoot>
                       </table>
                     </body>
                     </html>
@@ -319,15 +504,15 @@ export function LedgerSection({
               </button>
               <button
                 onClick={() => setOpenReject(true)}
-                disabled={draftSelectedIds.length === 0}
+                disabled={cancellableSelectedIds.length === 0}
                 className={`flex items-center gap-1 rounded-md px-2 py-1 text-[11px] ${
-                  draftSelectedIds.length === 0
+                  cancellableSelectedIds.length === 0
                     ? "bg-red-100 text-red-400 cursor-not-allowed"
                     : "bg-red-600 text-white hover:bg-red-700"
                 }`}
               >
                 <CancelIcon fontSize="small" />
-                Tolak Massal
+                Batalkan Massal
               </button>
             </div>
           )}
@@ -340,7 +525,9 @@ export function LedgerSection({
         onToggleAll={(ids) => {
           if (ids.length === 0) {
             // unselect current page
-            setSelectedIds((prev) => prev.filter((id) => !currentIds.includes(id)));
+            setSelectedIds((prev) =>
+              prev.filter((id) => !currentIds.includes(id))
+            );
           } else {
             toggleAll(ids);
           }
@@ -349,8 +536,11 @@ export function LedgerSection({
           setSelectedEntry(entry);
           setOpenView(true);
         }}
+        sortColumn={sortColumn}
+        sortDirection={sortDirection}
+        onSort={handleSort}
       />
-      
+
       {entries.length > 0 && (
         <div className="flex items-center justify-between border-t border-slate-100 px-3 py-2">
           <div className="flex items-center gap-3">
@@ -422,13 +612,14 @@ export function LedgerSection({
         }
       >
         <div className="text-sm text-slate-700">
-          Anda akan menyetujui {draftSelectedIds.length} transaksi (status draft). Lanjutkan?
+          Anda akan menyetujui {draftSelectedIds.length} transaksi (status
+          draft). Lanjutkan?
         </div>
       </GlassDialog>
 
       <GlassDialog
         open={openReject}
-        title="Konfirmasi Penolakan"
+        title="Konfirmasi Pembatalan"
         onClose={() => setOpenReject(false)}
         actions={
           <>
@@ -442,17 +633,18 @@ export function LedgerSection({
               onClick={handleRejectMass}
               className="rounded-md bg-red-600 px-3 py-1 text-[12px] text-white hover:bg-red-700"
             >
-              Tolak
+              Proses
             </button>
           </>
         }
       >
         <div className="flex flex-col gap-2">
           <div className="text-sm text-slate-700">
-            Anda akan menolak {draftSelectedIds.length} transaksi (status draft).
+            Anda akan membatalkan {cancellableSelectedIds.length} transaksi yang
+            dipilih. Transaksi yang sudah diposting akan dikembalikan stoknya.
           </div>
           <TextField
-            label="Alasan penolakan"
+            label="Alasan pembatalan (wajib)"
             value={rejectReason}
             onChange={(e) => setRejectReason(e.target.value)}
             size="small"
@@ -480,38 +672,77 @@ export function LedgerSection({
         {selectedEntry ? (
           <div className="grid gap-3 text-sm">
             <div className="space-y-1">
-              <div><span className="font-medium">Tanggal:</span> {new Date(selectedEntry.date).toLocaleString()}</div>
-              <div><span className="font-medium">Supplier:</span> {selectedEntry.counterparty || "-"}</div>
-              <div><span className="font-medium">Catatan:</span> {selectedEntry.notes || "-"}</div>
+              <div>
+                <span className="font-medium">Tanggal:</span>{" "}
+                {new Date(selectedEntry.date).toLocaleString()}
+              </div>
+              <div>
+                <span className="font-medium">Supplier:</span>{" "}
+                {selectedEntry.counterparty || "-"}
+              </div>
+              <div>
+                <span className="font-medium">Catatan:</span>{" "}
+                {selectedEntry.notes || "-"}
+              </div>
             </div>
             <div className="overflow-auto">
               {selectedEntry.lines && selectedEntry.lines.length > 0 ? (
                 <table className="w-full border-collapse text-xs">
                   <thead>
                     <tr className="bg-slate-50 text-slate-700">
-                      <th className="border border-slate-200 px-2 py-1 text-left w-10">#</th>
-                      <th className="border border-slate-200 px-2 py-1 text-left">Barang</th>
-                      <th className="border border-slate-200 px-2 py-1 text-left">Qty - Satuan</th>
-                      <th className="border border-slate-200 px-2 py-1 text-right">Harga</th>
-                      <th className="border border-slate-200 px-2 py-1 text-right">Subtotal</th>
+                      <th className="border border-slate-200 px-2 py-1 text-left w-10">
+                        #
+                      </th>
+                      <th className="border border-slate-200 px-2 py-1 text-left">
+                        Barang
+                      </th>
+                      <th className="border border-slate-200 px-2 py-1 text-left">
+                        Qty - Satuan
+                      </th>
+                      <th className="border border-slate-200 px-2 py-1 text-right">
+                        Harga
+                      </th>
+                      <th className="border border-slate-200 px-2 py-1 text-right">
+                        Subtotal
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
                     {selectedEntry.lines.map((ln, idx) => (
                       <tr key={idx}>
-                        <td className="border border-slate-200 px-2 py-1">{idx + 1}</td>
-                        <td className="border border-slate-200 px-2 py-1">{ln.name}</td>
-                        <td className="border border-slate-200 px-2 py-1">{ln.qty} {ln.unit ?? ""}</td>
-                        <td className="border border-slate-200 px-2 py-1 text-right">{toCurrency(ln.price)}</td>
-                        <td className="border border-slate-200 px-2 py-1 text-right">{toCurrency(ln.subtotal)}</td>
+                        <td className="border border-slate-200 px-2 py-1">
+                          {idx + 1}
+                        </td>
+                        <td className="border border-slate-200 px-2 py-1">
+                          {ln.name}
+                        </td>
+                        <td className="border border-slate-200 px-2 py-1">
+                          {ln.qty} {ln.unit ?? ""}
+                        </td>
+                        <td className="border border-slate-200 px-2 py-1 text-right">
+                          {toCurrency(ln.price)}
+                        </td>
+                        <td className="border border-slate-200 px-2 py-1 text-right">
+                          {toCurrency(ln.subtotal)}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
                   <tfoot>
                     <tr>
-                      <td className="border border-slate-200 px-2 py-1 font-semibold" colSpan={4}>Total</td>
+                      <td
+                        className="border border-slate-200 px-2 py-1 font-semibold"
+                        colSpan={4}
+                      >
+                        Total
+                      </td>
                       <td className="border border-slate-200 px-2 py-1 text-right font-semibold">
-                        {toCurrency(selectedEntry.lines.reduce((s, l) => s + l.subtotal, 0))}
+                        {toCurrency(
+                          selectedEntry.lines.reduce(
+                            (s, l) => s + l.subtotal,
+                            0
+                          )
+                        )}
                       </td>
                     </tr>
                   </tfoot>
@@ -538,12 +769,24 @@ export function LedgerSection({
               <button
                 onClick={() => {
                   const ws = XLSX.utils.aoa_to_sheet([
-                    ["nama suplier", "nama barang", "satuan", "qty", "harga"],
+                    [
+                      "tanggal",
+                      "nama suplier",
+                      "nama barang",
+                      "satuan",
+                      "qty",
+                      "harga",
+                    ],
                   ]);
                   const wb = XLSX.utils.book_new();
                   XLSX.utils.book_append_sheet(wb, ws, "Template");
-                  const out = XLSX.write(wb, { type: "array", bookType: "xlsx" });
-                  const blob = new Blob([out], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+                  const out = XLSX.write(wb, {
+                    type: "array",
+                    bookType: "xlsx",
+                  });
+                  const blob = new Blob([out], {
+                    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                  });
                   const url = URL.createObjectURL(blob);
                   const a = document.createElement("a");
                   a.href = url;
@@ -580,16 +823,31 @@ export function LedgerSection({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
             <div className="rounded-md border border-slate-200 p-3">
               <div className="font-medium mb-2">Unduh Template</div>
-              <p className="text-xs text-slate-600 mb-3">Format kolom: nama suplier | nama barang | satuan | qty | harga</p>
+              <p className="text-xs text-slate-600 mb-3">
+                Format kolom: tanggal (YYYY-MM-DD) | nama suplier | nama barang
+                | satuan | qty | harga
+              </p>
               <button
                 onClick={() => {
                   const ws = XLSX.utils.aoa_to_sheet([
-                    ["nama suplier", "nama barang", "satuan", "qty", "harga"],
+                    [
+                      "tanggal",
+                      "nama suplier",
+                      "nama barang",
+                      "satuan",
+                      "qty",
+                      "harga",
+                    ],
                   ]);
                   const wb = XLSX.utils.book_new();
                   XLSX.utils.book_append_sheet(wb, ws, "Template");
-                  const out = XLSX.write(wb, { type: "array", bookType: "xlsx" });
-                  const blob = new Blob([out], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+                  const out = XLSX.write(wb, {
+                    type: "array",
+                    bookType: "xlsx",
+                  });
+                  const blob = new Blob([out], {
+                    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                  });
                   const url = URL.createObjectURL(blob);
                   const a = document.createElement("a");
                   a.href = url;
@@ -633,7 +891,9 @@ export function LedgerSection({
                 }}
               />
               <button
-                onClick={() => document.getElementById("mass-upload-input")?.click()}
+                onClick={() =>
+                  document.getElementById("mass-upload-input")?.click()
+                }
                 className="rounded-md border border-slate-300 px-3 py-1 text-[12px] hover:bg-slate-50"
               >
                 Pilih File XLSX
@@ -644,29 +904,45 @@ export function LedgerSection({
                 <div className="flex items-center justify-between mb-2">
                   <div className="text-sm font-medium">Ringkasan Upload</div>
                   <div className="text-xs text-slate-600">
-                    Berhasil: <span className="font-semibold text-emerald-700">{massReport.success}</span> &nbsp;|&nbsp; 
-                    Gagal: <span className="font-semibold text-rose-700">{massReport.failed}</span>
+                    Berhasil:{" "}
+                    <span className="font-semibold text-emerald-700">
+                      {massReport.success}
+                    </span>{" "}
+                    &nbsp;|&nbsp; Gagal:{" "}
+                    <span className="font-semibold text-rose-700">
+                      {massReport.failed}
+                    </span>
                   </div>
                 </div>
                 {massReport.errors.length > 0 ? (
                   <table className="w-full text-xs border border-slate-200">
                     <thead className="bg-slate-50">
                       <tr>
-                        <th className="border border-slate-200 px-2 py-1 w-20">Baris</th>
-                        <th className="border border-slate-200 px-2 py-1">Penyebab</th>
+                        <th className="border border-slate-200 px-2 py-1 w-20">
+                          Baris
+                        </th>
+                        <th className="border border-slate-200 px-2 py-1">
+                          Penyebab
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
                       {massReport.errors.map((e, i) => (
                         <tr key={i}>
-                          <td className="border border-slate-200 px-2 py-1 text-center">{e.row}</td>
-                          <td className="border border-slate-200 px-2 py-1">{e.reason}</td>
+                          <td className="border border-slate-200 px-2 py-1 text-center">
+                            {e.row}
+                          </td>
+                          <td className="border border-slate-200 px-2 py-1">
+                            {e.reason}
+                          </td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 ) : (
-                  <div className="text-xs text-emerald-700">Semua baris berhasil diproses.</div>
+                  <div className="text-xs text-emerald-700">
+                    Semua baris berhasil diproses.
+                  </div>
                 )}
               </div>
             )}
@@ -674,29 +950,61 @@ export function LedgerSection({
               <div className="md:col-span-2 rounded-md border border-slate-200 p-3">
                 <div className="flex items-center justify-between mb-2">
                   <div className="text-sm font-medium">Preview Data</div>
-                  <div className="text-xs text-slate-600">Total baris valid: {massRows.length}</div>
+                  <div className="text-xs text-slate-600">
+                    Total baris valid: {massRows.length}
+                  </div>
                 </div>
                 <div className="max-h-72 overflow-auto">
                   <table className="w-full text-xs border border-slate-200">
                     <thead className="bg-slate-50">
                       <tr>
-                        <th className="border border-slate-200 px-2 py-1">Supplier</th>
-                        <th className="border border-slate-200 px-2 py-1">Nama Barang</th>
-                        <th className="border border-slate-200 px-2 py-1">Satuan</th>
-                        <th className="border border-slate-200 px-2 py-1 text-right">Qty</th>
-                        <th className="border border-slate-200 px-2 py-1 text-right">Harga</th>
-                        <th className="border border-slate-200 px-2 py-1 w-20 text-center">Baris</th>
+                        <th className="border border-slate-200 px-2 py-1 w-24">
+                          Tanggal
+                        </th>
+                        <th className="border border-slate-200 px-2 py-1">
+                          Supplier
+                        </th>
+                        <th className="border border-slate-200 px-2 py-1">
+                          Nama Barang
+                        </th>
+                        <th className="border border-slate-200 px-2 py-1">
+                          Satuan
+                        </th>
+                        <th className="border border-slate-200 px-2 py-1 text-right">
+                          Qty
+                        </th>
+                        <th className="border border-slate-200 px-2 py-1 text-right">
+                          Harga
+                        </th>
+                        <th className="border border-slate-200 px-2 py-1 w-20 text-center">
+                          Baris
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
                       {massRows.map((r, i) => (
                         <tr key={i}>
-                          <td className="border border-slate-200 px-2 py-1">{r.supplier}</td>
-                          <td className="border border-slate-200 px-2 py-1">{r.item}</td>
-                          <td className="border border-slate-200 px-2 py-1">{r.unit}</td>
-                          <td className="border border-slate-200 px-2 py-1 text-right">{r.qty}</td>
-                          <td className="border border-slate-200 px-2 py-1 text-right">{r.price}</td>
-                          <td className="border border-slate-200 px-2 py-1 text-center">{r._row}</td>
+                          <td className="border border-slate-200 px-2 py-1 text-center">
+                            {r.date}
+                          </td>
+                          <td className="border border-slate-200 px-2 py-1">
+                            {r.supplier}
+                          </td>
+                          <td className="border border-slate-200 px-2 py-1">
+                            {r.item}
+                          </td>
+                          <td className="border border-slate-200 px-2 py-1">
+                            {r.unit}
+                          </td>
+                          <td className="border border-slate-200 px-2 py-1 text-right">
+                            {r.qty}
+                          </td>
+                          <td className="border border-slate-200 px-2 py-1 text-right">
+                            {r.price}
+                          </td>
+                          <td className="border border-slate-200 px-2 py-1 text-center">
+                            {r._row}
+                          </td>
                         </tr>
                       ))}
                     </tbody>

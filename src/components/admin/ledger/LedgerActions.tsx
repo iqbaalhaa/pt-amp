@@ -27,8 +27,10 @@ export function LedgerActions({ id, type, status, entry, onView }: Props) {
   const router = useRouter();
   const canPrint = type === "purchase" || type === "sale" || type === "invoice";
   const isCancelled = status === "cancelled";
-  const canApprove = status === "draft" && (type === "purchase" || type === "sale" || type === "invoice");
-  const canReject = status === "draft" && !isCancelled && (type === "purchase" || type === "sale" || type === "invoice");
+  const canApprove =
+    status === "draft" &&
+    (type === "purchase" || type === "sale" || type === "invoice");
+  const canReject = status !== "cancelled";
   const [openApprove, setOpenApprove] = useState(false);
   const [openReject, setOpenReject] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
@@ -42,7 +44,29 @@ export function LedgerActions({ id, type, status, entry, onView }: Props) {
       } else if (type === "sale") {
         await revokeSale(id, reason);
       } else if (type === "production") {
-        await revokeProduction(id, reason);
+        if (id.startsWith("pengikisan-")) {
+          const { deletePengikisan } = await import(
+            "@/actions/pengikisan-actions"
+          );
+          await deletePengikisan(id.replace("pengikisan-", ""));
+        } else if (id.startsWith("pemotongan-")) {
+          const { deletePemotongan } = await import(
+            "@/actions/pemotongan-actions"
+          );
+          await deletePemotongan(id.replace("pemotongan-", ""));
+        } else if (id.startsWith("penjemuran-")) {
+          const { deletePenjemuran } = await import(
+            "@/actions/penjemuran-actions"
+          );
+          await deletePenjemuran(id.replace("penjemuran-", ""));
+        } else if (id.startsWith("pengemasan-")) {
+          const { deletePengemasan } = await import(
+            "@/actions/pengemasan-actions"
+          );
+          await deletePengemasan(id.replace("pengemasan-", ""));
+        } else {
+          await revokeProduction(id, reason);
+        }
       } else if (type === "invoice") {
         const { revokeExpense } = await import("@/actions/expense-actions");
         await revokeExpense(id, reason);
@@ -102,7 +126,9 @@ export function LedgerActions({ id, type, status, entry, onView }: Props) {
       <Link
         href={
           canPrint
-            ? `/admin/invoice/print?type=${type === "invoice" ? "expense" : type}&id=${id}`
+            ? `/admin/invoice/print?type=${
+                type === "invoice" ? "expense" : type
+              }&id=${id}`
             : "#"
         }
         aria-disabled={!canPrint}
@@ -119,7 +145,8 @@ export function LedgerActions({ id, type, status, entry, onView }: Props) {
           onClick={() => setOpenReject(true)}
           className="flex items-center gap-1 rounded-md bg-red-600 px-2 py-1 text-[11px] text-white hover:bg-red-700"
         >
-          <CancelIcon fontSize="small" /> Tolak
+          <CancelIcon fontSize="small" />{" "}
+          {status === "draft" ? "Tolak" : "Batalkan"}
         </button>
       )}
 

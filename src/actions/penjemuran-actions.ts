@@ -66,3 +66,11 @@ export async function createPenjemuran(input: PenjemuranInput) {
 
 	return { success: true, id: String(penjemuran.id) };
 }
+
+export async function deletePenjemuran(id: string) {
+	await prisma.penjemuran.delete({
+		where: { id: BigInt(id) },
+	});
+	revalidatePath("/admin/penjemuran");
+	revalidatePath("/admin/ledger");
+}

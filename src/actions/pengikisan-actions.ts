@@ -59,3 +59,11 @@ export async function createPengikisan(input: PengikisanInput) {
 
 	return { success: true, id: String(pengikisan.id) };
 }
+
+export async function deletePengikisan(id: string) {
+	await prisma.pengikisan.delete({
+		where: { id: BigInt(id) },
+	});
+	revalidatePath("/admin/pengikisan");
+	revalidatePath("/admin/ledger");
+}
