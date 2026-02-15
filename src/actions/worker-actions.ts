@@ -21,6 +21,22 @@ export async function getWorkers(): Promise<WorkerDTO[]> {
   }));
 }
 
+export async function createWorkerByName(name: string): Promise<WorkerDTO> {
+  const worker = await prisma.worker.create({
+    data: {
+      name,
+      isActive: true,
+    },
+  });
+
+  revalidatePath("/admin/workers");
+  return {
+    id: worker.id.toString(),
+    name: worker.name,
+    isActive: worker.isActive,
+  };
+}
+
 export async function createWorker(formData: FormData) {
   const name = formData.get("name") as string;
   const isActive = formData.get("isActive") === "true";

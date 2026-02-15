@@ -141,39 +141,5 @@ export async function revokeSale(id: string, reason?: string) {
   });
   revalidatePath("/admin/sales");
   revalidatePath("/admin/ledger");
-  revalidatePath("/admin/inventory/stock");
 }
 
-export async function approveSale(id: string) {
-  // Fetch sale and items
-  const sale = await prisma.sale.findUnique({
-    where: { id: BigInt(id) },
-    include: { saleItems: true },
-  });
-  if (!sale) return { success: false };
-
-  // Update status to posted
-  const updated = await prisma.sale.update({
-    where: { id: BigInt(id) },
-    data: { status: "posted" },
-    include: { saleItems: true },
-  });
-
-  // Create stock movements (negative)
-  if (updated.saleItems.length > 0) {
-    const movements = updated.saleItems.map((item) => ({
-      itemTypeId: item.itemTypeId,
-      qty: -Number(item.qty),
-      sourceType: "sale_item",
-      sourceId: item.id,
-      displayUnit: null,
-      conversionRateUsed: null,
-    }));
-    await prisma.stockMovement.createMany({ data: movements });
-  }
-
-  revalidatePath("/admin/sales");
-  revalidatePath("/admin/ledger");
-  revalidatePath("/admin/inventory/stock");
-  return { success: true };
-}

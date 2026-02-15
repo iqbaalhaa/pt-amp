@@ -112,6 +112,11 @@ const groups: Group[] = [
         href: "/admin/pengemasan",
         icon: <InventoryIcon fontSize="small" />,
       },
+      {
+        label: "Produksi Lainnya",
+        href: "/admin/produksi-lainnya",
+        icon: <FactoryIcon fontSize="small" />,
+      },
     ],
   },
 
