@@ -17,10 +17,15 @@ import { quickCreateItemType } from "@/actions/item-type-actions";
 import { quickCreateUnit } from "@/actions/unit-actions";
 import { createPurchase } from "@/actions/purchase-actions";
 import { quickCreateSupplier } from "@/actions/supplier-actions";
+import { createPengikisan } from "@/actions/pengikisan-actions";
+import { createPemotongan } from "@/actions/pemotongan-actions";
+import { createPenjemuran } from "@/actions/penjemuran-actions";
+import { createPengemasan } from "@/actions/pengemasan-actions";
 
 type Props = {
   title: string;
   type: LedgerEntry["type"];
+  subType?: string;
   entries: LedgerEntry[];
   totalCount: number;
   totalNominal: number;
@@ -30,6 +35,7 @@ type Props = {
 export function LedgerSection({
   title,
   type,
+  subType,
   entries,
   totalCount,
   totalNominal,
@@ -51,13 +57,20 @@ export function LedgerSection({
     failed: number;
     errors: { row: number; reason: string }[];
   } | null>(null);
+
   type MassRow = {
     date: string;
-    supplier: string;
-    item: string;
-    unit: string;
-    qty: number;
-    price: number;
+    party: string; // supplier or petugas
+    item: string; // nama barang or nama pekerja
+    // Purchase specific
+    unit?: string;
+    qty?: number;
+    price?: number;
+    // Production specific
+    val1?: number; // kaKg, qty, hari, bungkus
+    val2?: number; // stikKg, lemburJam
+    rate1?: number; // upahPerKg, upahPerHari, upahPerBungkus
+    rate2?: number; // upahLemburPerJam
     _row: number;
   };
   const [massRows, setMassRows] = useState<MassRow[] | null>(null);
@@ -257,23 +270,11 @@ export function LedgerSection({
           }
         }
 
-        const c1 = (cols?.[1] ?? "").toString(); // Supplier
-        const c2 = (cols?.[2] ?? "").toString(); // Item
-        const c3 = (cols?.[3] ?? "").toString(); // Unit
-        const c4 = (cols?.[4] ?? "").toString(); // Qty
-        const c5 = (cols?.[5] ?? "").toString(); // Price
-        const isBlank = [c0String, c1, c2, c3, c4, c5].every(
-          (v) => v.trim() === ""
+        // Basic validation for blank row
+        const hasContent = cols.some(
+          (c) => c != null && c.toString().trim() !== ""
         );
-        if (isBlank) return;
-
-        const supplier = c1.trim().toUpperCase();
-        const item = c2.trim().toUpperCase();
-        const unit = c3.trim().toUpperCase();
-        const qtyRaw = c4;
-        const priceRaw = c5;
-        const qty = parseFloat(qtyRaw.replace(/[^0-9.\-]/g, ""));
-        const price = parseFloat(priceRaw.replace(/[^0-9.\-]/g, ""));
+        if (!hasContent) return;
 
         if (!dateStr) {
           errors.push({ row: rowNum, reason: "tanggal kosong" });
@@ -294,23 +295,127 @@ export function LedgerSection({
         }
         const date = d.toISOString().slice(0, 10);
 
-        if (!supplier) {
-          errors.push({ row: rowNum, reason: "supplier kosong" });
-          return;
+        if (type === "purchase") {
+          const c1 = (cols?.[1] ?? "").toString(); // Supplier
+          const c2 = (cols?.[2] ?? "").toString(); // Item
+          const c3 = (cols?.[3] ?? "").toString(); // Unit
+          const c4 = (cols?.[4] ?? "").toString(); // Qty
+          const c5 = (cols?.[5] ?? "").toString(); // Price
+
+          const supplier = c1.trim().toUpperCase();
+          const item = c2.trim().toUpperCase();
+          const unit = c3.trim().toUpperCase();
+          const qtyRaw = c4;
+          const priceRaw = c5;
+          const qty = parseFloat(qtyRaw.replace(/[^0-9.\-]/g, ""));
+          const price = parseFloat(priceRaw.replace(/[^0-9.\-]/g, ""));
+
+          if (!supplier) {
+            errors.push({ row: rowNum, reason: "supplier kosong" });
+            return;
+          }
+          if (!item) {
+            errors.push({ row: rowNum, reason: "nama barang kosong" });
+            return;
+          }
+          if (!isFinite(qty)) {
+            errors.push({ row: rowNum, reason: "qty harus angka" });
+            return;
+          }
+          if (!isFinite(price)) {
+            errors.push({ row: rowNum, reason: "harga harus angka" });
+            return;
+          }
+          valid.push({
+            date,
+            party: supplier,
+            item,
+            unit,
+            qty,
+            price,
+            _row: rowNum,
+          });
+        } else if (type === "production") {
+          const c1 = (cols?.[1] ?? "").toString(); // Nama Pekerja (Item)
+          // Petugas diisi otomatis oleh session login
+          const petugas = "";
+
+          const worker = c1.trim().toUpperCase();
+          if (!worker) {
+            errors.push({ row: rowNum, reason: "nama pekerja kosong" });
+            return;
+          }
+
+          if (subType === "Pengikisan") {
+            const ka = parseFloat(
+              (cols?.[2] ?? "0").toString().replace(/[^0-9.\-]/g, "")
+            );
+            const stik = parseFloat(
+              (cols?.[3] ?? "0").toString().replace(/[^0-9.\-]/g, "")
+            );
+            valid.push({
+              date,
+              party: petugas,
+              item: worker,
+              val1: ka,
+              val2: stik,
+              _row: rowNum,
+            });
+          } else if (subType === "Pemotongan") {
+            const qty = parseFloat(
+              (cols?.[2] ?? "0").toString().replace(/[^0-9.\-]/g, "")
+            );
+            const rate = parseFloat(
+              (cols?.[3] ?? "0").toString().replace(/[^0-9.\-]/g, "")
+            );
+            valid.push({
+              date,
+              party: petugas,
+              item: worker,
+              val1: qty,
+              rate1: rate,
+              _row: rowNum,
+            });
+          } else if (subType === "Penjemuran") {
+            const hari = parseFloat(
+              (cols?.[2] ?? "0").toString().replace(/[^0-9.\-]/g, "")
+            );
+            const lembur = parseFloat(
+              (cols?.[3] ?? "0").toString().replace(/[^0-9.\-]/g, "")
+            );
+            const rateHarian = parseFloat(
+              (cols?.[4] ?? "0").toString().replace(/[^0-9.\-]/g, "")
+            );
+            const rateLembur = parseFloat(
+              (cols?.[5] ?? "0").toString().replace(/[^0-9.\-]/g, "")
+            );
+            valid.push({
+              date,
+              party: petugas,
+              item: worker,
+              val1: hari,
+              val2: lembur,
+              rate1: rateHarian,
+              rate2: rateLembur,
+              _row: rowNum,
+            });
+          } else if (subType === "Pengemasan") {
+            const bungkus = parseFloat(
+              (cols?.[2] ?? "0").toString().replace(/[^0-9.\-]/g, "")
+            );
+            const rate = parseFloat(
+              (cols?.[3] ?? "0").toString().replace(/[^0-9.\-]/g, "")
+            );
+            valid.push({
+              date,
+              party: petugas,
+              item: worker,
+              val1: bungkus,
+              rate1: rate,
+              _row: rowNum,
+            });
+          }
         }
-        if (!item) {
-          errors.push({ row: rowNum, reason: "nama barang kosong" });
-          return;
-        }
-        if (!isFinite(qty)) {
-          errors.push({ row: rowNum, reason: "qty harus angka" });
-          return;
-        }
-        if (!isFinite(price)) {
-          errors.push({ row: rowNum, reason: "harga harus angka" });
-          return;
-        }
-        valid.push({ date, supplier, item, unit, qty, price, _row: rowNum });
       });
 
       setMassRows(valid);
@@ -334,37 +439,108 @@ export function LedgerSection({
     if (!massRows || massRows.length === 0) return;
     setMassBusy(true);
     try {
-      const byKey = new Map<string, MassRow[]>();
-      massRows.forEach((r) => {
-        const key = JSON.stringify({ s: r.supplier, d: r.date });
-        const arr = byKey.get(key) ?? [];
-        arr.push(r);
-        byKey.set(key, arr);
-      });
-      const uniqueSuppliers = new Set(massRows.map((r) => r.supplier));
-      for (const s of uniqueSuppliers) {
-        await quickCreateSupplier(s);
-      }
-      for (const [key, items] of byKey.entries()) {
-        const { s: supplier, d: date } = JSON.parse(key);
-        const itemInputs = [];
-        for (const r of items) {
-          const it = await quickCreateItemType(r.item);
-          const u = r.unit ? await quickCreateUnit(r.unit) : null;
-          itemInputs.push({
-            itemTypeId: it.id,
-            qty: String(r.qty),
-            unitId: u ? u.id : undefined,
-            unitCost: String(r.price),
+      if (type === "purchase") {
+        const byKey = new Map<string, MassRow[]>();
+        massRows.forEach((r) => {
+          const key = JSON.stringify({ s: r.party, d: r.date });
+          const arr = byKey.get(key) ?? [];
+          arr.push(r);
+          byKey.set(key, arr);
+        });
+        const uniqueSuppliers = new Set(massRows.map((r) => r.party));
+        for (const s of uniqueSuppliers) {
+          await quickCreateSupplier(s);
+        }
+        for (const [key, items] of byKey.entries()) {
+          const { s: supplier, d: date } = JSON.parse(key);
+          const itemInputs = [];
+          for (const r of items) {
+            const it = await quickCreateItemType(r.item);
+            const u = r.unit ? await quickCreateUnit(r.unit) : null;
+            itemInputs.push({
+              itemTypeId: it.id,
+              qty: String(r.qty),
+              unitId: u ? u.id : undefined,
+              unitCost: String(r.price),
+            });
+          }
+          await createPurchase({
+            supplier,
+            date,
+            status: "draft",
+            notes: null,
+            items: itemInputs,
           });
         }
-        await createPurchase({
-          supplier,
-          date,
-          status: "draft",
-          notes: null,
-          items: itemInputs,
+      } else if (type === "production") {
+        // Group by date + petugas + rates
+        // Construct key based on subType requirements
+        const byKey = new Map<string, MassRow[]>();
+
+        massRows.forEach((r) => {
+          let keyObj: any = { p: r.party, d: r.date };
+          if (subType === "Pemotongan" || subType === "Pengemasan") {
+            keyObj.r1 = r.rate1;
+          } else if (subType === "Penjemuran") {
+            keyObj.r1 = r.rate1;
+            keyObj.r2 = r.rate2;
+          }
+          // Pengikisan no rates needed in key (constants)
+
+          const key = JSON.stringify(keyObj);
+          const arr = byKey.get(key) ?? [];
+          arr.push(r);
+          byKey.set(key, arr);
         });
+
+        for (const [key, items] of byKey.entries()) {
+          const keyObj = JSON.parse(key);
+          const { p: petugas, d: date } = keyObj;
+
+          if (subType === "Pengikisan") {
+            await createPengikisan({
+              date,
+              petugas: petugas || null,
+              items: items.map((r) => ({
+                nama: r.item,
+                kaKg: String(r.val1 || 0),
+                stikKg: String(r.val2 || 0),
+              })),
+            });
+          } else if (subType === "Pemotongan") {
+            await createPemotongan({
+              date,
+              petugas: petugas || null,
+              upahPerKg: String(keyObj.r1 || 0),
+              items: items.map((r) => ({
+                nama: r.item,
+                qty: String(r.val1 || 0),
+              })),
+            });
+          } else if (subType === "Penjemuran") {
+            await createPenjemuran({
+              date,
+              petugas: petugas || null,
+              upahPerHari: String(keyObj.r1 || 0),
+              upahLemburPerJam: String(keyObj.r2 || 0),
+              items: items.map((r) => ({
+                nama: r.item,
+                hari: String(r.val1 || 0),
+                lemburJam: String(r.val2 || 0),
+              })),
+            });
+          } else if (subType === "Pengemasan") {
+            await createPengemasan({
+              date,
+              petugas: petugas || null,
+              upahPerBungkus: String(keyObj.r1 || 0),
+              items: items.map((r) => ({
+                nama: r.item,
+                bungkus: String(r.val1 || 0),
+              })),
+            });
+          }
+        }
       }
       setOpenMass(false);
       setMassRows(null);
@@ -392,7 +568,7 @@ export function LedgerSection({
             type === "invoice" ||
             type === "production") && (
             <div className="flex items-center gap-2">
-              {type === "purchase" && (
+              {(type === "purchase" || type === "production") && (
                 <button
                   onClick={() => setOpenMass(true)}
                   className="flex items-center gap-1 rounded-md bg-indigo-600 px-2 py-1 text-[11px] text-white hover:bg-indigo-700"
@@ -757,10 +933,12 @@ export function LedgerSection({
         )}
       </GlassDialog>
 
-      {type === "purchase" && (
+      {(type === "purchase" || type === "production") && (
         <GlassDialog
           open={openMass}
-          title="Input Massal Pembelian"
+          title={`Input Massal ${
+            type === "purchase" ? "Pembelian" : `Produksi (${subType})`
+          }`}
           onClose={() => !massBusy && setOpenMass(false)}
           fullWidth
           maxWidth="lg"
@@ -768,16 +946,50 @@ export function LedgerSection({
             <>
               <button
                 onClick={() => {
-                  const ws = XLSX.utils.aoa_to_sheet([
-                    [
+                  let headers: string[] = [];
+                  if (type === "purchase") {
+                    headers = [
                       "tanggal",
                       "nama suplier",
                       "nama barang",
                       "satuan",
                       "qty",
                       "harga",
-                    ],
-                  ]);
+                    ];
+                  } else if (type === "production") {
+                    if (subType === "Pengikisan")
+                      headers = [
+                        "tanggal",
+                        "nama pekerja",
+                        "ka (kg)",
+                        "stik (kg)",
+                      ];
+                    else if (subType === "Pemotongan")
+                      headers = [
+                        "tanggal",
+                        "nama pekerja",
+                        "qty (kg)",
+                        "upah per kg",
+                      ];
+                    else if (subType === "Penjemuran")
+                      headers = [
+                        "tanggal",
+                        "nama pekerja",
+                        "hari",
+                        "lembur (jam)",
+                        "upah harian",
+                        "upah lembur",
+                      ];
+                    else if (subType === "Pengemasan")
+                      headers = [
+                        "tanggal",
+                        "nama pekerja",
+                        "bungkus",
+                        "upah per bungkus",
+                      ];
+                  }
+
+                  const ws = XLSX.utils.aoa_to_sheet([headers]);
                   const wb = XLSX.utils.book_new();
                   XLSX.utils.book_append_sheet(wb, ws, "Template");
                   const out = XLSX.write(wb, {
@@ -790,7 +1002,7 @@ export function LedgerSection({
                   const url = URL.createObjectURL(blob);
                   const a = document.createElement("a");
                   a.href = url;
-                  a.download = "template-pembelian.xlsx";
+                  a.download = `template-${type}-${subType || "purchase"}.xlsx`;
                   a.click();
                   URL.revokeObjectURL(url);
                 }}
@@ -824,41 +1036,10 @@ export function LedgerSection({
             <div className="rounded-md border border-slate-200 p-3">
               <div className="font-medium mb-2">Unduh Template</div>
               <p className="text-xs text-slate-600 mb-3">
-                Format kolom: tanggal (YYYY-MM-DD) | nama suplier | nama barang
-                | satuan | qty | harga
+                Gunakan template ini untuk mengisi data. Jangan ubah urutan
+                kolom. Tanggal harus format YYYY-MM-DD atau format tanggal
+                Excel.
               </p>
-              <button
-                onClick={() => {
-                  const ws = XLSX.utils.aoa_to_sheet([
-                    [
-                      "tanggal",
-                      "nama suplier",
-                      "nama barang",
-                      "satuan",
-                      "qty",
-                      "harga",
-                    ],
-                  ]);
-                  const wb = XLSX.utils.book_new();
-                  XLSX.utils.book_append_sheet(wb, ws, "Template");
-                  const out = XLSX.write(wb, {
-                    type: "array",
-                    bookType: "xlsx",
-                  });
-                  const blob = new Blob([out], {
-                    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                  });
-                  const url = URL.createObjectURL(blob);
-                  const a = document.createElement("a");
-                  a.href = url;
-                  a.download = "template-pembelian.xlsx";
-                  a.click();
-                  URL.revokeObjectURL(url);
-                }}
-                className="rounded-md bg-blue-600 px-3 py-1 text-[12px] text-white hover:bg-blue-700"
-              >
-                Download Template (XLSX)
-              </button>
             </div>
             <div
               className={`rounded-md border border-dashed p-3 flex flex-col items-center justify-center gap-2 transition-colors ${
@@ -962,20 +1143,70 @@ export function LedgerSection({
                           Tanggal
                         </th>
                         <th className="border border-slate-200 px-2 py-1">
-                          Supplier
+                          {type === "purchase" ? "Supplier" : "Petugas"}
                         </th>
                         <th className="border border-slate-200 px-2 py-1">
-                          Nama Barang
+                          {type === "purchase" ? "Nama Barang" : "Nama Pekerja"}
                         </th>
-                        <th className="border border-slate-200 px-2 py-1">
-                          Satuan
-                        </th>
-                        <th className="border border-slate-200 px-2 py-1 text-right">
-                          Qty
-                        </th>
-                        <th className="border border-slate-200 px-2 py-1 text-right">
-                          Harga
-                        </th>
+                        {type === "purchase" && (
+                          <>
+                            <th className="border border-slate-200 px-2 py-1">
+                              Satuan
+                            </th>
+                            <th className="border border-slate-200 px-2 py-1 text-right">
+                              Qty
+                            </th>
+                            <th className="border border-slate-200 px-2 py-1 text-right">
+                              Harga
+                            </th>
+                          </>
+                        )}
+                        {subType === "Pengikisan" && (
+                          <>
+                            <th className="border border-slate-200 px-2 py-1 text-right">
+                              KA (kg)
+                            </th>
+                            <th className="border border-slate-200 px-2 py-1 text-right">
+                              Stik (kg)
+                            </th>
+                          </>
+                        )}
+                        {subType === "Pemotongan" && (
+                          <>
+                            <th className="border border-slate-200 px-2 py-1 text-right">
+                              Qty (kg)
+                            </th>
+                            <th className="border border-slate-200 px-2 py-1 text-right">
+                              Upah/kg
+                            </th>
+                          </>
+                        )}
+                        {subType === "Penjemuran" && (
+                          <>
+                            <th className="border border-slate-200 px-2 py-1 text-right">
+                              Hari
+                            </th>
+                            <th className="border border-slate-200 px-2 py-1 text-right">
+                              Lembur (jam)
+                            </th>
+                            <th className="border border-slate-200 px-2 py-1 text-right">
+                              Upah Harian
+                            </th>
+                            <th className="border border-slate-200 px-2 py-1 text-right">
+                              Upah Lembur
+                            </th>
+                          </>
+                        )}
+                        {subType === "Pengemasan" && (
+                          <>
+                            <th className="border border-slate-200 px-2 py-1 text-right">
+                              Bungkus
+                            </th>
+                            <th className="border border-slate-200 px-2 py-1 text-right">
+                              Upah/Bungkus
+                            </th>
+                          </>
+                        )}
                         <th className="border border-slate-200 px-2 py-1 w-20 text-center">
                           Baris
                         </th>
@@ -988,20 +1219,70 @@ export function LedgerSection({
                             {r.date}
                           </td>
                           <td className="border border-slate-200 px-2 py-1">
-                            {r.supplier}
+                            {r.party}
                           </td>
                           <td className="border border-slate-200 px-2 py-1">
                             {r.item}
                           </td>
-                          <td className="border border-slate-200 px-2 py-1">
-                            {r.unit}
-                          </td>
-                          <td className="border border-slate-200 px-2 py-1 text-right">
-                            {r.qty}
-                          </td>
-                          <td className="border border-slate-200 px-2 py-1 text-right">
-                            {r.price}
-                          </td>
+                          {type === "purchase" && (
+                            <>
+                              <td className="border border-slate-200 px-2 py-1">
+                                {r.unit}
+                              </td>
+                              <td className="border border-slate-200 px-2 py-1 text-right">
+                                {r.qty}
+                              </td>
+                              <td className="border border-slate-200 px-2 py-1 text-right">
+                                {r.price}
+                              </td>
+                            </>
+                          )}
+                          {subType === "Pengikisan" && (
+                            <>
+                              <td className="border border-slate-200 px-2 py-1 text-right">
+                                {r.val1}
+                              </td>
+                              <td className="border border-slate-200 px-2 py-1 text-right">
+                                {r.val2}
+                              </td>
+                            </>
+                          )}
+                          {subType === "Pemotongan" && (
+                            <>
+                              <td className="border border-slate-200 px-2 py-1 text-right">
+                                {r.val1}
+                              </td>
+                              <td className="border border-slate-200 px-2 py-1 text-right">
+                                {r.rate1}
+                              </td>
+                            </>
+                          )}
+                          {subType === "Penjemuran" && (
+                            <>
+                              <td className="border border-slate-200 px-2 py-1 text-right">
+                                {r.val1}
+                              </td>
+                              <td className="border border-slate-200 px-2 py-1 text-right">
+                                {r.val2}
+                              </td>
+                              <td className="border border-slate-200 px-2 py-1 text-right">
+                                {r.rate1}
+                              </td>
+                              <td className="border border-slate-200 px-2 py-1 text-right">
+                                {r.rate2}
+                              </td>
+                            </>
+                          )}
+                          {subType === "Pengemasan" && (
+                            <>
+                              <td className="border border-slate-200 px-2 py-1 text-right">
+                                {r.val1}
+                              </td>
+                              <td className="border border-slate-200 px-2 py-1 text-right">
+                                {r.rate1}
+                              </td>
+                            </>
+                          )}
                           <td className="border border-slate-200 px-2 py-1 text-center">
                             {r._row}
                           </td>

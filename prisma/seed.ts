@@ -466,6 +466,7 @@ async function seedTransactions(ctx: {
     await prisma.pengikisan.create({
       data: {
         date: new Date("2026-02-07"),
+        petugas: "Budi Santoso",
         notes: "Pengikisan contoh",
         totalUpah: "58250.00",
         pengikisanItems: {
@@ -555,6 +556,7 @@ async function seedTransactions(ctx: {
     await prisma.pemotongan.create({
       data: {
         date: new Date("2026-02-10"),
+        petugas: "Rian Pratama",
         notes: "Pemotongan contoh",
         upahPerKg: "1800.00",
         totalUpah: "54000.00",
@@ -571,6 +573,29 @@ async function seedTransactions(ctx: {
               qty: "10.0000",
               upahPerKg: "1800.00",
               total: "18000.00",
+            },
+          ],
+        },
+      },
+    });
+  }
+
+  if ((await prisma.produksiLainnya.count()) === 0) {
+    await prisma.produksiLainnya.create({
+      data: {
+        date: new Date("2026-02-11"),
+        petugas: "Budi Santoso",
+        notes: "Produksi Lainnya contoh",
+        totalBiaya: "50000.00",
+        produksiLainnyaItems: {
+          create: [
+            {
+              namaPekerja: "Pak Bejo",
+              namaPekerjaan: "Angkut Barang",
+              upah: "10000.00",
+              qty: "5.0000",
+              satuan: "rit",
+              total: "50000.00",
             },
           ],
         },

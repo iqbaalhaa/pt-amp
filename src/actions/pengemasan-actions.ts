@@ -2,6 +2,8 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 
 export type PengemasanItemInput = {
   nama: string;
@@ -10,12 +12,16 @@ export type PengemasanItemInput = {
 
 export type PengemasanInput = {
   date: string;
+  petugas?: string | null;
   notes?: string | null;
   upahPerBungkus: string;
   items: PengemasanItemInput[];
 };
 
 export async function createPengemasan(input: PengemasanInput) {
+  const session = await auth.api.getSession({ headers: await headers() });
+  const currentUserName = session?.user.name ?? null;
+
   const upahPerBungkus = parseFloat(input.upahPerBungkus || "0");
 
   const cleanedItems = input.items
@@ -40,6 +46,7 @@ export async function createPengemasan(input: PengemasanInput) {
   const pengemasan = await prisma.pengemasan.create({
     data: {
       date: new Date(input.date),
+      petugas: currentUserName || input.petugas,
       notes: input.notes ?? null,
       totalUpah: totalUpah.toString(),
       upahPerBungkus: upahPerBungkus || null,
@@ -67,6 +74,7 @@ export async function getPengemasanHistory() {
   return data.map((item) => ({
     id: String(item.id),
     date: item.date,
+    petugas: item.petugas,
     notes: item.notes,
     totalUpah: parseFloat(item.totalUpah || "0"),
     items: item.pengemasanItems.map((sub) => ({

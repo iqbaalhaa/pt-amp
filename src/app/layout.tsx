@@ -27,7 +27,7 @@ export default function RootLayout({
 		return (
 			<html lang="id" suppressHydrationWarning>
 			<body className={`${plusJakarta.variable} ${geistMono.variable}`} suppressHydrationWarning>
-				<AppRouterCacheProvider options={{ enableCssLayer: true }}>
+				<AppRouterCacheProvider>
 					{children}
 				</AppRouterCacheProvider>
 			</body>

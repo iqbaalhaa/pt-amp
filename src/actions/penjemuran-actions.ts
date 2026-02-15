@@ -2,6 +2,8 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 
 export type PenjemuranItemInput = {
   nama: string;
@@ -11,6 +13,7 @@ export type PenjemuranItemInput = {
 
 export type PenjemuranInput = {
   date: string;
+  petugas?: string | null;
   notes?: string | null;
   upahPerHari: string;
   upahLemburPerJam: string;
@@ -18,6 +21,9 @@ export type PenjemuranInput = {
 };
 
 export async function createPenjemuran(input: PenjemuranInput) {
+  const session = await auth.api.getSession({ headers: await headers() });
+  const currentUserName = session?.user.name ?? null;
+
   const upahPerHari = parseFloat(input.upahPerHari || "0");
   const upahLemburPerJam = parseFloat(input.upahLemburPerJam || "0");
 
@@ -51,6 +57,7 @@ export async function createPenjemuran(input: PenjemuranInput) {
   const penjemuran = await prisma.penjemuran.create({
     data: {
       date: new Date(input.date),
+      petugas: currentUserName || input.petugas,
       notes: input.notes ?? null,
       totalUpah: totalUpah.toString(),
       upahPerHari: upahPerHari || null,
@@ -79,6 +86,7 @@ export async function getPenjemuranHistory() {
   return data.map((item) => ({
     id: String(item.id),
     date: item.date,
+    petugas: item.petugas,
     notes: item.notes,
     totalUpah: parseFloat(item.totalUpah || "0"),
     items: item.penjemuranItems.map((sub) => ({

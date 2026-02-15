@@ -2,6 +2,8 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 
 export type PemotonganItemInput = {
   nama: string;
@@ -10,12 +12,16 @@ export type PemotonganItemInput = {
 
 export type PemotonganInput = {
   date: string;
+  petugas?: string | null;
   notes?: string | null;
   upahPerKg: string;
   items: PemotonganItemInput[];
 };
 
 export async function createPemotongan(input: PemotonganInput) {
+  const session = await auth.api.getSession({ headers: await headers() });
+  const currentUserName = session?.user.name ?? null;
+
   const upahPerKg = parseFloat(input.upahPerKg || "0");
 
   const cleanedItems = input.items
@@ -40,6 +46,7 @@ export async function createPemotongan(input: PemotonganInput) {
   const pemotongan = await prisma.pemotongan.create({
     data: {
       date: new Date(input.date),
+      petugas: currentUserName || input.petugas,
       notes: input.notes ?? null,
       totalUpah: totalUpah.toString(),
       upahPerKg: upahPerKg || null,
@@ -67,6 +74,7 @@ export async function getPemotonganHistory() {
   return data.map((item) => ({
     id: String(item.id),
     date: item.date,
+    petugas: item.petugas,
     notes: item.notes,
     totalUpah: parseFloat(item.totalUpah || "0"),
     items: item.pemotonganItems.map((sub) => ({

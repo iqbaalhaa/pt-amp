@@ -817,6 +817,7 @@ export default async function AdminLedgerPage({
             <LedgerSection
               title={type}
               type="production"
+              subType={type}
               entries={items}
               totalCount={count}
               totalNominal={nominal}

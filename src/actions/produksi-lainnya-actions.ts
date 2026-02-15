@@ -1,6 +1,8 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 
 export type ProduksiLainnyaItemInput = {
   namaPekerja: string;
@@ -12,11 +14,15 @@ export type ProduksiLainnyaItemInput = {
 
 export type ProduksiLainnyaInput = {
   date: string;
+  petugas?: string | null;
   notes?: string | null;
   items: ProduksiLainnyaItemInput[];
 };
 
 export async function createProduksiLainnya(input: ProduksiLainnyaInput) {
+  const session = await auth.api.getSession({ headers: await headers() });
+  const currentUserName = session?.user.name ?? null;
+
   const cleanedItems = input.items
     .map((item) => {
       const qty = parseFloat(item.qty || "0");
@@ -41,6 +47,7 @@ export async function createProduksiLainnya(input: ProduksiLainnyaInput) {
   const produksiLainnya = await prisma.produksiLainnya.create({
     data: {
       date: new Date(input.date),
+      petugas: currentUserName || input.petugas,
       notes: input.notes ?? null,
       totalBiaya: totalBiaya,
       ...(cleanedItems.length > 0
@@ -67,6 +74,7 @@ export async function getProduksiLainnyaHistory() {
   return history.map((item) => ({
     id: String(item.id),
     date: item.date,
+    petugas: item.petugas,
     notes: item.notes,
     totalBiaya: Number(item.totalBiaya),
     items: item.produksiLainnyaItems.map((i) => ({

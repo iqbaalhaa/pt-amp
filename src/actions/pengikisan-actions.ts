@@ -2,6 +2,8 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 
 export type PengikisanItemInput = {
   nama: string;
@@ -11,6 +13,7 @@ export type PengikisanItemInput = {
 
 export type PengikisanInput = {
   date: string;
+  petugas?: string | null;
   notes?: string | null;
   items: PengikisanItemInput[];
 };
@@ -19,6 +22,9 @@ const UPAH_KA = 1000;
 const UPAH_STIK = 1200;
 
 export async function createPengikisan(input: PengikisanInput) {
+  const session = await auth.api.getSession({ headers: await headers() });
+  const currentUserName = session?.user.name ?? null;
+
   const cleanedItems = input.items
     .map((item) => {
       const ka = parseFloat(item.kaKg || "0");
@@ -46,6 +52,7 @@ export async function createPengikisan(input: PengikisanInput) {
   const pengikisan = await prisma.pengikisan.create({
     data: {
       date: new Date(input.date),
+      petugas: currentUserName || input.petugas,
       notes: input.notes ?? null,
       totalUpah: totalUpah.toString(),
       ...(cleanedItems.length > 0
@@ -72,6 +79,7 @@ export async function getPengikisanHistory() {
   return data.map((item) => ({
     id: String(item.id),
     date: item.date,
+    petugas: item.petugas,
     notes: item.notes,
     totalUpah: parseFloat(item.totalUpah || "0"),
     items: item.pengikisanItems.map((sub) => ({

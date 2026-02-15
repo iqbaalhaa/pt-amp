@@ -376,6 +376,7 @@ model StockMovement {
 model Pengikisan {
   id        BigInt            @id @default(autoincrement())
   date      DateTime          @db.Date
+  petugas   String?
   notes     String?
   totalUpah Decimal?          @db.Decimal(14, 2) @map("total_upah")
 
@@ -432,6 +433,7 @@ model PenjemuranItem {
 model Pengemasan {
   id        BigInt   @id @default(autoincrement())
   date      DateTime @db.Date
+  petugas   String?
   notes     String?
   totalUpah Decimal? @db.Decimal(14, 2) @map("total_upah")
   upahPerBungkus Decimal? @db.Decimal(14, 2) @map("upah_per_bungkus")
@@ -458,6 +460,7 @@ model PengemasanItem {
 model Pemotongan {
   id        BigInt            @id @default(autoincrement())
   date      DateTime          @db.Date
+  petugas   String?
   notes     String?
   totalUpah Decimal?          @db.Decimal(14, 2) @map("total_upah")
   upahPerKg Decimal?          @db.Decimal(14, 2) @map("upah_per_kg")
@@ -484,6 +487,7 @@ model PemotonganItem {
 model ProduksiLainnya {
   id         BigInt   @id @default(autoincrement())
   date       DateTime @db.Date
+  petugas    String?
   notes      String?
   totalBiaya Decimal? @db.Decimal(14, 2) @map("total_biaya")
 
