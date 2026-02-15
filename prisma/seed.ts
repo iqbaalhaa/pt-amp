@@ -466,7 +466,7 @@ async function seedTransactions(ctx: {
     await prisma.pengikisan.create({
       data: {
         date: new Date("2026-02-07"),
-        petugas: "Budi Santoso",
+        namaPetugas: "Budi Santoso",
         notes: "Pengikisan contoh",
         totalUpah: "58250.00",
         pengikisanItems: {
@@ -497,6 +497,7 @@ async function seedTransactions(ctx: {
     await prisma.penjemuran.create({
       data: {
         date: new Date("2026-02-08"),
+        petugas: "Siti Aulia",
         notes: "Penjemuran contoh",
         upahPerHari: "75000.00",
         upahLemburPerJam: "15000.00",
@@ -529,6 +530,7 @@ async function seedTransactions(ctx: {
     await prisma.pengemasan.create({
       data: {
         date: new Date("2026-02-09"),
+        petugas: "Dewi Lestari",
         notes: "Pengemasan contoh",
         upahPerBungkus: "250.00",
         totalUpah: "50000.00",

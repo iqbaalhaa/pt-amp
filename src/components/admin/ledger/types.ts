@@ -1,4 +1,8 @@
-export type LedgerEntryType = "purchase" | "sale" | "production" | "invoice";
+export type LedgerEntryType =
+  | "purchase"
+  | "sale"
+  | "production"
+  | "pengeluaran";
 
 export type LedgerStatus = "draft" | "posted" | "cancelled";
 
@@ -10,6 +14,13 @@ export type LedgerLine = {
   unit?: string | null;
   price: number;
   subtotal: number;
+  // Production specific fields
+  kaKg?: number;
+  stikKg?: number;
+  pemotonganQty?: number; // Kg
+  penjemuranHari?: number;
+  penjemuranLembur?: number; // Jam
+  pengemasanBungkus?: number;
 };
 
 export type LedgerEntry = {

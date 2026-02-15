@@ -63,7 +63,7 @@ const groups: Group[] = [
         icon: <ReceiptLongIcon fontSize="small" />,
       },
       {
-        label: "Invoice Expense",
+        label: "Pengeluaran",
         href: "/admin/expenses",
         icon: <RequestQuoteIcon fontSize="small" />,
       },
@@ -119,7 +119,6 @@ const groups: Group[] = [
       },
     ],
   },
-
 
   {
     title: "Master Data",
@@ -351,13 +350,21 @@ export default function GlassSidebar({
                     <AnimatePresence initial={false}>
                       {(isExpanded || collapsed) && (
                         <motion.div
-                          initial={collapsed ? { height: "auto" } : { height: 0, opacity: 0 }}
+                          initial={
+                            collapsed
+                              ? { height: "auto" }
+                              : { height: 0, opacity: 0 }
+                          }
                           animate={{ height: "auto", opacity: 1 }}
                           exit={{ height: 0, opacity: 0 }}
                           transition={{ duration: 0.2, ease: "easeInOut" }}
                           className="overflow-hidden"
                         >
-                          <div className={`flex flex-col gap-1 mt-1 ${!collapsed || isMobile ? "pl-6" : ""}`}>
+                          <div
+                            className={`flex flex-col gap-1 mt-1 ${
+                              !collapsed || isMobile ? "pl-6" : ""
+                            }`}
+                          >
                             {g.items.map((it) => {
                               const isItemActive = isActive(it.href);
                               return (
@@ -385,7 +392,10 @@ export default function GlassSidebar({
                                         initial={{ opacity: 0, x: -6 }}
                                         animate={{ opacity: 1, x: 0 }}
                                         exit={{ opacity: 0, x: -6 }}
-                                        transition={{ duration: 0.2, ease: "easeOut" }}
+                                        transition={{
+                                          duration: 0.2,
+                                          ease: "easeOut",
+                                        }}
                                         className="text-xs font-semibold"
                                       >
                                         {it.label}

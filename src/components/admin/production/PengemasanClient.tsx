@@ -69,9 +69,7 @@ function cx(...classes: Array<string | false | null | undefined>) {
 }
 
 export default function PengemasanClient() {
-  const [rows, setRows] = useState<Row[]>([
-    { id: 1, nama: "", bungkus: 0 },
-  ]);
+  const [rows, setRows] = useState<Row[]>([{ id: 1, nama: "", bungkus: 0 }]);
 
   const [date, setDate] = useState(
     () => new Date().toISOString().split("T")[0]
@@ -149,10 +147,7 @@ export default function PengemasanClient() {
   );
 
   const activeRows = useMemo(
-    () =>
-      rows.filter(
-        (r) => r.nama || r.bungkus > 0
-      ),
+    () => rows.filter((r) => r.nama || r.bungkus > 0),
     [rows]
   );
 
@@ -174,12 +169,12 @@ export default function PengemasanClient() {
       return;
     }
 
-    const validRows = rows.filter(
-      (r) => r.nama && r.bungkus > 0
-    );
+    const validRows = rows.filter((r) => r.nama && r.bungkus > 0);
 
     if (validRows.length === 0) {
-      alert("Mohon isi minimal satu baris data dengan lengkap (Pekerja, Bungkus)");
+      alert(
+        "Mohon isi minimal satu baris data dengan lengkap (Pekerja, Bungkus)"
+      );
       return;
     }
 
@@ -353,6 +348,7 @@ export default function PengemasanClient() {
         subtitle="Catat hasil kerja pengemasan (bungkus)."
         actions={
           <>
+            <PengemasanBulkImport />
             <Link
               href="/admin/pengemasan/riwayat"
               className={cx(
@@ -443,10 +439,14 @@ export default function PengemasanClient() {
               <TextField
                 type="number"
                 value={upahPerBungkus}
-                onChange={(e) => setUpahPerBungkus(parseFloat(e.target.value) || 0)}
+                onChange={(e) =>
+                  setUpahPerBungkus(parseFloat(e.target.value) || 0)
+                }
                 sx={muiCompactInputSx}
                 InputProps={{
-                  startAdornment: <InputAdornment position="start">Rp</InputAdornment>,
+                  startAdornment: (
+                    <InputAdornment position="start">Rp</InputAdornment>
+                  ),
                 }}
               />
             </div>
@@ -515,9 +515,8 @@ export default function PengemasanClient() {
                       <td className="px-3 py-2">
                         <Autocomplete
                           value={
-                            workerOptions.find(
-                              (w) => w.name === row.nama
-                            ) || null
+                            workerOptions.find((w) => w.name === row.nama) ||
+                            null
                           }
                           onChange={async (_event, newValue) => {
                             if (newValue && (newValue as any).inputValue) {
@@ -531,11 +530,7 @@ export default function PengemasanClient() {
                                     ...prev,
                                     newWorker,
                                   ]);
-                                  handleChange(
-                                    row.id,
-                                    "nama",
-                                    newWorker.name
-                                  );
+                                  handleChange(row.id, "nama", newWorker.name);
                                 }
                               } catch (err) {
                                 console.error(err);
@@ -735,8 +730,8 @@ export default function PengemasanClient() {
             Data Pengemasan Tersimpan!
           </h3>
           <p className="text-black/60 text-sm mb-6 max-w-xs">
-            Data pengemasan berhasil disimpan ke database. Anda dapat
-            mengunduh PDF sebagai arsip.
+            Data pengemasan berhasil disimpan ke database. Anda dapat mengunduh
+            PDF sebagai arsip.
           </p>
           <div className="bg-blue-50 text-blue-800 text-xs px-4 py-3 rounded-lg w-full text-left">
             <p className="font-semibold mb-1">ID Transaksi:</p>

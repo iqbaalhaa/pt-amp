@@ -28,6 +28,7 @@ import SpaRoundedIcon from "@mui/icons-material/SpaRounded";
 import GlassButton from "@/components/ui/GlassButton";
 import PageHeader from "@/components/ui/PageHeader";
 import SafeModal from "@/components/ui/SafeModal";
+import PengikisanBulkImport from "./PengikisanBulkImport";
 import { createPengikisan } from "@/actions/pengikisan-actions";
 import {
   getWorkers,
@@ -153,10 +154,7 @@ export default function PengikisanClient() {
   );
 
   const activeRows = useMemo(
-    () =>
-      rows.filter(
-        (r) => r.nama || r.kaKg > 0 || r.stikKg > 0
-      ),
+    () => rows.filter((r) => r.nama || r.kaKg > 0 || r.stikKg > 0),
     [rows]
   );
 
@@ -184,7 +182,9 @@ export default function PengikisanClient() {
     );
 
     if (validRows.length === 0) {
-      alert("Mohon isi minimal satu baris data dengan lengkap (Pekerja, KA/Stik)");
+      alert(
+        "Mohon isi minimal satu baris data dengan lengkap (Pekerja, KA/Stik)"
+      );
       return;
     }
 
@@ -361,6 +361,7 @@ export default function PengikisanClient() {
         subtitle="Catat hasil kerja pengikisan (KA & Stik)."
         actions={
           <>
+            <PengikisanBulkImport />
             <Link
               href="/admin/pengikisan/riwayat"
               className={cx(
@@ -513,9 +514,8 @@ export default function PengikisanClient() {
                       <td className="px-3 py-2">
                         <Autocomplete
                           value={
-                            workerOptions.find(
-                              (w) => w.name === row.nama
-                            ) || null
+                            workerOptions.find((w) => w.name === row.nama) ||
+                            null
                           }
                           onChange={async (_event, newValue) => {
                             if (newValue && (newValue as any).inputValue) {
@@ -529,11 +529,7 @@ export default function PengikisanClient() {
                                     ...prev,
                                     newWorker,
                                   ]);
-                                  handleChange(
-                                    row.id,
-                                    "nama",
-                                    newWorker.name
-                                  );
+                                  handleChange(row.id, "nama", newWorker.name);
                                 }
                               } catch (err) {
                                 console.error(err);
@@ -745,8 +741,8 @@ export default function PengikisanClient() {
             Data Pengikisan Tersimpan!
           </h3>
           <p className="text-black/60 text-sm mb-6 max-w-xs">
-            Data pengikisan berhasil disimpan ke database. Anda dapat
-            mengunduh PDF sebagai arsip.
+            Data pengikisan berhasil disimpan ke database. Anda dapat mengunduh
+            PDF sebagai arsip.
           </p>
           <div className="bg-blue-50 text-blue-800 text-xs px-4 py-3 rounded-lg w-full text-left">
             <p className="font-semibold mb-1">ID Transaksi:</p>

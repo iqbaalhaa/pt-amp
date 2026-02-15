@@ -178,16 +178,33 @@ export async function getProductStockMovements(itemTypeId: string): Promise<Stoc
     .filter(m => m.sourceType === 'sale_item')
     .map(m => m.sourceId);
 
-  // Fetch sources
-  const purchaseItems = purchaseItemIds.length > 0 ? await prisma.purchaseItem.findMany({
-    where: { id: { in: purchaseItemIds } },
-    include: { purchase: true }
-  }) : [];
+  const productionInputIds = movements
+    .filter(m => m.sourceType === 'production_input')
+    .map(m => m.sourceId);
 
-  const saleItems = saleItemIds.length > 0 ? await prisma.saleItem.findMany({
-    where: { id: { in: saleItemIds } },
-    include: { sale: true }
-  }) : [];
+  const productionOutputIds = movements
+    .filter(m => m.sourceType === 'production_output')
+    .map(m => m.sourceId);
+
+  // Fetch sources in parallel
+  const [purchaseItems, saleItems, productionInputs, productionOutputs] = await Promise.all([
+    purchaseItemIds.length > 0 ? prisma.purchaseItem.findMany({
+      where: { id: { in: purchaseItemIds } },
+      include: { purchase: true }
+    }) : [],
+    saleItemIds.length > 0 ? prisma.saleItem.findMany({
+      where: { id: { in: saleItemIds } },
+      include: { sale: true }
+    }) : [],
+    productionInputIds.length > 0 ? prisma.productionInput.findMany({
+      where: { id: { in: productionInputIds } },
+      include: { production: { include: { productionType: true } } }
+    }) : [],
+    productionOutputIds.length > 0 ? prisma.productionOutput.findMany({
+      where: { id: { in: productionOutputIds } },
+      include: { production: { include: { productionType: true } } }
+    }) : []
+  ]);
 
   // Map movements to DTO
   return movements.map(m => {
@@ -208,6 +225,20 @@ export async function getProductStockMovements(itemTypeId: string): Promise<Stoc
         date = sItem.sale.date.toISOString();
         type = 'Penjualan';
         reference = `Sale #${sItem.sale.id}`;
+      }
+    } else if (m.sourceType === 'production_input') {
+      const pInput = productionInputs.find(p => p.id === m.sourceId);
+      if (pInput) {
+        date = pInput.production.date.toISOString();
+        type = 'Produksi (Bahan Baku)';
+        reference = `Production #${pInput.production.id} (${pInput.production.productionType.name})`;
+      }
+    } else if (m.sourceType === 'production_output') {
+      const pOutput = productionOutputs.find(p => p.id === m.sourceId);
+      if (pOutput) {
+        date = pOutput.production.date.toISOString();
+        type = 'Produksi (Hasil Jadi)';
+        reference = `Production #${pOutput.production.id} (${pOutput.production.productionType.name})`;
       }
     }
 

@@ -353,6 +353,7 @@ export default function PemotonganClient() {
         subtitle="Catat hasil kerja pemotongan (kg)."
         actions={
           <>
+            <PemotonganBulkImport />
             <Link
               href="/admin/pemotongan/riwayat"
               className={cx(

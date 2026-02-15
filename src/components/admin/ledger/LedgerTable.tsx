@@ -14,6 +14,7 @@ type Props = {
   sortColumn?: keyof LedgerEntry;
   sortDirection?: "asc" | "desc";
   onSort?: (column: keyof LedgerEntry) => void;
+  counterpartyHeader?: string;
 };
 
 export function LedgerTable({
@@ -25,6 +26,7 @@ export function LedgerTable({
   sortColumn,
   sortDirection,
   onSort,
+  counterpartyHeader = "Pihak",
 }: Props) {
   const currentIds = useMemo(() => entries.map((e) => e.id), [entries]);
   const allSelected =
@@ -75,7 +77,7 @@ export function LedgerTable({
             </th>
             {renderHeader("Tanggal", "date")}
             {renderHeader("Petugas", "createdByName")}
-            {renderHeader("Pihak", "counterparty")}
+            {renderHeader(counterpartyHeader, "counterparty")}
             {renderHeader("Total (Rp)", "total")}
             {renderHeader("Status", "status")}
             <th className="px-3 py-2 text-right">Aksi</th>
@@ -103,12 +105,12 @@ export function LedgerTable({
                 </td>
                 <td className="px-3 py-2">
                   <span
-                    className={`rounded px-2 py-0.5 text-[10px] font-semibold ${
+                    className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${
                       e.status === "posted"
-                        ? "bg-green-100 text-green-700"
+                        ? "bg-emerald-100 text-emerald-700"
                         : e.status === "cancelled"
                         ? "bg-red-100 text-red-700"
-                        : "bg-yellow-100 text-yellow-700"
+                        : "bg-amber-100 text-amber-700"
                     }`}
                   >
                     {e.status.toUpperCase()}
@@ -120,12 +122,19 @@ export function LedgerTable({
                     type={e.type}
                     status={e.status}
                     entry={e}
-                    onView={onView}
+                    onView={() => onView?.(e)}
                   />
                 </td>
               </tr>
             );
           })}
+          {entries.length === 0 && (
+            <tr>
+              <td colSpan={7} className="px-3 py-4 text-center text-slate-500">
+                Tidak ada data transaksi.
+              </td>
+            </tr>
+          )}
         </tbody>
       </table>
     </div>

@@ -17,7 +17,7 @@ import { LedgerEntry } from "./types";
 
 type Props = {
   id: string;
-  type: "purchase" | "sale" | "production" | "invoice";
+  type: "purchase" | "sale" | "production" | "pengeluaran";
   status: "draft" | "posted" | "cancelled";
   entry?: LedgerEntry;
   onView?: (entry: LedgerEntry) => void;
@@ -25,11 +25,12 @@ type Props = {
 
 export function LedgerActions({ id, type, status, entry, onView }: Props) {
   const router = useRouter();
-  const canPrint = type === "purchase" || type === "sale" || type === "invoice";
+  const canPrint =
+    type === "purchase" || type === "sale" || type === "pengeluaran";
   const isCancelled = status === "cancelled";
   const canApprove =
     status === "draft" &&
-    (type === "purchase" || type === "sale" || type === "invoice");
+    (type === "purchase" || type === "sale" || type === "pengeluaran");
   const canReject = status !== "cancelled";
   const [openApprove, setOpenApprove] = useState(false);
   const [openReject, setOpenReject] = useState(false);
@@ -67,7 +68,7 @@ export function LedgerActions({ id, type, status, entry, onView }: Props) {
         } else {
           await revokeProduction(id, reason);
         }
-      } else if (type === "invoice") {
+      } else if (type === "pengeluaran") {
         const { revokeExpense } = await import("@/actions/expense-actions");
         await revokeExpense(id, reason);
       }
@@ -86,7 +87,7 @@ export function LedgerActions({ id, type, status, entry, onView }: Props) {
         await approvePurchase(id);
       } else if (type === "sale") {
         await approveSale(id);
-      } else if (type === "invoice") {
+      } else if (type === "pengeluaran") {
         const { approveExpense } = await import("@/actions/expense-actions");
         await approveExpense(id);
       }
@@ -127,7 +128,7 @@ export function LedgerActions({ id, type, status, entry, onView }: Props) {
         href={
           canPrint
             ? `/admin/invoice/print?type=${
-                type === "invoice" ? "expense" : type
+                type === "pengeluaran" ? "expense" : type
               }&id=${id}`
             : "#"
         }

@@ -105,7 +105,6 @@ export default function SaleClient() {
   ]);
 
   // UI State
-  const [creatingItemType, setCreatingItemType] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -202,6 +201,22 @@ export default function SaleClient() {
         alert("Mohon isi minimal satu item dengan lengkap");
         setSaving(false);
         return;
+      }
+
+      // Validate Stock
+      for (const item of validItems) {
+        const type = itemTypes.find((t) => t.id === item.itemTypeId);
+        if (!type) continue;
+        const stock = parseFloat(type.stock || "0");
+        const qty = parseFloat(item.qty);
+
+        if (qty > stock) {
+          alert(
+            `Stok tidak cukup untuk barang: ${type.name}. Stok tersedia: ${stock}`
+          );
+          setSaving(false);
+          return;
+        }
       }
 
       const payload = {
@@ -555,43 +570,12 @@ export default function SaleClient() {
                           <td className="px-3 py-2">
                             <Autocomplete
                               value={selectedItem || null}
-                              onChange={async (event, newValue) => {
-                                if (newValue && (newValue as any).inputValue) {
-                                  setCreatingItemType(true);
-                                  try {
-                                    const newIt = await quickCreateItemType(
-                                      (newValue as any).inputValue
-                                    );
-                                    setItemTypes((prev) => [...prev, newIt]);
-                                    updateItem(row.id, "itemTypeId", newIt.id);
-                                  } catch (err) {
-                                    alert("Gagal menambahkan barang");
-                                  } finally {
-                                    setCreatingItemType(false);
-                                  }
-                                } else {
-                                  updateItem(
-                                    row.id,
-                                    "itemTypeId",
-                                    newValue?.id || ""
-                                  );
-                                }
-                              }}
-                              filterOptions={(options, params) => {
-                                const filtered = filter(options, params);
-                                const { inputValue } = params;
-                                const isExisting = options.some(
-                                  (option) =>
-                                    inputValue.toLowerCase() ===
-                                    option.name.toLowerCase()
+                              onChange={(event, newValue) => {
+                                updateItem(
+                                  row.id,
+                                  "itemTypeId",
+                                  newValue?.id || ""
                                 );
-                                if (inputValue !== "" && !isExisting) {
-                                  filtered.push({
-                                    inputValue,
-                                    name: `Tambah "${inputValue}"`,
-                                  } as any);
-                                }
-                                return filtered;
                               }}
                               selectOnFocus
                               clearOnBlur
@@ -599,15 +583,29 @@ export default function SaleClient() {
                               options={activeItemTypes}
                               getOptionLabel={(option) => {
                                 if (typeof option === "string") return option;
-                                if ((option as any).inputValue)
-                                  return (option as any).inputValue;
                                 return option.name;
                               }}
                               renderOption={(props, option) => {
                                 const { key, ...optionProps } = props as any;
+                                const stock = parseFloat(option.stock || "0");
+                                const stockDisplay =
+                                  stock > 0
+                                    ? `(Stok: ${stock})`
+                                    : "(Stok Habis)";
                                 return (
                                   <li key={key} {...optionProps}>
-                                    {option.name}
+                                    <div className="flex justify-between w-full">
+                                      <span>{option.name}</span>
+                                      <span
+                                        className={`text-xs ${
+                                          stock > 0
+                                            ? "text-green-600"
+                                            : "text-red-600"
+                                        }`}
+                                      >
+                                        {stockDisplay}
+                                      </span>
+                                    </div>
                                   </li>
                                 );
                               }}
@@ -617,10 +615,24 @@ export default function SaleClient() {
                               renderInput={(params) => (
                                 <TextField
                                   {...params}
-                                  placeholder="Pilih/Cari Barang"
+                                  placeholder="Pilih Barang"
                                 />
                               )}
                             />
+                            {selectedItem && (
+                              <div className="text-[10px] text-gray-500 mt-1 px-1">
+                                Stok tersedia:{" "}
+                                <span
+                                  className={
+                                    parseFloat(selectedItem.stock || "0") > 0
+                                      ? "text-green-600 font-medium"
+                                      : "text-red-600 font-medium"
+                                  }
+                                >
+                                  {selectedItem.stock || "0"}
+                                </span>
+                              </div>
+                            )}
                           </td>
 
                           <td className="px-3 py-2">

@@ -365,6 +365,7 @@ export default function PenjemuranClient() {
         subtitle="Catat hari kerja dan lembur penjemuran."
         actions={
           <>
+            <PenjemuranBulkImport />
             <Link
               href="/admin/penjemuran/riwayat"
               className={cx(
