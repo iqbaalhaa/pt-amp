@@ -57,7 +57,6 @@ export async function createPenjemuran(input: PenjemuranInput) {
   const penjemuran = await prisma.penjemuran.create({
     data: {
       date: new Date(input.date),
-      petugas: currentUserName || input.petugas,
       notes: input.notes ?? null,
       totalUpah: totalUpah.toString(),
       upahPerHari: upahPerHari || null,
@@ -86,14 +85,13 @@ export async function getPenjemuranHistory() {
   return data.map((item) => ({
     id: String(item.id),
     date: item.date,
-    petugas: item.petugas,
     notes: item.notes,
-    totalUpah: parseFloat(item.totalUpah || "0"),
+    totalUpah: Number(item.totalUpah ?? 0),
     items: item.penjemuranItems.map((sub) => ({
       nama: sub.nama,
-      hari: parseFloat(sub.hari || "0"),
-      lemburJam: parseFloat(sub.lemburJam || "0"),
-      total: parseFloat(sub.total || "0"),
+      hari: Number(sub.hari ?? 0),
+      lemburJam: Number(sub.lemburJam ?? 0),
+      total: Number(sub.total ?? 0),
     })),
   }));
 }

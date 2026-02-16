@@ -76,11 +76,11 @@ export async function getPemotonganHistory() {
     date: item.date,
     petugas: item.petugas,
     notes: item.notes,
-    totalUpah: parseFloat(item.totalUpah || "0"),
+    totalUpah: Number(item.totalUpah ?? 0),
     items: item.pemotonganItems.map((sub) => ({
       nama: sub.nama,
-      qty: parseFloat(sub.qty || "0"),
-      total: parseFloat(sub.total || "0"),
+      qty: Number(sub.qty ?? 0),
+      total: Number(sub.total ?? 0),
     })),
   }));
 }

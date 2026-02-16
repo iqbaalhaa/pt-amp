@@ -81,12 +81,12 @@ export async function getPengikisanHistory() {
     date: item.date,
     petugas: item.petugas,
     notes: item.notes,
-    totalUpah: parseFloat(item.totalUpah || "0"),
+    totalUpah: Number(item.totalUpah ?? 0),
     items: item.pengikisanItems.map((sub) => ({
       nama: sub.nama,
-      kaKg: parseFloat(sub.kaKg || "0"),
-      stikKg: parseFloat(sub.stikKg || "0"),
-      total: parseFloat(sub.total || "0"),
+      kaKg: Number(sub.kaKg ?? 0),
+      stikKg: Number(sub.stikKg ?? 0),
+      total: Number(sub.total ?? 0),
     })),
   }));
 }

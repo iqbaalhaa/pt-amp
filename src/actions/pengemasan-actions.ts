@@ -76,11 +76,11 @@ export async function getPengemasanHistory() {
     date: item.date,
     petugas: item.petugas,
     notes: item.notes,
-    totalUpah: parseFloat(item.totalUpah || "0"),
+    totalUpah: Number(item.totalUpah ?? 0),
     items: item.pengemasanItems.map((sub) => ({
       nama: sub.nama,
-      bungkus: parseFloat(sub.bungkus || "0"),
-      total: parseFloat(sub.total || "0"),
+      bungkus: Number(sub.bungkus ?? 0),
+      total: Number(sub.total ?? 0),
     })),
   }));
 }

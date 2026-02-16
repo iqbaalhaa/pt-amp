@@ -285,9 +285,9 @@ export default function SaleForm({ itemTypes }: Props) {
       cell: (_row, idx) => (
         <GlassButton
           variant="danger"
-          size="small"
+          size="sm"
           onClick={() => removeItem(idx)}
-          sx={{ minWidth: 0, p: 0.5 }}
+          className="min-w-0 p-1"
         >
           <DeleteIcon fontSize="small" />
         </GlassButton>
@@ -454,7 +454,7 @@ export default function SaleForm({ itemTypes }: Props) {
                   type="button"
                   variant="secondary"
                   onClick={addItem}
-                  size="small"
+                  size="sm"
                 >
                   <AddIcon className="mr-1" fontSize="small" />
                   Tambah Baris
