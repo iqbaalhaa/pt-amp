@@ -5,6 +5,7 @@ import { Invoice, type InvoiceData } from "@/components/Invoice";
 import { useReactToPrint } from "react-to-print";
 import { createExpense } from "@/actions/expense-actions";
 import SuccessModal from "./SuccessModal";
+import ConfirmationDialog from "@/components/ui/ConfirmationDialog";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 
@@ -21,15 +22,19 @@ function formatRupiah(val: number) {
 }
 
 export default function ExpenseForm({ inputBy }: { inputBy: string | null }) {
-  const [date, setDate] = useState<string>(() => new Date().toISOString().slice(0, 10));
+  const [date, setDate] = useState<string>(() =>
+    new Date().toISOString().slice(0, 10)
+  );
   const [notes, setNotes] = useState("");
   const [message, setMessage] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
-  const newId = () => `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
-  const [items, setItems] = useState<{ id: string; purpose: string; amount: string }[]>([
-    { id: newId(), purpose: "", amount: "" },
-  ]);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const newId = () =>
+    `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
+  const [items, setItems] = useState<
+    { id: string; purpose: string; amount: string }[]
+  >([{ id: newId(), purpose: "", amount: "" }]);
 
   const grandTotal = useMemo(() => {
     return items.reduce((sum, it) => {
@@ -41,15 +46,24 @@ export default function ExpenseForm({ inputBy }: { inputBy: string | null }) {
   const canExport = useMemo(
     () =>
       items.some(
-        (it) => it.purpose.trim().length > 0 && isFinite(parseFloat(it.amount)) && parseFloat(it.amount) > 0,
+        (it) =>
+          it.purpose.trim().length > 0 &&
+          isFinite(parseFloat(it.amount)) &&
+          parseFloat(it.amount) > 0
       ),
-    [items],
+    [items]
   );
 
-  const addItem = () => setItems((prev) => [...prev, { id: newId(), purpose: "", amount: "" }]);
-  const removeItem = (id: string) => setItems((prev) => (prev.length <= 1 ? prev : prev.filter((x) => x.id !== id)));
+  const addItem = () =>
+    setItems((prev) => [...prev, { id: newId(), purpose: "", amount: "" }]);
+  const removeItem = (id: string) =>
+    setItems((prev) =>
+      prev.length <= 1 ? prev : prev.filter((x) => x.id !== id)
+    );
   const updateItem = (id: string, key: "purpose" | "amount", val: string) => {
-    setItems((prev) => prev.map((x) => (x.id === id ? { ...x, [key]: val } : x)));
+    setItems((prev) =>
+      prev.map((x) => (x.id === id ? { ...x, [key]: val } : x))
+    );
   };
 
   const invoiceData: InvoiceData = {
@@ -60,7 +74,12 @@ export default function ExpenseForm({ inputBy }: { inputBy: string | null }) {
     type: "Purchase Invoice",
     notes: notes || null,
     items: items
-      .filter((it) => it.purpose.trim().length > 0 && isFinite(parseFloat(it.amount)) && parseFloat(it.amount) > 0)
+      .filter(
+        (it) =>
+          it.purpose.trim().length > 0 &&
+          isFinite(parseFloat(it.amount)) &&
+          parseFloat(it.amount) > 0
+      )
       .map((it) => {
         const amt = String(parseFloat(it.amount));
         return {
@@ -114,10 +133,61 @@ export default function ExpenseForm({ inputBy }: { inputBy: string | null }) {
     while (heightLeft > 0) {
       offsetY += contentH;
       pdf.addPage([pageW, pageH], "p");
-      pdf.addImage(imgData, "PNG", margin, margin - offsetY, contentW, imgHeightMm);
+      pdf.addImage(
+        imgData,
+        "PNG",
+        margin,
+        margin - offsetY,
+        contentW,
+        imgHeightMm
+      );
       heightLeft -= contentH;
     }
     pdf.save(`faktur-expense-${date || "draft"}.pdf`);
+  };
+
+  const handleSaveClick = () => {
+    const validItems = items.filter(
+      (it) =>
+        it.purpose.trim().length > 0 &&
+        isFinite(parseFloat(it.amount)) &&
+        parseFloat(it.amount) > 0
+    );
+    if (validItems.length === 0) {
+      setMessage("Isi minimal satu baris dengan keterangan dan biaya > 0.");
+      return;
+    }
+    setMessage(null);
+    setConfirmOpen(true);
+  };
+
+  const handleConfirmSave = async () => {
+    const validItems = items.filter(
+      (it) =>
+        it.purpose.trim().length > 0 &&
+        isFinite(parseFloat(it.amount)) &&
+        parseFloat(it.amount) > 0
+    );
+
+    setSaving(true);
+    try {
+      const payload = {
+        date,
+        notes: notes || null,
+        items: validItems.map(({ id, ...rest }) => rest),
+      };
+      const res = await createExpense(payload);
+      if (res && res.success) {
+        setShowSuccess(true);
+        setConfirmOpen(false);
+      } else {
+        setMessage("Gagal menyimpan expense.");
+      }
+    } catch (err) {
+      setMessage("Terjadi kesalahan saat menyimpan.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -135,12 +205,16 @@ export default function ExpenseForm({ inputBy }: { inputBy: string | null }) {
       <div className="space-y-3 min-w-0">
         <div className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-100">
           <div className="mb-3">
-            <h2 className="text-sm font-semibold text-slate-800">Input Pengeluaran</h2>
+            <h2 className="text-sm font-semibold text-slate-800">
+              Input Pengeluaran
+            </h2>
           </div>
 
           <div className="grid gap-3 md:grid-cols-2">
             <div className="flex flex-col gap-1">
-              <label className="text-[11px] font-medium text-slate-600">Tanggal</label>
+              <label className="text-[11px] font-medium text-slate-600">
+                Tanggal
+              </label>
               <input
                 type="date"
                 value={date}
@@ -164,8 +238,12 @@ export default function ExpenseForm({ inputBy }: { inputBy: string | null }) {
               <thead className="bg-slate-50 text-[11px] uppercase tracking-wide text-slate-500">
                 <tr>
                   <th className="w-10 px-3 py-2 font-semibold">No</th>
-                  <th className="min-w-[220px] px-3 py-2 font-semibold">Keterangan Keperluan</th>
-                  <th className="w-40 px-3 py-2 text-right font-semibold">Biaya</th>
+                  <th className="min-w-[220px] px-3 py-2 font-semibold">
+                    Keterangan Keperluan
+                  </th>
+                  <th className="w-40 px-3 py-2 text-right font-semibold">
+                    Biaya
+                  </th>
                   <th className="w-10 px-3 py-2" />
                 </tr>
               </thead>
@@ -179,7 +257,9 @@ export default function ExpenseForm({ inputBy }: { inputBy: string | null }) {
                         <input
                           type="text"
                           value={row.purpose}
-                          onChange={(e) => updateItem(row.id, "purpose", e.target.value)}
+                          onChange={(e) =>
+                            updateItem(row.id, "purpose", e.target.value)
+                          }
                           placeholder="Contoh: Beli BBM, makan kru, dll."
                           className="w-full rounded-md border border-slate-200 bg-white px-2 py-1.5 text-sm outline-none focus:ring-2 focus:ring-[var(--brand)] focus:border-[var(--brand)]"
                         />
@@ -190,7 +270,9 @@ export default function ExpenseForm({ inputBy }: { inputBy: string | null }) {
                           inputMode="decimal"
                           placeholder="0"
                           value={row.amount}
-                          onChange={(e) => updateItem(row.id, "amount", e.target.value)}
+                          onChange={(e) =>
+                            updateItem(row.id, "amount", e.target.value)
+                          }
                           className="w-full rounded-md border border-slate-200 bg-white px-2 py-1.5 text-right text-sm outline-none focus:ring-2 focus:ring-[var(--brand)] focus:border-[var(--brand)]"
                         />
                       </td>
@@ -213,7 +295,9 @@ export default function ExpenseForm({ inputBy }: { inputBy: string | null }) {
           </div>
 
           <div className="flex flex-col gap-1 mt-3">
-            <label className="text-[11px] font-medium text-slate-600">Catatan</label>
+            <label className="text-[11px] font-medium text-slate-600">
+              Catatan
+            </label>
             <textarea
               placeholder="Opsional"
               value={notes}
@@ -228,42 +312,14 @@ export default function ExpenseForm({ inputBy }: { inputBy: string | null }) {
           <div className="flex items-center justify-between">
             <div className="text-xs">
               <div className="font-semibold text-slate-700">Total</div>
-              <div className="font-semibold text-slate-900">{formatRupiah(grandTotal)}</div>
+              <div className="font-semibold text-slate-900">
+                {formatRupiah(grandTotal)}
+              </div>
             </div>
             <div className="flex gap-2">
               <button
                 type="button"
-                onClick={async () => {
-                  const validItems = items.filter(
-                    (it) =>
-                      it.purpose.trim().length > 0 &&
-                      isFinite(parseFloat(it.amount)) &&
-                      parseFloat(it.amount) > 0,
-                  );
-                  if (validItems.length === 0) {
-                    setMessage("Isi minimal satu baris dengan keterangan dan biaya > 0.");
-                    return;
-                  }
-                  setSaving(true);
-                  setMessage(null);
-                  try {
-                    const payload = {
-                      date,
-                      notes: notes || null,
-                      items: validItems.map(({ id, ...rest }) => rest),
-                    };
-                    const res = await createExpense(payload);
-                    if (res && res.success) {
-                      setShowSuccess(true);
-                    } else {
-                      setMessage("Gagal menyimpan expense.");
-                    }
-                  } catch (err) {
-                    setMessage("Terjadi kesalahan saat menyimpan.");
-                  } finally {
-                    setSaving(false);
-                  }
-                }}
+                onClick={handleSaveClick}
                 className="inline-flex items-center rounded-md bg-[var(--brand)] px-2.5 py-1.5 text-[11px] font-medium text-white shadow-sm hover:opacity-90 disabled:opacity-50"
                 disabled={saving}
               >
@@ -319,6 +375,16 @@ export default function ExpenseForm({ inputBy }: { inputBy: string | null }) {
           </div>
         </div>
       </div>
+      <ConfirmationDialog
+        open={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        onConfirm={handleConfirmSave}
+        loading={saving}
+        title="Simpan Pengeluaran"
+        content={`Apakah Anda yakin ingin menyimpan pengeluaran ini dengan total ${formatRupiah(
+          grandTotal
+        )}?`}
+      />
     </div>
   );
 }

@@ -30,6 +30,7 @@ import SummarizeRoundedIcon from "@mui/icons-material/SummarizeRounded";
 import GlassButton from "@/components/ui/GlassButton";
 import PageHeader from "@/components/ui/PageHeader";
 import SafeModal from "@/components/ui/SafeModal";
+import ConfirmationDialog from "@/components/ui/ConfirmationDialog";
 import { createProduksiLainnya } from "@/actions/produksi-lainnya-actions";
 import {
   getWorkers,
@@ -86,6 +87,7 @@ export default function OtherProductionClient() {
   const [saving, setSaving] = useState(false);
 
   const [openPreview, setOpenPreview] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const [lastSavedId, setLastSavedId] = useState<string | null>(null);
 
   const [workerOptions, setWorkerOptions] = useState<WorkerDTO[]>([]);
@@ -188,7 +190,7 @@ export default function OtherProductionClient() {
     setNotes("");
   };
 
-  const handleSubmit = async (e: FormEvent) => {
+  const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (!date) {
       alert("Tanggal harus diisi");
@@ -201,21 +203,33 @@ export default function OtherProductionClient() {
     );
 
     if (validRows.length === 0) {
-      alert("Mohon isi minimal satu baris data dengan lengkap (Pekerja, Pekerjaan, Qty, Upah)");
+      alert(
+        "Mohon isi minimal satu baris data dengan lengkap (Pekerja, Pekerjaan, Qty, Upah)"
+      );
       return;
     }
 
     // Check for partially filled rows that are not complete
     const incompleteRows = rows.filter(
-      (r) => 
+      (r) =>
         (r.namaPekerja || r.namaPekerjaan || r.qty > 0 || r.upah > 0) &&
         !(r.namaPekerja && r.namaPekerjaan && r.qty > 0 && r.upah > 0)
     );
 
     if (incompleteRows.length > 0) {
-      alert("Ada baris data yang belum lengkap. Mohon lengkapi atau hapus baris tersebut.");
+      alert(
+        "Ada baris data yang belum lengkap. Mohon lengkapi atau hapus baris tersebut."
+      );
       return;
     }
+
+    setConfirmOpen(true);
+  };
+
+  const handleConfirmSave = async () => {
+    const validRows = rows.filter(
+      (r) => r.namaPekerja && r.namaPekerjaan && r.qty > 0 && r.upah > 0
+    );
 
     try {
       setSaving(true);
@@ -236,6 +250,7 @@ export default function OtherProductionClient() {
       if (res?.success) {
         setLastSavedId(res.id);
         setOpenPreview(true);
+        setConfirmOpen(false);
       } else {
         alert("Gagal menyimpan data");
       }
@@ -931,6 +946,15 @@ export default function OtherProductionClient() {
           </div>
         </div>
       </SafeModal>
+
+      <ConfirmationDialog
+        open={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        onConfirm={handleConfirmSave}
+        loading={saving}
+        title="Simpan Produksi Lainnya"
+        content="Apakah Anda yakin ingin menyimpan data produksi lainnya ini?"
+      />
     </div>
   );
 }

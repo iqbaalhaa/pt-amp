@@ -28,6 +28,7 @@ import SpaRoundedIcon from "@mui/icons-material/SpaRounded";
 import GlassButton from "@/components/ui/GlassButton";
 import PageHeader from "@/components/ui/PageHeader";
 import SafeModal from "@/components/ui/SafeModal";
+import ConfirmationDialog from "@/components/ui/ConfirmationDialog";
 import PengikisanBulkImport from "./PengikisanBulkImport";
 import { createPengikisan } from "@/actions/pengikisan-actions";
 import {
@@ -83,6 +84,7 @@ export default function PengikisanClient() {
   const [saving, setSaving] = useState(false);
 
   const [openPreview, setOpenPreview] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const [lastSavedId, setLastSavedId] = useState<string | null>(null);
 
   const [workerOptions, setWorkerOptions] = useState<WorkerDTO[]>([]);
@@ -170,7 +172,7 @@ export default function PengikisanClient() {
     setNotes("");
   };
 
-  const handleSubmit = async (e: FormEvent) => {
+  const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (!date) {
       alert("Tanggal harus diisi");
@@ -187,6 +189,14 @@ export default function PengikisanClient() {
       );
       return;
     }
+
+    setConfirmOpen(true);
+  };
+
+  const handleConfirmSave = async () => {
+    const validRows = rows.filter(
+      (r) => r.nama && (r.kaKg > 0 || r.stikKg > 0)
+    );
 
     try {
       setSaving(true);
@@ -205,6 +215,7 @@ export default function PengikisanClient() {
       if (res?.success) {
         setLastSavedId(res.id);
         setOpenPreview(true);
+        setConfirmOpen(false);
       } else {
         alert("Gagal menyimpan data");
       }
@@ -750,6 +761,15 @@ export default function PengikisanClient() {
           </div>
         </div>
       </SafeModal>
+
+      <ConfirmationDialog
+        open={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        onConfirm={handleConfirmSave}
+        loading={saving}
+        title="Simpan Data Pengikisan"
+        content="Apakah Anda yakin ingin menyimpan data pengikisan ini? Pastikan semua data sudah benar."
+      />
     </div>
   );
 }

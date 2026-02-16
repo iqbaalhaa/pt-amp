@@ -30,6 +30,7 @@ import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import { quickCreateItemType } from "@/actions/item-type-actions";
 import SuccessModal from "@/components/admin/purchases/SuccessModal";
+import ConfirmationDialog from "@/components/ui/ConfirmationDialog";
 import { authClient } from "@/lib/auth-client";
 
 import type { ItemTypeDTO } from "@/actions/item-type-actions";
@@ -77,6 +78,28 @@ export default function SaleForm({ itemTypes }: Props) {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const filter = createFilterOptions<ItemTypeDTO>();
   const { data: session } = authClient.useSession();
+
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmBusy, setConfirmBusy] = useState(false);
+  const [confirmConfig, setConfirmConfig] = useState<{
+    title: string;
+    message: string;
+    onConfirm: () => Promise<void>;
+    variant?: "danger" | "primary";
+    confirmText?: string;
+  } | null>(null);
+
+  const openConfirm = (cfg: {
+    title: string;
+    message: string;
+    onConfirm: () => Promise<void>;
+    variant?: "danger" | "primary";
+    confirmText?: string;
+  }) => {
+    setConfirmConfig(cfg);
+    setConfirmOpen(true);
+  };
+
   const A5_W_MM = 148;
   const A5_H_MM = 210;
   const PRINT_MARGIN_MM = 10;
@@ -110,48 +133,56 @@ export default function SaleForm({ itemTypes }: Props) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSaving(true);
-    try {
-      const validItems = items.filter(
-        (r) => r.itemTypeId && r.qty && r.unitPrice
-      );
-      if (validItems.length === 0) {
-        setSnack({
-          open: true,
-          message: "Mohon isi minimal satu item dengan lengkap",
-          severity: "error",
-        });
-        return;
-      }
-      const payload = {
-        customer: customer || null,
-        date,
-        status,
-        notes: notes || null,
-        items: validItems.map(({ id, ...rest }) => rest),
-      };
-
-      const res = await createSale(payload);
-      if (res && res.success) {
-        setShowSuccessModal(true);
-        router.refresh();
-      } else {
-        setSnack({
-          open: true,
-          message: "Gagal menyimpan penjualan",
-          severity: "error",
-        });
-      }
-    } catch (err) {
-      console.error(err);
+    const validItems = items.filter(
+      (r) => r.itemTypeId && r.qty && r.unitPrice
+    );
+    if (validItems.length === 0) {
       setSnack({
         open: true,
-        message: "Terjadi kesalahan saat menyimpan penjualan",
+        message: "Mohon isi minimal satu item dengan lengkap",
         severity: "error",
       });
-    } finally {
-      setSaving(false);
+      return;
     }
+
+    openConfirm({
+      title: "Simpan Penjualan",
+      message: `Apakah Anda yakin ingin menyimpan transaksi penjualan ini dengan total ${formatRupiah(
+        grandTotal
+      )}?`,
+      variant: "primary",
+      confirmText: "Simpan",
+      onConfirm: async () => {
+        try {
+          const payload = {
+            customer: customer || null,
+            date,
+            status,
+            notes: notes || null,
+            items: validItems.map(({ id, ...rest }) => rest),
+          };
+
+          const res = await createSale(payload);
+          if (res && res.success) {
+            setShowSuccessModal(true);
+            router.refresh();
+          } else {
+            setSnack({
+              open: true,
+              message: "Gagal menyimpan penjualan",
+              severity: "error",
+            });
+          }
+        } catch (err) {
+          console.error(err);
+          setSnack({
+            open: true,
+            message: "Terjadi kesalahan saat menyimpan penjualan",
+            severity: "error",
+          });
+        }
+      },
+    });
   };
 
   const columns: Column<ItemRow>[] = [
@@ -564,6 +595,26 @@ export default function SaleForm({ itemTypes }: Props) {
           {snack.message}
         </Alert>
       </Snackbar>
+
+      <ConfirmationDialog
+        open={confirmOpen}
+        onClose={() => (confirmBusy ? null : setConfirmOpen(false))}
+        onConfirm={async () => {
+          if (!confirmConfig) return;
+          try {
+            setConfirmBusy(true);
+            await confirmConfig.onConfirm();
+            setConfirmOpen(false);
+          } finally {
+            setConfirmBusy(false);
+          }
+        }}
+        loading={confirmBusy}
+        title={confirmConfig?.title}
+        content={confirmConfig?.message}
+        variant={confirmConfig?.variant}
+        confirmText={confirmConfig?.confirmText}
+      />
     </Box>
   );
 }

@@ -29,6 +29,7 @@ import AttachMoneyRoundedIcon from "@mui/icons-material/AttachMoneyRounded";
 import GlassButton from "@/components/ui/GlassButton";
 import PageHeader from "@/components/ui/PageHeader";
 import SafeModal from "@/components/ui/SafeModal";
+import ConfirmationDialog from "@/components/ui/ConfirmationDialog";
 import { createPengemasan } from "@/actions/pengemasan-actions";
 import {
   getWorkers,
@@ -79,6 +80,7 @@ export default function PengemasanClient() {
   const [saving, setSaving] = useState(false);
 
   const [openPreview, setOpenPreview] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const [lastSavedId, setLastSavedId] = useState<string | null>(null);
 
   const [workerOptions, setWorkerOptions] = useState<WorkerDTO[]>([]);
@@ -162,7 +164,7 @@ export default function PengemasanClient() {
     setNotes("");
   };
 
-  const handleSubmit = async (e: FormEvent) => {
+  const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (!date) {
       alert("Tanggal harus diisi");
@@ -177,6 +179,12 @@ export default function PengemasanClient() {
       );
       return;
     }
+
+    setConfirmOpen(true);
+  };
+
+  const handleConfirmSave = async () => {
+    const validRows = rows.filter((r) => r.nama && r.bungkus > 0);
 
     try {
       setSaving(true);
@@ -195,6 +203,7 @@ export default function PengemasanClient() {
       if (res?.success) {
         setLastSavedId(res.id);
         setOpenPreview(true);
+        setConfirmOpen(false);
       } else {
         alert("Gagal menyimpan data");
       }
@@ -739,6 +748,15 @@ export default function PengemasanClient() {
           </div>
         </div>
       </SafeModal>
+
+      <ConfirmationDialog
+        open={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        onConfirm={handleConfirmSave}
+        loading={saving}
+        title="Simpan Data Pengemasan"
+        content="Apakah Anda yakin ingin menyimpan data pengemasan ini? Pastikan semua data sudah benar."
+      />
     </div>
   );
 }

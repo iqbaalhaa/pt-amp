@@ -36,6 +36,7 @@ import {
   quickCreateSupplier,
 } from "@/actions/supplier-actions";
 import SuccessModal from "./SuccessModal";
+import ConfirmationDialog from "@/components/ui/ConfirmationDialog";
 import { authClient } from "@/lib/auth-client";
 
 // Icons
@@ -92,6 +93,7 @@ export default function PurchaseClient() {
   const [itemTypes, setItemTypes] = useState<ItemTypeDTO[]>([]);
   const [suppliers, setSuppliers] = useState<SupplierDTO[]>([]);
   const [loadingData, setLoadingData] = useState(true);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   // Form State
   const [supplierId, setSupplierId] = useState<string>("");
@@ -192,7 +194,7 @@ export default function PurchaseClient() {
     [items]
   );
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!supplierId) {
@@ -205,17 +207,22 @@ export default function PurchaseClient() {
       return;
     }
 
+    const validItems = items.filter((r) => r.itemTypeId && r.qty && r.unitCost);
+
+    if (validItems.length === 0) {
+      alert("Mohon isi minimal satu item dengan lengkap");
+      return;
+    }
+
+    setConfirmOpen(true);
+  };
+
+  const handleConfirmSave = async () => {
     setSaving(true);
     try {
       const validItems = items.filter(
         (r) => r.itemTypeId && r.qty && r.unitCost
       );
-
-      if (validItems.length === 0) {
-        alert("Mohon isi minimal satu item dengan lengkap");
-        setSaving(false);
-        return;
-      }
 
       const payload = {
         supplier: suppliers.find((s) => s.id === supplierId)?.name || null,
@@ -228,6 +235,7 @@ export default function PurchaseClient() {
       const res = await createPurchase(payload);
       if (res && res.success) {
         setShowSuccessModal(true);
+        setConfirmOpen(false);
         router.refresh();
       } else {
         alert("Gagal membuat purchase");
@@ -388,9 +396,18 @@ export default function PurchaseClient() {
       <SuccessModal
         open={showSuccessModal}
         onClose={() => setShowSuccessModal(false)}
-        onDownload={handleDownloadPdf}
         onNewPurchase={handleNewPurchase}
+        onDownloadPdf={handleDownloadPdf}
         entity="Pembelian"
+      />
+
+      <ConfirmationDialog
+        open={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        onConfirm={handleConfirmSave}
+        loading={saving}
+        title="Simpan Pembelian"
+        content="Apakah Anda yakin ingin menyimpan data pembelian ini? Pastikan semua data sudah benar."
       />
 
       {/* Hidden Invoice for generating PDF */}

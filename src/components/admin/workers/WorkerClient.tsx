@@ -2,21 +2,21 @@
 
 import { useState, useEffect } from "react";
 import {
-	Box,
-	TextField,
-	FormControlLabel,
-	Checkbox,
-	Alert,
-	Snackbar,
+  Box,
+  TextField,
+  FormControlLabel,
+  Checkbox,
+  Alert,
+  Snackbar,
 } from "@mui/material";
 import Grid from "@mui/material/Grid";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import {
-	createWorker,
-	updateWorker,
-	deleteWorker,
+  createWorker,
+  updateWorker,
+  deleteWorker,
 } from "@/actions/worker-actions";
 import { useRouter } from "next/navigation";
 import type { WorkerDTO } from "@/actions/worker-actions";
@@ -24,224 +24,286 @@ import GlassTable, { Column } from "@/components/ui/GlassTable";
 import GlassButton from "@/components/ui/GlassButton";
 import StatusBadge from "@/components/ui/StatusBadge";
 import GlassDialog from "@/components/ui/GlassDialog";
+import ConfirmationDialog from "@/components/ui/ConfirmationDialog";
 
 interface WorkerClientProps {
-	initialWorkers: WorkerDTO[];
+  initialWorkers: WorkerDTO[];
 }
 
 export default function WorkerClient({ initialWorkers }: WorkerClientProps) {
-	const router = useRouter();
-	const [workers, setWorkers] = useState<WorkerDTO[]>(initialWorkers);
-	const [open, setOpen] = useState(false);
-	const [editingWorker, setEditingWorker] = useState<WorkerDTO | null>(null);
-	const [snack, setSnack] = useState<{
-		open: boolean;
-		message: string;
-		severity: "success" | "error";
-	}>({
-		open: false,
-		message: "",
-		severity: "success",
-	});
+  const router = useRouter();
+  const [workers, setWorkers] = useState<WorkerDTO[]>(initialWorkers);
+  const [open, setOpen] = useState(false);
+  const [editingWorker, setEditingWorker] = useState<WorkerDTO | null>(null);
+  const [snack, setSnack] = useState<{
+    open: boolean;
+    message: string;
+    severity: "success" | "error";
+  }>({
+    open: false,
+    message: "",
+    severity: "success",
+  });
 
-	useEffect(() => {
-		setWorkers(initialWorkers);
-	}, [initialWorkers]);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmBusy, setConfirmBusy] = useState(false);
+  const [confirmConfig, setConfirmConfig] = useState<{
+    title: string;
+    message: string;
+    onConfirm: () => Promise<void>;
+    variant?: "danger" | "primary";
+    confirmText?: string;
+  } | null>(null);
 
-	const [formData, setFormData] = useState({
-		name: "",
-		isActive: true,
-	});
+  const openConfirm = (cfg: {
+    title: string;
+    message: string;
+    onConfirm: () => Promise<void>;
+    variant?: "danger" | "primary";
+    confirmText?: string;
+  }) => {
+    setConfirmConfig(cfg);
+    setConfirmOpen(true);
+  };
 
-	const handleOpen = (worker?: WorkerDTO) => {
-		if (worker) {
-			setEditingWorker(worker);
-			setFormData({
-				name: worker.name,
-				isActive: worker.isActive,
-			});
-		} else {
-			setEditingWorker(null);
-			setFormData({
-				name: "",
-				isActive: true,
-			});
-		}
-		setOpen(true);
-	};
+  useEffect(() => {
+    setWorkers(initialWorkers);
+  }, [initialWorkers]);
 
-	const handleClose = () => {
-		setOpen(false);
-		setEditingWorker(null);
-	};
+  const [formData, setFormData] = useState({
+    name: "",
+    isActive: true,
+  });
 
-	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		const { name, value } = e.target;
-		setFormData({ ...formData, [name]: value });
-	};
+  const handleOpen = (worker?: WorkerDTO) => {
+    if (worker) {
+      setEditingWorker(worker);
+      setFormData({
+        name: worker.name,
+        isActive: worker.isActive,
+      });
+    } else {
+      setEditingWorker(null);
+      setFormData({
+        name: "",
+        isActive: true,
+      });
+    }
+    setOpen(true);
+  };
 
-	const handleSubmit = async (e: React.FormEvent) => {
-		e.preventDefault();
-		try {
-			const data = new FormData();
-			data.append("name", formData.name);
-			data.append("isActive", String(formData.isActive));
+  const handleClose = () => {
+    setOpen(false);
+    setEditingWorker(null);
+  };
 
-			if (editingWorker) {
-				await updateWorker(editingWorker.id, data);
-				setSnack({
-					open: true,
-					message: "Pekerja berhasil diperbarui",
-					severity: "success",
-				});
-			} else {
-				await createWorker(data);
-				setSnack({
-					open: true,
-					message: "Pekerja berhasil ditambahkan",
-					severity: "success",
-				});
-			}
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+  };
 
-			handleClose();
-			router.refresh();
-		} catch {
-			setSnack({ open: true, message: "Terjadi kesalahan", severity: "error" });
-		}
-	};
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    openConfirm({
+      title: editingWorker ? "Simpan Perubahan" : "Simpan Pekerja",
+      message: editingWorker
+        ? "Apakah Anda yakin ingin menyimpan perubahan data pekerja ini?"
+        : "Apakah Anda yakin ingin menambahkan pekerja baru?",
+      variant: "primary",
+      confirmText: "Simpan",
+      onConfirm: async () => {
+        try {
+          const data = new FormData();
+          data.append("name", formData.name);
+          data.append("isActive", String(formData.isActive));
 
-	const handleDelete = async (id: string) => {
-		if (confirm("Apakah Anda yakin ingin menghapus pekerja ini?")) {
-			try {
-				await deleteWorker(id);
-				setSnack({
-					open: true,
-					message: "Pekerja berhasil dihapus",
-					severity: "success",
-				});
-				router.refresh();
-			} catch {
-				setSnack({
-					open: true,
-					message: "Gagal menghapus pekerja (mungkin sedang digunakan)",
-					severity: "error",
-				});
-			}
-		}
-	};
+          if (editingWorker) {
+            await updateWorker(editingWorker.id, data);
+            setSnack({
+              open: true,
+              message: "Pekerja berhasil diperbarui",
+              severity: "success",
+            });
+          } else {
+            await createWorker(data);
+            setSnack({
+              open: true,
+              message: "Pekerja berhasil ditambahkan",
+              severity: "success",
+            });
+          }
 
-	const columns: Column<WorkerDTO>[] = [
-		{ header: "Nama", accessorKey: "name", className: "font-medium" },
-		{
-			header: "Status",
-			cell: (row) => (
-				<StatusBadge status={row.isActive ? "success" : "neutral"}>
-					{row.isActive ? "Aktif" : "Non-Aktif"}
-				</StatusBadge>
-			),
-		},
-	];
+          handleClose();
+          router.refresh();
+        } catch {
+          setSnack({
+            open: true,
+            message: "Terjadi kesalahan",
+            severity: "error",
+          });
+        }
+      },
+    });
+  };
 
-	return (
-		<Box>
-			<div className="flex items-center justify-between mb-6">
-				<div>
-					<h1 className="text-2xl font-bold text-[var(--foreground)]">
-						Pekerja
-					</h1>
-					<p className="text-sm text-[var(--text-secondary)]">
-						Manajemen data pekerja (hanya nama, tanpa akun login)
-					</p>
-				</div>
-				<GlassButton onClick={() => handleOpen()}>
-					<AddIcon className="mr-2" fontSize="small" />
-					Tambah Pekerja
-				</GlassButton>
-			</div>
+  const handleDelete = async (id: string) => {
+    openConfirm({
+      title: "Hapus Pekerja",
+      message: "Apakah Anda yakin ingin menghapus pekerja ini?",
+      variant: "danger",
+      confirmText: "Hapus",
+      onConfirm: async () => {
+        try {
+          await deleteWorker(id);
+          setSnack({
+            open: true,
+            message: "Pekerja berhasil dihapus",
+            severity: "success",
+          });
+          router.refresh();
+        } catch {
+          setSnack({
+            open: true,
+            message: "Gagal menghapus pekerja (mungkin sedang digunakan)",
+            severity: "error",
+          });
+        }
+      },
+    });
+  };
 
-			<GlassTable
-				columns={columns}
-				data={workers}
-				showNumber
-				actions={(row) => (
-					<>
-						<GlassButton
-							variant="ghost"
-							size="icon"
-							onClick={() => handleOpen(row)}
-						>
-							<EditIcon fontSize="small" />
-						</GlassButton>
-						<GlassButton
-							variant="danger"
-							size="icon"
-							onClick={() => handleDelete(row.id)}
-						>
-							<DeleteIcon fontSize="small" />
-						</GlassButton>
-					</>
-				)}
-			/>
+  const columns: Column<WorkerDTO>[] = [
+    { header: "Nama", accessorKey: "name", className: "font-medium" },
+    {
+      header: "Status",
+      cell: (row) => (
+        <StatusBadge status={row.isActive ? "success" : "neutral"}>
+          {row.isActive ? "Aktif" : "Non-Aktif"}
+        </StatusBadge>
+      ),
+    },
+  ];
 
-			<GlassDialog
-				open={open}
-				onClose={handleClose}
-				maxWidth="sm"
-				fullWidth
-				title={editingWorker ? "Edit Pekerja" : "Tambah Pekerja"}
-				actions={
-					<>
-						<GlassButton variant="ghost" onClick={handleClose}>
-							Batal
-						</GlassButton>
-						<GlassButton variant="primary" onClick={handleSubmit}>
-							Simpan
-						</GlassButton>
-					</>
-				}
-			>
-				<form onSubmit={handleSubmit} id="worker-form">
-					<Grid container spacing={2} sx={{ mt: 1 }}>
-						<Grid size={{ xs: 12 }}>
-							<TextField
-								fullWidth
-								label="Nama Lengkap"
-								name="name"
-								value={formData.name}
-								onChange={handleChange}
-								required
-							/>
-						</Grid>
-						<Grid size={{ xs: 12 }}>
-							<FormControlLabel
-								control={
-									<Checkbox
-										checked={formData.isActive}
-										onChange={(e) =>
-											setFormData({ ...formData, isActive: e.target.checked })
-										}
-									/>
-								}
-								label="Status Aktif"
-							/>
-						</Grid>
-					</Grid>
-				</form>
-			</GlassDialog>
+  return (
+    <Box>
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-[var(--foreground)]">
+            Pekerja
+          </h1>
+          <p className="text-sm text-[var(--text-secondary)]">
+            Manajemen data pekerja (hanya nama, tanpa akun login)
+          </p>
+        </div>
+        <GlassButton onClick={() => handleOpen()}>
+          <AddIcon className="mr-2" fontSize="small" />
+          Tambah Pekerja
+        </GlassButton>
+      </div>
 
-			<Snackbar
-				open={snack.open}
-				autoHideDuration={3000}
-				onClose={() => setSnack((s) => ({ ...s, open: false }))}
-			>
-				<Alert
-					onClose={() => setSnack((s) => ({ ...s, open: false }))}
-					severity={snack.severity}
-					variant="filled"
-				>
-					{snack.message}
-				</Alert>
-			</Snackbar>
-		</Box>
-	);
+      <GlassTable
+        columns={columns}
+        data={workers}
+        showNumber
+        actions={(row) => (
+          <>
+            <GlassButton
+              variant="ghost"
+              size="icon"
+              onClick={() => handleOpen(row)}
+            >
+              <EditIcon fontSize="small" />
+            </GlassButton>
+            <GlassButton
+              variant="danger"
+              size="icon"
+              onClick={() => handleDelete(row.id)}
+            >
+              <DeleteIcon fontSize="small" />
+            </GlassButton>
+          </>
+        )}
+      />
+
+      <GlassDialog
+        open={open}
+        onClose={handleClose}
+        maxWidth="sm"
+        fullWidth
+        title={editingWorker ? "Edit Pekerja" : "Tambah Pekerja"}
+        actions={
+          <>
+            <GlassButton variant="ghost" onClick={handleClose}>
+              Batal
+            </GlassButton>
+            <GlassButton variant="primary" onClick={handleSubmit}>
+              Simpan
+            </GlassButton>
+          </>
+        }
+      >
+        <form onSubmit={handleSubmit} id="worker-form">
+          <Grid container spacing={2} sx={{ mt: 1 }}>
+            <Grid size={{ xs: 12 }}>
+              <TextField
+                fullWidth
+                label="Nama Lengkap"
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                required
+              />
+            </Grid>
+            <Grid size={{ xs: 12 }}>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={formData.isActive}
+                    onChange={(e) =>
+                      setFormData({ ...formData, isActive: e.target.checked })
+                    }
+                  />
+                }
+                label="Status Aktif"
+              />
+            </Grid>
+          </Grid>
+        </form>
+      </GlassDialog>
+
+      <ConfirmationDialog
+        open={confirmOpen}
+        onClose={() => (confirmBusy ? null : setConfirmOpen(false))}
+        onConfirm={async () => {
+          if (!confirmConfig) return;
+          try {
+            setConfirmBusy(true);
+            await confirmConfig.onConfirm();
+            setConfirmOpen(false);
+          } finally {
+            setConfirmBusy(false);
+          }
+        }}
+        loading={confirmBusy}
+        title={confirmConfig?.title}
+        content={confirmConfig?.message}
+        variant={confirmConfig?.variant}
+        confirmText={confirmConfig?.confirmText}
+      />
+
+      <Snackbar
+        open={snack.open}
+        autoHideDuration={3000}
+        onClose={() => setSnack((s) => ({ ...s, open: false }))}
+      >
+        <Alert
+          onClose={() => setSnack((s) => ({ ...s, open: false }))}
+          severity={snack.severity}
+          variant="filled"
+        >
+          {snack.message}
+        </Alert>
+      </Snackbar>
+    </Box>
+  );
 }

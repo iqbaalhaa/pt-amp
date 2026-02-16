@@ -31,6 +31,7 @@ import {
   quickCreateItemType,
 } from "@/actions/item-type-actions";
 import SuccessModal from "@/components/admin/purchases/SuccessModal";
+import ConfirmationDialog from "@/components/ui/ConfirmationDialog";
 import { authClient } from "@/lib/auth-client";
 
 // Icons
@@ -85,6 +86,7 @@ export default function SaleClient() {
   // Data State
   const [itemTypes, setItemTypes] = useState<ItemTypeDTO[]>([]);
   const [loadingData, setLoadingData] = useState(true);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   // Form State
   const [customer, setCustomer] = useState<string>("");
@@ -178,7 +180,7 @@ export default function SaleClient() {
     [items]
   );
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!customer) {
@@ -191,33 +193,39 @@ export default function SaleClient() {
       return;
     }
 
+    const validItems = items.filter(
+      (r) => r.itemTypeId && r.qty && r.unitPrice
+    );
+
+    if (validItems.length === 0) {
+      alert("Mohon isi minimal satu item dengan lengkap");
+      return;
+    }
+
+    // Validate Stock
+    for (const item of validItems) {
+      const type = itemTypes.find((t) => t.id === item.itemTypeId);
+      if (!type) continue;
+      const stock = parseFloat(type.stock || "0");
+      const qty = parseFloat(item.qty);
+
+      if (qty > stock) {
+        alert(
+          `Stok tidak cukup untuk barang: ${type.name}. Stok tersedia: ${stock}`
+        );
+        return;
+      }
+    }
+
+    setConfirmOpen(true);
+  };
+
+  const handleConfirmSave = async () => {
     setSaving(true);
     try {
       const validItems = items.filter(
         (r) => r.itemTypeId && r.qty && r.unitPrice
       );
-
-      if (validItems.length === 0) {
-        alert("Mohon isi minimal satu item dengan lengkap");
-        setSaving(false);
-        return;
-      }
-
-      // Validate Stock
-      for (const item of validItems) {
-        const type = itemTypes.find((t) => t.id === item.itemTypeId);
-        if (!type) continue;
-        const stock = parseFloat(type.stock || "0");
-        const qty = parseFloat(item.qty);
-
-        if (qty > stock) {
-          alert(
-            `Stok tidak cukup untuk barang: ${type.name}. Stok tersedia: ${stock}`
-          );
-          setSaving(false);
-          return;
-        }
-      }
 
       const payload = {
         customer: customer || null,
@@ -230,6 +238,7 @@ export default function SaleClient() {
       const res = await createSale(payload);
       if (res && res.success) {
         setShowSuccessModal(true);
+        setConfirmOpen(false);
         router.refresh();
       } else {
         alert("Gagal membuat penjualan");
@@ -394,6 +403,17 @@ export default function SaleClient() {
         onNewPurchase={handleNewSale}
         entity="Penjualan"
         newLabel="Penjualan Baru"
+      />
+
+      <ConfirmationDialog
+        open={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        onConfirm={handleConfirmSave}
+        loading={saving}
+        title="Simpan Penjualan"
+        content={`Apakah Anda yakin ingin menyimpan transaksi penjualan ini dengan total ${formatRupiah(
+          grandTotal
+        )}?`}
       />
 
       {/* Hidden Invoice for generating PDF */}
@@ -793,6 +813,17 @@ export default function SaleClient() {
           </div>
         </div>
       </div>
+
+      <ConfirmationDialog
+        open={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        onConfirm={handleConfirmSave}
+        loading={saving}
+        title="Simpan Penjualan"
+        content={`Apakah Anda yakin ingin menyimpan penjualan ini dengan total ${formatRupiah(
+          grandTotal
+        )}?`}
+      />
     </div>
   );
 }

@@ -29,6 +29,7 @@ import {
 import type { SupplierDTO } from "@/actions/supplier-actions";
 import GlassTable, { Column } from "@/components/ui/GlassTable";
 import GlassButton from "@/components/ui/GlassButton";
+import ConfirmationDialog from "@/components/ui/ConfirmationDialog";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 
@@ -47,11 +48,25 @@ export default function SupplierClient({
   );
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmBusy, setConfirmBusy] = useState(false);
   const [confirmConfig, setConfirmConfig] = useState<{
     title: string;
     message: string;
     onConfirm: () => Promise<void>;
+    variant?: "danger" | "primary";
+    confirmText?: string;
   } | null>(null);
+
+  const openConfirm = (cfg: {
+    title: string;
+    message: string;
+    onConfirm: () => Promise<void>;
+    variant?: "danger" | "primary";
+    confirmText?: string;
+  }) => {
+    setConfirmConfig(cfg);
+    setConfirmOpen(true);
+  };
 
   useEffect(() => {
     setSuppliers(initialSuppliers);
@@ -74,15 +89,15 @@ export default function SupplierClient({
   const handleBulkDelete = () => {
     if (selectedIds.length === 0) return;
 
-    setConfirmConfig({
+    openConfirm({
       title: "Hapus Masal",
       message: `Apakah Anda yakin ingin menghapus ${selectedIds.length} supplier terpilih?`,
+      variant: "danger",
       onConfirm: async () => {
         await deleteSuppliers(selectedIds);
         setSelectedIds([]);
       },
     });
-    setConfirmOpen(true);
   };
 
   const [formData, setFormData] = useState({
@@ -127,30 +142,40 @@ export default function SupplierClient({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const data = new FormData();
-    data.append("name", formData.name);
-    data.append("address", formData.address);
-    data.append("phone", formData.phone);
-    data.append("bankAccount", formData.bankAccount);
+    openConfirm({
+      title: editingSupplier ? "Simpan Perubahan" : "Simpan Supplier",
+      message: editingSupplier
+        ? "Apakah Anda yakin ingin menyimpan perubahan pada supplier ini?"
+        : "Apakah Anda yakin ingin menambahkan supplier baru?",
+      variant: "primary",
+      confirmText: "Simpan",
+      onConfirm: async () => {
+        const data = new FormData();
+        data.append("name", formData.name);
+        data.append("address", formData.address);
+        data.append("phone", formData.phone);
+        data.append("bankAccount", formData.bankAccount);
 
-    if (editingSupplier) {
-      await updateSupplier(editingSupplier.id, data);
-    } else {
-      await createSupplier(data);
-    }
-    handleClose();
-    router.refresh();
+        if (editingSupplier) {
+          await updateSupplier(editingSupplier.id, data);
+        } else {
+          await createSupplier(data);
+        }
+        handleClose();
+        router.refresh();
+      },
+    });
   };
 
   const handleDelete = (id: string) => {
-    setConfirmConfig({
+    openConfirm({
       title: "Hapus Supplier",
       message: "Apakah Anda yakin ingin menghapus supplier ini?",
+      variant: "danger",
       onConfirm: async () => {
         await deleteSupplier(id);
       },
     });
-    setConfirmOpen(true);
   };
 
   const columns: Column<SupplierDTO>[] = [
@@ -300,48 +325,25 @@ export default function SupplierClient({
         </div>
       </motion.div>
 
-      <Dialog
+      <ConfirmationDialog
         open={confirmOpen}
-        onClose={() => setConfirmOpen(false)}
-        PaperProps={{
-          className:
-            "rounded-[1.5rem] p-4 bg-white/90 backdrop-blur-xl border border-white/20 shadow-2xl",
-          style: { width: "100%", maxWidth: "400px" },
+        onClose={() => (confirmBusy ? null : setConfirmOpen(false))}
+        onConfirm={async () => {
+          if (!confirmConfig) return;
+          try {
+            setConfirmBusy(true);
+            await confirmConfig.onConfirm();
+            setConfirmOpen(false);
+          } finally {
+            setConfirmBusy(false);
+          }
         }}
-      >
-        <DialogTitle className="text-2xl font-black text-zinc-900 flex items-center gap-3">
-          <div className="p-2 bg-red-100 text-red-600 rounded-xl">
-            <DeleteIcon />
-          </div>
-          {confirmConfig?.title}
-        </DialogTitle>
-        <DialogContent className="py-4">
-          <p className="text-zinc-600 font-medium leading-relaxed">
-            {confirmConfig?.message}
-          </p>
-        </DialogContent>
-        <DialogActions className="p-4 gap-2">
-          <GlassButton
-            onClick={() => setConfirmOpen(false)}
-            variant="secondary"
-            className="px-6 py-3 rounded-xl font-bold uppercase tracking-wider text-sm flex-1"
-          >
-            Batal
-          </GlassButton>
-          <GlassButton
-            onClick={async () => {
-              if (confirmConfig) {
-                await confirmConfig.onConfirm();
-                setConfirmOpen(false);
-              }
-            }}
-            variant="danger"
-            className="px-6 py-3 rounded-xl font-bold uppercase tracking-wider text-sm flex-1"
-          >
-            Ya, Hapus
-          </GlassButton>
-        </DialogActions>
-      </Dialog>
+        loading={confirmBusy}
+        title={confirmConfig?.title}
+        content={confirmConfig?.message}
+        variant={confirmConfig?.variant}
+        confirmText={confirmConfig?.confirmText}
+      />
 
       <motion.div
         initial={{ opacity: 0, scale: 0.98 }}
