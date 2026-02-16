@@ -87,6 +87,11 @@ const groups: Group[] = [
         href: "/admin/cash",
         icon: <AccountBalanceWalletIcon fontSize="small" />,
       },
+      {
+        label: "Pengaturan Upah",
+        href: "/admin/wages",
+        icon: <RequestQuoteIcon fontSize="small" />,
+      },
     ],
   },
   {

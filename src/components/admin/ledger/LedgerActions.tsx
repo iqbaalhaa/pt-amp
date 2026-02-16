@@ -1,14 +1,15 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import jsPDF from "jspdf";
 import { revokePurchase } from "@/actions/purchase-actions";
 import { revokeSale } from "@/actions/sale-actions";
 import { revokeProduction } from "@/actions/production-actions";
 import { approvePurchase } from "@/actions/purchase-actions";
 import { approveSale } from "@/actions/sale-actions";
 import GlassDialog from "@/components/ui/GlassDialog";
-import { useState } from "react";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import PrintIcon from "@mui/icons-material/Print";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
@@ -23,9 +24,36 @@ type Props = {
   onView?: (entry: LedgerEntry) => void;
 };
 
+const F4_W_MM = 210;
+const F4_H_MM = 330;
+const PRINT_MARGIN_MM = 10;
+
+let logoImagePromise: Promise<HTMLImageElement | null> | null = null;
+
+function loadLogoImage() {
+  if (logoImagePromise) return logoImagePromise;
+
+  logoImagePromise = new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => resolve(null);
+    img.src = "/logoAMP.png";
+  });
+
+  return logoImagePromise;
+}
+
 export function LedgerActions({ id, type, status, entry, onView }: Props) {
   const router = useRouter();
-  const canPrint = type === "purchase" || type === "sale" || type === "invoice";
+  const canPrint =
+    type === "purchase" ||
+    type === "sale" ||
+    type === "invoice" ||
+    (type === "production" &&
+      (entry?.subType === "Pengikisan" ||
+        entry?.subType === "Pemotongan" ||
+        entry?.subType === "Penjemuran" ||
+        entry?.subType === "Pengemasan"));
   const isCancelled = status === "cancelled";
   const canApprove =
     status === "draft" &&
@@ -107,6 +135,306 @@ export function LedgerActions({ id, type, status, entry, onView }: Props) {
     router.replace(`${window.location.pathname}?${search.toString()}`);
   };
 
+  const handlePrintPengikisan = async () => {
+    if (!entry || !entry.pengikisanItems || entry.pengikisanItems.length === 0)
+      return;
+
+    const logo = await loadLogoImage();
+
+    const pdf = new jsPDF({
+      orientation: "p",
+      unit: "mm",
+      format: [F4_W_MM, F4_H_MM],
+    });
+
+    const margin = PRINT_MARGIN_MM;
+    const pageW = F4_W_MM;
+
+    let y = margin + 4;
+
+    if (logo) {
+      const logoW = 26;
+      const ratio = logo.height / logo.width || 1;
+      const logoH = logoW * ratio;
+
+      pdf.addImage(logo, "PNG", margin, y, logoW, logoH);
+
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(11);
+      pdf.text("PT AURORA MITRA PRAKARSA (AMP)", margin + logoW + 6, y + 5);
+
+      pdf.setFont("helvetica", "normal");
+      pdf.setFontSize(7);
+      pdf.text(
+        "(General Contractor, Supplier, Infrastructure)",
+        margin + logoW + 6,
+        y + 11
+      );
+
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(9);
+      pdf.text("REKAP PENGIKISAN", pageW - margin, y + 5, {
+        align: "right",
+      });
+
+      y += logoH + 6;
+
+      pdf.setDrawColor(26, 35, 126);
+      pdf.setLineWidth(0.4);
+      pdf.line(margin, y, pageW - margin, y);
+      y += 4;
+    } else {
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(12);
+      pdf.text("REKAP PENGIKISAN", pageW / 2, y, { align: "center" });
+      y += 8;
+      pdf.setDrawColor(26, 35, 126);
+      pdf.setLineWidth(0.4);
+      pdf.line(margin, y, pageW - margin, y);
+      y += 4;
+    }
+
+    const dateStr = new Date(entry.date).toLocaleDateString("id-ID");
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(9);
+    pdf.text(`Tanggal: ${dateStr}`, margin, y);
+    y += 5;
+
+    if (entry.reference) {
+      pdf.text(`Ref: ${entry.reference}`, margin, y);
+      y += 5;
+    }
+
+    if (entry.notes) {
+      pdf.text(`Catatan: ${entry.notes}`, margin, y);
+      y += 5;
+    }
+
+    y += 2;
+
+    const colNoX = margin;
+    const colPekerjaX = colNoX + 10;
+    const colKaX = colPekerjaX + 40;
+    const colStikX = colKaX + 25;
+    const colUpahKaX = colStikX + 25;
+    const colUpahStikX = colUpahKaX + 25;
+    const colTotalX = colUpahStikX + 30;
+
+    const rowHeight = 6;
+    const tableTop = y;
+
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(9);
+    pdf.text("No", colNoX, y);
+    pdf.text("Pekerja", colPekerjaX, y);
+    pdf.text("KA (Kg)", colKaX, y);
+    pdf.text("Stik (Kg)", colStikX, y);
+    pdf.text("Upah KA", colUpahKaX, y);
+    pdf.text("Upah Stik", colUpahStikX, y);
+    pdf.text("Total (Rp)", colTotalX, y);
+
+    y += 2;
+
+    pdf.setDrawColor(0, 0, 0);
+    pdf.setLineWidth(0.2);
+
+    const items = entry.pengikisanItems;
+    const tableBottomY = tableTop + rowHeight * (items.length + 2);
+
+    pdf.line(colNoX - 2, tableTop - 3, pageW - margin, tableTop - 3);
+    pdf.line(colNoX - 2, tableBottomY, pageW - margin, tableBottomY);
+    pdf.line(colNoX - 2, y, pageW - margin, y);
+
+    y += 4;
+    pdf.setFont("helvetica", "normal");
+
+    let grandTotal = 0;
+
+    items.forEach((it, idx) => {
+      const ka = it.kaKg ?? 0;
+      const stik = it.stikKg ?? 0;
+      const upahKa = it.upahKa ?? 0;
+      const upahStik = it.upahStik ?? 0;
+      const total = it.total ?? ka * upahKa + stik * upahStik;
+
+      grandTotal += total;
+
+      pdf.text(String(idx + 1), colNoX, y);
+      pdf.text(it.nama || "-", colPekerjaX, y);
+      pdf.text(ka ? ka.toLocaleString("id-ID") : "-", colKaX, y);
+      pdf.text(stik ? stik.toLocaleString("id-ID") : "-", colStikX, y);
+      pdf.text(
+        upahKa ? upahKa.toLocaleString("id-ID") : "-",
+        colUpahKaX,
+        y,
+        { align: "right" }
+      );
+      pdf.text(
+        upahStik ? upahStik.toLocaleString("id-ID") : "-",
+        colUpahStikX,
+        y,
+        { align: "right" }
+      );
+      pdf.text(total.toLocaleString("id-ID"), colTotalX, y, {
+        align: "right",
+      });
+
+      y += rowHeight;
+    });
+
+    y += 4;
+
+    pdf.setFont("helvetica", "bold");
+    pdf.text("Total Semua", colUpahStikX, y);
+    pdf.text(grandTotal.toLocaleString("id-ID"), colTotalX, y, {
+      align: "right",
+    });
+
+    const rawId = entry.id.startsWith("pengikisan-")
+      ? entry.id.replace("pengikisan-", "")
+      : entry.id;
+    pdf.save(`invoice-pengikisan-${rawId}.pdf`);
+  };
+
+  const handlePrintPemotongan = async () => {
+    if (
+      !entry ||
+      entry.subType !== "Pemotongan" ||
+      !entry.pemotonganItems ||
+      entry.pemotonganItems.length === 0
+    )
+      return;
+
+    const logo = await loadLogoImage();
+
+    const pdf = new jsPDF({
+      orientation: "p",
+      unit: "mm",
+      format: [F4_W_MM, F4_H_MM],
+    });
+
+    const margin = PRINT_MARGIN_MM;
+    const pageW = F4_W_MM;
+
+    let y = margin + 4;
+
+    if (logo) {
+      const logoW = 26;
+      const ratio = logo.height / logo.width || 1;
+      const logoH = logoW * ratio;
+
+      pdf.addImage(logo, "PNG", margin, y, logoW, logoH);
+
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(11);
+      pdf.text("PT AURORA MITRA PRAKARSA (AMP)", margin + logoW + 6, y + 5);
+
+      pdf.setFont("helvetica", "normal");
+      pdf.setFontSize(7);
+      pdf.text(
+        "(General Contractor, Supplier, Infrastructure)",
+        margin + logoW + 6,
+        y + 11
+      );
+
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(9);
+      pdf.text("REKAP PEMOTONGAN", pageW - margin, y + 5, {
+        align: "right",
+      });
+
+      y += logoH + 6;
+
+      pdf.setDrawColor(26, 35, 126);
+      pdf.setLineWidth(0.4);
+      pdf.line(margin, y, pageW - margin, y);
+      y += 4;
+    } else {
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(12);
+      pdf.text("REKAP PEMOTONGAN", pageW / 2, y, { align: "center" });
+      y += 8;
+      pdf.setDrawColor(26, 35, 126);
+      pdf.setLineWidth(0.4);
+      pdf.line(margin, y, pageW - margin, y);
+      y += 4;
+    }
+
+    const dateStr = new Date(entry.date).toLocaleDateString("id-ID");
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(9);
+    pdf.text(`Tanggal: ${dateStr}`, margin, y);
+    y += 5;
+
+    if (entry.notes) {
+      pdf.text(`Catatan: ${entry.notes}`, margin, y);
+      y += 5;
+    }
+
+    y += 2;
+
+    const colNoX = margin;
+    const colPekerjaX = colNoX + 10;
+    const colQtyX = colPekerjaX + 80;
+    const colTotalX = colQtyX + 50;
+
+    const rowHeight = 6;
+    const tableTop = y;
+
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(9);
+    pdf.text("No", colNoX, y);
+    pdf.text("Pekerja", colPekerjaX, y);
+    pdf.text("Qty (Kg)", colQtyX, y);
+    pdf.text("Total (Rp)", colTotalX, y);
+
+    y += 2;
+
+    pdf.setDrawColor(0, 0, 0);
+    pdf.setLineWidth(0.2);
+
+    const items = entry.pemotonganItems;
+    const tableBottomY = tableTop + rowHeight * (items.length + 2);
+
+    pdf.line(colNoX - 2, tableTop - 3, pageW - margin, tableTop - 3);
+    pdf.line(colNoX - 2, tableBottomY, pageW - margin, tableBottomY);
+    pdf.line(colNoX - 2, y, pageW - margin, y);
+
+    y += 4;
+    pdf.setFont("helvetica", "normal");
+
+    let grandTotal = 0;
+
+    items.forEach((it, idx) => {
+      const qty = it.qty ?? 0;
+      const total = it.total ?? 0;
+
+      grandTotal += total;
+
+      pdf.text(String(idx + 1), colNoX, y);
+      pdf.text(it.nama || "-", colPekerjaX, y);
+      pdf.text(qty.toLocaleString("id-ID"), colQtyX, y);
+      pdf.text(total.toLocaleString("id-ID"), colTotalX, y, {
+        align: "right",
+      });
+
+      y += rowHeight;
+    });
+
+    y += 4;
+
+    pdf.setFont("helvetica", "bold");
+    pdf.text("Total Semua", colQtyX, y);
+    pdf.text(grandTotal.toLocaleString("id-ID"), colTotalX, y, {
+      align: "right",
+    });
+
+    const rawId = entry.id.startsWith("pemotongan-")
+      ? entry.id.replace("pemotongan-", "")
+      : entry.id;
+    pdf.save(`invoice-pemotongan-${rawId}.pdf`);
+  };
+
   return (
     <div className="flex justify-end gap-2">
       <button
@@ -123,23 +451,49 @@ export function LedgerActions({ id, type, status, entry, onView }: Props) {
           <CheckCircleIcon fontSize="small" /> Setujui
         </button>
       )}
-      <Link
-        href={
-          canPrint
-            ? `/admin/invoice/print?type=${
-                type === "invoice" ? "expense" : type
-              }&id=${id}`
-            : "#"
-        }
-        aria-disabled={!canPrint}
-        className={`flex items-center gap-1 rounded-md px-2 py-1 text-[11px] ${
-          canPrint
-            ? "bg-slate-100 text-slate-800 hover:bg-slate-200"
-            : "bg-slate-50 text-slate-400 cursor-not-allowed"
-        }`}
-      >
-        <PrintIcon fontSize="small" /> Print Invoice
-      </Link>
+      {type === "production" && entry?.subType === "Pengikisan" ? (
+        <button
+          onClick={handlePrintPengikisan}
+          disabled={!canPrint}
+          className={`flex items-center gap-1 rounded-md px-2 py-1 text-[11px] ${
+            canPrint
+              ? "bg-slate-100 text-slate-800 hover:bg-slate-200"
+              : "bg-slate-50 text-slate-400 cursor-not-allowed"
+          }`}
+        >
+          <PrintIcon fontSize="small" /> Print Invoice
+        </button>
+      ) : type === "production" && entry?.subType === "Pemotongan" ? (
+        <button
+          onClick={handlePrintPemotongan}
+          disabled={!canPrint}
+          className={`flex items-center gap-1 rounded-md px-2 py-1 text-[11px] ${
+            canPrint
+              ? "bg-slate-100 text-slate-800 hover:bg-slate-200"
+              : "bg-slate-50 text-slate-400 cursor-not-allowed"
+          }`}
+        >
+          <PrintIcon fontSize="small" /> Print Invoice
+        </button>
+      ) : (
+        <Link
+          href={
+            canPrint
+              ? `/admin/invoice/print?type=${
+                  type === "invoice" ? "expense" : type
+                }&id=${id}`
+              : "#"
+          }
+          aria-disabled={!canPrint}
+          className={`flex items-center gap-1 rounded-md px-2 py-1 text-[11px] ${
+            canPrint
+              ? "bg-slate-100 text-slate-800 hover:bg-slate-200"
+              : "bg-slate-50 text-slate-400 cursor-not-allowed"
+          }`}
+        >
+          <PrintIcon fontSize="small" /> Print Invoice
+        </Link>
+      )}
       {canReject && (
         <button
           onClick={() => setOpenReject(true)}

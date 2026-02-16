@@ -1,5 +1,4 @@
 import { prisma } from "@/lib/prisma";
-import { LedgerFilters } from "@/components/admin/ledger/LedgerFilters";
 import { LedgerSection } from "@/components/admin/ledger/LedgerSection";
 import { LedgerTabs } from "@/components/admin/ledger/LedgerTabs";
 import { ProductionCostSummary } from "@/components/admin/ledger/ProductionCostSummary";
@@ -8,6 +7,7 @@ import {
   formatDateTime,
   toCurrency,
 } from "@/components/admin/ledger/formatters";
+import LedgerFiltersClient from "@/components/admin/ledger/LedgerFiltersClient";
 
 type SearchParams = {
   start?: string;
@@ -194,28 +194,50 @@ export default async function AdminLedgerPage({
         productionWorkers: { include: { worker: true } },
       },
     }),
-    prisma.pengikisan.findMany({
-      where: {
-        ...(start ? { date: { gte: start } } : {}),
-        ...(end ? { date: { lte: end } } : {}),
-        ...(params.q
-          ? { OR: [{ notes: { contains: params.q, mode: "insensitive" } }] }
-          : {}),
-      },
-      orderBy: { date: "desc" },
-      include: { pengikisanItems: true },
-    }),
-    prisma.pemotongan.findMany({
-      where: {
-        ...(start ? { date: { gte: start } } : {}),
-        ...(end ? { date: { lte: end } } : {}),
-        ...(params.q
-          ? { OR: [{ notes: { contains: params.q, mode: "insensitive" } }] }
-          : {}),
-      },
-      orderBy: { date: "desc" },
-      include: { pemotonganItems: true },
-    }),
+    (async () => {
+      try {
+        return await prisma.pengikisan.findMany({
+          where: {
+            ...(start ? { date: { gte: start } } : {}),
+            ...(end ? { date: { lte: end } } : {}),
+            ...(params.q
+              ? { OR: [{ notes: { contains: params.q, mode: "insensitive" } }] }
+              : {}),
+          },
+          orderBy: { date: "desc" },
+          include: { pengikisanItems: true },
+        });
+      } catch {
+        if (process.env.NODE_ENV === "development") {
+          console.warn(
+            "Failed to load pengikisan ledger data, returning empty list as fallback",
+          );
+        }
+        return [];
+      }
+    })(),
+    (async () => {
+      try {
+        return await prisma.pemotongan.findMany({
+          where: {
+            ...(start ? { date: { gte: start } } : {}),
+            ...(end ? { date: { lte: end } } : {}),
+            ...(params.q
+              ? { OR: [{ notes: { contains: params.q, mode: "insensitive" } }] }
+              : {}),
+          },
+          orderBy: { date: "desc" },
+          include: { pemotonganItems: true },
+        });
+      } catch {
+        if (process.env.NODE_ENV === "development") {
+          console.warn(
+            "Failed to load pemotongan ledger data, returning empty list as fallback",
+          );
+        }
+        return [];
+      }
+    })(),
     prisma.penjemuran.findMany({
       where: {
         ...(start ? { date: { gte: start } } : {}),
@@ -227,17 +249,28 @@ export default async function AdminLedgerPage({
       orderBy: { date: "desc" },
       include: { penjemuranItems: true },
     }),
-    prisma.pengemasan.findMany({
-      where: {
-        ...(start ? { date: { gte: start } } : {}),
-        ...(end ? { date: { lte: end } } : {}),
-        ...(params.q
-          ? { OR: [{ notes: { contains: params.q, mode: "insensitive" } }] }
-          : {}),
-      },
-      orderBy: { date: "desc" },
-      include: { pengemasanItems: true },
-    }),
+    (async () => {
+      try {
+        return await prisma.pengemasan.findMany({
+          where: {
+            ...(start ? { date: { gte: start } } : {}),
+            ...(end ? { date: { lte: end } } : {}),
+            ...(params.q
+              ? { OR: [{ notes: { contains: params.q, mode: "insensitive" } }] }
+              : {}),
+          },
+          orderBy: { date: "desc" },
+          include: { pengemasanItems: true },
+        });
+      } catch {
+        if (process.env.NODE_ENV === "development") {
+          console.warn(
+            "Failed to load pengemasan ledger data, returning empty list as fallback",
+          );
+        }
+        return [];
+      }
+    })(),
   ]);
   const anyPrisma = prisma as any;
   let expenses: Array<{
@@ -541,6 +574,7 @@ export default async function AdminLedgerPage({
       date: p.date.toISOString(),
       status: "completed" as any,
       reference: `PK-${p.id}`,
+      createdByName: p.petugas || null,
       counterparty: names || "-",
       total: total > 0 ? total : null,
       stockImpact: "NEUTRAL",
@@ -548,6 +582,14 @@ export default async function AdminLedgerPage({
       itemCount: p.pengikisanItems.length,
       productionCost: total,
       subType: "Pengikisan",
+      pengikisanItems: p.pengikisanItems.map((it) => ({
+        nama: it.nama,
+        kaKg: Number(it.kaKg ?? 0),
+        stikKg: Number(it.stikKg ?? 0),
+        upahKa: Number(it.upahKa ?? 0),
+        upahStik: Number(it.upahStik ?? 0),
+        total: Number(it.total ?? 0),
+      })),
     };
   });
 
@@ -562,6 +604,7 @@ export default async function AdminLedgerPage({
       date: p.date.toISOString(),
       status: "completed" as any,
       reference: `PM-${p.id}`,
+      createdByName: (p as any).petugas || null,
       counterparty: names || "-",
       total: total > 0 ? total : null,
       stockImpact: "NEUTRAL",
@@ -569,6 +612,11 @@ export default async function AdminLedgerPage({
       itemCount: p.pemotonganItems.length,
       productionCost: total,
       subType: "Pemotongan",
+      pemotonganItems: p.pemotonganItems.map((it) => ({
+        nama: it.nama,
+        qty: Number(it.qty ?? 0),
+        total: Number(it.total ?? 0),
+      })),
     };
   });
 
@@ -583,6 +631,7 @@ export default async function AdminLedgerPage({
       date: p.date.toISOString(),
       status: "completed" as any,
       reference: `PJ-${p.id}`,
+      createdByName: (p as any).petugas || null,
       counterparty: names || "-",
       total: total > 0 ? total : null,
       stockImpact: "NEUTRAL",
@@ -590,6 +639,14 @@ export default async function AdminLedgerPage({
       itemCount: p.penjemuranItems.length,
       productionCost: total,
       subType: "Penjemuran",
+      penjemuranItems: p.penjemuranItems.map((it) => ({
+        nama: it.nama,
+        hari: Number(it.hari ?? 0),
+        lemburJam: Number(it.lemburJam ?? 0),
+        upahPerHari: Number(it.upahPerHari ?? 0),
+        upahLemburPerJam: Number(it.upahLemburPerJam ?? 0),
+        total: Number(it.total ?? 0),
+      })),
     };
   });
 
@@ -604,6 +661,7 @@ export default async function AdminLedgerPage({
       date: p.date.toISOString(),
       status: "completed" as any,
       reference: `PG-${p.id}`,
+      createdByName: (p as any).petugas || null,
       counterparty: names || "-",
       total: total > 0 ? total : null,
       stockImpact: "NEUTRAL",
@@ -611,6 +669,12 @@ export default async function AdminLedgerPage({
       itemCount: p.pengemasanItems.length,
       productionCost: total,
       subType: "Pengemasan",
+      pengemasanItems: p.pengemasanItems.map((it) => ({
+        nama: it.nama,
+        bungkus: Number(it.bungkus ?? 0),
+        upahPerBungkus: Number(it.upahPerBungkus ?? 0),
+        total: Number(it.total ?? 0),
+      })),
     };
   });
 
@@ -752,7 +816,7 @@ export default async function AdminLedgerPage({
       </section>
 
       <section className="mb-4 rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-100">
-        <LedgerFilters
+        <LedgerFiltersClient
           params={params}
           partyOptions={partyOptions}
           itemTypeOptions={itemTypeOptions}
@@ -852,6 +916,12 @@ export default async function AdminLedgerPage({
               <div>
                 <span className="font-medium">Jenis:</span> {selected.type}
               </div>
+              {selected.subType && (
+                <div>
+                  <span className="font-medium">Sub Jenis:</span>{" "}
+                  {selected.subType}
+                </div>
+              )}
               <div>
                 <span className="font-medium">Status:</span>{" "}
                 {selected.status.toUpperCase()}
@@ -876,7 +946,279 @@ export default async function AdminLedgerPage({
                 {selected.notes || "-"}
               </div>
             </div>
-            <div className="space-y-2 text-xs" />
+            <div className="space-y-2 text-xs">
+              {selected.subType === "Pengikisan" &&
+              selected.pengikisanItems &&
+              selected.pengikisanItems.length > 0 ? (
+                <table className="w-full border-collapse text-[11px]">
+                  <thead>
+                    <tr className="bg-slate-50 text-slate-700">
+                      <th className="border border-slate-200 px-2 py-1 text-left w-8">
+                        #
+                      </th>
+                      <th className="border border-slate-200 px-2 py-1 text-left">
+                        Pekerja
+                      </th>
+                      <th className="border border-slate-200 px-2 py-1 text-right">
+                        KA (kg)
+                      </th>
+                      <th className="border border-slate-200 px-2 py-1 text-right">
+                        Stik (kg)
+                      </th>
+                      <th className="border border-slate-200 px-2 py-1 text-right">
+                        Upah KA
+                      </th>
+                      <th className="border border-slate-200 px-2 py-1 text-right">
+                        Upah Stik
+                      </th>
+                      <th className="border border-slate-200 px-2 py-1 text-right">
+                        Total
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {selected.pengikisanItems.map((it, idx) => (
+                      <tr key={idx}>
+                        <td className="border border-slate-200 px-2 py-1">
+                          {idx + 1}
+                        </td>
+                        <td className="border border-slate-200 px-2 py-1">
+                          {it.nama}
+                        </td>
+                        <td className="border border-slate-200 px-2 py-1 text-right">
+                          {it.kaKg}
+                        </td>
+                        <td className="border border-slate-200 px-2 py-1 text-right">
+                          {it.stikKg}
+                        </td>
+                        <td className="border border-slate-200 px-2 py-1 text-right">
+                          {toCurrency(it.upahKa)}
+                        </td>
+                        <td className="border border-slate-200 px-2 py-1 text-right">
+                          {toCurrency(it.upahStik)}
+                        </td>
+                        <td className="border border-slate-200 px-2 py-1 text-right">
+                          {toCurrency(it.total)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot>
+                    <tr>
+                      <td
+                        className="border border-slate-200 px-2 py-1 font-semibold"
+                        colSpan={6}
+                      >
+                        Total
+                      </td>
+                      <td className="border border-slate-200 px-2 py-1 text-right font-semibold">
+                        {toCurrency(
+                          selected.pengikisanItems.reduce(
+                            (s, it) => s + it.total,
+                            0
+                          )
+                        )}
+                      </td>
+                    </tr>
+                  </tfoot>
+                </table>
+              ) : selected.subType === "Pemotongan" &&
+                selected.pemotonganItems &&
+                selected.pemotonganItems.length > 0 ? (
+                <table className="w-full border-collapse text-[11px]">
+                  <thead>
+                    <tr className="bg-slate-50 text-slate-700">
+                      <th className="border border-slate-200 px-2 py-1 text-left w-8">
+                        #
+                      </th>
+                      <th className="border border-slate-200 px-2 py-1 text-left">
+                        Pekerja
+                      </th>
+                      <th className="border border-slate-200 px-2 py-1 text-right">
+                        Qty (kg)
+                      </th>
+                      <th className="border border-slate-200 px-2 py-1 text-right">
+                        Total (Rp)
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {selected.pemotonganItems.map((it, idx) => (
+                      <tr key={idx}>
+                        <td className="border border-slate-200 px-2 py-1">
+                          {idx + 1}
+                        </td>
+                        <td className="border border-slate-200 px-2 py-1">
+                          {it.nama}
+                        </td>
+                        <td className="border border-slate-200 px-2 py-1 text-right">
+                          {it.qty}
+                        </td>
+                        <td className="border border-slate-200 px-2 py-1 text-right">
+                          {toCurrency(it.total)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot>
+                    <tr>
+                      <td
+                        className="border border-slate-200 px-2 py-1 font-semibold"
+                        colSpan={3}
+                      >
+                        Total
+                      </td>
+                      <td className="border border-slate-200 px-2 py-1 text-right font-semibold">
+                        {toCurrency(
+                          selected.pemotonganItems.reduce(
+                            (s, it) => s + it.total,
+                            0
+                          )
+                        )}
+                      </td>
+                    </tr>
+                  </tfoot>
+                </table>
+              ) : selected.subType === "Penjemuran" &&
+                selected.penjemuranItems &&
+                selected.penjemuranItems.length > 0 ? (
+                <table className="w-full border-collapse text-[11px]">
+                  <thead>
+                    <tr className="bg-slate-50 text-slate-700">
+                      <th className="border border-slate-200 px-2 py-1 text-left w-8">
+                        #
+                      </th>
+                      <th className="border border-slate-200 px-2 py-1 text-left">
+                        Pekerja
+                      </th>
+                      <th className="border border-slate-200 px-2 py-1 text-right">
+                        Hari
+                      </th>
+                      <th className="border border-slate-200 px-2 py-1 text-right">
+                        Lembur (jam)
+                      </th>
+                      <th className="border border-slate-200 px-2 py-1 text-right">
+                        Upah Harian
+                      </th>
+                      <th className="border border-slate-200 px-2 py-1 text-right">
+                        Upah Lembur
+                      </th>
+                      <th className="border border-slate-200 px-2 py-1 text-right">
+                        Total
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {selected.penjemuranItems.map((it, idx) => (
+                      <tr key={idx}>
+                        <td className="border border-slate-200 px-2 py-1">
+                          {idx + 1}
+                        </td>
+                        <td className="border border-slate-200 px-2 py-1">
+                          {it.nama}
+                        </td>
+                        <td className="border border-slate-200 px-2 py-1 text-right">
+                          {it.hari}
+                        </td>
+                        <td className="border border-slate-200 px-2 py-1 text-right">
+                          {it.lemburJam}
+                        </td>
+                        <td className="border border-slate-200 px-2 py-1 text-right">
+                          {toCurrency(it.upahPerHari)}
+                        </td>
+                        <td className="border border-slate-200 px-2 py-1 text-right">
+                          {toCurrency(it.upahLemburPerJam)}
+                        </td>
+                        <td className="border border-slate-200 px-2 py-1 text-right">
+                          {toCurrency(it.total)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot>
+                    <tr>
+                      <td
+                        className="border border-slate-200 px-2 py-1 font-semibold"
+                        colSpan={6}
+                      >
+                        Total
+                      </td>
+                      <td className="border border-slate-200 px-2 py-1 text-right font-semibold">
+                        {toCurrency(
+                          selected.penjemuranItems.reduce(
+                            (s, it) => s + it.total,
+                            0
+                          )
+                        )}
+                      </td>
+                    </tr>
+                  </tfoot>
+                </table>
+              ) : selected.subType === "Pengemasan" &&
+                selected.pengemasanItems &&
+                selected.pengemasanItems.length > 0 ? (
+                <table className="w-full border-collapse text-[11px]">
+                  <thead>
+                    <tr className="bg-slate-50 text-slate-700">
+                      <th className="border border-slate-200 px-2 py-1 text-left w-8">
+                        #
+                      </th>
+                      <th className="border border-slate-200 px-2 py-1 text-left">
+                        Pekerja
+                      </th>
+                      <th className="border border-slate-200 px-2 py-1 text-right">
+                        Bungkus
+                      </th>
+                      <th className="border border-slate-200 px-2 py-1 text-right">
+                        Upah / Bungkus
+                      </th>
+                      <th className="border border-slate-200 px-2 py-1 text-right">
+                        Total
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {selected.pengemasanItems.map((it, idx) => (
+                      <tr key={idx}>
+                        <td className="border border-slate-200 px-2 py-1">
+                          {idx + 1}
+                        </td>
+                        <td className="border border-slate-200 px-2 py-1">
+                          {it.nama}
+                        </td>
+                        <td className="border border-slate-200 px-2 py-1 text-right">
+                          {it.bungkus}
+                        </td>
+                        <td className="border border-slate-200 px-2 py-1 text-right">
+                          {toCurrency(it.upahPerBungkus)}
+                        </td>
+                        <td className="border border-slate-200 px-2 py-1 text-right">
+                          {toCurrency(it.total)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot>
+                    <tr>
+                      <td
+                        className="border border-slate-200 px-2 py-1 font-semibold"
+                        colSpan={4}
+                      >
+                        Total
+                      </td>
+                      <td className="border border-slate-200 px-2 py-1 text-right font-semibold">
+                        {toCurrency(
+                          selected.pengemasanItems.reduce(
+                            (s, it) => s + it.total,
+                            0
+                          )
+                        )}
+                      </td>
+                    </tr>
+                  </tfoot>
+                </table>
+              ) : null}
+            </div>
           </div>
         </section>
       )}

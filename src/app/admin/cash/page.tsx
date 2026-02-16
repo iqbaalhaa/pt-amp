@@ -68,30 +68,74 @@ export default async function CashPage({
 				productionType: true,
 			},
 		}),
-		prisma.pengikisan.findMany({
-			where: {
-				...(start ? { date: { gte: start } } : {}),
-				...(end ? { date: { lte: end } } : {}),
-			},
-		}),
-		prisma.pemotongan.findMany({
-			where: {
-				...(start ? { date: { gte: start } } : {}),
-				...(end ? { date: { lte: end } } : {}),
-			},
-		}),
-		prisma.penjemuran.findMany({
-			where: {
-				...(start ? { date: { gte: start } } : {}),
-				...(end ? { date: { lte: end } } : {}),
-			},
-		}),
-		prisma.pengemasan.findMany({
-			where: {
-				...(start ? { date: { gte: start } } : {}),
-				...(end ? { date: { lte: end } } : {}),
-			},
-		}),
+		(async () => {
+			try {
+				return await prisma.pengikisan.findMany({
+					where: {
+						...(start ? { date: { gte: start } } : {}),
+						...(end ? { date: { lte: end } } : {}),
+					},
+				});
+			} catch {
+				if (process.env.NODE_ENV === "development") {
+					console.warn(
+						"Failed to load pengikisan cash data, returning empty list as fallback",
+					);
+				}
+				return [];
+			}
+		})(),
+		(async () => {
+			try {
+				return await prisma.pemotongan.findMany({
+					where: {
+						...(start ? { date: { gte: start } } : {}),
+						...(end ? { date: { lte: end } } : {}),
+					},
+				});
+			} catch {
+				if (process.env.NODE_ENV === "development") {
+					console.warn(
+						"Failed to load pemotongan cash data, returning empty list as fallback",
+					);
+				}
+				return [];
+			}
+		})(),
+		(async () => {
+			try {
+				return await prisma.penjemuran.findMany({
+					where: {
+						...(start ? { date: { gte: start } } : {}),
+						...(end ? { date: { lte: end } } : {}),
+					},
+				});
+			} catch {
+				if (process.env.NODE_ENV === "development") {
+					console.warn(
+						"Failed to load penjemuran cash data, returning empty list as fallback",
+					);
+				}
+				return [];
+			}
+		})(),
+		(async () => {
+			try {
+				return await prisma.pengemasan.findMany({
+					where: {
+						...(start ? { date: { gte: start } } : {}),
+						...(end ? { date: { lte: end } } : {}),
+					},
+				});
+			} catch {
+				if (process.env.NODE_ENV === "development") {
+					console.warn(
+						"Failed to load pengemasan cash data, returning empty list as fallback",
+					);
+				}
+				return [];
+			}
+		})(),
 	]);
 	const anyPrisma = prisma as any;
 	let totalExpense = 0;
@@ -262,8 +306,7 @@ export default async function CashPage({
 
 	return (
 		<main className="w-full px-4 py-6 md:py-8">
-			<div className="mx-auto max-w-6xl">
-				<div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-zinc-200">
+			<div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-zinc-200">
 					<div className="flex flex-col gap-3 border-b border-zinc-200 px-4 py-4 md:flex-row md:items-center md:justify-between md:px-6">
 						<div className="space-y-2">
 							<div className="text-[11px] font-medium text-zinc-500">
@@ -682,7 +725,6 @@ export default async function CashPage({
 						)}
 					</div>
 				</div>
-			</div>
 		</main>
 	);
 }

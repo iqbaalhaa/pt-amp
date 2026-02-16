@@ -73,11 +73,9 @@ export default function PemotonganClient() {
     { id: 1, nama: "", qty: 0 },
   ]);
 
-  const [date, setDate] = useState(
-    () => new Date().toISOString().split("T")[0]
-  );
+  const [date, setDate] = useState("");
   const [notes, setNotes] = useState("");
-  const [upahPerKg, setUpahPerKg] = useState(1500); // Default value
+  const [upahPerKg, setUpahPerKg] = useState(1500);
   const [saving, setSaving] = useState(false);
 
   const [openPreview, setOpenPreview] = useState(false);
@@ -85,11 +83,27 @@ export default function PemotonganClient() {
 
   const [workerOptions, setWorkerOptions] = useState<WorkerDTO[]>([]);
   const [creatingWorkerId, setCreatingWorkerId] = useState<number | null>(null);
+  const [bulkWorkerModalOpen, setBulkWorkerModalOpen] = useState(false);
+  const [selectedWorkerIds, setSelectedWorkerIds] = useState<string[]>([]);
 
   useEffect(() => {
     getWorkers().then((data) =>
       setWorkerOptions(data.filter((w) => w.isActive))
     );
+    try {
+      if (typeof window !== "undefined") {
+        const raw = window.localStorage.getItem("upahSettings");
+        if (raw) {
+          const parsed = JSON.parse(raw) as { pemotonganPerKg?: number };
+          if (typeof parsed.pemotonganPerKg === "number") {
+            setUpahPerKg(parsed.pemotonganPerKg);
+          }
+        }
+      }
+    } catch {
+      setUpahPerKg(1500);
+    }
+    setDate(new Date().toISOString().split("T")[0]);
   }, []);
 
   const addRow = () => {
@@ -147,6 +161,35 @@ export default function PemotonganClient() {
     () => rows.reduce((sum, row) => sum + getRowTotal(row), 0),
     [rows, upahPerKg]
   );
+
+  const toggleWorkerSelection = (id: string) => {
+    setSelectedWorkerIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  };
+
+  const handleAddSelectedWorkers = () => {
+    if (selectedWorkerIds.length === 0) return;
+    setRows((prev) => {
+      const existingNames = new Set(prev.map((r) => r.nama));
+      const selectedWorkers = workerOptions.filter((w) =>
+        selectedWorkerIds.includes(w.id)
+      );
+      const next = [...prev];
+      selectedWorkers.forEach((w) => {
+        if (existingNames.has(w.name)) return;
+        const nextId = next.length ? next[next.length - 1].id + 1 : 1;
+        next.push({
+          id: nextId,
+          nama: w.name,
+          qty: 0,
+        });
+      });
+      return next;
+    });
+    setSelectedWorkerIds([]);
+    setBulkWorkerModalOpen(false);
+  };
 
   const activeRows = useMemo(
     () =>
@@ -660,16 +703,25 @@ export default function PemotonganClient() {
             </table>
           </div>
 
-          {/* Action Buttons */}
           <div className="mt-4 flex flex-col md:flex-row items-center justify-between gap-4">
-            <button
-              type="button"
-              onClick={addRow}
-              className="flex items-center gap-2 text-[13px] font-semibold text-[var(--brand)] hover:text-[var(--brand-dark)] transition-colors"
-            >
-              <AddRoundedIcon fontSize="small" />
-              Tambah Baris
-            </button>
+            <div className="flex items-center gap-3 w-full md:w-auto">
+              <button
+                type="button"
+                onClick={addRow}
+                className="flex items-center gap-2 text-[13px] font-semibold text-[var(--brand)] hover:text-[var(--brand-dark)] transition-colors"
+              >
+                <AddRoundedIcon fontSize="small" />
+                Tambah Baris
+              </button>
+              <button
+                type="button"
+                onClick={() => setBulkWorkerModalOpen(true)}
+                className="flex items-center gap-2 text-[13px] font-semibold text-[var(--brand)] hover:text-[var(--brand-dark)] transition-colors"
+              >
+                <AddRoundedIcon fontSize="small" />
+                Tambah Pekerja (Banyak)
+              </button>
+            </div>
 
             <div className="flex items-center gap-3 w-full md:w-auto">
               <GlassButton
@@ -708,7 +760,63 @@ export default function PemotonganClient() {
         </div>
       </form>
 
-      {/* Success/Preview Modal */}
+      <SafeModal
+        open={bulkWorkerModalOpen}
+        title="Pilih Pekerja"
+        onClose={() => setBulkWorkerModalOpen(false)}
+        footer={
+          <div className="flex gap-2">
+            <GlassButton
+              variant="secondary"
+              onClick={() => setBulkWorkerModalOpen(false)}
+            >
+              Batal
+            </GlassButton>
+            <GlassButton
+              variant="primary"
+              disabled={selectedWorkerIds.length === 0}
+              onClick={handleAddSelectedWorkers}
+            >
+              Tambahkan
+              {selectedWorkerIds.length > 0
+                ? ` (${selectedWorkerIds.length})`
+                : ""}
+            </GlassButton>
+          </div>
+        }
+      >
+        <div className="max-h-80 w-full overflow-y-auto rounded-lg border border-[var(--glass-border)] bg-white/80">
+          {workerOptions.length === 0 ? (
+            <div className="px-4 py-6 text-center text-[12px] text-black/60">
+              Belum ada data pekerja. Tambahkan pekerja terlebih dahulu di menu
+              Master Data.
+            </div>
+          ) : (
+            <ul className="divide-y divide-[var(--glass-border)]">
+              {workerOptions.map((w) => (
+                <li
+                  key={w.id}
+                  className="flex items-center justify-between px-3 py-2 text-[13px]"
+                >
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4 rounded border-black/20"
+                      checked={selectedWorkerIds.includes(w.id)}
+                      onChange={() => toggleWorkerSelection(w.id)}
+                    />
+                    <span>{w.name}</span>
+                  </label>
+                  {!w.isActive && (
+                    <span className="text-[11px] text-black/40">Non-aktif</span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </SafeModal>
+
       <SafeModal
         open={openPreview}
         title="Berhasil Disimpan"

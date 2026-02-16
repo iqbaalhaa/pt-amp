@@ -8,11 +8,13 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "db:migrate:petugas": "tsx prisma/migrate-petugas.ts",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
     "auth:schema": "npx @better-auth/cli@latest generate",
-    "seed:superadmin": "tsx prisma/seed-superadmin.ts"
+    "seed:superadmin": "tsx prisma/seed-superadmin.ts",
+    "seed:pengikisan-feb": "tsx prisma/seed-pengikisan-february.ts"
   },
   "dependencies": {
     "@emotion/cache": "^11.14.0",

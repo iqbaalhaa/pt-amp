@@ -27,4 +27,31 @@ export type LedgerEntry = {
   productionCost?: number | null;
   subType?: string;
   lines?: LedgerLine[];
+  pengikisanItems?: {
+    nama: string;
+    kaKg: number;
+    stikKg: number;
+    upahKa: number;
+    upahStik: number;
+    total: number;
+  }[];
+  pemotonganItems?: {
+    nama: string;
+    qty: number;
+    total: number;
+  }[];
+  penjemuranItems?: {
+    nama: string;
+    hari: number;
+    lemburJam: number;
+    upahPerHari: number;
+    upahLemburPerJam: number;
+    total: number;
+  }[];
+  pengemasanItems?: {
+    nama: string;
+    bungkus: number;
+    upahPerBungkus: number;
+    total: number;
+  }[];
 };

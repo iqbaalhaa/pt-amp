@@ -15,28 +15,30 @@ export type PengikisanInput = {
   date: string;
   petugas?: string | null;
   notes?: string | null;
+  upahKa?: string;
+  upahStik?: string;
   items: PengikisanItemInput[];
 };
-
-const UPAH_KA = 1000;
-const UPAH_STIK = 1200;
 
 export async function createPengikisan(input: PengikisanInput) {
   const session = await auth.api.getSession({ headers: await headers() });
   const currentUserName = session?.user.name ?? null;
 
+  const upahKaValue = parseFloat(input.upahKa || "1000");
+  const upahStikValue = parseFloat(input.upahStik || "1200");
+
   const cleanedItems = input.items
     .map((item) => {
       const ka = parseFloat(item.kaKg || "0");
       const stik = parseFloat(item.stikKg || "0");
-      const total = ka * UPAH_KA + stik * UPAH_STIK;
+      const total = ka * upahKaValue + stik * upahStikValue;
 
       return {
         nama: item.nama,
         kaKg: item.kaKg || "0",
         stikKg: item.stikKg || "0",
-        upahKa: UPAH_KA.toString(),
-        upahStik: UPAH_STIK.toString(),
+        upahKa: upahKaValue.toString(),
+        upahStik: upahStikValue.toString(),
         total: total.toString(),
       };
     })

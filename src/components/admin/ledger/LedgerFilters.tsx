@@ -155,7 +155,12 @@ export function LedgerFilters({ params, partyOptions = [], itemTypeOptions = [] 
             onChange={(_e, v) => setParty(v ?? "")}
             onInputChange={(_e, v) => setParty(v)}
             renderInput={(params) => (
-              <TextField {...params} size="small" placeholder="Ketik nama pihak terkait" />
+              <TextField
+                {...params}
+                id="ledger-filter-party"
+                size="small"
+                placeholder="Ketik nama pihak terkait"
+              />
             )}
           />
         </div>
@@ -169,7 +174,12 @@ export function LedgerFilters({ params, partyOptions = [], itemTypeOptions = [] 
             value={itemTypeOptions.find((it) => it.id === itemType) ?? null}
             onChange={(_e, v) => setItemType(v?.id ?? "")}
             renderInput={(params) => (
-              <TextField {...params} size="small" placeholder="Cari jenis barang" />
+              <TextField
+                {...params}
+                id="ledger-filter-item-type"
+                size="small"
+                placeholder="Cari jenis barang"
+              />
             )}
           />
         </div>

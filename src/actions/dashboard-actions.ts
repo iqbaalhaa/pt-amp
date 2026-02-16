@@ -31,28 +31,44 @@ export async function getDashboardData() {
 	}, 0);
 
 	// Scraping (This Month) - Sum of Output Qty (stik + ka)
-	const scraping = await prisma.pengikisan.findMany({
-		where: { date: { gte: startMonth, lte: endMonth } },
-		include: { pengikisanItems: true },
-	});
-	const totalScraping = scraping.reduce((sum, p) => {
-		return (
-			sum +
-			p.pengikisanItems.reduce(
-				(s, i) => s + Number(i.stikKg) + Number(i.kaKg),
-				0,
-			)
-		);
-	}, 0);
+	let totalScraping = 0;
+	try {
+		const scraping = await prisma.pengikisan.findMany({
+			where: { date: { gte: startMonth, lte: endMonth } },
+			include: { pengikisanItems: true },
+		});
+		totalScraping = scraping.reduce((sum, p) => {
+			return (
+				sum +
+				p.pengikisanItems.reduce(
+					(s, i) => s + Number(i.stikKg) + Number(i.kaKg),
+					0,
+				)
+			);
+		}, 0);
+	} catch {
+		if (process.env.NODE_ENV === "development") {
+			console.warn("Failed to load pengikisan KPI data, using 0 as fallback");
+		}
+		totalScraping = 0;
+	}
 
 	// Cutting (This Month) - Sum of Output Qty
-	const cutting = await prisma.pemotongan.findMany({
-		where: { date: { gte: startMonth, lte: endMonth } },
-		include: { pemotonganItems: true },
-	});
-	const totalCutting = cutting.reduce((sum, p) => {
-		return sum + p.pemotonganItems.reduce((s, i) => s + Number(i.qty), 0);
-	}, 0);
+	let totalCutting = 0;
+	try {
+		const cutting = await prisma.pemotongan.findMany({
+			where: { date: { gte: startMonth, lte: endMonth } },
+			include: { pemotonganItems: true },
+		});
+		totalCutting = cutting.reduce((sum, p) => {
+			return sum + p.pemotonganItems.reduce((s, i) => s + Number(i.qty), 0);
+		}, 0);
+	} catch {
+		if (process.env.NODE_ENV === "development") {
+			console.warn("Failed to load pemotongan KPI data, using 0 as fallback");
+		}
+		totalCutting = 0;
+	}
 
 	// Drying (This Month) - Sum of Cost (Total Upah)
 	const drying = await prisma.penjemuran.aggregate({
@@ -120,47 +136,64 @@ export async function getDashboardData() {
 		}
 	});
 
-	// Scraping (Pengikisan) Chart (Daily Output - stikKg + kaKg)
-	const pengikisans = await prisma.pengikisan.findMany({
-		where: { date: { gte: startDate, lte: endDate } },
-		include: { pengikisanItems: true },
-	});
 	const scrapingData = initData();
-	pengikisans.forEach((p) => {
-		const dayIndex =
-			6 -
-			Math.floor(
-				(today.getTime() - new Date(p.date).getTime()) / (1000 * 60 * 60 * 24),
+	try {
+		const pengikisans = await prisma.pengikisan.findMany({
+			where: { date: { gte: startDate, lte: endDate } },
+			include: { pengikisanItems: true },
+		});
+		pengikisans.forEach((p) => {
+			const dayIndex =
+				6 -
+				Math.floor(
+					(today.getTime() - new Date(p.date).getTime()) /
+						(1000 * 60 * 60 * 24),
+				);
+			if (dayIndex >= 0 && dayIndex < 7) {
+				const dailySum = p.pengikisanItems.reduce(
+					(sum, item) => sum + Number(item.stikKg) + Number(item.kaKg),
+					0,
+				);
+				scrapingData[dayIndex] += dailySum;
+			}
+		});
+	} catch {
+		if (process.env.NODE_ENV === "development") {
+			console.warn(
+				"Failed to load pengikisan chart data, using zero values as fallback",
 			);
-		if (dayIndex >= 0 && dayIndex < 7) {
-			const dailySum = p.pengikisanItems.reduce(
-				(sum, item) => sum + Number(item.stikKg) + Number(item.kaKg),
-				0,
-			);
-			scrapingData[dayIndex] += dailySum;
 		}
-	});
+	}
 
-	// Cutting (Pemotongan) Chart (Daily Output Qty)
-	const pemotongans = await prisma.pemotongan.findMany({
-		where: { date: { gte: startDate, lte: endDate } },
-		include: { pemotonganItems: true },
-	});
 	const cuttingData = initData();
-	pemotongans.forEach((p) => {
-		const dayIndex =
-			6 -
-			Math.floor(
-				(today.getTime() - new Date(p.date).getTime()) / (1000 * 60 * 60 * 24),
+	try {
+		// Cutting (Pemotongan) Chart (Daily Output Qty)
+		const pemotongans = await prisma.pemotongan.findMany({
+			where: { date: { gte: startDate, lte: endDate } },
+			include: { pemotonganItems: true },
+		});
+		pemotongans.forEach((p) => {
+			const dayIndex =
+				6 -
+				Math.floor(
+					(today.getTime() - new Date(p.date).getTime()) /
+						(1000 * 60 * 60 * 24),
+				);
+			if (dayIndex >= 0 && dayIndex < 7) {
+				const dailySum = p.pemotonganItems.reduce(
+					(sum, item) => sum + Number(item.qty),
+					0,
+				);
+				cuttingData[dayIndex] += dailySum;
+			}
+		});
+	} catch {
+		if (process.env.NODE_ENV === "development") {
+			console.warn(
+				"Failed to load pemotongan chart data, using zero values as fallback",
 			);
-		if (dayIndex >= 0 && dayIndex < 7) {
-			const dailySum = p.pemotonganItems.reduce(
-				(sum, item) => sum + Number(item.qty),
-				0,
-			);
-			cuttingData[dayIndex] += dailySum;
 		}
-	});
+	}
 
 	// Drying (Penjemuran) Chart (Daily Cost - Total Upah)
 	const penjemurans = await prisma.penjemuran.findMany({

@@ -1,6 +1,7 @@
 "use client";
 
 import { ReactNode, useMemo, useState } from "react";
+import jsPDF from "jspdf";
 import { LedgerEntry } from "./types";
 import { toCurrency } from "./formatters";
 import { LedgerTable } from "./LedgerTable";
@@ -21,6 +22,25 @@ import { createPengikisan } from "@/actions/pengikisan-actions";
 import { createPemotongan } from "@/actions/pemotongan-actions";
 import { createPenjemuran } from "@/actions/penjemuran-actions";
 import { createPengemasan } from "@/actions/pengemasan-actions";
+
+const REPORT_MARGIN_MM = 10;
+
+let reportLogoPromise: Promise<HTMLImageElement | null> | null = null;
+
+function loadReportLogo() {
+  if (reportLogoPromise) return reportLogoPromise;
+  if (typeof window === "undefined") {
+    reportLogoPromise = Promise.resolve(null);
+    return reportLogoPromise;
+  }
+  reportLogoPromise = new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => resolve(null);
+    img.src = "/logoAMP.png";
+  });
+  return reportLogoPromise;
+}
 
 type Props = {
   title: string;
@@ -57,6 +77,12 @@ export function LedgerSection({
     failed: number;
     errors: { row: number; reason: string }[];
   } | null>(null);
+  const [openReport, setOpenReport] = useState(false);
+  const [reportMode, setReportMode] = useState<"range" | "month">("month");
+  const [reportStart, setReportStart] = useState("");
+  const [reportEnd, setReportEnd] = useState("");
+  const [reportMonth, setReportMonth] = useState("");
+  const [reportYear, setReportYear] = useState("");
 
   type MassRow = {
     date: string;
@@ -83,7 +109,7 @@ export function LedgerSection({
       const bVal = b[sortColumn];
 
       if (aVal === bVal) return 0;
-      if (aVal === null || aVal === undefined) return 1; // nulls last
+      if (aVal === null || aVal === undefined) return 1;
       if (bVal === null || bVal === undefined) return -1;
 
       if (aVal < bVal) return sortDirection === "asc" ? -1 : 1;
@@ -92,6 +118,804 @@ export function LedgerSection({
     });
     return sorted;
   }, [entries, sortColumn, sortDirection]);
+
+  const getProductionValue = (e: LedgerEntry) => {
+    if (e.type === "production" && typeof e.productionCost === "number") {
+      return e.productionCost;
+    }
+    if (typeof e.total === "number") {
+      return e.total;
+    }
+    return 0;
+  };
+
+  const getReportEntriesForRange = (mode: "monthly" | "weekly") => {
+    if (sortedEntries.length === 0) return [];
+    const now = new Date();
+    if (mode === "monthly") {
+      const month = now.getMonth();
+      const year = now.getFullYear();
+      return sortedEntries.filter((e) => {
+        const d = new Date(e.date);
+        return d.getMonth() === month && d.getFullYear() === year;
+      });
+    }
+    const start = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate() - 6
+    );
+    return sortedEntries.filter((e) => {
+      const d = new Date(e.date);
+      return d >= start && d <= now;
+    });
+  };
+
+  const handleDownloadReport = (mode: "monthly" | "weekly") => {
+    const reportEntries = getReportEntriesForRange(mode);
+    if (reportEntries.length === 0) {
+      return;
+    }
+
+    const pdf = new jsPDF({
+      orientation: "p",
+      unit: "mm",
+      format: "a4",
+    });
+
+    const margin = 15;
+    const pageW = pdf.internal.pageSize.getWidth();
+    const pageH = pdf.internal.pageSize.getHeight();
+
+    let y = margin;
+
+    const now = new Date();
+    const rangeLabel =
+      mode === "monthly"
+        ? now.toLocaleString("id-ID", {
+            month: "long",
+            year: "numeric",
+          })
+        : `${new Date(
+            now.getFullYear(),
+            now.getMonth(),
+            now.getDate() - 6
+          ).toLocaleDateString("id-ID")} - ${now.toLocaleDateString("id-ID")}`;
+
+    const reportTitleBase =
+      type === "production" && subType ? subType : title;
+
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(13);
+    pdf.text(
+      `LAPORAN ${reportTitleBase.toUpperCase()} ${
+        mode === "monthly" ? "BULANAN" : "MINGGUAN"
+      }`,
+      pageW / 2,
+      y,
+      { align: "center" }
+    );
+    y += 7;
+
+    pdf.setFontSize(10);
+    pdf.setFont("helvetica", "normal");
+    pdf.text(`Periode: ${rangeLabel}`, margin, y);
+    y += 6;
+    const printedAt = `${now.toLocaleDateString(
+      "id-ID"
+    )} ${now.toLocaleTimeString("id-ID")}`;
+    pdf.text(`Dicetak: ${printedAt}`, margin, y);
+    y += 8;
+
+    const totalSum = reportEntries.reduce(
+      (sum, e) => sum + getProductionValue(e),
+      0
+    );
+
+    pdf.setFont("helvetica", "bold");
+    pdf.text(
+      `Total Transaksi: ${reportEntries.length} | Total: ${toCurrency(
+        totalSum
+      )}`,
+      margin,
+      y
+    );
+    y += 8;
+
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(9);
+
+    const colTanggalX = margin;
+    const colPetugasX = colTanggalX + 32;
+    const colPihakX = colPetugasX + 32;
+    const colTotalX = pageW - margin - 30;
+    const colStatusX = pageW - margin;
+
+    pdf.text("Tanggal", colTanggalX, y);
+    pdf.text("Petugas", colPetugasX, y);
+    pdf.text("Pihak", colPihakX, y);
+    pdf.text("Total", colTotalX, y, { align: "right" });
+    pdf.text("Status", colStatusX, y, { align: "right" });
+    y += 5;
+
+    pdf.setFont("helvetica", "normal");
+
+    reportEntries.forEach((e) => {
+      if (y > pageH - margin) {
+        pdf.addPage();
+        y = margin;
+      }
+      const d = new Date(e.date);
+      const dateStr = `${d.toLocaleDateString(
+        "id-ID"
+      )} ${d.toLocaleTimeString("id-ID").slice(0, 5)}`;
+      const petugas = e.createdByName || "-";
+      const pihak = e.counterparty || "-";
+      const totalVal = getProductionValue(e);
+      const status = e.status.toUpperCase();
+
+      pdf.text(dateStr, colTanggalX, y);
+      pdf.text(petugas, colPetugasX, y);
+      pdf.text(pihak, colPihakX, y);
+      pdf.text(toCurrency(totalVal), colTotalX, y, { align: "right" });
+      pdf.text(status, colStatusX, y, { align: "right" });
+      y += 5;
+    });
+
+    const fileNameMode = mode === "monthly" ? "bulanan" : "mingguan";
+    const fileTypeSlug =
+      type === "production" && subType
+        ? `produksi-${subType.toLowerCase()}`
+        : type;
+    pdf.save(
+      `laporan-${fileTypeSlug}-${fileNameMode}-${now
+        .toISOString()
+        .slice(0, 10)}.pdf`
+    );
+  };
+
+  const handleDownloadPengikisanExcelReport = () => {
+    if (entries.length === 0) return;
+    let startDate: Date | null = null;
+    let endDate: Date | null = null;
+    let periodeLabel = "";
+    if (reportMode === "range") {
+      if (!reportStart || !reportEnd) return;
+      const s = new Date(reportStart);
+      const e = new Date(reportEnd);
+      if (isNaN(s.getTime()) || isNaN(e.getTime()) || s > e) return;
+      startDate = new Date(s.getFullYear(), s.getMonth(), s.getDate());
+      endDate = new Date(e.getFullYear(), e.getMonth(), e.getDate(), 23, 59, 59, 999);
+      periodeLabel = `${s.toLocaleDateString("id-ID")} - ${e.toLocaleDateString("id-ID")}`;
+    } else {
+      if (!reportMonth || !reportYear) return;
+      const yearNum = Number(reportYear);
+      const monthNum = Number(reportMonth);
+      if (!yearNum || !monthNum) return;
+      startDate = new Date(yearNum, monthNum - 1, 1);
+      endDate = new Date(yearNum, monthNum, 0, 23, 59, 59, 999);
+      const base = new Date(yearNum, monthNum - 1, 1);
+      const monthName = base.toLocaleString("id-ID", { month: "long" });
+      periodeLabel = `${monthName} ${yearNum}`;
+    }
+    if (!startDate || !endDate) return;
+
+    const filtered = entries.filter((e) => {
+      if (e.type !== "production" || e.subType !== "Pengikisan") return false;
+      if (!e.pengikisanItems || e.pengikisanItems.length === 0) return false;
+      const d = new Date(e.date);
+      return d >= startDate! && d <= endDate!;
+    });
+    if (filtered.length === 0) return;
+
+    type RowInfo = {
+      name: string;
+      ket: "KA" | "STIK";
+      values: Record<string, number>;
+      harga: number;
+    };
+
+    const dateKeySet = new Set<string>();
+    const rowsMap = new Map<string, RowInfo>();
+
+    const ensureRow = (name: string, ket: "KA" | "STIK", harga: number) => {
+      const key = `${name}|${ket}`;
+      let row = rowsMap.get(key);
+      if (!row) {
+        row = { name, ket, values: {}, harga };
+        rowsMap.set(key, row);
+      }
+      if (!row.harga && harga > 0) row.harga = harga;
+      return row;
+    };
+
+    filtered.forEach((entry) => {
+      const d = new Date(entry.date);
+      const dateKey = d.toISOString().slice(0, 10);
+      dateKeySet.add(dateKey);
+      entry.pengikisanItems?.forEach((it) => {
+        const baseName = it.nama || "-";
+        const ka = typeof it.kaKg === "number" ? it.kaKg : Number(it.kaKg ?? 0);
+        const stik = typeof it.stikKg === "number" ? it.stikKg : Number(it.stikKg ?? 0);
+        const upahKa = typeof it.upahKa === "number" ? it.upahKa : Number(it.upahKa ?? 0);
+        const upahStik = typeof it.upahStik === "number" ? it.upahStik : Number(it.upahStik ?? 0);
+
+        if (ka > 0) {
+          const rowKa = ensureRow(baseName, "KA", upahKa);
+          rowKa.values[dateKey] = (rowKa.values[dateKey] ?? 0) + ka;
+        }
+        if (stik > 0) {
+          const rowStik = ensureRow(baseName, "STIK", upahStik);
+          rowStik.values[dateKey] = (rowStik.values[dateKey] ?? 0) + stik;
+        }
+      });
+    });
+
+    if (rowsMap.size === 0) return;
+
+    const dateKeys = Array.from(dateKeySet).sort();
+    const dateHeaders = dateKeys.map((key) => {
+      const d = new Date(key);
+      const day = d.getDate().toString().padStart(2, "0");
+      const month = (d.getMonth() + 1).toString().padStart(2, "0");
+      const weekday = d.toLocaleDateString("id-ID", { weekday: "short" }).toUpperCase();
+      return `${day}/${month} ${weekday}`;
+    });
+
+    const data: (string | number)[][] = [];
+    data.push(["PERIODE", periodeLabel]);
+    data.push([]);
+    const header: (string | number)[] = [
+      "NO",
+      "NAMA",
+      "KET",
+      ...dateHeaders,
+      "JUMLAH",
+      "HARGA",
+      "TOTAL",
+      "JUMLAH UPAH",
+    ];
+    data.push(header);
+
+    const names = Array.from(
+      new Set(Array.from(rowsMap.values()).map((r) => r.name))
+    ).sort((a, b) => a.localeCompare(b));
+
+    let counter = 1;
+    names.forEach((name) => {
+      const rowsForName: RowInfo[] = [];
+      const rowKa = rowsMap.get(`${name}|KA`);
+      const rowStik = rowsMap.get(`${name}|STIK`);
+      if (rowKa) rowsForName.push(rowKa);
+      if (rowStik) rowsForName.push(rowStik);
+      rowsForName.forEach((row, idx) => {
+        const jumlah = dateKeys.reduce(
+          (sum, key) => sum + (row.values[key] ?? 0),
+          0
+        );
+        const harga = row.harga || 0;
+        const total = jumlah * harga;
+        const jumlahUpah = row.ket === "STIK" ? total : 0;
+        const perDate = dateKeys.map((key) => row.values[key] ?? 0);
+        data.push([
+          idx === 0 ? counter : "",
+          row.name,
+          row.ket,
+          ...perDate,
+          jumlah,
+          harga,
+          total,
+          jumlahUpah,
+        ]);
+      });
+      counter += 1;
+    });
+
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet(data);
+    XLSX.utils.book_append_sheet(wb, ws, "Laporan");
+    const wbout = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+    const blob = new Blob([wbout], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    const suffix =
+      reportMode === "range"
+        ? "range"
+        : `bulan-${reportMonth}-${reportYear}`;
+    a.download = `laporan-pengikisan-${suffix}.xlsx`;
+    a.click();
+    URL.revokeObjectURL(url);
+    setOpenReport(false);
+  };
+
+  const handleDownloadPengikisanPdfReport = async () => {
+    if (entries.length === 0) return;
+    let startDate: Date | null = null;
+    let endDate: Date | null = null;
+    let periodeLabel = "";
+    if (reportMode === "range") {
+      if (!reportStart || !reportEnd) return;
+      const s = new Date(reportStart);
+      const e = new Date(reportEnd);
+      if (isNaN(s.getTime()) || isNaN(e.getTime()) || s > e) return;
+      startDate = new Date(s.getFullYear(), s.getMonth(), s.getDate());
+      endDate = new Date(
+        e.getFullYear(),
+        e.getMonth(),
+        e.getDate(),
+        23,
+        59,
+        59,
+        999
+      );
+      periodeLabel = `${s.toLocaleDateString("id-ID")} - ${e.toLocaleDateString(
+        "id-ID"
+      )}`;
+    } else {
+      if (!reportMonth || !reportYear) return;
+      const yearNum = Number(reportYear);
+      const monthNum = Number(reportMonth);
+      if (!yearNum || !monthNum) return;
+      startDate = new Date(yearNum, monthNum - 1, 1);
+      endDate = new Date(yearNum, monthNum, 0, 23, 59, 59, 999);
+      const base = new Date(yearNum, monthNum - 1, 1);
+      const monthName = base.toLocaleString("id-ID", { month: "long" });
+      periodeLabel = `${monthName} ${yearNum}`;
+    }
+    if (!startDate || !endDate) return;
+
+    const filtered = entries.filter((e) => {
+      if (e.type !== "production" || e.subType !== "Pengikisan") return false;
+      if (!e.pengikisanItems || e.pengikisanItems.length === 0) return false;
+      const d = new Date(e.date);
+      return d >= startDate! && d <= endDate!;
+    });
+    if (filtered.length === 0) return;
+
+    type RowInfo = {
+      name: string;
+      ket: "KA" | "STIK";
+      values: Record<string, number>;
+      harga: number;
+    };
+
+    const dateKeySet = new Set<string>();
+    const rowsMap = new Map<string, RowInfo>();
+
+    const ensureRow = (name: string, ket: "KA" | "STIK", harga: number) => {
+      const key = `${name}|${ket}`;
+      let row = rowsMap.get(key);
+      if (!row) {
+        row = { name, ket, values: {}, harga };
+        rowsMap.set(key, row);
+      }
+      if (!row.harga && harga > 0) row.harga = harga;
+      return row;
+    };
+
+    filtered.forEach((entry) => {
+      const d = new Date(entry.date);
+      const dateKey = d.toISOString().slice(0, 10);
+      dateKeySet.add(dateKey);
+      entry.pengikisanItems?.forEach((it) => {
+        const baseName = it.nama || "-";
+        const ka = typeof it.kaKg === "number" ? it.kaKg : Number(it.kaKg ?? 0);
+        const stik =
+          typeof it.stikKg === "number" ? it.stikKg : Number(it.stikKg ?? 0);
+        const upahKa =
+          typeof it.upahKa === "number" ? it.upahKa : Number(it.upahKa ?? 0);
+        const upahStik =
+          typeof it.upahStik === "number"
+            ? it.upahStik
+            : Number(it.upahStik ?? 0);
+
+        if (ka > 0) {
+          const rowKa = ensureRow(baseName, "KA", upahKa);
+          rowKa.values[dateKey] = (rowKa.values[dateKey] ?? 0) + ka;
+        }
+        if (stik > 0) {
+          const rowStik = ensureRow(baseName, "STIK", upahStik);
+          rowStik.values[dateKey] = (rowStik.values[dateKey] ?? 0) + stik;
+        }
+      });
+    });
+
+    if (rowsMap.size === 0) return;
+
+    const dateKeys = Array.from(dateKeySet).sort();
+    const isMonthlyReport = reportMode === "month";
+
+    const names = Array.from(
+      new Set(Array.from(rowsMap.values()).map((r) => r.name))
+    ).sort((a, b) => a.localeCompare(b));
+
+    const pdf = new jsPDF({
+      orientation: "l",
+      unit: "mm",
+      format: "a4",
+    });
+
+    const margin = REPORT_MARGIN_MM;
+    const pageW = pdf.internal.pageSize.getWidth();
+    const pageH = pdf.internal.pageSize.getHeight();
+
+    let y = margin;
+
+    const logo = await loadReportLogo();
+    if (logo) {
+      const logoW = 26;
+      const ratio = logo.height / logo.width || 1;
+      const logoH = logoW * ratio;
+
+      pdf.addImage(logo, "PNG", margin, y, logoW, logoH);
+
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(11);
+      pdf.text(
+        "PT AURORA MITRA PRAKARSA (AMP)",
+        margin + logoW + 6,
+        y + 5
+      );
+
+      pdf.setFont("helvetica", "normal");
+      pdf.setFontSize(7);
+      pdf.text(
+        "(General Contractor, Supplier, Infrastructure)",
+        margin + logoW + 6,
+        y + 11
+      );
+
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(9);
+      pdf.text("LAPORAN PENGIKISAN", pageW - margin, y + 5, {
+        align: "right",
+      });
+
+      y += logoH + 6;
+
+      pdf.setDrawColor(26, 35, 126);
+      pdf.setLineWidth(0.4);
+      pdf.line(margin, y, pageW - margin, y);
+      y += 4;
+    } else {
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(12);
+      pdf.text("LAPORAN PENGIKISAN", pageW / 2, y, { align: "center" });
+      y += 8;
+      pdf.setDrawColor(26, 35, 126);
+      pdf.setLineWidth(0.4);
+      pdf.line(margin, y, pageW - margin, y);
+      y += 4;
+    }
+
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(9);
+    pdf.text(`Periode: ${periodeLabel}`, margin, y);
+    const now = new Date();
+    const printedAt = `${now.toLocaleDateString(
+      "id-ID"
+    )} ${now.toLocaleTimeString("id-ID")}`;
+    pdf.text(`Dicetak: ${printedAt}`, pageW - margin, y, { align: "right" });
+    y += 6;
+
+    pdf.setFont("helvetica", "bold");
+
+    const dateHeadersRange = dateKeys.map((key) => {
+      const d = new Date(key);
+      const day = d.getDate().toString().padStart(2, "0");
+      const month = (d.getMonth() + 1).toString().padStart(2, "0");
+      const weekday = d
+        .toLocaleDateString("id-ID", { weekday: "short" })
+        .toUpperCase();
+      return `${day}/${month} ${weekday}`;
+    });
+
+    const tableStartY = y;
+    let counter = 1;
+
+    if (!isMonthlyReport) {
+      const colNoX = margin;
+      const colNamaX = colNoX + 10;
+      const colKetX = colNamaX + 38;
+      const dateColWidth = 14;
+      const firstDateX = colKetX + 12;
+      const colJumlahX = firstDateX + dateHeadersRange.length * dateColWidth + 2;
+      const colHargaX = colJumlahX + 18;
+      const colTotalX = colHargaX + 22;
+      const colJumlahUpahX = colTotalX + 26;
+      const tableRightX = colJumlahUpahX + 26;
+
+      const headerYTop = y;
+      const headerHeight = 7;
+
+      pdf.setDrawColor(148, 163, 184);
+      pdf.setLineWidth(0.2);
+      pdf.rect(colNoX, headerYTop, tableRightX - colNoX, headerHeight);
+
+      pdf.text("NO", colNoX + 2, headerYTop + 4);
+      pdf.text("NAMA", colNamaX + 1, headerYTop + 4);
+      pdf.text("KET", colKetX + 1, headerYTop + 4);
+      dateHeadersRange.forEach((h, idx) => {
+        const x = firstDateX + idx * dateColWidth;
+        pdf.text(h, x + 1, headerYTop + 4);
+      });
+      pdf.text("JML", colJumlahX + 1, headerYTop + 4);
+      pdf.text("HARGA", colHargaX + 1, headerYTop + 4);
+      pdf.text("TOTAL", colTotalX + 1, headerYTop + 4);
+      pdf.text("JML UPAH", colJumlahUpahX + 1, headerYTop + 4);
+
+      const headerColumnXs: number[] = [
+        colNoX,
+        colNamaX - 2,
+        colKetX - 2,
+        firstDateX - 2,
+        colJumlahX - 2,
+        colHargaX - 2,
+        colTotalX - 2,
+        colJumlahUpahX - 2,
+        tableRightX,
+      ];
+      headerColumnXs.forEach((x) => {
+        pdf.line(x, headerYTop, x, headerYTop + headerHeight);
+      });
+
+      y = headerYTop + headerHeight;
+      pdf.setFont("helvetica", "normal");
+
+      names.forEach((name) => {
+        const rowsForName: RowInfo[] = [];
+        const rowKa = rowsMap.get(`${name}|KA`);
+        const rowStik = rowsMap.get(`${name}|STIK`);
+        if (rowKa) rowsForName.push(rowKa);
+        if (rowStik) rowsForName.push(rowStik);
+
+        rowsForName.forEach((row, idx) => {
+          if (y > pageH - margin) {
+            pdf.addPage("a4", "l");
+            y = margin;
+          }
+
+          const rowHeight = 6;
+          pdf.rect(colNoX, y, tableRightX - colNoX, rowHeight);
+          headerColumnXs.forEach((x) => {
+            pdf.line(x, y, x, y + rowHeight);
+          });
+
+          const jumlah = Object.values(row.values).reduce(
+            (sum, v) => sum + v,
+            0
+          );
+          const harga = row.harga || 0;
+          const total = jumlah * harga;
+          const jumlahUpah = row.ket === "STIK" ? total : 0;
+          const perDate = dateKeys.map((key) => row.values[key] ?? 0);
+
+          const textY = y + 4;
+
+          if (idx === 0) {
+            pdf.text(String(counter), colNoX + 2, textY);
+          }
+          pdf.text(row.name, colNamaX + 1, textY);
+          pdf.text(row.ket, colKetX + 1, textY);
+          perDate.forEach((val, i) => {
+            const x = firstDateX + i * dateColWidth;
+            if (val !== 0) {
+              pdf.text(String(val), x + 1, textY);
+            }
+          });
+          if (jumlah !== 0) {
+            pdf.text(String(jumlah), colJumlahX + 1, textY);
+          }
+          if (harga !== 0) {
+            pdf.text(toCurrency(harga), colHargaX + 16, textY, {
+              align: "right",
+            });
+          }
+          if (total !== 0) {
+            pdf.text(toCurrency(total), colTotalX + 20, textY, {
+              align: "right",
+            });
+          }
+          if (jumlahUpah !== 0) {
+            pdf.text(toCurrency(jumlahUpah), colJumlahUpahX + 24, textY, {
+              align: "right",
+            });
+          }
+
+          y += rowHeight;
+        });
+        counter += 1;
+      });
+    } else {
+      const daysInMonth = endDate.getDate();
+      const allDays = Array.from({ length: daysInMonth }, (_, i) => i + 1);
+
+      const chunkDayRanges: number[][] = [];
+      const firstEnd = Math.min(13, daysInMonth);
+      if (firstEnd > 0) {
+        chunkDayRanges.push(allDays.slice(0, firstEnd));
+      }
+      if (firstEnd < daysInMonth) {
+        const secondStart = firstEnd + 1;
+        const secondEnd = Math.min(secondStart + 12, daysInMonth);
+        chunkDayRanges.push(allDays.slice(secondStart - 1, secondEnd));
+        if (secondEnd < daysInMonth) {
+          chunkDayRanges.push(allDays.slice(secondEnd, daysInMonth));
+        }
+      }
+
+      type Chunk = {
+        days: number[];
+        showJml: boolean;
+        showJumlahUpah: boolean;
+      };
+
+      const chunks: Chunk[] = chunkDayRanges.map((days, idx, arr) => ({
+        days,
+        showJml: idx === arr.length - 1,
+        showJumlahUpah: idx === arr.length - 1,
+      }));
+
+      const yearNum = startDate.getFullYear();
+      const monthNum = startDate.getMonth();
+
+      const makeDateKey = (day: number) =>
+        new Date(yearNum, monthNum, day).toISOString().slice(0, 10);
+
+      chunks.forEach((chunk, chunkIndex) => {
+        const chunkHeaders = chunk.days.map((d) =>
+          d.toString().padStart(2, "0")
+        );
+
+        if (chunkIndex === 0) {
+          y = tableStartY;
+        } else {
+          pdf.addPage("a4", "l");
+          y = margin;
+          pdf.setFont("helvetica", "normal");
+          pdf.setFontSize(9);
+          pdf.text(`Periode: ${periodeLabel}`, margin, y);
+          pdf.text(`Dicetak: ${printedAt}`, pageW - margin, y, {
+            align: "right",
+          });
+          y += 6;
+          pdf.setFont("helvetica", "bold");
+        }
+
+        const colNoX = margin;
+        const colNamaX = colNoX + 10;
+        const colKetX = colNamaX + 38;
+        const dateColWidth = 14;
+        const firstDateX = colKetX + 12;
+
+        let colJumlahX: number | null = null;
+        let colJumlahUpahX: number | null = null;
+        let tableRightX = firstDateX + chunkHeaders.length * dateColWidth + 2;
+
+        if (chunk.showJml || chunk.showJumlahUpah) {
+          colJumlahX = tableRightX + 2;
+          tableRightX = colJumlahX + 22;
+          if (chunk.showJumlahUpah) {
+            colJumlahUpahX = tableRightX + 2;
+            tableRightX = colJumlahUpahX + 26;
+          }
+        }
+
+        const headerYTop = y;
+        const headerHeight = 7;
+
+        pdf.setDrawColor(148, 163, 184);
+        pdf.setLineWidth(0.2);
+        pdf.rect(colNoX, headerYTop, tableRightX - colNoX, headerHeight);
+
+        pdf.text("NO", colNoX + 2, headerYTop + 4);
+        pdf.text("NAMA", colNamaX + 1, headerYTop + 4);
+        pdf.text("KET", colKetX + 1, headerYTop + 4);
+        chunkHeaders.forEach((h, idx) => {
+          const x = firstDateX + idx * dateColWidth;
+          pdf.text(h, x + 1, headerYTop + 4);
+        });
+        if (chunk.showJml && colJumlahX != null) {
+          pdf.text("JML", colJumlahX + 1, headerYTop + 4);
+        }
+        if (chunk.showJumlahUpah && colJumlahUpahX != null) {
+          pdf.text("JML UPAH", colJumlahUpahX + 1, headerYTop + 4);
+        }
+
+        const headerColumnXs: number[] = [
+          colNoX,
+          colNamaX - 2,
+          colKetX - 2,
+          firstDateX - 2,
+        ];
+        if (chunk.showJml && colJumlahX != null) {
+          headerColumnXs.push(colJumlahX - 2);
+        }
+        if (chunk.showJumlahUpah && colJumlahUpahX != null) {
+          headerColumnXs.push(colJumlahUpahX - 2);
+        }
+        headerColumnXs.push(tableRightX);
+        headerColumnXs.forEach((x) => {
+          pdf.line(x, headerYTop, x, headerYTop + headerHeight);
+        });
+
+        y = headerYTop + headerHeight;
+        pdf.setFont("helvetica", "normal");
+
+        names.forEach((name) => {
+          const rowsForName: RowInfo[] = [];
+          const rowKa = rowsMap.get(`${name}|KA`);
+          const rowStik = rowsMap.get(`${name}|STIK`);
+          if (rowKa) rowsForName.push(rowKa);
+          if (rowStik) rowsForName.push(rowStik);
+
+          rowsForName.forEach((row, idx) => {
+            if (y > pageH - margin) {
+              pdf.addPage("a4", "l");
+              y = margin;
+            }
+
+            const rowHeight = 6;
+            pdf.rect(colNoX, y, tableRightX - colNoX, rowHeight);
+            headerColumnXs.forEach((x) => {
+              pdf.line(x, y, x, y + rowHeight);
+            });
+
+            const jumlah = Object.values(row.values).reduce(
+              (sum, v) => sum + v,
+              0
+            );
+            const harga = row.harga || 0;
+            const total = jumlah * harga;
+            const jumlahUpah = row.ket === "STIK" ? total : 0;
+            const perDate = chunk.days.map((day) => {
+              const key = makeDateKey(day);
+              return row.values[key] ?? 0;
+            });
+
+            const textY = y + 4;
+
+            if (idx === 0) {
+              pdf.text(String(counter), colNoX + 2, textY);
+            }
+            pdf.text(row.name, colNamaX + 1, textY);
+            pdf.text(row.ket, colKetX + 1, textY);
+            perDate.forEach((val, i) => {
+              const x = firstDateX + i * dateColWidth;
+              if (val !== 0) {
+                pdf.text(String(val), x + 1, textY);
+              }
+            });
+            if (chunk.showJml && colJumlahX != null && jumlah !== 0) {
+              pdf.text(String(jumlah), colJumlahX + 1, textY);
+            }
+            if (
+              chunk.showJumlahUpah &&
+              colJumlahUpahX != null &&
+              jumlahUpah !== 0
+            ) {
+              pdf.text(toCurrency(jumlahUpah), colJumlahUpahX + 24, textY, {
+                align: "right",
+              });
+            }
+
+            y += rowHeight;
+          });
+          counter += 1;
+        });
+      });
+    }
+
+    const suffix =
+      reportMode === "range"
+        ? "range"
+        : `bulan-${reportMonth}-${reportYear}`;
+    pdf.save(`laporan-pengikisan-${suffix}.pdf`);
+    setOpenReport(false);
+  };
 
   const totalPages =
     pageSize === "all"
@@ -577,6 +1401,28 @@ export function LedgerSection({
                   Input Massal
                 </button>
               )}
+              {type === "production" && subType && (
+                <button
+                  onClick={() => {
+                    if (subType === "Pengikisan") {
+                      const now = new Date();
+                      if (!reportYear)
+                        setReportYear(String(now.getFullYear()));
+                      if (!reportMonth)
+                        setReportMonth(String(now.getMonth() + 1));
+                      setReportMode("month");
+                      setOpenReport(true);
+                    } else {
+                      handleDownloadReport("monthly");
+                    }
+                  }}
+                  className="flex items-center gap-1 rounded-md bg-emerald-700 px-2 py-1 text-[11px] text-white hover:bg-emerald-800"
+                  title="Download laporan produksi"
+                >
+                  <DownloadIcon fontSize="small" />
+                  Download Laporan
+                </button>
+              )}
               <button
                 onClick={() => {
                   const style = `
@@ -862,7 +1708,82 @@ export function LedgerSection({
               </div>
             </div>
             <div className="overflow-auto">
-              {selectedEntry.lines && selectedEntry.lines.length > 0 ? (
+              {selectedEntry.subType === "Pengikisan" &&
+              selectedEntry.pengikisanItems &&
+              selectedEntry.pengikisanItems.length > 0 ? (
+                <table className="w-full border-collapse text-xs">
+                  <thead>
+                    <tr className="bg-slate-50 text-slate-700">
+                      <th className="border border-slate-200 px-2 py-1 text-left w-10">
+                        #
+                      </th>
+                      <th className="border border-slate-200 px-2 py-1 text-left">
+                        Pekerja
+                      </th>
+                      <th className="border border-slate-200 px-2 py-1 text-right">
+                        KA (kg)
+                      </th>
+                      <th className="border border-slate-200 px-2 py-1 text-right">
+                        Stik (kg)
+                      </th>
+                      <th className="border border-slate-200 px-2 py-1 text-right">
+                        Upah KA
+                      </th>
+                      <th className="border border-slate-200 px-2 py-1 text-right">
+                        Upah Stik
+                      </th>
+                      <th className="border border-slate-200 px-2 py-1 text-right">
+                        Total
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {selectedEntry.pengikisanItems.map((it, idx) => (
+                      <tr key={idx}>
+                        <td className="border border-slate-200 px-2 py-1">
+                          {idx + 1}
+                        </td>
+                        <td className="border border-slate-200 px-2 py-1">
+                          {it.nama}
+                        </td>
+                        <td className="border border-slate-200 px-2 py-1 text-right">
+                          {it.kaKg}
+                        </td>
+                        <td className="border border-slate-200 px-2 py-1 text-right">
+                          {it.stikKg}
+                        </td>
+                        <td className="border border-slate-200 px-2 py-1 text-right">
+                          {toCurrency(it.upahKa)}
+                        </td>
+                        <td className="border border-slate-200 px-2 py-1 text-right">
+                          {toCurrency(it.upahStik)}
+                        </td>
+                        <td className="border border-slate-200 px-2 py-1 text-right">
+                          {toCurrency(it.total)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot>
+                    <tr>
+                      <td
+                        className="border border-slate-200 px-2 py-1 font-semibold"
+                        colSpan={6}
+                      >
+                        Total
+                      </td>
+                      <td className="border border-slate-200 px-2 py-1 text-right font-semibold">
+                        {toCurrency(
+                          selectedEntry.pengikisanItems.reduce(
+                            (s, it) => s + it.total,
+                            0
+                          )
+                        )}
+                      </td>
+                    </tr>
+                  </tfoot>
+                </table>
+              ) : selectedEntry.lines && selectedEntry.lines.length > 0 ? (
                 <table className="w-full border-collapse text-xs">
                   <thead>
                     <tr className="bg-slate-50 text-slate-700">
@@ -932,6 +1853,121 @@ export function LedgerSection({
           <div className="text-sm text-slate-600">Tidak ada data</div>
         )}
       </GlassDialog>
+
+      {type === "production" && subType === "Pengikisan" && (
+        <GlassDialog
+          open={openReport}
+          title="Download Laporan Pengikisan"
+          onClose={() => setOpenReport(false)}
+          fullWidth
+          maxWidth="sm"
+          actions={
+            <>
+              <button
+                onClick={() => setOpenReport(false)}
+                className="rounded-md bg-slate-100 px-3 py-1 text-[12px] text-slate-800 hover:bg-slate-200"
+              >
+                Batal
+              </button>
+              <button
+                onClick={handleDownloadPengikisanExcelReport}
+                className="rounded-md bg-emerald-600 px-3 py-1 text-[12px] text-white hover:bg-emerald-700"
+              >
+                Download Excel
+              </button>
+              <button
+                onClick={handleDownloadPengikisanPdfReport}
+                className="rounded-md bg-indigo-600 px-3 py-1 text-[12px] text-white hover:bg-indigo-700"
+              >
+                Download PDF
+              </button>
+            </>
+          }
+        >
+          <div className="flex flex-col gap-3 text-sm">
+            <div className="flex gap-4">
+              <label className="flex items-center gap-1 text-[13px]">
+                <input
+                  type="radio"
+                  className="h-3 w-3"
+                  checked={reportMode === "range"}
+                  onChange={() => setReportMode("range")}
+                />
+                <span>Per Tanggal</span>
+              </label>
+              <label className="flex items-center gap-1 text-[13px]">
+                <input
+                  type="radio"
+                  className="h-3 w-3"
+                  checked={reportMode === "month"}
+                  onChange={() => setReportMode("month")}
+                />
+                <span>Per Bulan</span>
+              </label>
+            </div>
+            {reportMode === "range" ? (
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-2">
+                  <span className="w-20 text-[13px] text-slate-700">
+                    Dari
+                  </span>
+                  <input
+                    type="date"
+                    value={reportStart}
+                    onChange={(e) => setReportStart(e.target.value)}
+                    className="flex-1 rounded-md border border-slate-200 px-2 py-1 text-[13px]"
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="w-20 text-[13px] text-slate-700">
+                    Sampai
+                  </span>
+                  <input
+                    type="date"
+                    value={reportEnd}
+                    onChange={(e) => setReportEnd(e.target.value)}
+                    className="flex-1 rounded-md border border-slate-200 px-2 py-1 text-[13px]"
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <span className="w-20 text-[13px] text-slate-700">Bulan</span>
+                <select
+                  value={reportMonth}
+                  onChange={(e) => setReportMonth(e.target.value)}
+                  className="rounded-md border border-slate-200 px-2 py-1 text-[13px]"
+                >
+                  <option value="">Pilih bulan</option>
+                  <option value="1">Januari</option>
+                  <option value="2">Februari</option>
+                  <option value="3">Maret</option>
+                  <option value="4">April</option>
+                  <option value="5">Mei</option>
+                  <option value="6">Juni</option>
+                  <option value="7">Juli</option>
+                  <option value="8">Agustus</option>
+                  <option value="9">September</option>
+                  <option value="10">Oktober</option>
+                  <option value="11">November</option>
+                  <option value="12">Desember</option>
+                </select>
+                <span className="text-[13px] text-slate-700">Tahun</span>
+                <input
+                  type="number"
+                  value={reportYear}
+                  onChange={(e) => setReportYear(e.target.value)}
+                  className="w-24 rounded-md border border-slate-200 px-2 py-1 text-[13px]"
+                />
+              </div>
+            )}
+            <div className="text-[11px] text-slate-500">
+              Laporan akan diunduh sebagai file Excel dengan format baris per
+              pekerja dan kolom tanggal, mirip dengan contoh yang Anda kirim.
+            </div>
+          </div>
+        </GlassDialog>
+      )}
 
       {(type === "purchase" || type === "production") && (
         <GlassDialog
