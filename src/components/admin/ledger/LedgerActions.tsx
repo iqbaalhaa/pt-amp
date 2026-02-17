@@ -53,7 +53,8 @@ export function LedgerActions({ id, type, status, entry, onView }: Props) {
       (entry?.subType === "Pengikisan" ||
         entry?.subType === "Pemotongan" ||
         entry?.subType === "Penjemuran" ||
-        entry?.subType === "Pengemasan"));
+        entry?.subType === "Pengemasan" ||
+        entry?.subType === "Produksi Lainnya"));
   const isCancelled = status === "cancelled";
   const canApprove =
     status === "draft" &&
@@ -435,6 +436,165 @@ export function LedgerActions({ id, type, status, entry, onView }: Props) {
     pdf.save(`invoice-pemotongan-${rawId}.pdf`);
   };
 
+  const handlePrintProduksiLainnya = async () => {
+    if (
+      !entry ||
+      entry.subType !== "Produksi Lainnya" ||
+      !entry.produksiLainnyaItems ||
+      entry.produksiLainnyaItems.length === 0
+    )
+      return;
+
+    const logo = await loadLogoImage();
+
+    const pdf = new jsPDF({
+      orientation: "p",
+      unit: "mm",
+      format: [F4_W_MM, F4_H_MM],
+    });
+
+    const margin = PRINT_MARGIN_MM;
+    const pageW = F4_W_MM;
+
+    let y = margin + 4;
+
+    if (logo) {
+      const logoW = 26;
+      const ratio = logo.height / logo.width || 1;
+      const logoH = logoW * ratio;
+
+      pdf.addImage(logo, "PNG", margin, y, logoW, logoH);
+
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(11);
+      pdf.text("PT AURORA MITRA PRAKARSA (AMP)", margin + logoW + 6, y + 5);
+
+      pdf.setFont("helvetica", "normal");
+      pdf.setFontSize(7);
+      pdf.text(
+        "(General Contractor, Supplier, Infrastructure)",
+        margin + logoW + 6,
+        y + 11
+      );
+
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(9);
+      pdf.text("REKAP PRODUKSI LAINNYA", pageW - margin, y + 5, {
+        align: "right",
+      });
+
+      y += logoH + 6;
+
+      pdf.setDrawColor(26, 35, 126);
+      pdf.setLineWidth(0.4);
+      pdf.line(margin, y, pageW - margin, y);
+      y += 4;
+    } else {
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(12);
+      pdf.text("REKAP PRODUKSI LAINNYA", pageW / 2, y, { align: "center" });
+      y += 8;
+      pdf.setDrawColor(26, 35, 126);
+      pdf.setLineWidth(0.4);
+      pdf.line(margin, y, pageW - margin, y);
+      y += 4;
+    }
+
+    const dateStr = new Date(entry.date).toLocaleDateString("id-ID");
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(9);
+    pdf.text(`Tanggal: ${dateStr}`, margin, y);
+    y += 5;
+
+    if (entry.reference) {
+      pdf.text(`Ref: ${entry.reference}`, margin, y);
+      y += 5;
+    }
+
+    if (entry.notes) {
+      pdf.text(`Catatan: ${entry.notes}`, margin, y);
+      y += 5;
+    }
+
+    y += 2;
+
+    const colNoX = margin;
+    const colPekerjaX = colNoX + 10;
+    const colPekerjaanX = colPekerjaX + 40;
+    const colQtyX = colPekerjaanX + 40;
+    const colSatuanX = colQtyX + 20;
+    const colUpahX = colSatuanX + 18;
+    const colTotalX = colUpahX + 28;
+
+    const rowHeight = 6;
+    const tableTop = y;
+
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(9);
+    pdf.text("No", colNoX, y);
+    pdf.text("Pekerja", colPekerjaX, y);
+    pdf.text("Pekerjaan", colPekerjaanX, y);
+    pdf.text("Qty", colQtyX, y);
+    pdf.text("Satuan", colSatuanX, y);
+    pdf.text("Upah", colUpahX, y);
+    pdf.text("Total (Rp)", colTotalX, y);
+
+    y += 2;
+
+    pdf.setDrawColor(0, 0, 0);
+    pdf.setLineWidth(0.2);
+
+    const items = entry.produksiLainnyaItems;
+    const tableBottomY = tableTop + rowHeight * (items.length + 2);
+
+    pdf.line(colNoX - 2, tableTop - 3, pageW - margin, tableTop - 3);
+    pdf.line(colNoX - 2, tableBottomY, pageW - margin, tableBottomY);
+    pdf.line(colNoX - 2, y, pageW - margin, y);
+
+    y += 4;
+    pdf.setFont("helvetica", "normal");
+
+    let grandTotal = 0;
+
+    items.forEach((it, idx) => {
+      const qty = it.qty ?? 0;
+      const upah = it.upah ?? 0;
+      const total = it.total ?? qty * upah;
+
+      grandTotal += total;
+
+      pdf.text(String(idx + 1), colNoX, y);
+      pdf.text(it.namaPekerja || "-", colPekerjaX, y);
+      pdf.text(it.namaPekerjaan || "-", colPekerjaanX, y);
+      pdf.text(qty ? qty.toLocaleString("id-ID") : "-", colQtyX, y);
+      pdf.text(it.satuan || "-", colSatuanX, y);
+      pdf.text(
+        upah ? upah.toLocaleString("id-ID") : "-",
+        colUpahX,
+        y,
+        { align: "right" }
+      );
+      pdf.text(total.toLocaleString("id-ID"), colTotalX, y, {
+        align: "right",
+      });
+
+      y += rowHeight;
+    });
+
+    y += 4;
+
+    pdf.setFont("helvetica", "bold");
+    pdf.text("Total Semua", colUpahX, y);
+    pdf.text(grandTotal.toLocaleString("id-ID"), colTotalX, y, {
+      align: "right",
+    });
+
+    const rawId = entry.id.startsWith("produksi-lainnya-")
+      ? entry.id.replace("produksi-lainnya-", "")
+      : entry.id;
+    pdf.save(`invoice-produksi-lainnya-${rawId}.pdf`);
+  };
+
   return (
     <div className="flex justify-end gap-2">
       <button
@@ -466,6 +626,18 @@ export function LedgerActions({ id, type, status, entry, onView }: Props) {
       ) : type === "production" && entry?.subType === "Pemotongan" ? (
         <button
           onClick={handlePrintPemotongan}
+          disabled={!canPrint}
+          className={`flex items-center gap-1 rounded-md px-2 py-1 text-[11px] ${
+            canPrint
+              ? "bg-slate-100 text-slate-800 hover:bg-slate-200"
+              : "bg-slate-50 text-slate-400 cursor-not-allowed"
+          }`}
+        >
+          <PrintIcon fontSize="small" /> Print Invoice
+        </button>
+      ) : type === "production" && entry?.subType === "Produksi Lainnya" ? (
+        <button
+          onClick={handlePrintProduksiLainnya}
           disabled={!canPrint}
           className={`flex items-center gap-1 rounded-md px-2 py-1 text-[11px] ${
             canPrint

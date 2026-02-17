@@ -36,7 +36,7 @@ async function main() {
   }
 
   console.log(
-    `Seeding Pemotongan, Penjemuran, Pengemasan for ${workDays.length} work days and ${allWorkers.length} workers...`,
+    `Seeding Pengikisan, Pemotongan, Penjemuran, Pengemasan for ${workDays.length} work days and ${allWorkers.length} workers...`,
   );
 
   const firstTwoWorkers = allWorkers.slice(0, 2);
@@ -44,6 +44,8 @@ async function main() {
   const upahPerHari = 75000;
   const upahLemburPerJam = 15000;
   const upahPerBungkus = 250;
+  const upahKa = 1000;
+  const upahStik = 1200;
 
   for (const workDate of workDays) {
     const dateOnly = new Date(
@@ -51,6 +53,37 @@ async function main() {
       workDate.getMonth(),
       workDate.getDate(),
     );
+
+    const pengikisanItems = allWorkers.map((w, idx) => {
+      const baseKa = 8 + (idx % 5);
+      const baseStik = 4 + (idx % 4);
+      const kaKg = baseKa;
+      const stikKg = baseStik;
+      const total = kaKg * upahKa + stikKg * upahStik;
+      return {
+        nama: w.name,
+        kaKg: kaKg.toFixed(4),
+        stikKg: stikKg.toFixed(4),
+        upahKa: upahKa.toFixed(2),
+        upahStik: upahStik.toFixed(2),
+        total: total.toFixed(2),
+      };
+    });
+
+    const totalUpahPengikisan = pengikisanItems.reduce(
+      (sum, it) => sum + parseFloat(it.total),
+      0,
+    );
+
+    await prisma.pengikisan.create({
+      data: {
+        date: dateOnly,
+        petugas: "Seed Pengikisan",
+        notes: "Seed data pengikisan 30 hari kerja",
+        totalUpah: totalUpahPengikisan.toFixed(2),
+        pengikisanItems: { create: pengikisanItems },
+      },
+    });
 
     if (firstTwoWorkers.length > 0) {
       const pemotonganItems = firstTwoWorkers.map((w, idx) => {
@@ -152,4 +185,3 @@ main()
     await prisma.$disconnect();
     await pool.end();
   });
-

@@ -1,5 +1,5 @@
-import PengemasanClient from "@/components/admin/production/PengemasanClient";
+import PengemasanPageClient from "./PengemasanPageClient";
 
 export default function Page() {
-	return <PengemasanClient />;
+  return <PengemasanPageClient />;
 }

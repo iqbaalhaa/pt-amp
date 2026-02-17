@@ -75,6 +75,7 @@ export default async function AdminLedgerPage({
     pemotonganList,
     penjemuranList,
     pengemasanList,
+    produksiLainnyaList,
   ] = await Promise.all([
     prisma.purchase.findMany({
       where: {
@@ -271,6 +272,17 @@ export default async function AdminLedgerPage({
         return [];
       }
     })(),
+    prisma.produksiLainnya.findMany({
+      where: {
+        ...(start ? { date: { gte: start } } : {}),
+        ...(end ? { date: { lte: end } } : {}),
+        ...(params.q
+          ? { OR: [{ notes: { contains: params.q, mode: "insensitive" } }] }
+          : {}),
+      },
+      orderBy: { date: "desc" },
+      include: { produksiLainnyaItems: true },
+    }),
   ]);
   const anyPrisma = prisma as any;
   let expenses: Array<{
@@ -678,12 +690,43 @@ export default async function AdminLedgerPage({
     };
   });
 
+  const produksiLainnyaEntries: LedgerEntry[] = produksiLainnyaList.map((p) => {
+    const total = parseFloat(p.totalBiaya?.toString() || "0");
+    const names = Array.from(
+      new Set(p.produksiLainnyaItems.map((i) => i.namaPekerja))
+    ).join(", ");
+    return {
+      id: `produksi-lainnya-${p.id}`,
+      type: "production",
+      date: p.date.toISOString(),
+      status: "completed" as any,
+      reference: `PL-${p.id}`,
+      createdByName: p.petugas || null,
+      counterparty: names || "-",
+      total: total > 0 ? total : null,
+      stockImpact: "NEUTRAL",
+      notes: p.notes,
+      itemCount: p.produksiLainnyaItems.length,
+      productionCost: total,
+      subType: "Produksi Lainnya",
+      produksiLainnyaItems: p.produksiLainnyaItems.map((it) => ({
+        namaPekerja: it.namaPekerja,
+        namaPekerjaan: it.namaPekerjaan,
+        qty: Number(it.qty ?? 0),
+        satuan: it.satuan,
+        upah: Number(it.upah ?? 0),
+        total: Number(it.total ?? 0),
+      })),
+    };
+  });
+
   const allProductions = [
     ...productionEntries,
     ...pengikisanEntries,
     ...pemotonganEntries,
     ...penjemuranEntries,
     ...pengemasanEntries,
+    ...produksiLainnyaEntries,
   ];
 
   let filteredPurchases: LedgerEntry[] = purchaseEntries;
@@ -697,6 +740,7 @@ export default async function AdminLedgerPage({
     "Pemotongan",
     "Penjemuran",
     "Pengemasan",
+    "Produksi Lainnya",
   ];
   filteredProductions = filteredProductions.filter((p) =>
     knownProductionTypes.includes(p.subType || "")

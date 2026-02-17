@@ -1,5 +1,5 @@
-import PenjemuranClient from "@/components/admin/production/PenjemuranClient";
+import PenjemuranPageClient from "./PenjemuranPageClient";
 
 export default function Page() {
-  return <PenjemuranClient />;
+  return <PenjemuranPageClient />;
 }

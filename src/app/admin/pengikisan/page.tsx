@@ -1,5 +1,5 @@
-import PengikisanClient from "@/components/admin/production/PengikisanClient";
+import PengikisanPageClient from "./PengikisanPageClient";
 
 export default function Page() {
-	return <PengikisanClient />;
+  return <PengikisanPageClient />;
 }

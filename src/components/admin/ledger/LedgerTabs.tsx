@@ -9,7 +9,8 @@
    | "production:Pengikisan"
    | "production:Pemotongan"
    | "production:Penjemuran"
-   | "production:Pengemasan";
+  | "production:Pengemasan"
+  | "production:Produksi Lainnya";
  
  const TABS: { key: TabKey; label: string }[] = [
    { key: "purchase", label: "Pembelian" },
@@ -19,6 +20,7 @@
    { key: "production:Pemotongan", label: "Pemotongan" },
    { key: "production:Penjemuran", label: "Penjemuran" },
    { key: "production:Pengemasan", label: "Pengemasan" },
+  { key: "production:Produksi Lainnya", label: "Produksi Lainnya" },
  ];
  
  export function LedgerTabs() {

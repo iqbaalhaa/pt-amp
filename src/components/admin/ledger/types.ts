@@ -54,4 +54,12 @@ export type LedgerEntry = {
     upahPerBungkus: number;
     total: number;
   }[];
+  produksiLainnyaItems?: {
+    namaPekerja: string;
+    namaPekerjaan: string;
+    qty: number;
+    satuan: string;
+    upah: number;
+    total: number;
+  }[];
 };

@@ -1142,6 +1142,404 @@ export function LedgerSection({
     setOpenReport(false);
   };
 
+  const handleDownloadUpahMonthlyPdfReport = async () => {
+    if (reportMode !== "month") {
+      handleDownloadProductionRangePdfReport();
+      return;
+    }
+
+    if (!subType) return;
+    if (
+      subType !== "Pemotongan" &&
+      subType !== "Penjemuran" &&
+      subType !== "Pengemasan" &&
+      subType !== "Produksi Lainnya"
+    )
+      return;
+
+    if (!reportMonth || !reportYear) return;
+    const yearNum = Number(reportYear);
+    const monthNum = Number(reportMonth);
+    if (!yearNum || !monthNum) return;
+
+    const startDate = new Date(yearNum, monthNum - 1, 1);
+    const endDate = new Date(yearNum, monthNum, 0, 23, 59, 59, 999);
+
+    const base = new Date(yearNum, monthNum - 1, 1);
+    const monthName = base.toLocaleString("id-ID", { month: "long" });
+    const periodeLabel = `${monthName} ${yearNum}`;
+
+    type RowInfo = {
+      name: string;
+      ket: string;
+      values: Record<string, number>;
+    };
+
+    const rowsMap = new Map<string, RowInfo>();
+    const totalUpahByNamePdf = new Map<string, number>();
+
+    const ensureRow = (name: string, ket: string) => {
+      const key = `${name}|${ket}`;
+      let row = rowsMap.get(key);
+      if (!row) {
+        row = { name, ket, values: {} };
+        rowsMap.set(key, row);
+      }
+      return row;
+    };
+
+    entries.forEach((entry) => {
+      if (entry.type !== "production" || entry.subType !== subType) return;
+      const d = new Date(entry.date);
+      if (d < startDate || d > endDate) return;
+      const dateKey = d.toISOString().slice(0, 10);
+
+      if (subType === "Pemotongan") {
+        entry.pemotonganItems?.forEach((it) => {
+          const name = it.nama || "-";
+          const qty =
+            typeof it.qty === "number" ? it.qty : Number(it.qty ?? 0);
+          const total =
+            typeof it.total === "number" ? it.total : Number(it.total ?? 0);
+          if (qty > 0) {
+            const row = ensureRow(name, "KG");
+            row.values[dateKey] = (row.values[dateKey] ?? 0) + qty;
+          }
+          if (total > 0) {
+            totalUpahByNamePdf.set(
+              name,
+              (totalUpahByNamePdf.get(name) ?? 0) + total
+            );
+          }
+        });
+      } else if (subType === "Penjemuran") {
+        entry.penjemuranItems?.forEach((it) => {
+          const name = it.nama || "-";
+          const hari =
+            typeof it.hari === "number" ? it.hari : Number(it.hari ?? 0);
+          const total =
+            typeof it.total === "number" ? it.total : Number(it.total ?? 0);
+          if (hari > 0) {
+            const row = ensureRow(name, "HARI");
+            row.values[dateKey] = (row.values[dateKey] ?? 0) + hari;
+          }
+          if (total > 0) {
+            totalUpahByNamePdf.set(
+              name,
+              (totalUpahByNamePdf.get(name) ?? 0) + total
+            );
+          }
+        });
+      } else if (subType === "Pengemasan") {
+        entry.pengemasanItems?.forEach((it) => {
+          const name = it.nama || "-";
+          const bungkus =
+            typeof it.bungkus === "number"
+              ? it.bungkus
+              : Number(it.bungkus ?? 0);
+          const total =
+            typeof it.total === "number" ? it.total : Number(it.total ?? 0);
+          if (bungkus > 0) {
+            const row = ensureRow(name, "BKS");
+            row.values[dateKey] = (row.values[dateKey] ?? 0) + bungkus;
+          }
+          if (total > 0) {
+            totalUpahByNamePdf.set(
+              name,
+              (totalUpahByNamePdf.get(name) ?? 0) + total
+            );
+          }
+        });
+      } else if (subType === "Produksi Lainnya") {
+        entry.produksiLainnyaItems?.forEach((it) => {
+          const name = it.namaPekerja || "-";
+          const ketBase = it.satuan || it.namaPekerjaan || "-";
+          const ket = ketBase.toString().toUpperCase();
+          const qty =
+            typeof it.qty === "number" ? it.qty : Number(it.qty ?? 0);
+          const total =
+            typeof it.total === "number" ? it.total : Number(it.total ?? 0);
+          if (qty > 0) {
+            const row = ensureRow(name, ket);
+            row.values[dateKey] = (row.values[dateKey] ?? 0) + qty;
+          }
+          if (total > 0) {
+            totalUpahByNamePdf.set(
+              name,
+              (totalUpahByNamePdf.get(name) ?? 0) + total
+            );
+          }
+        });
+      }
+    });
+
+    if (rowsMap.size === 0) return;
+
+    const names = Array.from(
+      new Set(Array.from(rowsMap.values()).map((r) => r.name))
+    ).sort((a, b) => a.localeCompare(b));
+
+    const pdf = new jsPDF({
+      orientation: "l",
+      unit: "mm",
+      format: "a4",
+    });
+
+    const margin = REPORT_MARGIN_MM;
+    const pageW = pdf.internal.pageSize.getWidth();
+    const pageH = pdf.internal.pageSize.getHeight();
+
+    let y = margin;
+
+    const logo = await loadReportLogo();
+    if (logo) {
+      const logoW = 26;
+      const ratio = logo.height / logo.width || 1;
+      const logoH = logoW * ratio;
+
+      pdf.addImage(logo, "PNG", margin, y, logoW, logoH);
+
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(11);
+      pdf.text(
+        "PT AURORA MITRA PRAKARSA (AMP)",
+        margin + logoW + 6,
+        y + 5
+      );
+
+      pdf.setFont("helvetica", "normal");
+      pdf.setFontSize(7);
+      pdf.text(
+        "(General Contractor, Supplier, Infrastructure)",
+        margin + logoW + 6,
+        y + 11
+      );
+
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(9);
+      pdf.text(
+        `LAPORAN ${subType.toUpperCase()}`,
+        pageW - margin,
+        y + 5,
+        {
+          align: "right",
+        }
+      );
+
+      y += logoH + 6;
+
+      pdf.setDrawColor(26, 35, 126);
+      pdf.setLineWidth(0.4);
+      pdf.line(margin, y, pageW - margin, y);
+      y += 4;
+    } else {
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(12);
+      pdf.text(`LAPORAN ${subType.toUpperCase()}`, pageW / 2, y, {
+        align: "center",
+      });
+      y += 8;
+      pdf.setDrawColor(26, 35, 126);
+      pdf.setLineWidth(0.4);
+      pdf.line(margin, y, pageW - margin, y);
+      y += 4;
+    }
+
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(9);
+    pdf.text(`Periode: ${periodeLabel}`, margin, y);
+    const now = new Date();
+    const printedAt = `${now.toLocaleDateString(
+      "id-ID"
+    )} ${now.toLocaleTimeString("id-ID")}`;
+    pdf.text(`Dicetak: ${printedAt}`, pageW - margin, y, {
+      align: "right",
+    });
+    y += 6;
+
+    pdf.setFont("helvetica", "bold");
+
+    const tableStartY = y;
+
+    const daysInMonth = endDate.getDate();
+    const allDays = Array.from({ length: daysInMonth }, (_, i) => i + 1);
+
+    const chunkDayRanges: number[][] = [];
+    const firstEnd = Math.min(13, daysInMonth);
+    if (firstEnd > 0) {
+      chunkDayRanges.push(allDays.slice(0, firstEnd));
+    }
+    if (firstEnd < daysInMonth) {
+      const secondStart = firstEnd + 1;
+      const secondEnd = Math.min(secondStart + 12, daysInMonth);
+      chunkDayRanges.push(allDays.slice(secondStart - 1, secondEnd));
+      if (secondEnd < daysInMonth) {
+        chunkDayRanges.push(allDays.slice(secondEnd, daysInMonth));
+      }
+    }
+
+    type Chunk = {
+      days: number[];
+      showJml: boolean;
+      showJumlahUpah: boolean;
+    };
+
+    const chunks: Chunk[] = chunkDayRanges.map((days, idx, arr) => ({
+      days,
+      showJml: idx === arr.length - 1,
+      showJumlahUpah: idx === arr.length - 1,
+    }));
+
+    const makeDateKey = (day: number) =>
+      new Date(yearNum, monthNum - 1, day).toISOString().slice(0, 10);
+
+    let counter = 1;
+
+    chunks.forEach((chunk, chunkIndex) => {
+      const chunkHeaders = chunk.days.map((d) =>
+        d.toString().padStart(2, "0")
+      );
+
+      if (chunkIndex === 0) {
+        y = tableStartY;
+      } else {
+        pdf.addPage("a4", "l");
+        y = margin;
+        pdf.setFont("helvetica", "normal");
+        pdf.setFontSize(9);
+        pdf.text(`Periode: ${periodeLabel}`, margin, y);
+        pdf.text(`Dicetak: ${printedAt}`, pageW - margin, y, {
+          align: "right",
+        });
+        y += 6;
+        pdf.setFont("helvetica", "bold");
+      }
+
+      const colNoX = margin;
+      const colNamaX = colNoX + 10;
+      const colKetX = colNamaX + 38;
+      const dateColWidth = 14;
+      const firstDateX = colKetX + 12;
+
+      let colJumlahX: number | null = null;
+      let colJumlahUpahX: number | null = null;
+      let tableRightX = firstDateX + chunkHeaders.length * dateColWidth + 2;
+
+      if (chunk.showJml || chunk.showJumlahUpah) {
+        colJumlahX = tableRightX + 2;
+        tableRightX = colJumlahX + 22;
+        if (chunk.showJumlahUpah) {
+          colJumlahUpahX = tableRightX + 2;
+          tableRightX = colJumlahUpahX + 26;
+        }
+      }
+
+      const headerYTop = y;
+      const headerHeight = 7;
+
+      pdf.setDrawColor(148, 163, 184);
+      pdf.setLineWidth(0.2);
+      pdf.rect(colNoX, headerYTop, tableRightX - colNoX, headerHeight);
+
+      pdf.text("NO", colNoX + 2, headerYTop + 4);
+      pdf.text("NAMA", colNamaX + 1, headerYTop + 4);
+      pdf.text("KET", colKetX + 1, headerYTop + 4);
+      chunkHeaders.forEach((h, idx) => {
+        const x = firstDateX + idx * dateColWidth;
+        pdf.text(h, x + 1, headerYTop + 4);
+      });
+      if (chunk.showJml && colJumlahX != null) {
+        pdf.text("JML", colJumlahX + 1, headerYTop + 4);
+      }
+      if (chunk.showJumlahUpah && colJumlahUpahX != null) {
+        pdf.text("JML UPAH", colJumlahUpahX + 1, headerYTop + 4);
+      }
+
+      const headerColumnXs: number[] = [
+        colNoX,
+        colNamaX - 2,
+        colKetX - 2,
+        firstDateX - 2,
+      ];
+      if (chunk.showJml && colJumlahX != null) {
+        headerColumnXs.push(colJumlahX - 2);
+      }
+      if (chunk.showJumlahUpah && colJumlahUpahX != null) {
+        headerColumnXs.push(colJumlahUpahX - 2);
+      }
+      headerColumnXs.push(tableRightX);
+      headerColumnXs.forEach((x) => {
+        pdf.line(x, headerYTop, x, headerYTop + headerHeight);
+      });
+
+      y = headerYTop + headerHeight;
+      pdf.setFont("helvetica", "normal");
+
+      names.forEach((name) => {
+        const row =
+          Array.from(rowsMap.values()).find((r) => r.name === name) || null;
+        if (!row) return;
+
+        if (y > pageH - margin) {
+          pdf.addPage("a4", "l");
+          y = margin;
+        }
+
+        const rowHeight = 6;
+        pdf.rect(colNoX, y, tableRightX - colNoX, rowHeight);
+        headerColumnXs.forEach((x) => {
+          pdf.line(x, y, x, y + rowHeight);
+        });
+
+        const jumlah = Object.values(row.values).reduce(
+          (sum, v) => sum + v,
+          0
+        );
+        const totalUpahName = totalUpahByNamePdf.get(name) ?? 0;
+        const perDate = chunk.days.map((day) => {
+          const key = makeDateKey(day);
+          return row.values[key] ?? 0;
+        });
+
+        const textY = y + 4;
+
+        pdf.text(String(counter), colNoX + 2, textY);
+        pdf.text(row.name, colNamaX + 1, textY);
+        pdf.text(row.ket, colKetX + 1, textY);
+        perDate.forEach((val, i) => {
+          const x = firstDateX + i * dateColWidth;
+          if (val !== 0) {
+            pdf.text(String(val), x + 1, textY);
+          }
+        });
+        if (chunk.showJml && colJumlahX != null && jumlah !== 0) {
+          pdf.text(String(jumlah), colJumlahX + 1, textY);
+        }
+        if (
+          chunk.showJumlahUpah &&
+          colJumlahUpahX != null &&
+          totalUpahName !== 0
+        ) {
+          pdf.text(
+            toCurrency(totalUpahName),
+            colJumlahUpahX + 24,
+            textY,
+            {
+              align: "right",
+            }
+          );
+        }
+
+        y += rowHeight;
+        counter += 1;
+      });
+    });
+
+    const suffix = `bulan-${reportMonth}-${reportYear}`;
+    pdf.save(`laporan-${subType.toLowerCase()}-${suffix}.pdf`);
+    setOpenReport(false);
+  };
+
   const totalPages =
     pageSize === "all"
       ? 1
@@ -1633,7 +2031,8 @@ export function LedgerSection({
                       subType === "Pengikisan" ||
                       subType === "Pemotongan" ||
                       subType === "Penjemuran" ||
-                      subType === "Pengemasan";
+                      subType === "Pengemasan" ||
+                      subType === "Produksi Lainnya";
                     if (shouldOpenModal) {
                       const now = new Date();
                       if (!reportYear)
@@ -2284,7 +2683,8 @@ export function LedgerSection({
         (subType === "Pengikisan" ||
           subType === "Pemotongan" ||
           subType === "Penjemuran" ||
-          subType === "Pengemasan") && (
+          subType === "Pengemasan" ||
+          subType === "Produksi Lainnya") && (
         <GlassDialog
           open={openReport}
           title={`Download Laporan Produksi (${subType})`}
@@ -2300,11 +2700,21 @@ export function LedgerSection({
                 Batal
               </button>
               <button
-                onClick={
-                  subType === "Pengikisan"
-                    ? handleDownloadPengikisanPdfReport
-                    : handleDownloadProductionRangePdfReport
-                }
+                onClick={() => {
+                  if (subType === "Pengikisan") {
+                    handleDownloadPengikisanPdfReport();
+                  } else if (
+                    reportMode === "month" &&
+                    (subType === "Pemotongan" ||
+                      subType === "Penjemuran" ||
+                      subType === "Pengemasan" ||
+                      subType === "Produksi Lainnya")
+                  ) {
+                    handleDownloadUpahMonthlyPdfReport();
+                  } else {
+                    handleDownloadProductionRangePdfReport();
+                  }
+                }}
                 className="rounded-md bg-indigo-600 px-3 py-1 text-[12px] text-white hover:bg-indigo-700"
               >
                 Download PDF

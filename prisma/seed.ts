@@ -245,17 +245,37 @@ async function seedMaster() {
     });
   }
 
-  // Workers (no unique => seed only if empty)
-  const workerCount = await prisma.worker.count();
-  if (workerCount === 0) {
-    await prisma.worker.createMany({
-      data: [
-        { name: "Budi Santoso", isActive: true },
-        { name: "Siti Aulia", isActive: true },
-        { name: "Rian Pratama", isActive: true },
-        { name: "Dewi Lestari", isActive: true },
-      ],
-    });
+  // Workers: ensure at least 10 aktif
+  const existingWorkers = await prisma.worker.findMany({
+    select: { name: true },
+  });
+  if (existingWorkers.length < 10) {
+    const existingNames = new Set(existingWorkers.map((w) => w.name));
+    const candidateNames = [
+      "Budi Santoso",
+      "Siti Aulia",
+      "Rian Pratama",
+      "Dewi Lestari",
+      "Agus Salim",
+      "Nur Hasanah",
+      "Joko Widodo",
+      "Lina Marlina",
+      "Andi Saputra",
+      "Mega Purnama",
+      "Farhan Hidayat",
+      "Fitriani",
+    ];
+    const toCreate: { name: string; isActive: boolean }[] = [];
+    for (const name of candidateNames) {
+      if (existingWorkers.length + toCreate.length >= 10) break;
+      if (!existingNames.has(name)) {
+        toCreate.push({ name, isActive: true });
+        existingNames.add(name);
+      }
+    }
+    if (toCreate.length > 0) {
+      await prisma.worker.createMany({ data: toCreate });
+    }
   }
 
   const workers = await prisma.worker.findMany({ orderBy: { id: "asc" } });

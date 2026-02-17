@@ -196,7 +196,7 @@ export default function PenjemuranClient() {
         next.push({
           id: nextId,
           nama: w.name,
-          qty: 0,
+          hari: 0,
           lemburJam: 0,
         });
       });

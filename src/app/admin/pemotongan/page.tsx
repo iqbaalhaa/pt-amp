@@ -1,5 +1,5 @@
-import PemotonganClient from "@/components/admin/production/PemotonganClient";
+import PemotonganPageClient from "./PemotonganPageClient";
 
 export default function Page() {
-	return <PemotonganClient />;
+  return <PemotonganPageClient />;
 }

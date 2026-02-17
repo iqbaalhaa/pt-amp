@@ -1,5 +1,5 @@
 import { Metadata } from "next";
-import OtherProductionClient from "@/components/admin/production/OtherProductionClient";
+import ProduksiLainnyaPageClient from "./ProduksiLainnyaPageClient";
 
 export const metadata: Metadata = {
   title: "Produksi Lainnya | Admin",
@@ -7,5 +7,5 @@ export const metadata: Metadata = {
 };
 
 export default function ProduksiLainnyaPage() {
-  return <OtherProductionClient />;
+  return <ProduksiLainnyaPageClient />;
 }
