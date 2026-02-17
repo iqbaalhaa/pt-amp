@@ -274,6 +274,163 @@ export function LedgerSection({
     );
   };
 
+  const handleDownloadProductionRangePdfReport = async () => {
+    if (entries.length === 0) return;
+    if (type !== "production" || !subType) return;
+
+    let startDate: Date | null = null;
+    let endDate: Date | null = null;
+    let periodeLabel = "";
+
+    if (reportMode === "range") {
+      if (!reportStart || !reportEnd) return;
+      const s = new Date(reportStart);
+      const e = new Date(reportEnd);
+      if (isNaN(s.getTime()) || isNaN(e.getTime()) || s > e) return;
+      startDate = new Date(s.getFullYear(), s.getMonth(), s.getDate());
+      endDate = new Date(
+        e.getFullYear(),
+        e.getMonth(),
+        e.getDate(),
+        23,
+        59,
+        59,
+        999
+      );
+      periodeLabel = `${s.toLocaleDateString("id-ID")} - ${e.toLocaleDateString(
+        "id-ID"
+      )}`;
+    } else {
+      if (!reportMonth || !reportYear) return;
+      const yearNum = Number(reportYear);
+      const monthNum = Number(reportMonth);
+      if (!yearNum || !monthNum) return;
+      startDate = new Date(yearNum, monthNum - 1, 1);
+      endDate = new Date(yearNum, monthNum, 0, 23, 59, 59, 999);
+      const base = new Date(yearNum, monthNum - 1, 1);
+      const monthName = base.toLocaleString("id-ID", { month: "long" });
+      periodeLabel = `${monthName} ${yearNum}`;
+    }
+
+    if (!startDate || !endDate) return;
+
+    const reportEntries = sortedEntries.filter((e) => {
+      if (e.type !== "production" || e.subType !== subType) return false;
+      const d = new Date(e.date);
+      return d >= startDate! && d <= endDate!;
+    });
+
+    if (reportEntries.length === 0) return;
+
+    const pdf = new jsPDF({
+      orientation: "p",
+      unit: "mm",
+      format: "a4",
+    });
+
+    const margin = 15;
+    const pageW = pdf.internal.pageSize.getWidth();
+    const pageH = pdf.internal.pageSize.getHeight();
+
+    let y = margin;
+
+    const reportTitleBase = subType;
+
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(13);
+    pdf.text(
+      `LAPORAN PRODUKSI ${reportTitleBase.toUpperCase()}`,
+      pageW / 2,
+      y,
+      { align: "center" }
+    );
+    y += 7;
+
+    pdf.setFontSize(10);
+    pdf.setFont("helvetica", "normal");
+    pdf.text(`Periode: ${periodeLabel}`, margin, y);
+    y += 6;
+    const now = new Date();
+    const printedAt = `${now.toLocaleDateString(
+      "id-ID"
+    )} ${now.toLocaleTimeString("id-ID")}`;
+    pdf.text(`Dicetak: ${printedAt}`, margin, y);
+    y += 8;
+
+    const totalSum = reportEntries.reduce(
+      (sum, e) => sum + getProductionValue(e),
+      0
+    );
+
+    pdf.setFont("helvetica", "bold");
+    pdf.text(
+      `Total Transaksi: ${reportEntries.length} | Total: ${toCurrency(
+        totalSum
+      )}`,
+      margin,
+      y
+    );
+    y += 8;
+
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(9);
+
+    const colTanggalX = margin;
+    const colPetugasX = colTanggalX + 32;
+    const colPihakX = colPetugasX + 32;
+    const colTotalX = pageW - margin - 30;
+    const colStatusX = pageW - margin;
+
+    pdf.text("Tanggal", colTanggalX, y);
+    pdf.text("Petugas", colPetugasX, y);
+    pdf.text("Pihak", colPihakX, y);
+    pdf.text("Total", colTotalX, y, { align: "right" });
+    pdf.text("Status", colStatusX, y, { align: "right" });
+    y += 5;
+
+    pdf.setFont("helvetica", "normal");
+
+    reportEntries.forEach((e) => {
+      if (y > pageH - margin) {
+        pdf.addPage();
+        y = margin;
+        pdf.setFont("helvetica", "bold");
+        pdf.setFontSize(9);
+        pdf.text("Tanggal", colTanggalX, y);
+        pdf.text("Petugas", colPetugasX, y);
+        pdf.text("Pihak", colPihakX, y);
+        pdf.text("Total", colTotalX, y, { align: "right" });
+        pdf.text("Status", colStatusX, y, { align: "right" });
+        y += 5;
+        pdf.setFont("helvetica", "normal");
+      }
+      const d = new Date(e.date);
+      const dateStr = `${d.toLocaleDateString(
+        "id-ID"
+      )} ${d.toLocaleTimeString("id-ID").slice(0, 5)}`;
+      const petugas = e.createdByName || "-";
+      const pihak = e.counterparty || "-";
+      const totalVal = getProductionValue(e);
+      const status = e.status.toUpperCase();
+
+      pdf.text(dateStr, colTanggalX, y);
+      pdf.text(petugas, colPetugasX, y);
+      pdf.text(pihak, colPihakX, y);
+      pdf.text(toCurrency(totalVal), colTotalX, y, { align: "right" });
+      pdf.text(status, colStatusX, y, { align: "right" });
+      y += 5;
+    });
+
+    const suffix =
+      reportMode === "range"
+        ? "range"
+        : `bulan-${reportMonth}-${reportYear}`;
+    pdf.save(
+      `laporan-produksi-${subType.toLowerCase()}-${suffix}.pdf`
+    );
+    setOpenReport(false);
+  };
+
   const handleDownloadPengikisanExcelReport = () => {
     if (entries.length === 0) return;
     let startDate: Date | null = null;
@@ -380,6 +537,23 @@ export function LedgerSection({
     const names = Array.from(
       new Set(Array.from(rowsMap.values()).map((r) => r.name))
     ).sort((a, b) => a.localeCompare(b));
+
+    const totalUpahByName = new Map<string, number>();
+    names.forEach((name) => {
+      const rowKa = rowsMap.get(`${name}|KA`);
+      const rowStik = rowsMap.get(`${name}|STIK`);
+      let totalUpah = 0;
+      [rowKa, rowStik].forEach((row) => {
+        if (!row) return;
+        const jumlahRow = Object.values(row.values).reduce(
+          (sum, v) => sum + v,
+          0
+        );
+        const hargaRow = row.harga || 0;
+        totalUpah += jumlahRow * hargaRow;
+      });
+      totalUpahByName.set(name, totalUpah);
+    });
 
     let counter = 1;
     names.forEach((name) => {
@@ -532,6 +706,23 @@ export function LedgerSection({
       new Set(Array.from(rowsMap.values()).map((r) => r.name))
     ).sort((a, b) => a.localeCompare(b));
 
+    const totalUpahByNamePdf = new Map<string, number>();
+    names.forEach((name) => {
+      const rowKa = rowsMap.get(`${name}|KA`);
+      const rowStik = rowsMap.get(`${name}|STIK`);
+      let totalUpah = 0;
+      [rowKa, rowStik].forEach((row) => {
+        if (!row) return;
+        const jumlahRow = Object.values(row.values).reduce(
+          (sum, v) => sum + v,
+          0
+        );
+        const hargaRow = row.harga || 0;
+        totalUpah += jumlahRow * hargaRow;
+      });
+      totalUpahByNamePdf.set(name, totalUpah);
+    });
+
     const pdf = new jsPDF({
       orientation: "l",
       unit: "mm",
@@ -603,131 +794,159 @@ export function LedgerSection({
 
     pdf.setFont("helvetica", "bold");
 
-    const dateHeadersRange = dateKeys.map((key) => {
-      const d = new Date(key);
-      const day = d.getDate().toString().padStart(2, "0");
-      const month = (d.getMonth() + 1).toString().padStart(2, "0");
-      const weekday = d
-        .toLocaleDateString("id-ID", { weekday: "short" })
-        .toUpperCase();
-      return `${day}/${month} ${weekday}`;
-    });
-
     const tableStartY = y;
     let counter = 1;
 
     if (!isMonthlyReport) {
-      const colNoX = margin;
-      const colNamaX = colNoX + 10;
-      const colKetX = colNamaX + 38;
-      const dateColWidth = 14;
-      const firstDateX = colKetX + 12;
-      const colJumlahX = firstDateX + dateHeadersRange.length * dateColWidth + 2;
-      const colHargaX = colJumlahX + 18;
-      const colTotalX = colHargaX + 22;
-      const colJumlahUpahX = colTotalX + 26;
-      const tableRightX = colJumlahUpahX + 26;
-
-      const headerYTop = y;
-      const headerHeight = 7;
-
-      pdf.setDrawColor(148, 163, 184);
-      pdf.setLineWidth(0.2);
-      pdf.rect(colNoX, headerYTop, tableRightX - colNoX, headerHeight);
-
-      pdf.text("NO", colNoX + 2, headerYTop + 4);
-      pdf.text("NAMA", colNamaX + 1, headerYTop + 4);
-      pdf.text("KET", colKetX + 1, headerYTop + 4);
-      dateHeadersRange.forEach((h, idx) => {
-        const x = firstDateX + idx * dateColWidth;
-        pdf.text(h, x + 1, headerYTop + 4);
-      });
-      pdf.text("JML", colJumlahX + 1, headerYTop + 4);
-      pdf.text("HARGA", colHargaX + 1, headerYTop + 4);
-      pdf.text("TOTAL", colTotalX + 1, headerYTop + 4);
-      pdf.text("JML UPAH", colJumlahUpahX + 1, headerYTop + 4);
-
-      const headerColumnXs: number[] = [
-        colNoX,
-        colNamaX - 2,
-        colKetX - 2,
-        firstDateX - 2,
-        colJumlahX - 2,
-        colHargaX - 2,
-        colTotalX - 2,
-        colJumlahUpahX - 2,
-        tableRightX,
-      ];
-      headerColumnXs.forEach((x) => {
-        pdf.line(x, headerYTop, x, headerYTop + headerHeight);
-      });
-
-      y = headerYTop + headerHeight;
-      pdf.setFont("helvetica", "normal");
-
-      names.forEach((name) => {
-        const rowsForName: RowInfo[] = [];
-        const rowKa = rowsMap.get(`${name}|KA`);
-        const rowStik = rowsMap.get(`${name}|STIK`);
-        if (rowKa) rowsForName.push(rowKa);
-        if (rowStik) rowsForName.push(rowStik);
-
-        rowsForName.forEach((row, idx) => {
-          if (y > pageH - margin) {
-            pdf.addPage("a4", "l");
-            y = margin;
-          }
-
-          const rowHeight = 6;
-          pdf.rect(colNoX, y, tableRightX - colNoX, rowHeight);
-          headerColumnXs.forEach((x) => {
-            pdf.line(x, y, x, y + rowHeight);
-          });
-
-          const jumlah = Object.values(row.values).reduce(
-            (sum, v) => sum + v,
-            0
-          );
-          const harga = row.harga || 0;
-          const total = jumlah * harga;
-          const jumlahUpah = row.ket === "STIK" ? total : 0;
-          const perDate = dateKeys.map((key) => row.values[key] ?? 0);
-
-          const textY = y + 4;
-
-          if (idx === 0) {
-            pdf.text(String(counter), colNoX + 2, textY);
-          }
-          pdf.text(row.name, colNamaX + 1, textY);
-          pdf.text(row.ket, colKetX + 1, textY);
-          perDate.forEach((val, i) => {
-            const x = firstDateX + i * dateColWidth;
-            if (val !== 0) {
-              pdf.text(String(val), x + 1, textY);
-            }
-          });
-          if (jumlah !== 0) {
-            pdf.text(String(jumlah), colJumlahX + 1, textY);
-          }
-          if (harga !== 0) {
-            pdf.text(toCurrency(harga), colHargaX + 16, textY, {
-              align: "right",
-            });
-          }
-          if (total !== 0) {
-            pdf.text(toCurrency(total), colTotalX + 20, textY, {
-              align: "right",
-            });
-          }
-          if (jumlahUpah !== 0) {
-            pdf.text(toCurrency(jumlahUpah), colJumlahUpahX + 24, textY, {
-              align: "right",
-            });
-          }
-
-          y += rowHeight;
+      const maxColsPerPage = 13;
+      const chunks: { keys: string[]; headers: string[] }[] = [];
+      for (let i = 0; i < dateKeys.length; i += maxColsPerPage) {
+        const keys = dateKeys.slice(i, i + maxColsPerPage);
+        const headers = keys.map((key) => {
+          const d = new Date(key);
+          return d.getDate().toString().padStart(2, "0");
         });
-        counter += 1;
+        chunks.push({ keys, headers });
+      }
+
+      chunks.forEach((chunk, chunkIndex) => {
+        const chunkKeys = chunk.keys;
+        const chunkHeaders = chunk.headers;
+
+        if (chunkIndex === 0) {
+          y = tableStartY;
+        } else {
+          pdf.addPage("a4", "l");
+          y = margin;
+          pdf.setFont("helvetica", "normal");
+          pdf.setFontSize(9);
+          pdf.text(`Periode: ${periodeLabel}`, margin, y);
+          pdf.text(`Dicetak: ${printedAt}`, pageW - margin, y, {
+            align: "right",
+          });
+          y += 6;
+          pdf.setFont("helvetica", "bold");
+        }
+
+        const colNoX = margin;
+        const colNamaX = colNoX + 10;
+        const colKetX = colNamaX + 38;
+        const dateColWidth = 14;
+        const firstDateX = colKetX + 12;
+        const colJumlahX =
+          firstDateX + chunkHeaders.length * dateColWidth + 2;
+        const colHargaX = colJumlahX + 18;
+        const colTotalX = colHargaX + 22;
+        const colJumlahUpahX = colTotalX + 26;
+        const tableRightX = colJumlahUpahX + 26;
+
+        const headerYTop = y;
+        const headerHeight = 7;
+
+        pdf.setDrawColor(148, 163, 184);
+        pdf.setLineWidth(0.2);
+        pdf.rect(colNoX, headerYTop, tableRightX - colNoX, headerHeight);
+
+        pdf.text("NO", colNoX + 2, headerYTop + 4);
+        pdf.text("NAMA", colNamaX + 1, headerYTop + 4);
+        pdf.text("KET", colKetX + 1, headerYTop + 4);
+        chunkHeaders.forEach((h, idx) => {
+          const x = firstDateX + idx * dateColWidth;
+          pdf.text(h, x + 1, headerYTop + 4);
+        });
+        pdf.text("JML", colJumlahX + 1, headerYTop + 4);
+        pdf.text("HARGA", colHargaX + 1, headerYTop + 4);
+        pdf.text("TOTAL", colTotalX + 1, headerYTop + 4);
+        pdf.text("JML UPAH", colJumlahUpahX + 1, headerYTop + 4);
+
+        const headerColumnXs: number[] = [
+          colNoX,
+          colNamaX - 2,
+          colKetX - 2,
+          firstDateX - 2,
+          colJumlahX - 2,
+          colHargaX - 2,
+          colTotalX - 2,
+          colJumlahUpahX - 2,
+          tableRightX,
+        ];
+        headerColumnXs.forEach((x) => {
+          pdf.line(x, headerYTop, x, headerYTop + headerHeight);
+        });
+
+        y = headerYTop + headerHeight;
+        pdf.setFont("helvetica", "normal");
+
+        names.forEach((name) => {
+          const rowsForName: RowInfo[] = [];
+          const rowKa = rowsMap.get(`${name}|KA`);
+          const rowStik = rowsMap.get(`${name}|STIK`);
+          if (rowKa) rowsForName.push(rowKa);
+          if (rowStik) rowsForName.push(rowStik);
+
+          const totalUpahName = totalUpahByNamePdf.get(name) ?? 0;
+
+          rowsForName.forEach((row, idx) => {
+            if (y > pageH - margin) {
+              pdf.addPage("a4", "l");
+              y = margin;
+            }
+
+            const rowHeight = 6;
+            pdf.rect(colNoX, y, tableRightX - colNoX, rowHeight);
+            headerColumnXs.forEach((x) => {
+              pdf.line(x, y, x, y + rowHeight);
+            });
+
+            const jumlah = Object.values(row.values).reduce(
+              (sum, v) => sum + v,
+              0
+            );
+            const harga = row.harga || 0;
+            const total = jumlah * harga;
+            const perDate = chunkKeys.map((key) => row.values[key] ?? 0);
+
+            const textY = y + 4;
+
+            if (idx === 0) {
+              pdf.text(String(counter), colNoX + 2, textY);
+            }
+            pdf.text(row.name, colNamaX + 1, textY);
+            pdf.text(row.ket, colKetX + 1, textY);
+            perDate.forEach((val, i) => {
+              const x = firstDateX + i * dateColWidth;
+              if (val !== 0) {
+                pdf.text(String(val), x + 1, textY);
+              }
+            });
+            if (jumlah !== 0) {
+              pdf.text(String(jumlah), colJumlahX + 1, textY);
+            }
+            if (harga !== 0) {
+              pdf.text(toCurrency(harga), colHargaX + 16, textY, {
+                align: "right",
+              });
+            }
+            if (total !== 0) {
+              pdf.text(toCurrency(total), colTotalX + 20, textY, {
+                align: "right",
+              });
+            }
+            if (row.ket === "STIK" && totalUpahName !== 0) {
+              pdf.text(
+                toCurrency(totalUpahName),
+                colJumlahUpahX + 24,
+                textY,
+                {
+                  align: "right",
+                }
+              );
+            }
+
+            y += rowHeight;
+          });
+          counter += 1;
+        });
       });
     } else {
       const daysInMonth = endDate.getDate();
@@ -870,7 +1089,7 @@ export function LedgerSection({
             );
             const harga = row.harga || 0;
             const total = jumlah * harga;
-            const jumlahUpah = row.ket === "STIK" ? total : 0;
+            const totalUpahName = totalUpahByNamePdf.get(name) ?? 0;
             const perDate = chunk.days.map((day) => {
               const key = makeDateKey(day);
               return row.values[key] ?? 0;
@@ -895,11 +1114,17 @@ export function LedgerSection({
             if (
               chunk.showJumlahUpah &&
               colJumlahUpahX != null &&
-              jumlahUpah !== 0
+              row.ket === "STIK" &&
+              totalUpahName !== 0
             ) {
-              pdf.text(toCurrency(jumlahUpah), colJumlahUpahX + 24, textY, {
-                align: "right",
-              });
+              pdf.text(
+                toCurrency(totalUpahName),
+                colJumlahUpahX + 24,
+                textY,
+                {
+                  align: "right",
+                }
+              );
             }
 
             y += rowHeight;
@@ -1404,7 +1629,12 @@ export function LedgerSection({
               {type === "production" && subType && (
                 <button
                   onClick={() => {
-                    if (subType === "Pengikisan") {
+                    const shouldOpenModal =
+                      subType === "Pengikisan" ||
+                      subType === "Pemotongan" ||
+                      subType === "Penjemuran" ||
+                      subType === "Pengemasan";
+                    if (shouldOpenModal) {
                       const now = new Date();
                       if (!reportYear)
                         setReportYear(String(now.getFullYear()));
@@ -1783,6 +2013,201 @@ export function LedgerSection({
                     </tr>
                   </tfoot>
                 </table>
+              ) : selectedEntry.subType === "Pemotongan" &&
+                selectedEntry.pemotonganItems &&
+                selectedEntry.pemotonganItems.length > 0 ? (
+                <table className="w-full border-collapse text-xs">
+                  <thead>
+                    <tr className="bg-slate-50 text-slate-700">
+                      <th className="border border-slate-200 px-2 py-1 text-left w-10">
+                        #
+                      </th>
+                      <th className="border border-slate-200 px-2 py-1 text-left">
+                        Pekerja
+                      </th>
+                      <th className="border border-slate-200 px-2 py-1 text-right">
+                        Qty (kg)
+                      </th>
+                      <th className="border border-slate-200 px-2 py-1 text-right">
+                        Total
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {selectedEntry.pemotonganItems.map((it, idx) => (
+                      <tr key={idx}>
+                        <td className="border border-slate-200 px-2 py-1">
+                          {idx + 1}
+                        </td>
+                        <td className="border border-slate-200 px-2 py-1">
+                          {it.nama}
+                        </td>
+                        <td className="border border-slate-200 px-2 py-1 text-right">
+                          {it.qty}
+                        </td>
+                        <td className="border border-slate-200 px-2 py-1 text-right">
+                          {toCurrency(it.total)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot>
+                    <tr>
+                      <td
+                        className="border border-slate-200 px-2 py-1 font-semibold"
+                        colSpan={3}
+                      >
+                        Total
+                      </td>
+                      <td className="border border-slate-200 px-2 py-1 text-right font-semibold">
+                        {toCurrency(
+                          selectedEntry.pemotonganItems.reduce(
+                            (s, it) => s + it.total,
+                            0
+                          )
+                        )}
+                      </td>
+                    </tr>
+                  </tfoot>
+                </table>
+              ) : selectedEntry.subType === "Penjemuran" &&
+                selectedEntry.penjemuranItems &&
+                selectedEntry.penjemuranItems.length > 0 ? (
+                <table className="w-full border-collapse text-xs">
+                  <thead>
+                    <tr className="bg-slate-50 text-slate-700">
+                      <th className="border border-slate-200 px-2 py-1 text-left w-10">
+                        #
+                      </th>
+                      <th className="border border-slate-200 px-2 py-1 text-left">
+                        Pekerja
+                      </th>
+                      <th className="border border-slate-200 px-2 py-1 text-right">
+                        Hari
+                      </th>
+                      <th className="border border-slate-200 px-2 py-1 text-right">
+                        Lembur (jam)
+                      </th>
+                      <th className="border border-slate-200 px-2 py-1 text-right">
+                        Upah Harian
+                      </th>
+                      <th className="border border-slate-200 px-2 py-1 text-right">
+                        Upah Lembur
+                      </th>
+                      <th className="border border-slate-200 px-2 py-1 text-right">
+                        Total
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {selectedEntry.penjemuranItems.map((it, idx) => (
+                      <tr key={idx}>
+                        <td className="border border-slate-200 px-2 py-1">
+                          {idx + 1}
+                        </td>
+                        <td className="border border-slate-200 px-2 py-1">
+                          {it.nama}
+                        </td>
+                        <td className="border border-slate-200 px-2 py-1 text-right">
+                          {it.hari}
+                        </td>
+                        <td className="border border-slate-200 px-2 py-1 text-right">
+                          {it.lemburJam}
+                        </td>
+                        <td className="border border-slate-200 px-2 py-1 text-right">
+                          {toCurrency(it.upahPerHari)}
+                        </td>
+                        <td className="border border-slate-200 px-2 py-1 text-right">
+                          {toCurrency(it.upahLemburPerJam)}
+                        </td>
+                        <td className="border border-slate-200 px-2 py-1 text-right">
+                          {toCurrency(it.total)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot>
+                    <tr>
+                      <td
+                        className="border border-slate-200 px-2 py-1 font-semibold"
+                        colSpan={6}
+                      >
+                        Total
+                      </td>
+                      <td className="border border-slate-200 px-2 py-1 text-right font-semibold">
+                        {toCurrency(
+                          selectedEntry.penjemuranItems.reduce(
+                            (s, it) => s + it.total,
+                            0
+                          )
+                        )}
+                      </td>
+                    </tr>
+                  </tfoot>
+                </table>
+              ) : selectedEntry.subType === "Pengemasan" &&
+                selectedEntry.pengemasanItems &&
+                selectedEntry.pengemasanItems.length > 0 ? (
+                <table className="w-full border-collapse text-xs">
+                  <thead>
+                    <tr className="bg-slate-50 text-slate-700">
+                      <th className="border border-slate-200 px-2 py-1 text-left w-10">
+                        #
+                      </th>
+                      <th className="border border-slate-200 px-2 py-1 text-left">
+                        Pekerja
+                      </th>
+                      <th className="border border-slate-200 px-2 py-1 text-right">
+                        Bungkus
+                      </th>
+                      <th className="border border-slate-200 px-2 py-1 text-right">
+                        Upah/Bungkus
+                      </th>
+                      <th className="border border-slate-200 px-2 py-1 text-right">
+                        Total
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {selectedEntry.pengemasanItems.map((it, idx) => (
+                      <tr key={idx}>
+                        <td className="border border-slate-200 px-2 py-1">
+                          {idx + 1}
+                        </td>
+                        <td className="border border-slate-200 px-2 py-1">
+                          {it.nama}
+                        </td>
+                        <td className="border border-slate-200 px-2 py-1 text-right">
+                          {it.bungkus}
+                        </td>
+                        <td className="border border-slate-200 px-2 py-1 text-right">
+                          {toCurrency(it.upahPerBungkus)}
+                        </td>
+                        <td className="border border-slate-200 px-2 py-1 text-right">
+                          {toCurrency(it.total)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot>
+                    <tr>
+                      <td
+                        className="border border-slate-200 px-2 py-1 font-semibold"
+                        colSpan={4}
+                      >
+                        Total
+                      </td>
+                      <td className="border border-slate-200 px-2 py-1 text-right font-semibold">
+                        {toCurrency(
+                          selectedEntry.pengemasanItems.reduce(
+                            (s, it) => s + it.total,
+                            0
+                          )
+                        )}
+                      </td>
+                    </tr>
+                  </tfoot>
+                </table>
               ) : selectedEntry.lines && selectedEntry.lines.length > 0 ? (
                 <table className="w-full border-collapse text-xs">
                   <thead>
@@ -1854,10 +2279,15 @@ export function LedgerSection({
         )}
       </GlassDialog>
 
-      {type === "production" && subType === "Pengikisan" && (
+      {type === "production" &&
+        subType &&
+        (subType === "Pengikisan" ||
+          subType === "Pemotongan" ||
+          subType === "Penjemuran" ||
+          subType === "Pengemasan") && (
         <GlassDialog
           open={openReport}
-          title="Download Laporan Pengikisan"
+          title={`Download Laporan Produksi (${subType})`}
           onClose={() => setOpenReport(false)}
           fullWidth
           maxWidth="sm"
@@ -1870,13 +2300,11 @@ export function LedgerSection({
                 Batal
               </button>
               <button
-                onClick={handleDownloadPengikisanExcelReport}
-                className="rounded-md bg-emerald-600 px-3 py-1 text-[12px] text-white hover:bg-emerald-700"
-              >
-                Download Excel
-              </button>
-              <button
-                onClick={handleDownloadPengikisanPdfReport}
+                onClick={
+                  subType === "Pengikisan"
+                    ? handleDownloadPengikisanPdfReport
+                    : handleDownloadProductionRangePdfReport
+                }
                 className="rounded-md bg-indigo-600 px-3 py-1 text-[12px] text-white hover:bg-indigo-700"
               >
                 Download PDF
