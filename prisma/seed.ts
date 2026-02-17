@@ -600,27 +600,37 @@ async function seedTransactions(ctx: {
     });
   }
 
-  if ((await prisma.produksiLainnya.count()) === 0) {
-    await prisma.produksiLainnya.create({
-      data: {
-        date: new Date("2026-02-11"),
-        petugas: "Budi Santoso",
-        notes: "Produksi Lainnya contoh",
-        totalBiaya: "50000.00",
-        produksiLainnyaItems: {
-          create: [
-            {
-              namaPekerja: "Pak Bejo",
-              namaPekerjaan: "Angkut Barang",
-              upah: "10000.00",
-              qty: "5.0000",
-              satuan: "rit",
-              total: "50000.00",
-            },
-          ],
+  try {
+    if ((await prisma.produksiLainnya.count()) === 0) {
+      await prisma.produksiLainnya.create({
+        data: {
+          date: new Date("2026-02-11"),
+          petugas: "Budi Santoso",
+          notes: "Produksi Lainnya contoh",
+          totalBiaya: "50000.00",
+          produksiLainnyaItems: {
+            create: [
+              {
+                namaPekerja: "Pak Bejo",
+                namaPekerjaan: "Angkut Barang",
+                upah: "10000.00",
+                qty: "5.0000",
+                satuan: "rit",
+                total: "50000.00",
+              },
+            ],
+          },
         },
-      },
-    });
+      });
+    }
+  } catch (e: any) {
+    if (e?.code === "P2021") {
+      console.warn(
+        "[seed] Skipping ProduksiLainnya seeding because table does not exist"
+      );
+    } else {
+      throw e;
+    }
   }
 
   return { purchaseId, saleId, productionId };

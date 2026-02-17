@@ -10,6 +10,7 @@ export type ProduksiLainnyaItemInput = {
   upah: string;
   qty: string;
   satuan: string;
+  tipeUpah: "per_qty" | "per_hari";
 };
 
 export type ProduksiLainnyaInput = {
@@ -27,7 +28,10 @@ export async function createProduksiLainnya(input: ProduksiLainnyaInput) {
     .map((item) => {
       const qty = parseFloat(item.qty || "0");
       const upah = parseFloat(item.upah || "0");
-      const total = qty * upah;
+      const total =
+        item.tipeUpah === "per_hari"
+          ? upah
+          : qty * upah;
 
       return {
         namaPekerja: item.namaPekerja,

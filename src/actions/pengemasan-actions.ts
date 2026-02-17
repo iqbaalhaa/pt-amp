@@ -8,6 +8,7 @@ import { headers } from "next/headers";
 export type PengemasanItemInput = {
   nama: string;
   bungkus: string;
+  itemTypeId: string;
 };
 
 export type PengemasanInput = {
@@ -34,6 +35,7 @@ export async function createPengemasan(input: PengemasanInput) {
         bungkus: item.bungkus || "0",
         upahPerBungkus: upahPerBungkus.toString(),
         total: total.toString(),
+        itemTypeId: item.itemTypeId ? BigInt(item.itemTypeId) : null,
       };
     })
     .filter((it) => it.nama || parseFloat(it.bungkus) > 0);

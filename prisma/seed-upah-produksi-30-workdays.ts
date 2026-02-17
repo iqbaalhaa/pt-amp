@@ -36,7 +36,7 @@ async function main() {
   }
 
   console.log(
-    `Seeding Pengikisan, Pemotongan, Penjemuran, Pengemasan for ${workDays.length} work days and ${allWorkers.length} workers...`,
+    `Seeding Pengikisan, Pemotongan, Penjemuran, Pengemasan, Produksi Lainnya for ${workDays.length} work days and ${allWorkers.length} workers...`,
   );
 
   const firstTwoWorkers = allWorkers.slice(0, 2);
@@ -171,9 +171,44 @@ async function main() {
         pengemasanItems: { create: pengemasanItems },
       },
     });
+
+    const produksiLainnyaItems = firstTwoWorkers.map((w, idx) => {
+      const baseQty = 3 + idx;
+      const qty = baseQty;
+      const upah = 12000 + idx * 3000;
+      const total = qty * upah;
+      const pekerjaanList = ["Angkut Barang", "Bersih-bersih Gudang"];
+      const namaPekerjaan =
+        pekerjaanList[idx % pekerjaanList.length] || "Pekerjaan Lainnya";
+      return {
+        namaPekerja: w.name,
+        namaPekerjaan,
+        qty: qty.toFixed(4),
+        satuan: "rit",
+        upah: upah.toFixed(2),
+        total: total.toFixed(2),
+      };
+    });
+
+    const totalBiayaProduksiLainnya = produksiLainnyaItems.reduce(
+      (sum, it) => sum + parseFloat(it.total),
+      0,
+    );
+
+    await prisma.produksiLainnya.create({
+      data: {
+        date: dateOnly,
+        petugas: "Seed Produksi Lainnya",
+        notes: "Seed data Produksi Lainnya 30 hari kerja",
+        totalBiaya: totalBiayaProduksiLainnya.toFixed(2),
+        produksiLainnyaItems: { create: produksiLainnyaItems },
+      },
+    });
   }
 
-  console.log("✅ Seed Pemotongan, Penjemuran, Pengemasan 30 hari kerja completed.");
+  console.log(
+    "✅ Seed Pengikisan, Pemotongan, Penjemuran, Pengemasan, Produksi Lainnya 30 hari kerja completed.",
+  );
 }
 
 main()

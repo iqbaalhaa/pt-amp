@@ -185,6 +185,7 @@ model ItemType {
   productionInputs  ProductionInput[]
   productionOutputs ProductionOutput[]
   stockMovements    StockMovement[]
+  pengemasanItems   PengemasanItem[]
 
   @@map("item_types")
 }
@@ -452,6 +453,8 @@ model PengemasanItem {
   total         Decimal  @db.Decimal(14, 2)
 
   pengemasan Pengemasan @relation(fields: [pengemasanId], references: [id], onDelete: Cascade)
+  itemTypeId BigInt?    @map("item_type_id")
+  itemType   ItemType?  @relation(fields: [itemTypeId], references: [id])
 
   @@map("pengemasan_items")
 }

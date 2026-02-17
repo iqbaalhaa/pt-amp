@@ -72,7 +72,7 @@ function cx(...classes: Array<string | false | null | undefined>) {
 
 export default function PenjemuranClient() {
   const [rows, setRows] = useState<Row[]>([
-    { id: 1, nama: "", hari: 0, lemburJam: 0 },
+    { id: 1, nama: "", hari: 1, lemburJam: 0 },
   ]);
 
   const [date, setDate] = useState(
@@ -125,7 +125,7 @@ export default function PenjemuranClient() {
         {
           id: nextId,
           nama: "",
-          hari: 0,
+          hari: 1,
           lemburJam: 0,
         },
       ];
@@ -138,7 +138,7 @@ export default function PenjemuranClient() {
         {
           id: 1,
           nama: "",
-          hari: 0,
+          hari: 1,
           lemburJam: 0,
         },
       ]);
@@ -196,7 +196,7 @@ export default function PenjemuranClient() {
         next.push({
           id: nextId,
           nama: w.name,
-          hari: 0,
+          hari: 1,
           lemburJam: 0,
         });
       });
@@ -209,7 +209,7 @@ export default function PenjemuranClient() {
   const activeRows = useMemo(
     () =>
       rows.filter(
-        (r) => r.nama || r.hari > 0 || r.lemburJam > 0
+        (r) => r.nama || r.lemburJam > 0
       ),
     [rows]
   );
@@ -219,7 +219,7 @@ export default function PenjemuranClient() {
       {
         id: 1,
         nama: "",
-        hari: 0,
+        hari: 1,
         lemburJam: 0,
       },
     ]);
@@ -475,7 +475,7 @@ export default function PenjemuranClient() {
               </div>
             </div>
 
-            <div className="md:col-span-5">
+            <div className="md:col-span-9">
               <label className="text-[11px] font-semibold text-black/70 flex items-center gap-1.5 mb-1">
                 <StickyNote2RoundedIcon
                   sx={{ fontSize: 16 }}
@@ -496,23 +496,20 @@ export default function PenjemuranClient() {
               />
             </div>
 
-            <div className="md:col-span-2">
+            {/* <div className="md:col-span-2">
               <label className="text-[11px] font-semibold text-black/70 flex items-center gap-1.5 mb-1">
                 <AttachMoneyRoundedIcon
                   sx={{ fontSize: 16 }}
                   className="text-[var(--brand)]"
                 />
-                Upah/Hari
+                Upah/Hari (dari Pengaturan Upah)
               </label>
-              <TextField
-                type="number"
-                value={upahPerHari}
-                onChange={(e) => setUpahPerHari(parseFloat(e.target.value) || 0)}
-                sx={muiCompactInputSx}
-                InputProps={{
-                  startAdornment: <InputAdornment position="start">Rp</InputAdornment>,
-                }}
-              />
+              <div className="h-[38px] flex items-center rounded-lg border border-[var(--glass-border)] bg-zinc-50 px-3 text-[12px] text-black/80">
+                <span className="mr-1 text-black/50">Rp</span>
+                <span className="font-semibold">
+                  {upahPerHari.toLocaleString("id-ID")}
+                </span>
+              </div>
             </div>
 
             <div className="md:col-span-2">
@@ -521,18 +518,15 @@ export default function PenjemuranClient() {
                   sx={{ fontSize: 16 }}
                   className="text-[var(--brand)]"
                 />
-                Lembur/Jam
+                Lembur/Jam (dari Pengaturan Upah)
               </label>
-              <TextField
-                type="number"
-                value={upahLemburPerJam}
-                onChange={(e) => setUpahLemburPerJam(parseFloat(e.target.value) || 0)}
-                sx={muiCompactInputSx}
-                InputProps={{
-                  startAdornment: <InputAdornment position="start">Rp</InputAdornment>,
-                }}
-              />
-            </div>
+              <div className="h-[38px] flex items-center rounded-lg border border-[var(--glass-border)] bg-zinc-50 px-3 text-[12px] text-black/80">
+                <span className="mr-1 text-black/50">Rp</span>
+                <span className="font-semibold">
+                  {upahLemburPerJam.toLocaleString("id-ID")}
+                </span>
+              </div>
+            </div> */}
           </div>
 
           {/* Table */}
@@ -708,15 +702,9 @@ export default function PenjemuranClient() {
                       </td>
 
                       <td className="px-3 py-2 text-center">
-                        <TextField
-                          type="number"
-                          value={row.hari || ""}
-                          onChange={(e) =>
-                            handleChange(row.id, "hari", e.target.value)
-                          }
-                          sx={muiCompactInputSx}
-                          inputProps={{ min: 0, step: "any" }}
-                        />
+                        <span className="inline-flex items-center justify-center w-10 h-8 rounded-lg border border-[var(--glass-border)] bg-zinc-50 text-[12px]">
+                          1
+                        </span>
                       </td>
 
                       <td className="px-3 py-2 text-center">

@@ -9,6 +9,7 @@
     "start": "next start",
     "lint": "eslint",
     "db:migrate:petugas": "tsx prisma/migrate-petugas.ts",
+    "db:migrate:produksi-lainnya": "tsx prisma/migrate-produksi-lainnya.ts",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",

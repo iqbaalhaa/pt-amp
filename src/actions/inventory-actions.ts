@@ -9,6 +9,7 @@ export type InventoryItemDTO = {
   totalExpense: number;
   avgPrice: number;
   lastPurchaseDate: string | null;
+   packagingBungkus: number;
 };
 
 export async function getInventorySummary(): Promise<InventoryItemDTO[]> {
@@ -37,6 +38,19 @@ export async function getInventorySummary(): Promise<InventoryItemDTO[]> {
         status: 'posted',
       }
     }
+  });
+
+  const pengemasanItems = await prisma.pengemasanItem.findMany();
+
+  const packagingMap = new Map<string, number>();
+
+  (pengemasanItems as any[]).forEach((item) => {
+    const itemTypeIdValue = (item as any).itemTypeId;
+    if (!itemTypeIdValue) return;
+    const bungkus = Number((item as any).bungkus || 0);
+    if (bungkus <= 0) return;
+    const key = itemTypeIdValue.toString();
+    packagingMap.set(key, (packagingMap.get(key) || 0) + bungkus);
   });
 
   const results: InventoryItemDTO[] = await Promise.all(
@@ -82,6 +96,7 @@ export async function getInventorySummary(): Promise<InventoryItemDTO[]> {
         totalExpense,
         avgPrice,
         lastPurchaseDate,
+        packagingBungkus: packagingMap.get(typeId.toString()) || 0,
       };
     })
   );
@@ -131,6 +146,15 @@ export async function getInventoryItemSummary(itemTypeId: string): Promise<Inven
   const avgPrice = totalPurchaseQty > 0 ? totalPurchaseExpense / totalPurchaseQty : 0;
   const totalExpense = totalQty * avgPrice;
 
+  const pengemasanItems = await prisma.pengemasanItem.findMany();
+
+  const packagingBungkus = (pengemasanItems as any[]).reduce((acc, item) => {
+    const itemTypeIdValue = (item as any).itemTypeId;
+    if (!itemTypeIdValue) return acc;
+    if (itemTypeIdValue.toString() !== itemTypeId) return acc;
+    return acc + Number((item as any).bungkus || 0);
+  }, 0);
+
   return {
     itemTypeId: itemTypeId,
     itemTypeName: itemType.name,
@@ -138,6 +162,7 @@ export async function getInventoryItemSummary(itemTypeId: string): Promise<Inven
     totalExpense,
     avgPrice,
     lastPurchaseDate,
+    packagingBungkus,
   };
 }
 

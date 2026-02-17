@@ -90,7 +90,7 @@ export default function ProductDetailClient({ summary, purchases }: Props) {
         </Box>
       </Box>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Box className="bg-white/50 backdrop-blur-md border border-white/80 p-6 rounded-2xl shadow-sm">
           <Typography className="text-xs text-zinc-400 font-bold uppercase tracking-widest mb-1">
             Total Stok Saat Ini
@@ -117,6 +117,17 @@ export default function ProductDetailClient({ summary, purchases }: Props) {
             {formatRupiah(summary.totalExpense, 0)}
           </Typography>
         </Box>
+
+        {summary.packagingBungkus > 0 && (
+          <Box className="bg-white/50 backdrop-blur-md border border-white/80 p-6 rounded-2xl shadow-sm">
+            <Typography className="text-xs text-zinc-400 font-bold uppercase tracking-widest mb-1">
+              Keterangan Pengemasan
+            </Typography>
+            <Typography className="text-sm font-medium text-zinc-700">
+              {summary.packagingBungkus.toLocaleString("id-ID")} ball dikemas
+            </Typography>
+          </Box>
+        )}
       </div>
 
       <Box>

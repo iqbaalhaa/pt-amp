@@ -30,6 +30,8 @@ import GlassButton from "@/components/ui/GlassButton";
 import PageHeader from "@/components/ui/PageHeader";
 import SafeModal from "@/components/ui/SafeModal";
 import { createPengemasan } from "@/actions/pengemasan-actions";
+import { ItemTypeDTO } from "@/actions/item-type-actions";
+import { getInventorySummary } from "@/actions/inventory-actions";
 import {
   getWorkers,
   WorkerDTO,
@@ -40,10 +42,12 @@ import { formatRupiah } from "@/lib/currency";
 type Row = {
   id: number;
   nama: string;
+  itemTypeId: string;
   bungkus: number;
 };
 
-const filter = createFilterOptions<WorkerDTO>();
+const workerFilter = createFilterOptions<WorkerDTO>();
+const itemTypeFilter = createFilterOptions<ItemTypeDTO>();
 
 const F4_W_MM = 210;
 const F4_H_MM = 330;
@@ -70,7 +74,7 @@ function cx(...classes: Array<string | false | null | undefined>) {
 
 export default function PengemasanClient() {
   const [rows, setRows] = useState<Row[]>([
-    { id: 1, nama: "", bungkus: 0 },
+    { id: 1, nama: "", itemTypeId: "", bungkus: 0 },
   ]);
 
   const [date, setDate] = useState(
@@ -87,11 +91,26 @@ export default function PengemasanClient() {
   const [creatingWorkerId, setCreatingWorkerId] = useState<number | null>(null);
   const [bulkWorkerModalOpen, setBulkWorkerModalOpen] = useState(false);
   const [selectedWorkerIds, setSelectedWorkerIds] = useState<string[]>([]);
+  const [itemTypeOptions, setItemTypeOptions] = useState<ItemTypeDTO[]>([]);
 
   useEffect(() => {
     getWorkers().then((data) =>
       setWorkerOptions(data.filter((w) => w.isActive))
     );
+    getInventorySummary().then((items) => {
+      const options: ItemTypeDTO[] = items.map((it) => ({
+        id: it.itemTypeId,
+        name: it.itemTypeName,
+        description: null,
+        type: null,
+        image: null,
+        unit: null,
+        isPublic: true,
+        isActive: true,
+        stock: String(it.totalQty),
+      }));
+      setItemTypeOptions(options);
+    });
     try {
       if (typeof window !== "undefined") {
         const raw = window.localStorage.getItem("upahSettings");
@@ -115,6 +134,7 @@ export default function PengemasanClient() {
         {
           id: nextId,
           nama: "",
+          itemTypeId: "",
           bungkus: 0,
         },
       ];
@@ -127,6 +147,7 @@ export default function PengemasanClient() {
         {
           id: 1,
           nama: "",
+          itemTypeId: "",
           bungkus: 0,
         },
       ]);
@@ -142,7 +163,7 @@ export default function PengemasanClient() {
           ? {
               ...r,
               [field]:
-                field === "nama"
+                field === "nama" || field === "itemTypeId"
                   ? value
                   : Number.isFinite(parseFloat(value))
                   ? parseFloat(value)
@@ -205,6 +226,7 @@ export default function PengemasanClient() {
       {
         id: 1,
         nama: "",
+        itemTypeId: "",
         bungkus: 0,
       },
     ]);
@@ -219,7 +241,7 @@ export default function PengemasanClient() {
     }
 
     const validRows = rows.filter(
-      (r) => r.nama && r.bungkus > 0
+      (r) => r.nama && r.bungkus > 0 && r.itemTypeId
     );
 
     if (validRows.length === 0) {
@@ -237,6 +259,7 @@ export default function PengemasanClient() {
         items: validRows.map((r) => ({
           nama: r.nama,
           bungkus: String(r.bungkus),
+          itemTypeId: r.itemTypeId,
         })),
       };
 
@@ -455,7 +478,7 @@ export default function PengemasanClient() {
               </div>
             </div>
 
-            <div className="md:col-span-6">
+            <div className="md:col-span-9">
               <label className="text-[11px] font-semibold text-black/70 flex items-center gap-1.5 mb-1">
                 <StickyNote2RoundedIcon
                   sx={{ fontSize: 16 }}
@@ -476,24 +499,21 @@ export default function PengemasanClient() {
               />
             </div>
 
-            <div className="md:col-span-3">
+            {/* <div className="md:col-span-3">
               <label className="text-[11px] font-semibold text-black/70 flex items-center gap-1.5 mb-1">
                 <AttachMoneyRoundedIcon
                   sx={{ fontSize: 16 }}
                   className="text-[var(--brand)]"
                 />
-                Upah/Bungkus
+                Upah/Bungkus (dari Pengaturan Upah)
               </label>
-              <TextField
-                type="number"
-                value={upahPerBungkus}
-                onChange={(e) => setUpahPerBungkus(parseFloat(e.target.value) || 0)}
-                sx={muiCompactInputSx}
-                InputProps={{
-                  startAdornment: <InputAdornment position="start">Rp</InputAdornment>,
-                }}
-              />
-            </div>
+              <div className="h-[38px] flex items-center rounded-lg border border-[var(--glass-border)] bg-zinc-50 px-3 text-[12px] text-black/80">
+                <span className="mr-1 text-black/50">Rp</span>
+                <span className="font-semibold">
+                  {upahPerBungkus.toLocaleString("id-ID")}
+                </span>
+              </div>
+            </div> */}
           </div>
 
           {/* Table */}
@@ -517,6 +537,15 @@ export default function PengemasanClient() {
                         className="text-black/45"
                       />
                       Pekerja <span className="text-red-500">*</span>
+                    </span>
+                  </th>
+                  <th className="px-3 py-3 min-w-[200px]">
+                    <span className="inline-flex items-center gap-1.5">
+                      <Inventory2RoundedIcon
+                        sx={{ fontSize: 16 }}
+                        className="text-black/45"
+                      />
+                      Jenis Barang <span className="text-red-500">*</span>
                     </span>
                   </th>
                   <th className="px-3 py-3 text-center min-w-[120px]">
@@ -597,7 +626,7 @@ export default function PengemasanClient() {
                             }
                           }}
                           filterOptions={(options, params) => {
-                            const filtered = filter(options, params);
+                            const filtered = workerFilter(options, params);
                             const { inputValue } = params;
                             const isExisting = options.some(
                               (option) => inputValue === option.name
@@ -650,6 +679,61 @@ export default function PengemasanClient() {
                                         size={16}
                                       />
                                     ) : null}
+                                    {params.InputProps.endAdornment}
+                                  </>
+                                ),
+                              }}
+                            />
+                          )}
+                        />
+                      </td>
+
+                      <td className="px-3 py-2">
+                        <Autocomplete
+                          value={
+                            itemTypeOptions.find(
+                              (it) => it.id === row.itemTypeId
+                            ) || null
+                          }
+                          onChange={(_event, newValue) => {
+                            if (!newValue || typeof newValue === "string") {
+                              handleChange(row.id, "itemTypeId", "");
+                            } else {
+                              handleChange(
+                                row.id,
+                                "itemTypeId",
+                                newValue?.id || ""
+                              );
+                            }
+                          }}
+                          filterOptions={(options, params) => {
+                            return itemTypeFilter(options, params);
+                          }}
+                          selectOnFocus
+                          clearOnBlur
+                          handleHomeEndKeys
+                          options={itemTypeOptions}
+                          getOptionLabel={(option) => {
+                            return option.name;
+                          }}
+                          renderOption={(props, option) => {
+                            const { key, ...optionProps } = props;
+                            return (
+                              <li key={key} {...optionProps}>
+                                {option.name}
+                              </li>
+                            );
+                          }}
+                          sx={muiCompactInputSx}
+                          renderInput={(params) => (
+                            <TextField
+                              {...params}
+                              required
+                              placeholder="Pilih jenis barang (hanya yang ada stok)"
+                              InputProps={{
+                                ...params.InputProps,
+                                endAdornment: (
+                                  <>
                                     {params.InputProps.endAdornment}
                                   </>
                                 ),

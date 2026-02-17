@@ -454,7 +454,7 @@ export default function PemotonganClient() {
               </div>
             </div>
 
-            <div className="md:col-span-6">
+            <div className="md:col-span-9">
               <label className="text-[11px] font-semibold text-black/70 flex items-center gap-1.5 mb-1">
                 <StickyNote2RoundedIcon
                   sx={{ fontSize: 16 }}
@@ -475,24 +475,21 @@ export default function PemotonganClient() {
               />
             </div>
 
-            <div className="md:col-span-3">
+            {/* <div className="md:col-span-3">
               <label className="text-[11px] font-semibold text-black/70 flex items-center gap-1.5 mb-1">
                 <AttachMoneyRoundedIcon
                   sx={{ fontSize: 16 }}
                   className="text-[var(--brand)]"
                 />
-                Upah/Kg
+                Upah/Kg (dari Pengaturan Upah)
               </label>
-              <TextField
-                type="number"
-                value={upahPerKg}
-                onChange={(e) => setUpahPerKg(parseFloat(e.target.value) || 0)}
-                sx={muiCompactInputSx}
-                InputProps={{
-                  startAdornment: <InputAdornment position="start">Rp</InputAdornment>,
-                }}
-              />
-            </div>
+              <div className="h-[38px] flex items-center rounded-lg border border-[var(--glass-border)] bg-zinc-50 px-3 text-[12px] text-black/80">
+                <span className="mr-1 text-black/50">Rp</span>
+                <span className="font-semibold">
+                  {upahPerKg.toLocaleString("id-ID")}
+                </span>
+              </div>
+            </div> */}
           </div>
 
           {/* Table */}

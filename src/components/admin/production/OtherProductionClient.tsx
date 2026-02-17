@@ -75,8 +75,16 @@ function cx(...classes: Array<string | false | null | undefined>) {
 }
 
 export default function OtherProductionClient() {
+  const [tipeUpah, setTipeUpah] = useState<"per_qty" | "per_hari">("per_qty");
   const [rows, setRows] = useState<Row[]>([
-    { id: 1, namaPekerja: "", namaPekerjaan: "", qty: 0, satuan: "", upah: 0 },
+    {
+      id: 1,
+      namaPekerja: "",
+      namaPekerjaan: "",
+      qty: 0,
+      satuan: "",
+      upah: 0,
+    },
   ]);
 
   const [date, setDate] = useState(
@@ -160,6 +168,9 @@ export default function OtherProductionClient() {
   const getRowTotal = (row: Row) => {
     const q = Number.isFinite(row.qty) ? row.qty : 0;
     const u = Number.isFinite(row.upah) ? row.upah : 0;
+    if (tipeUpah === "per_hari") {
+      return u;
+    }
     return q * u;
   };
 
@@ -203,7 +214,11 @@ export default function OtherProductionClient() {
   const activeRows = useMemo(
     () =>
       rows.filter(
-        (r) => r.namaPekerja || r.namaPekerjaan || r.qty > 0 || r.upah > 0
+        (r) =>
+          r.namaPekerja ||
+          r.namaPekerjaan ||
+          r.qty > 0 ||
+          r.upah > 0
       ),
     [rows]
   );
@@ -217,6 +232,7 @@ export default function OtherProductionClient() {
         qty: 0,
         satuan: "",
         upah: 0,
+        tipeUpah: "per_qty",
       },
     ]);
     setNotes("");
@@ -230,9 +246,15 @@ export default function OtherProductionClient() {
     }
 
     // Validation: Check if there are valid rows and if required fields are filled
-    const validRows = rows.filter(
-      (r) => r.namaPekerja && r.namaPekerjaan && r.qty > 0 && r.upah > 0
-    );
+    const validRows = rows.filter((r) => {
+      const hasNames = r.namaPekerja && r.namaPekerjaan;
+      const hasUpah = r.upah > 0;
+      if (!hasNames || !hasUpah) return false;
+      if (tipeUpah === "per_hari") {
+        return true;
+      }
+      return r.qty > 0;
+    });
 
     if (validRows.length === 0) {
       alert("Mohon isi minimal satu baris data dengan lengkap (Pekerja, Pekerjaan, Qty, Upah)");
@@ -240,11 +262,18 @@ export default function OtherProductionClient() {
     }
 
     // Check for partially filled rows that are not complete
-    const incompleteRows = rows.filter(
-      (r) => 
-        (r.namaPekerja || r.namaPekerjaan || r.qty > 0 || r.upah > 0) &&
-        !(r.namaPekerja && r.namaPekerjaan && r.qty > 0 && r.upah > 0)
-    );
+    const incompleteRows = rows.filter((r) => {
+      const hasAny =
+        r.namaPekerja || r.namaPekerjaan || r.qty > 0 || r.upah > 0;
+      if (!hasAny) return false;
+      const hasNames = r.namaPekerja && r.namaPekerjaan;
+      const hasUpah = r.upah > 0;
+      if (!hasNames || !hasUpah) return true;
+      if (tipeUpah === "per_hari") {
+        return false;
+      }
+      return r.qty <= 0;
+    });
 
     if (incompleteRows.length > 0) {
       alert("Ada baris data yang belum lengkap. Mohon lengkapi atau hapus baris tersebut.");
@@ -263,6 +292,7 @@ export default function OtherProductionClient() {
           qty: String(r.qty),
           satuan: r.satuan,
           upah: String(r.upah),
+          tipeUpah,
         })),
       };
 
@@ -369,8 +399,8 @@ export default function OtherProductionClient() {
     pdf.text("No", colNoX, y);
     pdf.text("Pekerja", colPekerjaX, y);
     pdf.text("Pekerjaan", colPekerjaanX, y);
-    pdf.text("Qty", colQtyX, y);
-    pdf.text("Satuan", colSatuanX, y);
+    pdf.text(tipeUpah === "per_hari" ? "Hari" : "Qty", colQtyX, y);
+    pdf.text(tipeUpah === "per_hari" ? "Lembur" : "Satuan", colSatuanX, y);
     pdf.text("Upah (Rp)", colUpahX, y);
     pdf.text("Total (Rp)", colTotalX, y);
 
@@ -490,7 +520,7 @@ export default function OtherProductionClient() {
               </div>
             </div>
 
-            <div className="md:col-span-8">
+            <div className="md:col-span-5">
               <label className="text-[11px] font-semibold text-black/70 flex items-center gap-1.5 mb-1">
                 <StickyNote2RoundedIcon
                   sx={{ fontSize: 16 }}
@@ -509,6 +539,42 @@ export default function OtherProductionClient() {
                 )}
                 placeholder="Contoh: kerja lembur / pekerjaan tambahan (opsional)"
               />
+            </div>
+
+            <div className="md:col-span-3">
+              <label className="text-[11px] font-semibold text-black/70 flex items-center gap-1.5 mb-1">
+                <PaymentsRoundedIcon
+                  sx={{ fontSize: 16 }}
+                  className="text-[var(--brand)]"
+                />
+                Mode Upah
+              </label>
+              <div className="flex rounded-lg border border-[var(--glass-border)] bg-white/95 overflow-hidden text-[11px]">
+                <button
+                  type="button"
+                  onClick={() => setTipeUpah("per_qty")}
+                  className={cx(
+                    "flex-1 px-2 py-1.5 font-semibold transition-colors",
+                    tipeUpah === "per_qty"
+                      ? "bg-[var(--brand)] text-white"
+                      : "bg-transparent text-black/60"
+                  )}
+                >
+                  Per Qty
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTipeUpah("per_hari")}
+                  className={cx(
+                    "flex-1 px-2 py-1.5 font-semibold border-l border-[var(--glass-border)] transition-colors",
+                    tipeUpah === "per_hari"
+                      ? "bg-[var(--brand)] text-white"
+                      : "bg-transparent text-black/60"
+                  )}
+                >
+                  Per Hari
+                </button>
+              </div>
             </div>
           </div>
 
@@ -550,7 +616,10 @@ export default function OtherProductionClient() {
                         sx={{ fontSize: 16 }}
                         className="text-black/45"
                       />
-                      Qty <span className="text-red-500">*</span>
+                      {tipeUpah === "per_hari" ? "Hari" : "Qty"}
+                      {tipeUpah === "per_qty" && (
+                        <span className="text-red-500">*</span>
+                      )}
                     </span>
                   </th>
                   <th className="px-3 py-3 text-center min-w-[140px]">
@@ -559,7 +628,7 @@ export default function OtherProductionClient() {
                         sx={{ fontSize: 16 }}
                         className="text-black/45"
                       />
-                      Satuan
+                      {tipeUpah === "per_hari" ? "Lembur" : "Satuan"}
                     </span>
                   </th>
                   <th className="px-3 py-3 text-right min-w-[150px]">
@@ -722,107 +791,138 @@ export default function OtherProductionClient() {
                       <td className="px-3 py-2 text-center">
                         <TextField
                           type="number"
-                          required
-                          value={row.qty || ""}
+                          required={tipeUpah === "per_qty"}
+                          value={tipeUpah === "per_hari" ? 1 : row.qty || ""}
                           onChange={(e) =>
-                            handleChange(row.id, "qty", e.target.value)
+                            handleChange(
+                              row.id,
+                              "qty",
+                              e.target.value
+                            )
                           }
                           sx={{ ...muiCompactInputSx, width: "80px" }}
-                          inputProps={{ min: 0, step: "any" }}
+                          inputProps={{
+                            min: 0,
+                            step: "any",
+                            readOnly: tipeUpah === "per_hari",
+                          }}
                         />
                       </td>
 
                       <td className="px-3 py-2 text-center">
-                        <Autocomplete
-                          value={
-                            unitOptions.find((u) => u.name === row.satuan) ||
-                            null
-                          }
-                          onChange={async (_event, newValue) => {
-                            if (newValue && (newValue as any).inputValue) {
-                              setCreatingUnitId(row.id);
-                              try {
-                                const newUnit = await quickCreateUnit(
-                                  (newValue as any).inputValue
-                                );
-                                if (newUnit) {
-                                  setUnitOptions((prev) => [...prev, newUnit]);
-                                  handleChange(row.id, "satuan", newUnit.name);
-                                }
-                              } catch (err) {
-                                console.error(err);
-                              } finally {
-                                setCreatingUnitId(null);
-                              }
-                            } else if (typeof newValue === "string") {
-                              handleChange(row.id, "satuan", newValue);
-                            } else {
+                        {tipeUpah === "per_hari" ? (
+                          <TextField
+                            type="number"
+                            value={row.satuan || ""}
+                            onChange={(e) =>
                               handleChange(
                                 row.id,
                                 "satuan",
-                                newValue?.name || ""
+                                e.target.value
+                              )
+                            }
+                            sx={{ ...muiCompactInputSx, width: "120px" }}
+                            inputProps={{ min: 0, step: "any" }}
+                          />
+                        ) : (
+                          <Autocomplete
+                            value={
+                              unitOptions.find((u) => u.name === row.satuan) ||
+                              null
+                            }
+                            onChange={async (_event, newValue) => {
+                              if (newValue && (newValue as any).inputValue) {
+                                setCreatingUnitId(row.id);
+                                try {
+                                  const newUnit = await quickCreateUnit(
+                                    (newValue as any).inputValue
+                                  );
+                                  if (newUnit) {
+                                    setUnitOptions((prev) => [
+                                      ...prev,
+                                      newUnit,
+                                    ]);
+                                    handleChange(
+                                      row.id,
+                                      "satuan",
+                                      newUnit.name
+                                    );
+                                  }
+                                } catch (err) {
+                                  console.error(err);
+                                } finally {
+                                  setCreatingUnitId(null);
+                                }
+                              } else if (typeof newValue === "string") {
+                                handleChange(row.id, "satuan", newValue);
+                              } else {
+                                handleChange(
+                                  row.id,
+                                  "satuan",
+                                  newValue?.name || ""
+                                );
+                              }
+                            }}
+                            filterOptions={(options, params) => {
+                              const filtered = unitFilter(options, params);
+                              const { inputValue } = params;
+                              const isExisting = options.some(
+                                (option) => inputValue === option.name
                               );
-                            }
-                          }}
-                          filterOptions={(options, params) => {
-                            const filtered = unitFilter(options, params);
-                            const { inputValue } = params;
-                            const isExisting = options.some(
-                              (option) => inputValue === option.name
-                            );
-                            if (inputValue !== "" && !isExisting) {
-                              filtered.push({
-                                inputValue,
-                                name: `Tambah "${inputValue}"`,
-                                id: 0,
-                                isActive: true,
-                                createdAt: new Date(),
-                                updatedAt: new Date(),
-                              } as any);
-                            }
-                            return filtered;
-                          }}
-                          selectOnFocus
-                          clearOnBlur
-                          handleHomeEndKeys
-                          options={unitOptions}
-                          getOptionLabel={(option) => {
-                            if (typeof option === "string") return option;
-                            if ((option as any).inputValue)
-                              return (option as any).inputValue;
-                            return option.name;
-                          }}
-                          renderOption={(props, option) => {
-                            const { key, ...optionProps } = props;
-                            return (
-                              <li key={key} {...optionProps}>
-                                {option.name}
-                              </li>
-                            );
-                          }}
-                          freeSolo
-                          sx={{ ...muiCompactInputSx, width: "120px" }}
-                          renderInput={(params) => (
-                            <TextField
-                              {...params}
-                              placeholder="Satuan"
-                              InputProps={{
-                                ...params.InputProps,
-                                endAdornment: (
-                                  <>
-                                    {creatingUnitId === row.id ? (
-                                      <CircularProgress
-                                        color="inherit"
-                                        size={16}
-                                      />
-                                    ) : null}
-                                    {params.InputProps.endAdornment}
-                                  </>
-                                ),
-                              }}
-                            />
-                          )}
-                        />
+                              if (inputValue !== "" && !isExisting) {
+                                filtered.push({
+                                  inputValue,
+                                  name: `Tambah "${inputValue}"`,
+                                  id: 0,
+                                  isActive: true,
+                                  createdAt: new Date(),
+                                  updatedAt: new Date(),
+                                } as any);
+                              }
+                              return filtered;
+                            }}
+                            selectOnFocus
+                            clearOnBlur
+                            handleHomeEndKeys
+                            options={unitOptions}
+                            getOptionLabel={(option) => {
+                              if (typeof option === "string") return option;
+                              if ((option as any).inputValue)
+                                return (option as any).inputValue;
+                              return option.name;
+                            }}
+                            renderOption={(props, option) => {
+                              const { key, ...optionProps } = props;
+                              return (
+                                <li key={key} {...optionProps}>
+                                  {option.name}
+                                </li>
+                              );
+                            }}
+                            freeSolo
+                            sx={{ ...muiCompactInputSx, width: "120px" }}
+                            renderInput={(params) => (
+                              <TextField
+                                {...params}
+                                placeholder="Satuan"
+                                InputProps={{
+                                  ...params.InputProps,
+                                  endAdornment: (
+                                    <>
+                                      {creatingUnitId === row.id ? (
+                                        <CircularProgress
+                                          color="inherit"
+                                          size={16}
+                                        />
+                                      ) : null}
+                                      {params.InputProps.endAdornment}
+                                    </>
+                                  ),
+                                }}
+                              />
+                            )}
+                          />
+                        )}
                       </td>
 
                       <td className="px-3 py-2 text-right">

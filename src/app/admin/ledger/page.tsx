@@ -272,17 +272,30 @@ export default async function AdminLedgerPage({
         return [];
       }
     })(),
-    prisma.produksiLainnya.findMany({
-      where: {
-        ...(start ? { date: { gte: start } } : {}),
-        ...(end ? { date: { lte: end } } : {}),
-        ...(params.q
-          ? { OR: [{ notes: { contains: params.q, mode: "insensitive" } }] }
-          : {}),
-      },
-      orderBy: { date: "desc" },
-      include: { produksiLainnyaItems: true },
-    }),
+    (async () => {
+      try {
+        return await prisma.produksiLainnya.findMany({
+          where: {
+            ...(start ? { date: { gte: start } } : {}),
+            ...(end ? { date: { lte: end } } : {}),
+            ...(params.q
+              ? {
+                  OR: [{ notes: { contains: params.q, mode: "insensitive" } }],
+                }
+              : {}),
+          },
+          orderBy: { date: "desc" },
+          include: { produksiLainnyaItems: true },
+        });
+      } catch {
+        if (process.env.NODE_ENV === "development") {
+          console.warn(
+            "Failed to load produksi_lainnya ledger data, returning empty list as fallback",
+          );
+        }
+        return [];
+      }
+    })(),
   ]);
   const anyPrisma = prisma as any;
   let expenses: Array<{

@@ -44,7 +44,14 @@ export default function InventoryClient({ initialData }: { initialData: Inventor
           <span className="font-black text-zinc-900 text-base">
             {row.totalQty.toLocaleString("id-ID")}
           </span>
-          <span className="text-[10px] text-zinc-400 font-bold uppercase">Satuan</span>
+          <span className="text-[10px] text-zinc-400 font-bold uppercase">
+            Satuan
+          </span>
+          {row.packagingBungkus > 0 && (
+            <span className="text-[10px] text-zinc-500 font-medium">
+              Keterangan: {row.packagingBungkus.toLocaleString("id-ID")} ball dikemas
+            </span>
+          )}
         </div>
       ),
     },
