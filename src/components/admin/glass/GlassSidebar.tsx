@@ -52,6 +52,17 @@ const groups: Group[] = [
   },
 
   {
+    title: "Laporan",
+    items: [
+      {
+        label: "Laporan Gaji",
+        href: "/admin/laporan-gaji",
+        icon: <RequestQuoteIcon fontSize="small" />,
+      },
+    ],
+  },
+
+  {
     title: "Transaksi",
     items: [
       {
