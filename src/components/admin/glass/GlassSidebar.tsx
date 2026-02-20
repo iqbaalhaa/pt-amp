@@ -50,7 +50,6 @@ const groups: Group[] = [
       },
     ],
   },
-
   {
     title: "Laporan",
     items: [
@@ -61,7 +60,6 @@ const groups: Group[] = [
       },
     ],
   },
-
   {
     title: "Transaksi",
     items: [
@@ -147,8 +145,6 @@ const groups: Group[] = [
       },
     ],
   },
-
-
   {
     title: "Master Data",
     items: [
@@ -174,7 +170,6 @@ const groups: Group[] = [
       },
     ],
   },
-
   {
     title: "Compro",
     items: [
@@ -205,7 +200,6 @@ const groups: Group[] = [
       },
     ],
   },
-
   {
     title: "Settings",
     items: [
@@ -236,7 +230,6 @@ export default function GlassSidebar({
 }) {
   const pathname = usePathname();
 
-  // State for expanded groups
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(
     {}
   );
@@ -249,13 +242,10 @@ export default function GlassSidebar({
   };
 
   const isActive = (href: string) => {
-    if (href === "/admin") {
-      return pathname === "/admin";
-    }
+    if (href === "/admin") return pathname === "/admin";
     return pathname === href || pathname.startsWith(href + "/");
   };
 
-  // Auto-expand group if an item within it is active
   useEffect(() => {
     groups.forEach((g) => {
       const hasActiveChild = g.items.some((it) => isActive(it.href));
@@ -265,7 +255,6 @@ export default function GlassSidebar({
     });
   }, [pathname]);
 
-  // Determine width/transform classes based on state
   const containerClasses = isMobile
     ? `fixed left-0 top-0 h-screen z-40 transition-transform duration-300 ease-in-out ${
         collapsed ? "-translate-x-full" : "translate-x-0"
@@ -277,6 +266,11 @@ export default function GlassSidebar({
     : collapsed
     ? "w-[76px]"
     : "w-[260px]";
+
+  // Soft brand for non-active
+  const softBrandText = "text-[rgba(213,14,12,0.72)]";
+  const softBrandIcon = "text-[rgba(213,14,12,0.62)]";
+  const softerBrandIcon = "text-[rgba(213,14,12,0.52)]";
 
   return (
     <div className={containerClasses}>
@@ -292,6 +286,7 @@ export default function GlassSidebar({
                 className="w-full h-full object-contain"
               />
             </div>
+
             <AnimatePresence initial={false}>
               {(!collapsed || isMobile) && (
                 <motion.div
@@ -309,7 +304,11 @@ export default function GlassSidebar({
             {!isMobile && (
               <button
                 aria-label="Toggle sidebar"
-                className="ml-auto w-8 h-8 rounded-full glass flex items-center justify-center text-secondary hover:text-[var(--brand)] transition-transform hover:scale-105"
+                className={`ml-auto w-8 h-8 rounded-full glass flex items-center justify-center
+                           ${softerBrandIcon}
+                           hover:text-[var(--brand)]
+                           hover:bg-[rgba(244,63,94,0.08)]
+                           transition-transform hover:scale-105`}
                 onClick={onToggle}
               >
                 {collapsed ? (
@@ -320,6 +319,7 @@ export default function GlassSidebar({
               </button>
             )}
           </div>
+
           <div className="px-2 mt-2 overflow-y-auto no-scrollbar flex-1">
             {groups
               .map((g) => {
@@ -338,19 +338,27 @@ export default function GlassSidebar({
 
                 return (
                   <div key={g.title} className="mb-2">
-                    {/* Group Header (Clickable Dropdown) */}
+                    {/* Group Header */}
                     <button
                       onClick={() => toggleGroup(g.title)}
-                      className={`w-full flex items-center gap-2 px-3 py-2 rounded-xl transition-all ${
-                        hasActiveChild
-                          ? "text-[var(--brand)] font-bold"
-                          : "text-secondary hover:bg-[rgba(255,255,255,0.06)]"
-                      }`}
+                      className={`w-full flex items-center gap-2 px-3 py-2 rounded-xl transition-all
+                        ${
+                          hasActiveChild
+                            ? "text-[var(--brand)] font-semibold bg-[rgba(213,14,12,0.06)]"
+                            : `${softBrandText} hover:bg-[rgba(244,63,94,0.06)]`
+                        }`}
                     >
-                      <div className="w-6 h-6 flex items-center justify-center">
-                        {/* Use the icon of the first item as the group icon, or a default */}
+                      <div
+                        className={`w-6 h-6 flex items-center justify-center transition-colors
+                          ${
+                            hasActiveChild
+                              ? "text-[var(--brand)]"
+                              : softBrandIcon
+                          }`}
+                      >
                         {g.items[0]?.icon}
                       </div>
+
                       <AnimatePresence initial={false}>
                         {(!collapsed || isMobile) && (
                           <motion.div
@@ -364,8 +372,15 @@ export default function GlassSidebar({
                           </motion.div>
                         )}
                       </AnimatePresence>
+
                       {(!collapsed || isMobile) && (
-                        <div className="ml-auto opacity-50">
+                        <div
+                          className={`ml-auto transition-colors ${
+                            hasActiveChild
+                              ? "text-[rgba(213,14,12,0.65)]"
+                              : "text-[rgba(213,14,12,0.45)]"
+                          }`}
+                        >
                           {isExpanded ? (
                             <ExpandLessIcon fontSize="inherit" />
                           ) : (
@@ -379,49 +394,64 @@ export default function GlassSidebar({
                     <AnimatePresence initial={false}>
                       {(isExpanded || collapsed) && (
                         <motion.div
-                          initial={collapsed ? { height: "auto" } : { height: 0, opacity: 0 }}
+                          initial={
+                            collapsed
+                              ? { height: "auto" }
+                              : { height: 0, opacity: 0 }
+                          }
                           animate={{ height: "auto", opacity: 1 }}
                           exit={{ height: 0, opacity: 0 }}
                           transition={{ duration: 0.2, ease: "easeInOut" }}
                           className="overflow-hidden"
                         >
-                          <div className={`flex flex-col gap-1 mt-1 ${!collapsed || isMobile ? "pl-6" : ""}`}>
+                          <div
+                            className={`flex flex-col gap-1 mt-1 ${
+                              !collapsed || isMobile ? "pl-6" : ""
+                            }`}
+                          >
                             {g.items.map((it) => {
                               const isItemActive = isActive(it.href);
                               return (
                                 <Link
                                   key={`${g.title}-${it.label}`}
                                   href={it.href}
-                                  className={`flex items-center gap-2 px-3 py-2 rounded-xl transition-colors ${
-                                    isItemActive
-                                      ? "bg-[rgba(213,14,12,0.12)] text-[var(--brand)]"
-                                      : "hover:bg-[rgba(255,255,255,0.06)] text-primary"
-                                  }`}
+                                  className={`flex items-center gap-2 px-3 py-2 rounded-xl transition-colors
+                                    ${
+                                      isItemActive
+                                        ? "bg-[rgba(213,14,12,0.12)] text-[var(--brand)]"
+                                        : `hover:bg-[rgba(244,63,94,0.06)] ${softBrandText}`
+                                    }`}
                                 >
                                   <div
-                                    className={`w-6 h-6 flex items-center justify-center ${
-                                      isItemActive
-                                        ? "text-[var(--brand)]"
-                                        : "text-black"
-                                    }`}
+                                    className={`w-6 h-6 flex items-center justify-center transition-colors
+                                      ${
+                                        isItemActive
+                                          ? "text-[var(--brand)]"
+                                          : softBrandIcon
+                                      }`}
                                   >
                                     {it.icon}
                                   </div>
+
                                   <AnimatePresence initial={false}>
                                     {(!collapsed || isMobile) && (
                                       <motion.span
                                         initial={{ opacity: 0, x: -6 }}
                                         animate={{ opacity: 1, x: 0 }}
                                         exit={{ opacity: 0, x: -6 }}
-                                        transition={{ duration: 0.2, ease: "easeOut" }}
+                                        transition={{
+                                          duration: 0.2,
+                                          ease: "easeOut",
+                                        }}
                                         className="text-xs font-semibold"
                                       >
                                         {it.label}
                                       </motion.span>
                                     )}
                                   </AnimatePresence>
+
                                   {isItemActive && (
-                                    <span className="ml-auto w-1.5 h-1.5 rounded-full bg-[var(--brand)] shadow-[0_0_12px_rgba(213,14,12,0.8)]" />
+                                    <span className="ml-auto w-1.5 h-1.5 rounded-full bg-[var(--brand)] shadow-[0_0_12px_rgba(213,14,12,0.55)]" />
                                   )}
                                 </Link>
                               );
@@ -434,7 +464,8 @@ export default function GlassSidebar({
                 );
               })}
           </div>
-          <div className="mt-auto px-3 pb-3 text-[11px] text-secondary">
+
+          <div className={`mt-auto px-3 pb-3 text-[11px] ${softBrandText}`}>
             ERP Pt. AMP
           </div>
         </div>

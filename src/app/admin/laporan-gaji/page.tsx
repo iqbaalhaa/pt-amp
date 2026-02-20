@@ -83,7 +83,7 @@ function addValue(
   row: WeeklyRow,
   date: Date,
   amount: number,
-  shift: ShiftKey = "siang",
+  shift: ShiftKey = "siang"
 ) {
   if (!Number.isFinite(amount) || amount === 0) return;
   const dayIdx = date.getDay();
@@ -117,8 +117,7 @@ export default async function LaporanGajiPage({
   const weekLabel = formatDateRangeLabel(weekStart, weekEndDisplay);
 
   const activeTabKey: TabKey =
-    (TABS.find((t) => t.key === params.jenis)?.key as TabKey) ||
-    "pengikisan";
+    (TABS.find((t) => t.key === params.jenis)?.key as TabKey) || "pengikisan";
 
   const anyPrisma = prisma as any;
 
@@ -179,7 +178,7 @@ export default async function LaporanGajiPage({
       } catch {
         if (process.env.NODE_ENV === "development") {
           console.warn(
-            "Failed to load pensortiran weekly report data, returning empty list as fallback",
+            "Failed to load pensortiran weekly report data, returning empty list as fallback"
           );
         }
         return [];
@@ -198,7 +197,7 @@ export default async function LaporanGajiPage({
       } catch {
         if (process.env.NODE_ENV === "development") {
           console.warn(
-            "Failed to load qc_potong_sortir weekly report data, returning empty list as fallback",
+            "Failed to load qc_potong_sortir weekly report data, returning empty list as fallback"
           );
         }
         return [];
@@ -280,7 +279,7 @@ export default async function LaporanGajiPage({
       }
     }
     return Array.from(map.values()).sort((a, b) =>
-      a.nama.localeCompare(b.nama, "id-ID"),
+      a.nama.localeCompare(b.nama, "id-ID")
     );
   })();
 
@@ -304,7 +303,7 @@ export default async function LaporanGajiPage({
       }
     }
     return Array.from(map.values()).sort((a, b) =>
-      a.nama.localeCompare(b.nama, "id-ID"),
+      a.nama.localeCompare(b.nama, "id-ID")
     );
   })();
 
@@ -328,7 +327,7 @@ export default async function LaporanGajiPage({
       }
     }
     return Array.from(map.values()).sort((a, b) =>
-      a.nama.localeCompare(b.nama, "id-ID"),
+      a.nama.localeCompare(b.nama, "id-ID")
     );
   })();
 
@@ -352,7 +351,7 @@ export default async function LaporanGajiPage({
       }
     }
     return Array.from(map.values()).sort((a, b) =>
-      a.nama.localeCompare(b.nama, "id-ID"),
+      a.nama.localeCompare(b.nama, "id-ID")
     );
   })();
 
@@ -376,7 +375,7 @@ export default async function LaporanGajiPage({
       }
     }
     return Array.from(map.values()).sort((a, b) =>
-      a.nama.localeCompare(b.nama, "id-ID"),
+      a.nama.localeCompare(b.nama, "id-ID")
     );
   })();
 
@@ -400,7 +399,7 @@ export default async function LaporanGajiPage({
       }
     }
     return Array.from(map.values()).sort((a, b) =>
-      a.nama.localeCompare(b.nama, "id-ID"),
+      a.nama.localeCompare(b.nama, "id-ID")
     );
   })();
 
@@ -460,18 +459,15 @@ export default async function LaporanGajiPage({
       }[]
     | null =
     activeTabKey === "pengikisan"
-      ? rowsForActive.reduce(
-          (groups, row) => {
-            const last = groups[groups.length - 1];
-            if (last && last.nama === row.nama) {
-              last.rows.push(row);
-            } else {
-              groups.push({ nama: row.nama, rows: [row] });
-            }
-            return groups;
-          },
-          [] as { nama: string; rows: WeeklyRow[] }[],
-        )
+      ? rowsForActive.reduce((groups, row) => {
+          const last = groups[groups.length - 1];
+          if (last && last.nama === row.nama) {
+            last.rows.push(row);
+          } else {
+            groups.push({ nama: row.nama, rows: [row] });
+          }
+          return groups;
+        }, [] as { nama: string; rows: WeeklyRow[] }[])
       : null;
 
   return (
@@ -544,7 +540,9 @@ export default async function LaporanGajiPage({
 
       <section className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-100">
         <LaporanGajiHeaderWithDownload
-          title={`${TABS.find((t) => t.key === activeTabKey)?.label} - Weekly Report`}
+          title={`${
+            TABS.find((t) => t.key === activeTabKey)?.label
+          } - Weekly Report`}
         />
 
         <div className="overflow-x-auto rounded-lg border border-slate-200">
@@ -570,9 +568,7 @@ export default async function LaporanGajiPage({
                       rowSpan={2}
                     >
                       <span>Ket</span>
-                      <span className="block text-[10px]">
-                        barang
-                      </span>
+                      <span className="block text-[10px]">barang</span>
                     </th>
                     <th className="border border-slate-200 px-2 py-1 text-center">
                       Minggu
@@ -655,7 +651,7 @@ export default async function LaporanGajiPage({
                             Siang
                           </th>
                         </React.Fragment>
-                      ),
+                      )
                     )}
                     <th className="border border-slate-200 px-2 py-1 text-center">
                       Siang
@@ -683,15 +679,48 @@ export default async function LaporanGajiPage({
                     >
                       Ket
                     </th>
-                    {DAY_LABELS.map((label) => (
-                      <th
-                        key={label}
-                        className="border border-slate-200 px-2 py-1 text-center"
-                        colSpan={2}
-                      >
-                        {label}
-                      </th>
-                    ))}
+                    <th className="border border-slate-200 px-2 py-1 text-center">
+                      Minggu
+                    </th>
+                    <th
+                      className="border border-slate-200 px-2 py-1 text-center"
+                      colSpan={2}
+                    >
+                      Senin
+                    </th>
+                    <th
+                      className="border border-slate-200 px-2 py-1 text-center"
+                      colSpan={2}
+                    >
+                      Selasa
+                    </th>
+                    <th
+                      className="border border-slate-200 px-2 py-1 text-center"
+                      colSpan={2}
+                    >
+                      Rabu
+                    </th>
+                    <th
+                      className="border border-slate-200 px-2 py-1 text-center"
+                      colSpan={2}
+                    >
+                      Kamis
+                    </th>
+                    <th
+                      className="border border-slate-200 px-2 py-1 text-center"
+                      colSpan={2}
+                    >
+                      Jumat
+                    </th>
+                    <th
+                      className="border border-slate-200 px-2 py-1 text-center"
+                      colSpan={2}
+                    >
+                      Sabtu
+                    </th>
+                    <th className="border border-slate-200 px-2 py-1 text-center">
+                      Minggu
+                    </th>
                     <th
                       className="border border-slate-200 px-2 py-1"
                       rowSpan={2}
@@ -700,16 +729,24 @@ export default async function LaporanGajiPage({
                     </th>
                   </tr>
                   <tr className="bg-slate-50 text-slate-700">
-                    {DAY_LABELS.map((label) => (
-                      <React.Fragment key={label}>
-                        <th className="border border-slate-200 px-2 py-1 text-center">
-                          Malam
-                        </th>
-                        <th className="border border-slate-200 px-2 py-1 text-center">
-                          Siang
-                        </th>
-                      </React.Fragment>
-                    ))}
+                    <th className="border border-slate-200 px-2 py-1 text-center">
+                      Malam
+                    </th>
+                    {["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"].map(
+                      (label) => (
+                        <React.Fragment key={label}>
+                          <th className="border border-slate-200 px-2 py-1 text-center">
+                            Malam
+                          </th>
+                          <th className="border border-slate-200 px-2 py-1 text-center">
+                            Siang
+                          </th>
+                        </React.Fragment>
+                      )
+                    )}
+                    <th className="border border-slate-200 px-2 py-1 text-center">
+                      Siang
+                    </th>
                   </tr>
                 </>
               )}
@@ -718,11 +755,7 @@ export default async function LaporanGajiPage({
               {rowsForActive.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={
-                      activeTabKey === "pengikisan"
-                        ? 21
-                        : 3 + 7 * 2 + 1
-                    }
+                    colSpan={activeTabKey === "pengikisan" ? 21 : 3 + 7 * 2 + 1}
                     className="px-3 py-4 text-center text-xs text-slate-500"
                   >
                     Tidak ada data untuk minggu ini.
@@ -732,8 +765,7 @@ export default async function LaporanGajiPage({
                 pengikisanGroups.map((group, groupIdx) => {
                   const firstRow = group.rows[0];
                   const secondRow = group.rows[1];
-                  const jumlahGabungan =
-                    totalUpahByNama?.get(group.nama) ?? 0;
+                  const jumlahGabungan = totalUpahByNama?.get(group.nama) ?? 0;
                   const renderDayCells = (row: WeeklyRow) => (
                     <>
                       <td className="border border-slate-200 px-2 py-1 text-right">
@@ -749,7 +781,7 @@ export default async function LaporanGajiPage({
                             {row.values[dayIdx].malam
                               ? row.values[dayIdx].malam.toLocaleString(
                                   "id-ID",
-                                  { maximumFractionDigits: 2 },
+                                  { maximumFractionDigits: 2 }
                                 )
                               : ""}
                           </td>
@@ -757,7 +789,7 @@ export default async function LaporanGajiPage({
                             {row.values[dayIdx].siang
                               ? row.values[dayIdx].siang.toLocaleString(
                                   "id-ID",
-                                  { maximumFractionDigits: 2 },
+                                  { maximumFractionDigits: 2 }
                                 )
                               : ""}
                           </td>
@@ -776,11 +808,11 @@ export default async function LaporanGajiPage({
                   const renderSummaryCells = (
                     row: WeeklyRow,
                     showGabungan: boolean,
-                    rowSpan: number,
+                    rowSpan: number
                   ) => {
                     const totalKg = Object.values(row.values).reduce(
                       (sum, v) => sum + v.malam + v.siang,
-                      0,
+                      0
                     );
                     const upah = row.upahPerUnit ?? 0;
                     const jumlah = row.jumlah;
@@ -861,7 +893,12 @@ export default async function LaporanGajiPage({
                     <td className="border border-slate-200 px-2 py-1">
                       {row.ket}
                     </td>
-                    {DAY_LABELS.map((_, dayIdx) => (
+                    <td className="border border-slate-200 px-2 py-1 text-right">
+                      {row.values[0].malam
+                        ? toCurrency(row.values[0].malam)
+                        : ""}
+                    </td>
+                    {[1, 2, 3, 4, 5, 6].map((dayIdx) => (
                       <React.Fragment key={dayIdx}>
                         <td className="border border-slate-200 px-2 py-1 text-right">
                           {row.values[dayIdx].malam
@@ -875,6 +912,11 @@ export default async function LaporanGajiPage({
                         </td>
                       </React.Fragment>
                     ))}
+                    <td className="border border-slate-200 px-2 py-1 text-right">
+                      {row.values[0].siang
+                        ? toCurrency(row.values[0].siang)
+                        : ""}
+                    </td>
                     <td className="border border-slate-200 px-2 py-1 text-right font-semibold">
                       {toCurrency(row.jumlah)}
                     </td>
