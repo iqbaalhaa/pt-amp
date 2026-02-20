@@ -514,6 +514,62 @@ model ProduksiLainnyaItem {
   @@map("produksi_lainnya_items")
 }
 
+// 11. PENSORTIRAN
+model Pensortiran {
+  id        BigInt   @id @default(autoincrement())
+  date      DateTime @db.Date
+  petugas   String?
+  notes     String?
+  totalUpah Decimal? @db.Decimal(14, 2) @map("total_upah")
+  upahPerKg Decimal? @db.Decimal(14, 2) @map("upah_per_kg")
+
+  pensortiranItems PensortiranItem[]
+
+  @@map("pensortiran")
+}
+
+model PensortiranItem {
+  id             BigInt   @id @default(autoincrement())
+  pensortiranId  BigInt   @map("pensortiran_id")
+  nama           String
+  qty            Decimal  @db.Decimal(14, 4)
+  upahPerKg      Decimal  @db.Decimal(14, 2) @map("upah_per_kg")
+  total          Decimal  @db.Decimal(14, 2)
+
+  pensortiran Pensortiran @relation(fields: [pensortiranId], references: [id], onDelete: Cascade)
+
+  @@map("pensortiran_items")
+}
+
+// 12. QC POTONG SORTIR
+model QcPotongSortir {
+  id        BigInt   @id @default(autoincrement())
+  date      DateTime @db.Date
+  notes     String?
+  totalUpah Decimal? @db.Decimal(14, 2) @map("total_upah")
+  upahPerHari      Decimal? @db.Decimal(14, 2) @map("upah_per_hari")
+  upahLemburPerJam Decimal? @db.Decimal(14, 2) @map("upah_lembur_per_jam")
+
+  qcPotongSortirItems QcPotongSortirItem[]
+
+  @@map("qc_potong_sortir")
+}
+
+model QcPotongSortirItem {
+  id               BigInt  @id @default(autoincrement())
+  qcPotongSortirId BigInt  @map("qc_potong_sortir_id")
+  nama             String
+  hari             Decimal @db.Decimal(10, 2)
+  lemburJam        Decimal @db.Decimal(10, 2) @map("lembur_jam")
+  upahPerHari      Decimal @db.Decimal(14, 2) @map("upah_per_hari")
+  upahLemburPerJam Decimal @db.Decimal(14, 2) @map("upah_lembur_per_jam")
+  total            Decimal @db.Decimal(14, 2)
+
+  qcPotongSortir QcPotongSortir @relation(fields: [qcPotongSortirId], references: [id], onDelete: Cascade)
+
+  @@map("qc_potong_sortir_items")
+}
+
 // =========================================================
 // CMS / WEBSITE (Keep existing)
 // =========================================================

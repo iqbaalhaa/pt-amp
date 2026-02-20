@@ -76,6 +76,8 @@ export default async function AdminLedgerPage({
     penjemuranList,
     pengemasanList,
     produksiLainnyaList,
+    pensortiranList,
+    qcPotongSortirList,
   ] = await Promise.all([
     prisma.purchase.findMany({
       where: {
@@ -291,6 +293,50 @@ export default async function AdminLedgerPage({
         if (process.env.NODE_ENV === "development") {
           console.warn(
             "Failed to load produksi_lainnya ledger data, returning empty list as fallback",
+          );
+        }
+        return [];
+      }
+    })(),
+    (async () => {
+      try {
+        return await prisma.pensortiran.findMany({
+          where: {
+            ...(start ? { date: { gte: start } } : {}),
+            ...(end ? { date: { lte: end } } : {}),
+            ...(params.q
+              ? { OR: [{ notes: { contains: params.q, mode: "insensitive" } }] }
+              : {}),
+          },
+          orderBy: { date: "desc" },
+          include: { pensortiranItems: true },
+        });
+      } catch {
+        if (process.env.NODE_ENV === "development") {
+          console.warn(
+            "Failed to load pensortiran ledger data, returning empty list as fallback",
+          );
+        }
+        return [];
+      }
+    })(),
+    (async () => {
+      try {
+        return await prisma.qcPotongSortir.findMany({
+          where: {
+            ...(start ? { date: { gte: start } } : {}),
+            ...(end ? { date: { lte: end } } : {}),
+            ...(params.q
+              ? { OR: [{ notes: { contains: params.q, mode: "insensitive" } }] }
+              : {}),
+          },
+          orderBy: { date: "desc" },
+          include: { qcPotongSortirItems: true },
+        });
+      } catch {
+        if (process.env.NODE_ENV === "development") {
+          console.warn(
+            "Failed to load qc_potong_sortir ledger data, returning empty list as fallback",
           );
         }
         return [];
@@ -733,6 +779,63 @@ export default async function AdminLedgerPage({
     };
   });
 
+  const pensortiranEntries: LedgerEntry[] = pensortiranList.map((p) => {
+    const total = parseFloat(p.totalUpah?.toString() || "0");
+    const names = Array.from(
+      new Set(p.pensortiranItems.map((i) => i.nama))
+    ).join(", ");
+    return {
+      id: `pensortiran-${p.id}`,
+      type: "production",
+      date: p.date.toISOString(),
+      status: "completed" as any,
+      reference: `PS-${p.id}`,
+      createdByName: (p as any).petugas || null,
+      counterparty: names || "-",
+      total: total > 0 ? total : null,
+      stockImpact: "NEUTRAL",
+      notes: p.notes,
+      itemCount: p.pensortiranItems.length,
+      productionCost: total,
+      subType: "Pensortiran",
+      pemotonganItems: p.pensortiranItems.map((it) => ({
+        nama: it.nama,
+        qty: Number(it.qty ?? 0),
+        total: Number(it.total ?? 0),
+      })),
+    };
+  });
+
+  const qcPotongSortirEntries: LedgerEntry[] = qcPotongSortirList.map((p) => {
+    const total = parseFloat(p.totalUpah?.toString() || "0");
+    const names = Array.from(
+      new Set(p.qcPotongSortirItems.map((i) => i.nama))
+    ).join(", ");
+    return {
+      id: `qc-potong-sortir-${p.id}`,
+      type: "production",
+      date: p.date.toISOString(),
+      status: "completed" as any,
+      reference: `QC-${p.id}`,
+      createdByName: (p as any).petugas || null,
+      counterparty: names || "-",
+      total: total > 0 ? total : null,
+      stockImpact: "NEUTRAL",
+      notes: p.notes,
+      itemCount: p.qcPotongSortirItems.length,
+      productionCost: total,
+      subType: "QC Potong & Sortir",
+      penjemuranItems: p.qcPotongSortirItems.map((it) => ({
+        nama: it.nama,
+        hari: Number(it.hari ?? 0),
+        lemburJam: Number(it.lemburJam ?? 0),
+        upahPerHari: Number(it.upahPerHari ?? 0),
+        upahLemburPerJam: Number(it.upahLemburPerJam ?? 0),
+        total: Number(it.total ?? 0),
+      })),
+    };
+  });
+
   const allProductions = [
     ...productionEntries,
     ...pengikisanEntries,
@@ -740,6 +843,8 @@ export default async function AdminLedgerPage({
     ...penjemuranEntries,
     ...pengemasanEntries,
     ...produksiLainnyaEntries,
+    ...pensortiranEntries,
+    ...qcPotongSortirEntries,
   ];
 
   let filteredPurchases: LedgerEntry[] = purchaseEntries;
@@ -753,6 +858,8 @@ export default async function AdminLedgerPage({
     "Pemotongan",
     "Penjemuran",
     "Pengemasan",
+    "Pensortiran",
+    "QC Potong & Sortir",
     "Produksi Lainnya",
   ];
   filteredProductions = filteredProductions.filter((p) =>

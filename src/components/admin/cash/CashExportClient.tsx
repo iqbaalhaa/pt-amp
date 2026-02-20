@@ -14,6 +14,8 @@ type Props = {
 	biayaUpahPemotongan: number;
 	biayaUpahPenjemuran: number;
 	biayaUpahPengemasan: number;
+	biayaUpahPensortiran: number;
+	biayaUpahQcPotongSortir: number;
 	totalExpense: number;
 	totalExpenseDraft: number;
 };
@@ -41,6 +43,8 @@ export default function CashExportClient({
 	biayaUpahPemotongan,
 	biayaUpahPenjemuran,
 	biayaUpahPengemasan,
+	biayaUpahPensortiran,
+	biayaUpahQcPotongSortir,
 	totalExpense,
 	totalExpenseDraft,
 }: Props) {
@@ -60,6 +64,8 @@ export default function CashExportClient({
 			["Upah Pemotongan", biayaUpahPemotongan],
 			["Upah Penjemuran", biayaUpahPenjemuran],
 			["Upah Pengemasan", biayaUpahPengemasan],
+			["Upah Pensortiran", biayaUpahPensortiran],
+			["Upah QC Potong & Sortir", biayaUpahQcPotongSortir],
 			["Expense (posted)", totalExpense],
 		];
 
@@ -145,6 +151,8 @@ export default function CashExportClient({
 			["Upah Pemotongan", toCurrencyClient(biayaUpahPemotongan)],
 			["Upah Penjemuran", toCurrencyClient(biayaUpahPenjemuran)],
 			["Upah Pengemasan", toCurrencyClient(biayaUpahPengemasan)],
+			["Upah Pensortiran", toCurrencyClient(biayaUpahPensortiran)],
+			["Upah QC Potong & Sortir", toCurrencyClient(biayaUpahQcPotongSortir)],
 			["Expense (posted)", toCurrencyClient(totalExpense)],
 		];
 

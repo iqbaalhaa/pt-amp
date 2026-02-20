@@ -507,7 +507,7 @@ export function LedgerSection({
       const dateKey = d.toISOString().slice(0, 10);
       dateKeySet.add(dateKey);
 
-      if (subType === "Pemotongan") {
+      if (subType === "Pemotongan" || subType === "Pensortiran") {
         entry.pemotonganItems?.forEach((it) => {
           const name = it.nama || "-";
           const qty =
@@ -526,7 +526,7 @@ export function LedgerSection({
             );
           }
         });
-      } else if (subType === "Penjemuran") {
+      } else if (subType === "Penjemuran" || subType === "QC Potong & Sortir") {
         entry.penjemuranItems?.forEach((it) => {
           const name = it.nama || "-";
           const hari =
@@ -1608,7 +1608,7 @@ export function LedgerSection({
       if (d < startDate || d > endDate) return;
       const dateKey = d.toISOString().slice(0, 10);
 
-      if (subType === "Pemotongan") {
+      if (subType === "Pemotongan" || subType === "Pensortiran") {
         entry.pemotonganItems?.forEach((it) => {
           const name = it.nama || "-";
           const qty =
@@ -1626,7 +1626,7 @@ export function LedgerSection({
             );
           }
         });
-      } else if (subType === "Penjemuran") {
+      } else if (subType === "Penjemuran" || subType === "QC Potong & Sortir") {
         entry.penjemuranItems?.forEach((it) => {
           const name = it.nama || "-";
           const hari =
@@ -2074,6 +2074,16 @@ export function LedgerSection({
             "@/actions/pengemasan-actions"
           );
           await deletePengemasan(id.replace("pengemasan-", ""));
+        } else if (id.startsWith("pensortiran-")) {
+          const { deletePensortiran } = await import(
+            "@/actions/pensortiran-actions"
+          );
+          await deletePensortiran(id.replace("pensortiran-", ""));
+        } else if (id.startsWith("qc-potong-sortir-")) {
+          const { deleteQcPotongSortir } = await import(
+            "@/actions/qc-potong-sortir-actions"
+          );
+          await deleteQcPotongSortir(id.replace("qc-potong-sortir-", ""));
         } else {
           await revokeProduction(id, rejectReason.trim());
         }
@@ -2222,7 +2232,7 @@ export function LedgerSection({
               val2: stik,
               _row: rowNum,
             });
-          } else if (subType === "Pemotongan") {
+          } else if (subType === "Pemotongan" || subType === "Pensortiran") {
             const qty = parseFloat(
               (cols?.[2] ?? "0").toString().replace(/[^0-9.\-]/g, "")
             );
@@ -2237,7 +2247,7 @@ export function LedgerSection({
               rate1: rate,
               _row: rowNum,
             });
-          } else if (subType === "Penjemuran") {
+          } else if (subType === "Penjemuran" || subType === "QC Potong & Sortir") {
             const hari = parseFloat(
               (cols?.[2] ?? "0").toString().replace(/[^0-9.\-]/g, "")
             );

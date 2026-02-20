@@ -11,7 +11,7 @@ import {
   CircularProgress,
   InputAdornment,
   Tooltip,
-  Checkbox,
+  MenuItem,
 } from "@mui/material";
 
 import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
@@ -23,15 +23,14 @@ import EventRoundedIcon from "@mui/icons-material/EventRounded";
 import StickyNote2RoundedIcon from "@mui/icons-material/StickyNote2Rounded";
 import BadgeRoundedIcon from "@mui/icons-material/BadgeRounded";
 import NumbersRoundedIcon from "@mui/icons-material/NumbersRounded";
-import PaymentsRoundedIcon from "@mui/icons-material/PaymentsRounded";
 import SummarizeRoundedIcon from "@mui/icons-material/SummarizeRounded";
-import AccessTimeRoundedIcon from "@mui/icons-material/AccessTimeRounded";
+import ContentCutRoundedIcon from "@mui/icons-material/ContentCutRounded";
 import AttachMoneyRoundedIcon from "@mui/icons-material/AttachMoneyRounded";
 
 import GlassButton from "@/components/ui/GlassButton";
 import PageHeader from "@/components/ui/PageHeader";
 import SafeModal from "@/components/ui/SafeModal";
-import { createPenjemuran } from "@/actions/penjemuran-actions";
+import { createPensortiran } from "@/actions/pensortiran-actions";
 import {
   getWorkers,
   WorkerDTO,
@@ -42,8 +41,16 @@ import { formatRupiah } from "@/lib/currency";
 type Row = {
   id: number;
   nama: string;
-  hadir: "HADIR" | "TIDAK_HADIR";
-  lemburJam: number;
+  shift: "" | "SIANG" | "MALAM";
+  itemTypeId: string;
+  qty: number;
+};
+
+type PemotonganRate = {
+  id: string;
+  name: string;
+  unit: string;
+  rate: number;
 };
 
 const filter = createFilterOptions<WorkerDTO>();
@@ -71,17 +78,14 @@ function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(" ");
 }
 
-export default function PenjemuranClient() {
+export default function PensortiranClient() {
   const [rows, setRows] = useState<Row[]>([
-    { id: 1, nama: "", hadir: "HADIR", lemburJam: 0 },
+    { id: 1, nama: "", shift: "", itemTypeId: "", qty: 0 },
   ]);
 
-  const [date, setDate] = useState(
-    () => new Date().toISOString().split("T")[0]
-  );
+  const [date, setDate] = useState("");
   const [notes, setNotes] = useState("");
-  const [upahPerHari, setUpahPerHari] = useState(100000);
-  const [upahLemburPerJam, setUpahLemburPerJam] = useState(15000);
+  const [upahPerKg, setUpahPerKg] = useState(1500);
   const [saving, setSaving] = useState(false);
 
   const [openPreview, setOpenPreview] = useState(false);
@@ -91,6 +95,9 @@ export default function PenjemuranClient() {
   const [creatingWorkerId, setCreatingWorkerId] = useState<number | null>(null);
   const [bulkWorkerModalOpen, setBulkWorkerModalOpen] = useState(false);
   const [selectedWorkerIds, setSelectedWorkerIds] = useState<string[]>([]);
+  const [pemotonganRateOptions, setPemotonganRateOptions] = useState<
+    PemotonganRate[]
+  >([]);
 
   useEffect(() => {
     getWorkers().then((data) =>
@@ -100,22 +107,33 @@ export default function PenjemuranClient() {
       if (typeof window !== "undefined") {
         const raw = window.localStorage.getItem("upahSettings");
         if (raw) {
-          const parsed = JSON.parse(raw) as {
-            penjemuranPerHari?: number;
-            penjemuranLemburPerJam?: number;
-          };
-          if (typeof parsed.penjemuranPerHari === "number") {
-            setUpahPerHari(parsed.penjemuranPerHari);
+          const parsed = JSON.parse(raw) as any;
+          if (typeof parsed.pemotonganPerKg === "number") {
+            setUpahPerKg(parsed.pemotonganPerKg);
           }
-          if (typeof parsed.penjemuranLemburPerJam === "number") {
-            setUpahLemburPerJam(parsed.penjemuranLemburPerJam);
-          }
+
+          const rates: PemotonganRate[] = Array.isArray(
+            parsed.pemotonganRates,
+          )
+            ? parsed.pemotonganRates.map((r: any, idx: number) => ({
+                id: r.id || `rate-${idx}`,
+                name: String(r.name ?? "").trim() || `Jenis ${idx + 1}`,
+                unit: String(r.unit ?? "Kg"),
+                rate:
+                  typeof r.rate === "number" && !Number.isNaN(r.rate)
+                    ? r.rate
+                    : 0,
+              }))
+            : [];
+
+          setPemotonganRateOptions(rates);
         }
       }
     } catch {
-      setUpahPerHari(100000);
-      setUpahLemburPerJam(15000);
+      setUpahPerKg(1500);
+      setPemotonganRateOptions([]);
     }
+    setDate(new Date().toISOString().split("T")[0]);
   }, []);
 
   const addRow = () => {
@@ -126,8 +144,9 @@ export default function PenjemuranClient() {
         {
           id: nextId,
           nama: "",
-          hadir: "HADIR",
-          lemburJam: 0,
+          shift: "",
+          itemTypeId: "",
+          qty: 0,
         },
       ];
     });
@@ -139,8 +158,9 @@ export default function PenjemuranClient() {
         {
           id: 1,
           nama: "",
-          hadir: "HADIR",
-          lemburJam: 0,
+          shift: "",
+          itemTypeId: "",
+          qty: 0,
         },
       ]);
       return;
@@ -155,7 +175,7 @@ export default function PenjemuranClient() {
           ? {
               ...r,
               [field]:
-                field === "nama" || field === "hadir"
+                field === "nama" || field === "shift" || field === "itemTypeId"
                   ? value
                   : Number.isFinite(parseFloat(value))
                   ? parseFloat(value)
@@ -167,14 +187,41 @@ export default function PenjemuranClient() {
   };
 
   const getRowTotal = (row: Row) => {
-    const h = row.hadir === "HADIR" ? 1 : 0;
-    const l = Number.isFinite(row.lemburJam) ? row.lemburJam : 0;
-    return h * upahPerHari + l * upahLemburPerJam;
+    const q = Number.isFinite(row.qty) ? row.qty : 0;
+
+    const stored =
+      typeof window !== "undefined"
+        ? window.localStorage.getItem("upahSettings")
+        : null;
+    let rate = upahPerKg;
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored) as any;
+        const perKg =
+          typeof parsed.pemotonganPerKg === "number"
+            ? parsed.pemotonganPerKg
+            : upahPerKg;
+        rate = perKg;
+
+        if (Array.isArray(parsed.pemotonganRates) && row.itemTypeId) {
+          const match = parsed.pemotonganRates.find(
+            (r: any) => r.id === row.itemTypeId,
+          );
+          if (match && typeof match.rate === "number") {
+            rate = match.rate;
+          }
+        }
+      } catch {
+        rate = upahPerKg;
+      }
+    }
+
+    return q * rate;
   };
 
   const totalSemua = useMemo(
     () => rows.reduce((sum, row) => sum + getRowTotal(row), 0),
-    [rows, upahPerHari, upahLemburPerJam]
+    [rows, upahPerKg]
   );
 
   const toggleWorkerSelection = (id: string) => {
@@ -197,8 +244,9 @@ export default function PenjemuranClient() {
         next.push({
           id: nextId,
           nama: w.name,
-          hari: 1,
-          lemburJam: 0,
+          shift: "",
+          itemTypeId: "",
+          qty: 0,
         });
       });
       return next;
@@ -210,7 +258,7 @@ export default function PenjemuranClient() {
   const activeRows = useMemo(
     () =>
       rows.filter(
-        (r) => r.nama || r.lemburJam > 0
+        (r) => r.nama || r.qty > 0
       ),
     [rows]
   );
@@ -220,8 +268,9 @@ export default function PenjemuranClient() {
       {
         id: 1,
         nama: "",
-        hadir: "HADIR",
-        lemburJam: 0,
+        shift: "",
+        itemTypeId: "",
+        qty: 0,
       },
     ]);
     setNotes("");
@@ -234,10 +283,12 @@ export default function PenjemuranClient() {
       return;
     }
 
-    const validRows = rows.filter((r) => r.nama && r.lemburJam > 0);
+    const validRows = rows.filter(
+      (r) => r.nama && r.qty > 0 && r.itemTypeId
+    );
 
     if (validRows.length === 0) {
-      alert("Mohon isi minimal satu baris data dengan lengkap (Pekerja, Lembur)");
+      alert("Mohon isi minimal satu baris data dengan lengkap (Pekerja, Qty)");
       return;
     }
 
@@ -247,16 +298,15 @@ export default function PenjemuranClient() {
       const payload = {
         date,
         notes: notes || null,
-        upahPerHari: String(upahPerHari),
-        upahLemburPerJam: String(upahLemburPerJam),
+        upahPerKg: String(upahPerKg),
         items: validRows.map((r) => ({
           nama: r.nama,
-          hari: r.hadir === "HADIR" ? "1" : "0",
-          lemburJam: String(r.lemburJam),
+          qty: String(r.qty),
+          itemTypeId: r.itemTypeId,
         })),
       };
 
-      const res = await createPenjemuran(payload);
+      const res = await createPensortiran(payload);
       if (res?.success) {
         setLastSavedId(res.id);
         setOpenPreview(true);
@@ -306,7 +356,7 @@ export default function PenjemuranClient() {
 
       pdf.setFont("helvetica", "bold");
       pdf.setFontSize(9);
-      pdf.text("REKAP PENJEMURAN", pageW - margin, y + 5, {
+      pdf.text("REKAP PENSORTIRAN", pageW - margin, y + 5, {
         align: "right",
       });
 
@@ -319,7 +369,7 @@ export default function PenjemuranClient() {
     } else {
       pdf.setFont("helvetica", "bold");
       pdf.setFontSize(12);
-      pdf.text("REKAP PENJEMURAN", pageW / 2, y, { align: "center" });
+      pdf.text("REKAP PENSORTIRAN", pageW / 2, y, { align: "center" });
       y += 8;
       pdf.setDrawColor(26, 35, 126);
       pdf.setLineWidth(0.4);
@@ -345,9 +395,8 @@ export default function PenjemuranClient() {
 
     const colNoX = margin;
     const colPekerjaX = colNoX + 10;
-    const colHariX = colPekerjaX + 60;
-    const colLemburX = colHariX + 30;
-    const colTotalX = colLemburX + 40;
+    const colQtyX = colPekerjaX + 80;
+    const colTotalX = colQtyX + 50;
 
     const rowHeight = 6;
     const tableTop = y;
@@ -356,8 +405,7 @@ export default function PenjemuranClient() {
     pdf.setFontSize(9);
     pdf.text("No", colNoX, y);
     pdf.text("Pekerja", colPekerjaX, y);
-    pdf.text("Hari", colHariX, y);
-    pdf.text("Lembur (Jam)", colLemburX, y);
+    pdf.text("Qty (Kg)", colQtyX, y);
     pdf.text("Total (Rp)", colTotalX, y);
 
     y += 2;
@@ -380,8 +428,7 @@ export default function PenjemuranClient() {
 
       pdf.text(String(idx + 1), colNoX, y);
       pdf.text(row.nama || "-", colPekerjaX, y);
-      pdf.text((row.hari || 0).toLocaleString("id-ID"), colHariX, y);
-      pdf.text((row.lemburJam || 0).toLocaleString("id-ID"), colLemburX, y);
+      pdf.text((row.qty || 0).toLocaleString("id-ID"), colQtyX, y);
       pdf.text(total.toLocaleString("id-ID"), colTotalX, y, { align: "right" });
 
       y += rowHeight;
@@ -390,10 +437,10 @@ export default function PenjemuranClient() {
     y += 4;
 
     pdf.setFont("helvetica", "bold");
-    pdf.text("Total Semua", colLemburX, y);
+    pdf.text("Total Semua", colQtyX, y);
     pdf.text(formatRupiah(totalSemua), colTotalX, y, { align: "right" });
 
-    pdf.save(`nota-penjemuran-${date || "draft"}.pdf`);
+    pdf.save(`nota-pensortiran-${date || "draft"}.pdf`);
   };
 
   const muiCompactInputSx = {
@@ -412,22 +459,10 @@ export default function PenjemuranClient() {
   return (
     <div className="space-y-4">
       <PageHeader
-        title="Penjemuran"
-        subtitle="Catat hari kerja dan lembur penjemuran."
+        title="Pensortiran"
+        subtitle="Catat hasil kerja pensortiran (kg)."
         actions={
           <>
-            <Link
-              href="/admin/penjemuran/riwayat"
-              className={cx(
-                "inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold",
-                "border border-[var(--glass-border)] bg-white/70 backdrop-blur shadow-sm",
-                "hover:bg-white/90 active:scale-[0.99] transition"
-              )}
-            >
-              <HistoryRoundedIcon fontSize="small" className="text-black/70" />
-              <span>Riwayat</span>
-            </Link>
-
             <button
               type="button"
               onClick={handleDownloadPdf}
@@ -449,7 +484,6 @@ export default function PenjemuranClient() {
 
       <form onSubmit={handleSubmit}>
         <div className="w-full border border-[var(--glass-border)] bg-transparent rounded-xl p-4 md:p-5">
-          {/* Top Controls */}
           <div className="grid grid-cols-1 md:grid-cols-12 gap-3 mb-4">
             <div className="md:col-span-3">
               <label className="text-[11px] font-semibold text-black/70 flex items-center gap-1.5 mb-1">
@@ -494,43 +528,10 @@ export default function PenjemuranClient() {
                 placeholder="Catatan tambahan (opsional)"
               />
             </div>
-
-            {/* <div className="md:col-span-2">
-              <label className="text-[11px] font-semibold text-black/70 flex items-center gap-1.5 mb-1">
-                <AttachMoneyRoundedIcon
-                  sx={{ fontSize: 16 }}
-                  className="text-[var(--brand)]"
-                />
-                Upah/Hari (dari Pengaturan Upah)
-              </label>
-              <div className="h-[38px] flex items-center rounded-lg border border-[var(--glass-border)] bg-zinc-50 px-3 text-[12px] text-black/80">
-                <span className="mr-1 text-black/50">Rp</span>
-                <span className="font-semibold">
-                  {upahPerHari.toLocaleString("id-ID")}
-                </span>
-              </div>
-            </div>
-
-            <div className="md:col-span-2">
-              <label className="text-[11px] font-semibold text-black/70 flex items-center gap-1.5 mb-1">
-                <AccessTimeRoundedIcon
-                  sx={{ fontSize: 16 }}
-                  className="text-[var(--brand)]"
-                />
-                Lembur/Jam (dari Pengaturan Upah)
-              </label>
-              <div className="h-[38px] flex items-center rounded-lg border border-[var(--glass-border)] bg-zinc-50 px-3 text-[12px] text-black/80">
-                <span className="mr-1 text-black/50">Rp</span>
-                <span className="font-semibold">
-                  {upahLemburPerJam.toLocaleString("id-ID")}
-                </span>
-              </div>
-            </div> */}
           </div>
 
-          {/* Table */}
           <div className="mt-4 overflow-x-auto rounded-lg border border-[var(--glass-border)] bg-transparent">
-            <table className="w-full min-w-[800px] text-[12px] text-left">
+            <table className="w-full min-w-[900px] text-[12px] text-left">
               <thead className="sticky top-0 z-10 bg-white/80 backdrop-blur border-b border-[var(--glass-border)]">
                 <tr className="text-[11px] font-extrabold tracking-wide text-black/75 uppercase">
                   <th className="px-3 py-3 w-12 text-center">
@@ -551,18 +552,27 @@ export default function PenjemuranClient() {
                       Pekerja <span className="text-red-500">*</span>
                     </span>
                   </th>
-                  <th className="px-3 py-3 text-center min-w-[140px]">
+                  <th className="px-3 py-3 text-center min-w-[120px]">
                     <span className="inline-flex items-center gap-1.5 justify-center">
-                      Keterangan
+                      Shift
+                    </span>
+                  </th>
+                  <th className="px-3 py-3 min-w-[200px]">
+                    <span className="inline-flex items-center gap-1.5">
+                      <ContentCutRoundedIcon
+                        sx={{ fontSize: 16 }}
+                        className="text-black/45"
+                      />
+                      Jenis Barang <span className="text-red-500">*</span>
                     </span>
                   </th>
                   <th className="px-3 py-3 text-center min-w-[120px]">
                     <span className="inline-flex items-center gap-1.5 justify-center">
-                      <AccessTimeRoundedIcon
+                      <ContentCutRoundedIcon
                         sx={{ fontSize: 16 }}
                         className="text-black/45"
                       />
-                      Lembur (Jam)
+                      Qty (Kg)
                     </span>
                   </th>
                   <th className="px-3 py-3 text-right min-w-[160px]">
@@ -697,30 +707,78 @@ export default function PenjemuranClient() {
                       </td>
 
                       <td className="px-3 py-2 text-center">
-                        <Checkbox
-                          checked={row.hadir === "HADIR"}
+                        <TextField
+                          select
+                          value={row.shift || ""}
                           onChange={(e) =>
-                            handleChange(
-                              row.id,
-                              "hadir",
-                              e.target.checked ? "HADIR" : "TIDAK_HADIR"
-                            )
+                            handleChange(row.id, "shift", e.target.value)
                           }
-                          size="medium"
-                          sx={{
-                            "& .MuiSvgIcon-root": {
-                              fontSize: 22,
-                            },
+                          sx={muiCompactInputSx}
+                          size="small"
+                        >
+                          <MenuItem value="">-</MenuItem>
+                          <MenuItem value="SIANG">Siang</MenuItem>
+                          <MenuItem value="MALAM">Malam</MenuItem>
+                        </TextField>
+                      </td>
+
+                      <td className="px-3 py-2">
+                        <Autocomplete
+                          value={
+                            pemotonganRateOptions.find(
+                              (it) => it.id === row.itemTypeId
+                            ) || null
+                          }
+                          onChange={(_event, newValue) => {
+                            if (!newValue || typeof newValue === "string") {
+                              handleChange(row.id, "itemTypeId", "");
+                            } else {
+                              handleChange(
+                                row.id,
+                                "itemTypeId",
+                                newValue?.id || ""
+                              );
+                            }
                           }}
+                          filterOptions={(options, params) => {
+                            return options.filter((option) =>
+                              option.name
+                                .toLowerCase()
+                                .includes(params.inputValue.toLowerCase())
+                            );
+                          }}
+                          selectOnFocus
+                          clearOnBlur
+                          handleHomeEndKeys
+                          options={pemotonganRateOptions}
+                          getOptionLabel={(option) => {
+                            return option.name;
+                          }}
+                          renderOption={(props, option) => {
+                            const { key, ...optionProps } = props;
+                            return (
+                              <li key={key} {...optionProps}>
+                                {option.name}
+                              </li>
+                            );
+                          }}
+                          sx={muiCompactInputSx}
+                          renderInput={(params) => (
+                            <TextField
+                              {...params}
+                              required
+                              placeholder="Pilih jenis barang..."
+                            />
+                          )}
                         />
                       </td>
 
                       <td className="px-3 py-2 text-center">
                         <TextField
                           type="number"
-                          value={row.lemburJam || ""}
+                          value={row.qty || ""}
                           onChange={(e) =>
-                            handleChange(row.id, "lemburJam", e.target.value)
+                            handleChange(row.id, "qty", e.target.value)
                           }
                           sx={muiCompactInputSx}
                           inputProps={{ min: 0, step: "any" }}
@@ -873,43 +931,7 @@ export default function PenjemuranClient() {
           )}
         </div>
       </SafeModal>
-
-      {/* Success/Preview Modal */}
-      <SafeModal
-        open={openPreview}
-        title="Berhasil Disimpan"
-        onClose={() => setOpenPreview(false)}
-        footer={
-          <div className="flex gap-2">
-            <GlassButton
-              variant="secondary"
-              onClick={() => setOpenPreview(false)}
-            >
-              Tutup
-            </GlassButton>
-            <GlassButton variant="primary" onClick={handleDownloadPdf}>
-              Download PDF
-            </GlassButton>
-          </div>
-        }
-      >
-        <div className="flex flex-col items-center justify-center p-6 text-center">
-          <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mb-4">
-            <SaveRoundedIcon className="text-green-600 text-3xl" />
-          </div>
-          <h3 className="text-lg font-bold text-black mb-2">
-            Data Penjemuran Tersimpan!
-          </h3>
-          <p className="text-black/60 text-sm mb-6 max-w-xs">
-            Data penjemuran berhasil disimpan ke database. Anda dapat
-            mengunduh PDF sebagai arsip.
-          </p>
-          <div className="bg-blue-50 text-blue-800 text-xs px-4 py-3 rounded-lg w-full text-left">
-            <p className="font-semibold mb-1">ID Transaksi:</p>
-            <code className="font-mono">{lastSavedId || "-"}</code>
-          </div>
-        </div>
-      </SafeModal>
     </div>
   );
 }
+

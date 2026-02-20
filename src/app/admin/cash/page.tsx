@@ -41,6 +41,8 @@ export default async function CashPage({
 		pemotonganList,
 		penjemuranList,
 		pengemasanList,
+		pensortiranList,
+		qcPotongSortirList,
 	] = await Promise.all([
 		prisma.sale.findMany({
 			where: {
@@ -131,6 +133,40 @@ export default async function CashPage({
 				if (process.env.NODE_ENV === "development") {
 					console.warn(
 						"Failed to load pengemasan cash data, returning empty list as fallback",
+					);
+				}
+				return [];
+			}
+		})(),
+		(async () => {
+			try {
+				return await prisma.pensortiran.findMany({
+					where: {
+						...(start ? { date: { gte: start } } : {}),
+						...(end ? { date: { lte: end } } : {}),
+					},
+				});
+			} catch {
+				if (process.env.NODE_ENV === "development") {
+					console.warn(
+						"Failed to load pensortiran cash data, returning empty list as fallback",
+					);
+				}
+				return [];
+			}
+		})(),
+		(async () => {
+			try {
+				return await prisma.qcPotongSortir.findMany({
+					where: {
+						...(start ? { date: { gte: start } } : {}),
+						...(end ? { date: { lte: end } } : {}),
+					},
+				});
+			} catch {
+				if (process.env.NODE_ENV === "development") {
+					console.warn(
+						"Failed to load qc_potong_sortir cash data, returning empty list as fallback",
 					);
 				}
 				return [];
@@ -258,6 +294,16 @@ export default async function CashPage({
 			(sum, p) => sum + parseFloat(p.totalUpah?.toString() || "0"),
 			0,
 		) || 0;
+	const biayaUpahPensortiran =
+		pensortiranList.reduce(
+			(sum, p) => sum + parseFloat(p.totalUpah?.toString() || "0"),
+			0,
+		) || 0;
+	const biayaUpahQcPotongSortir =
+		qcPotongSortirList.reduce(
+			(sum, p) => sum + parseFloat(p.totalUpah?.toString() || "0"),
+			0,
+		) || 0;
 
 	const pengeluaran =
 		pembelian +
@@ -266,6 +312,8 @@ export default async function CashPage({
 		biayaUpahPemotongan +
 		biayaUpahPenjemuran +
 		biayaUpahPengemasan +
+		biayaUpahPensortiran +
+		biayaUpahQcPotongSortir +
 		totalExpense;
 
 	const saldo = pendapatan - pengeluaran;
@@ -431,6 +479,8 @@ export default async function CashPage({
 									biayaUpahPemotongan={biayaUpahPemotongan}
 									biayaUpahPenjemuran={biayaUpahPenjemuran}
 									biayaUpahPengemasan={biayaUpahPengemasan}
+									biayaUpahPensortiran={biayaUpahPensortiran}
+									biayaUpahQcPotongSortir={biayaUpahQcPotongSortir}
 									totalExpense={totalExpense}
 									totalExpenseDraft={totalExpenseDraft}
 								/>
@@ -539,6 +589,22 @@ export default async function CashPage({
 												</div>
 												<div className="font-semibold text-zinc-800">
 													{toCurrency(biayaUpahPengemasan)}
+												</div>
+											</div>
+											<div className="rounded-lg border border-zinc-100 bg-white/60 p-2">
+												<div className="text-[11px] text-zinc-500">
+													Upah Pensortiran
+												</div>
+												<div className="font-semibold text-zinc-800">
+													{toCurrency(biayaUpahPensortiran)}
+												</div>
+											</div>
+											<div className="rounded-lg border border-zinc-100 bg-white/60 p-2">
+												<div className="text-[11px] text-zinc-500">
+													Upah QC Potong & Sortir
+												</div>
+												<div className="font-semibold text-zinc-800">
+													{toCurrency(biayaUpahQcPotongSortir)}
 												</div>
 											</div>
 										</div>

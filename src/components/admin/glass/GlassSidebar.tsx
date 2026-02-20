@@ -29,6 +29,8 @@ import StraightenIcon from "@mui/icons-material/Straighten";
 import LocalShippingIcon from "@mui/icons-material/LocalShipping";
 import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 import RequestQuoteIcon from "@mui/icons-material/RequestQuote";
+import SortIcon from "@mui/icons-material/Sort";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 
@@ -113,9 +115,19 @@ const groups: Group[] = [
         icon: <WbSunnyIcon fontSize="small" />,
       },
       {
+        label: "Pensortiran",
+        href: "/admin/pensortiran",
+        icon: <SortIcon fontSize="small" />,
+      },
+      {
         label: "Pengemasan",
         href: "/admin/pengemasan",
         icon: <InventoryIcon fontSize="small" />,
+      },
+      {
+        label: "QC Potong & Sortir",
+        href: "/admin/qc-potong-sortir",
+        icon: <CheckCircleIcon fontSize="small" />,
       },
       {
         label: "Produksi Lainnya",

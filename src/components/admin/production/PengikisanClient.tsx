@@ -10,6 +10,7 @@ import {
   createFilterOptions,
   CircularProgress,
   Tooltip,
+  MenuItem,
 } from "@mui/material";
 
 import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
@@ -39,6 +40,7 @@ import { formatRupiah } from "@/lib/currency";
 type Row = {
   id: number;
   nama: string;
+  shift: "" | "SIANG" | "MALAM";
   kaKg: number;
   stikKg: number;
 };
@@ -73,7 +75,7 @@ function cx(...classes: Array<string | false | null | undefined>) {
 
 export default function PengikisanClient() {
   const [rows, setRows] = useState<Row[]>([
-    { id: 1, nama: "", kaKg: 0, stikKg: 0 },
+    { id: 1, nama: "", shift: "", kaKg: 0, stikKg: 0 },
   ]);
 
   const [date, setDate] = useState(
@@ -126,6 +128,7 @@ export default function PengikisanClient() {
         {
           id: nextId,
           nama: "",
+          shift: "",
           kaKg: 0,
           stikKg: 0,
         },
@@ -139,6 +142,7 @@ export default function PengikisanClient() {
         {
           id: 1,
           nama: "",
+          shift: "",
           kaKg: 0,
           stikKg: 0,
         },
@@ -155,7 +159,7 @@ export default function PengikisanClient() {
           ? {
               ...r,
               [field]:
-                field === "nama"
+                field === "nama" || field === "shift"
                   ? value
                   : Number.isFinite(parseFloat(value))
                   ? parseFloat(value)
@@ -220,6 +224,7 @@ export default function PengikisanClient() {
       {
         id: 1,
         nama: "",
+        shift: "",
         kaKg: 0,
         stikKg: 0,
       },
@@ -522,6 +527,11 @@ export default function PengikisanClient() {
                   </th>
                   <th className="px-3 py-3 text-center min-w-[120px]">
                     <span className="inline-flex items-center gap-1.5 justify-center">
+                      Shift
+                    </span>
+                  </th>
+                  <th className="px-3 py-3 text-center min-w-[120px]">
+                    <span className="inline-flex items-center gap-1.5 justify-center">
                       <ScaleRoundedIcon
                         sx={{ fontSize: 16 }}
                         className="text-black/45"
@@ -671,6 +681,22 @@ export default function PengikisanClient() {
 
                       <td className="px-3 py-2 text-center">
                         <TextField
+                          select
+                          value={row.shift || ""}
+                          onChange={(e) =>
+                            handleChange(row.id, "shift", e.target.value)
+                          }
+                          sx={muiCompactInputSx}
+                          size="small"
+                        >
+                          <MenuItem value="">-</MenuItem>
+                          <MenuItem value="SIANG">Siang</MenuItem>
+                          <MenuItem value="MALAM">Malam</MenuItem>
+                        </TextField>
+                      </td>
+
+                      <td className="px-3 py-2 text-center">
+                        <TextField
                           type="number"
                           value={row.kaKg || ""}
                           onChange={(e) =>
@@ -714,7 +740,7 @@ export default function PengikisanClient() {
               </tbody>
               <tfoot>
                 <tr className="border-t border-[var(--glass-border)] bg-black/[0.015]">
-                  <td colSpan={4} className="px-3 py-3 text-right font-bold">
+                  <td colSpan={5} className="px-3 py-3 text-right font-bold">
                     Total Semua:
                   </td>
                   <td className="px-3 py-3 text-right font-bold text-[var(--brand)]">

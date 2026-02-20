@@ -31,7 +31,7 @@ import AttachMoneyRoundedIcon from "@mui/icons-material/AttachMoneyRounded";
 import GlassButton from "@/components/ui/GlassButton";
 import PageHeader from "@/components/ui/PageHeader";
 import SafeModal from "@/components/ui/SafeModal";
-import { createPenjemuran } from "@/actions/penjemuran-actions";
+import { createQcPotongSortir } from "@/actions/qc-potong-sortir-actions";
 import {
   getWorkers,
   WorkerDTO,
@@ -71,7 +71,7 @@ function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(" ");
 }
 
-export default function PenjemuranClient() {
+export default function QcPotongSortirClient() {
   const [rows, setRows] = useState<Row[]>([
     { id: 1, nama: "", hadir: "HADIR", lemburJam: 0 },
   ]);
@@ -197,7 +197,7 @@ export default function PenjemuranClient() {
         next.push({
           id: nextId,
           nama: w.name,
-          hari: 1,
+          hadir: "HADIR",
           lemburJam: 0,
         });
       });
@@ -234,10 +234,10 @@ export default function PenjemuranClient() {
       return;
     }
 
-    const validRows = rows.filter((r) => r.nama && r.lemburJam > 0);
+    const validRows = rows.filter((r) => r.nama && (r.hadir === "HADIR" || r.lemburJam > 0));
 
     if (validRows.length === 0) {
-      alert("Mohon isi minimal satu baris data dengan lengkap (Pekerja, Lembur)");
+      alert("Mohon isi minimal satu baris data dengan lengkap (Pekerja, Lembur/Hadir)");
       return;
     }
 
@@ -256,7 +256,7 @@ export default function PenjemuranClient() {
         })),
       };
 
-      const res = await createPenjemuran(payload);
+      const res = await createQcPotongSortir(payload);
       if (res?.success) {
         setLastSavedId(res.id);
         setOpenPreview(true);
@@ -306,7 +306,7 @@ export default function PenjemuranClient() {
 
       pdf.setFont("helvetica", "bold");
       pdf.setFontSize(9);
-      pdf.text("REKAP PENJEMURAN", pageW - margin, y + 5, {
+      pdf.text("REKAP QC POTONG & SORTIR", pageW - margin, y + 5, {
         align: "right",
       });
 
@@ -319,7 +319,7 @@ export default function PenjemuranClient() {
     } else {
       pdf.setFont("helvetica", "bold");
       pdf.setFontSize(12);
-      pdf.text("REKAP PENJEMURAN", pageW / 2, y, { align: "center" });
+      pdf.text("REKAP QC POTONG & SORTIR", pageW / 2, y, { align: "center" });
       y += 8;
       pdf.setDrawColor(26, 35, 126);
       pdf.setLineWidth(0.4);
@@ -380,7 +380,11 @@ export default function PenjemuranClient() {
 
       pdf.text(String(idx + 1), colNoX, y);
       pdf.text(row.nama || "-", colPekerjaX, y);
-      pdf.text((row.hari || 0).toLocaleString("id-ID"), colHariX, y);
+      pdf.text(
+        row.hadir === "HADIR" ? "1" : "0",
+        colHariX,
+        y
+      );
       pdf.text((row.lemburJam || 0).toLocaleString("id-ID"), colLemburX, y);
       pdf.text(total.toLocaleString("id-ID"), colTotalX, y, { align: "right" });
 
@@ -393,7 +397,7 @@ export default function PenjemuranClient() {
     pdf.text("Total Semua", colLemburX, y);
     pdf.text(formatRupiah(totalSemua), colTotalX, y, { align: "right" });
 
-    pdf.save(`nota-penjemuran-${date || "draft"}.pdf`);
+    pdf.save(`nota-qc-potong-sortir-${date || "draft"}.pdf`);
   };
 
   const muiCompactInputSx = {
@@ -412,22 +416,10 @@ export default function PenjemuranClient() {
   return (
     <div className="space-y-4">
       <PageHeader
-        title="Penjemuran"
-        subtitle="Catat hari kerja dan lembur penjemuran."
+        title="QC Potong & Sortir"
+        subtitle="Catat hari kerja dan lembur QC potong & sortir."
         actions={
           <>
-            <Link
-              href="/admin/penjemuran/riwayat"
-              className={cx(
-                "inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold",
-                "border border-[var(--glass-border)] bg-white/70 backdrop-blur shadow-sm",
-                "hover:bg-white/90 active:scale-[0.99] transition"
-              )}
-            >
-              <HistoryRoundedIcon fontSize="small" className="text-black/70" />
-              <span>Riwayat</span>
-            </Link>
-
             <button
               type="button"
               onClick={handleDownloadPdf}
@@ -449,7 +441,6 @@ export default function PenjemuranClient() {
 
       <form onSubmit={handleSubmit}>
         <div className="w-full border border-[var(--glass-border)] bg-transparent rounded-xl p-4 md:p-5">
-          {/* Top Controls */}
           <div className="grid grid-cols-1 md:grid-cols-12 gap-3 mb-4">
             <div className="md:col-span-3">
               <label className="text-[11px] font-semibold text-black/70 flex items-center gap-1.5 mb-1">
@@ -494,41 +485,8 @@ export default function PenjemuranClient() {
                 placeholder="Catatan tambahan (opsional)"
               />
             </div>
-
-            {/* <div className="md:col-span-2">
-              <label className="text-[11px] font-semibold text-black/70 flex items-center gap-1.5 mb-1">
-                <AttachMoneyRoundedIcon
-                  sx={{ fontSize: 16 }}
-                  className="text-[var(--brand)]"
-                />
-                Upah/Hari (dari Pengaturan Upah)
-              </label>
-              <div className="h-[38px] flex items-center rounded-lg border border-[var(--glass-border)] bg-zinc-50 px-3 text-[12px] text-black/80">
-                <span className="mr-1 text-black/50">Rp</span>
-                <span className="font-semibold">
-                  {upahPerHari.toLocaleString("id-ID")}
-                </span>
-              </div>
-            </div>
-
-            <div className="md:col-span-2">
-              <label className="text-[11px] font-semibold text-black/70 flex items-center gap-1.5 mb-1">
-                <AccessTimeRoundedIcon
-                  sx={{ fontSize: 16 }}
-                  className="text-[var(--brand)]"
-                />
-                Lembur/Jam (dari Pengaturan Upah)
-              </label>
-              <div className="h-[38px] flex items-center rounded-lg border border-[var(--glass-border)] bg-zinc-50 px-3 text-[12px] text-black/80">
-                <span className="mr-1 text-black/50">Rp</span>
-                <span className="font-semibold">
-                  {upahLemburPerJam.toLocaleString("id-ID")}
-                </span>
-              </div>
-            </div> */}
           </div>
 
-          {/* Table */}
           <div className="mt-4 overflow-x-auto rounded-lg border border-[var(--glass-border)] bg-transparent">
             <table className="w-full min-w-[800px] text-[12px] text-left">
               <thead className="sticky top-0 z-10 bg-white/80 backdrop-blur border-b border-[var(--glass-border)]">
@@ -874,7 +832,6 @@ export default function PenjemuranClient() {
         </div>
       </SafeModal>
 
-      {/* Success/Preview Modal */}
       <SafeModal
         open={openPreview}
         title="Berhasil Disimpan"
@@ -898,10 +855,10 @@ export default function PenjemuranClient() {
             <SaveRoundedIcon className="text-green-600 text-3xl" />
           </div>
           <h3 className="text-lg font-bold text-black mb-2">
-            Data Penjemuran Tersimpan!
+            Data QC Potong & Sortir Tersimpan!
           </h3>
           <p className="text-black/60 text-sm mb-6 max-w-xs">
-            Data penjemuran berhasil disimpan ke database. Anda dapat
+            Data QC potong & sortir berhasil disimpan ke database. Anda dapat
             mengunduh PDF sebagai arsip.
           </p>
           <div className="bg-blue-50 text-blue-800 text-xs px-4 py-3 rounded-lg w-full text-left">
@@ -913,3 +870,4 @@ export default function PenjemuranClient() {
     </div>
   );
 }
+

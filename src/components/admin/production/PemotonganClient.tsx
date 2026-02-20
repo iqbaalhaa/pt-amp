@@ -11,6 +11,7 @@ import {
   CircularProgress,
   InputAdornment,
   Tooltip,
+  MenuItem,
 } from "@mui/material";
 
 import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
@@ -40,7 +41,16 @@ import { formatRupiah } from "@/lib/currency";
 type Row = {
   id: number;
   nama: string;
+  shift: "" | "SIANG" | "MALAM";
+  itemTypeId: string;
   qty: number;
+};
+
+type PemotonganRate = {
+  id: string;
+  name: string;
+  unit: string;
+  rate: number;
 };
 
 const filter = createFilterOptions<WorkerDTO>();
@@ -70,7 +80,7 @@ function cx(...classes: Array<string | false | null | undefined>) {
 
 export default function PemotonganClient() {
   const [rows, setRows] = useState<Row[]>([
-    { id: 1, nama: "", qty: 0 },
+    { id: 1, nama: "", shift: "", itemTypeId: "", qty: 0 },
   ]);
 
   const [date, setDate] = useState("");
@@ -85,6 +95,9 @@ export default function PemotonganClient() {
   const [creatingWorkerId, setCreatingWorkerId] = useState<number | null>(null);
   const [bulkWorkerModalOpen, setBulkWorkerModalOpen] = useState(false);
   const [selectedWorkerIds, setSelectedWorkerIds] = useState<string[]>([]);
+  const [pemotonganRateOptions, setPemotonganRateOptions] = useState<
+    PemotonganRate[]
+  >([]);
 
   useEffect(() => {
     getWorkers().then((data) =>
@@ -94,14 +107,86 @@ export default function PemotonganClient() {
       if (typeof window !== "undefined") {
         const raw = window.localStorage.getItem("upahSettings");
         if (raw) {
-          const parsed = JSON.parse(raw) as { pemotonganPerKg?: number };
+          const parsed = JSON.parse(raw) as any;
           if (typeof parsed.pemotonganPerKg === "number") {
             setUpahPerKg(parsed.pemotonganPerKg);
           }
+
+          const rates: PemotonganRate[] = Array.isArray(
+            parsed.pemotonganRates,
+          )
+            ? parsed.pemotonganRates.map((r: any, idx: number) => ({
+                id: r.id || `rate-${idx}`,
+                name: String(r.name ?? "").trim() || `Jenis ${idx + 1}`,
+                unit: String(r.unit ?? "Kg"),
+                rate:
+                  typeof r.rate === "number" && !Number.isNaN(r.rate)
+                    ? r.rate
+                    : 0,
+              }))
+            : [
+                {
+                  id: "stik25",
+                  name: "Stik 25",
+                  unit: "Kg",
+                  rate:
+                    typeof parsed.pemotonganStik25 === "number"
+                      ? parsed.pemotonganStik25
+                      : 1500,
+                },
+                {
+                  id: "aaa8",
+                  name: "Aaa (8 cm)",
+                  unit: "Kg",
+                  rate:
+                    typeof parsed.pemotonganAaa8 === "number"
+                      ? parsed.pemotonganAaa8
+                      : 1500,
+                },
+                {
+                  id: "aa8",
+                  name: "Aa (8 cm)",
+                  unit: "Kg",
+                  rate:
+                    typeof parsed.pemotonganAa8 === "number"
+                      ? parsed.pemotonganAa8
+                      : 1500,
+                },
+                {
+                  id: "reject8",
+                  name: "Reject (8)",
+                  unit: "Kg",
+                  rate:
+                    typeof parsed.pemotonganReject8 === "number"
+                      ? parsed.pemotonganReject8
+                      : 1500,
+                },
+                {
+                  id: "reject6",
+                  name: "Reject (6)",
+                  unit: "Kg",
+                  rate:
+                    typeof parsed.pemotonganReject6 === "number"
+                      ? parsed.pemotonganReject6
+                      : 1500,
+                },
+                {
+                  id: "campuran8",
+                  name: "Campuran (8 cm)",
+                  unit: "Kg",
+                  rate:
+                    typeof parsed.pemotonganCampuran8 === "number"
+                      ? parsed.pemotonganCampuran8
+                      : 1500,
+                },
+              ];
+
+          setPemotonganRateOptions(rates);
         }
       }
     } catch {
       setUpahPerKg(1500);
+      setPemotonganRateOptions([]);
     }
     setDate(new Date().toISOString().split("T")[0]);
   }, []);
@@ -114,6 +199,8 @@ export default function PemotonganClient() {
         {
           id: nextId,
           nama: "",
+          shift: "",
+          itemTypeId: "",
           qty: 0,
         },
       ];
@@ -126,6 +213,8 @@ export default function PemotonganClient() {
         {
           id: 1,
           nama: "",
+          shift: "",
+          itemTypeId: "",
           qty: 0,
         },
       ]);
@@ -141,7 +230,7 @@ export default function PemotonganClient() {
           ? {
               ...r,
               [field]:
-                field === "nama"
+                field === "nama" || field === "shift" || field === "itemTypeId"
                   ? value
                   : Number.isFinite(parseFloat(value))
                   ? parseFloat(value)
@@ -154,7 +243,53 @@ export default function PemotonganClient() {
 
   const getRowTotal = (row: Row) => {
     const q = Number.isFinite(row.qty) ? row.qty : 0;
-    return q * upahPerKg;
+
+    const stored =
+      typeof window !== "undefined"
+        ? window.localStorage.getItem("upahSettings")
+        : null;
+    let rate = upahPerKg;
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored) as any;
+        const perKg =
+          typeof parsed.pemotonganPerKg === "number"
+            ? parsed.pemotonganPerKg
+            : upahPerKg;
+        rate = perKg;
+
+        if (Array.isArray(parsed.pemotonganRates) && row.itemTypeId) {
+          const match = parsed.pemotonganRates.find(
+            (r: any) => r.id === row.itemTypeId,
+          );
+          if (match && typeof match.rate === "number") {
+            rate = match.rate;
+          }
+        } else if (row.itemTypeId) {
+          const typeName = String(
+            pemotonganRateOptions.find((r) => r.id === row.itemTypeId)?.name ??
+              "",
+          ).toUpperCase();
+          if (typeName.includes("STIK 25")) {
+            rate = parsed.pemotonganStik25 ?? rate;
+          } else if (typeName.includes("AAA") && typeName.includes("8")) {
+            rate = parsed.pemotonganAaa8 ?? rate;
+          } else if (typeName.match(/\bAA\b/) && typeName.includes("8")) {
+            rate = parsed.pemotonganAa8 ?? rate;
+          } else if (typeName.includes("REJECT") && typeName.includes("8")) {
+            rate = parsed.pemotonganReject8 ?? rate;
+          } else if (typeName.includes("REJECT") && typeName.includes("6")) {
+            rate = parsed.pemotonganReject6 ?? rate;
+          } else if (typeName.includes("CAMPURAN") && typeName.includes("8")) {
+            rate = parsed.pemotonganCampuran8 ?? rate;
+          }
+        }
+      } catch {
+        rate = upahPerKg;
+      }
+    }
+
+    return q * rate;
   };
 
   const totalSemua = useMemo(
@@ -182,6 +317,7 @@ export default function PemotonganClient() {
         next.push({
           id: nextId,
           nama: w.name,
+          itemTypeId: "",
           qty: 0,
         });
       });
@@ -204,6 +340,7 @@ export default function PemotonganClient() {
       {
         id: 1,
         nama: "",
+        itemTypeId: "",
         qty: 0,
       },
     ]);
@@ -218,7 +355,7 @@ export default function PemotonganClient() {
     }
 
     const validRows = rows.filter(
-      (r) => r.nama && r.qty > 0
+      (r) => r.nama && r.qty > 0 && r.itemTypeId
     );
 
     if (validRows.length === 0) {
@@ -236,6 +373,7 @@ export default function PemotonganClient() {
         items: validRows.map((r) => ({
           nama: r.nama,
           qty: String(r.qty),
+          itemTypeId: r.itemTypeId,
         })),
       };
 
@@ -494,7 +632,7 @@ export default function PemotonganClient() {
 
           {/* Table */}
           <div className="mt-4 overflow-x-auto rounded-lg border border-[var(--glass-border)] bg-transparent">
-            <table className="w-full min-w-[800px] text-[12px] text-left">
+            <table className="w-full min-w-[900px] text-[12px] text-left">
               <thead className="sticky top-0 z-10 bg-white/80 backdrop-blur border-b border-[var(--glass-border)]">
                 <tr className="text-[11px] font-extrabold tracking-wide text-black/75 uppercase">
                   <th className="px-3 py-3 w-12 text-center">
@@ -513,6 +651,20 @@ export default function PemotonganClient() {
                         className="text-black/45"
                       />
                       Pekerja <span className="text-red-500">*</span>
+                    </span>
+                  </th>
+                  <th className="px-3 py-3 text-center min-w-[120px]">
+                    <span className="inline-flex items-center gap-1.5 justify-center">
+                      Shift
+                    </span>
+                  </th>
+                  <th className="px-3 py-3 min-w-[200px]">
+                    <span className="inline-flex items-center gap-1.5">
+                      <ContentCutRoundedIcon
+                        sx={{ fontSize: 16 }}
+                        className="text-black/45"
+                      />
+                      Jenis Barang <span className="text-red-500">*</span>
                     </span>
                   </th>
                   <th className="px-3 py-3 text-center min-w-[120px]">
@@ -657,6 +809,73 @@ export default function PemotonganClient() {
 
                       <td className="px-3 py-2 text-center">
                         <TextField
+                          select
+                          value={row.shift || ""}
+                          onChange={(e) =>
+                            handleChange(row.id, "shift", e.target.value)
+                          }
+                          sx={muiCompactInputSx}
+                          size="small"
+                        >
+                          <MenuItem value="">-</MenuItem>
+                          <MenuItem value="SIANG">Siang</MenuItem>
+                          <MenuItem value="MALAM">Malam</MenuItem>
+                        </TextField>
+                      </td>
+
+                      <td className="px-3 py-2">
+                        <Autocomplete
+                          value={
+                            pemotonganRateOptions.find(
+                              (it) => it.id === row.itemTypeId
+                            ) || null
+                          }
+                          onChange={(_event, newValue) => {
+                            if (!newValue || typeof newValue === "string") {
+                              handleChange(row.id, "itemTypeId", "");
+                            } else {
+                              handleChange(
+                                row.id,
+                                "itemTypeId",
+                                newValue?.id || ""
+                              );
+                            }
+                          }}
+                          filterOptions={(options, params) => {
+                            return options.filter((option) =>
+                              option.name
+                                .toLowerCase()
+                                .includes(params.inputValue.toLowerCase())
+                            );
+                          }}
+                          selectOnFocus
+                          clearOnBlur
+                          handleHomeEndKeys
+                          options={pemotonganRateOptions}
+                          getOptionLabel={(option) => {
+                            return option.name;
+                          }}
+                          renderOption={(props, option) => {
+                            const { key, ...optionProps } = props;
+                            return (
+                              <li key={key} {...optionProps}>
+                                {option.name}
+                              </li>
+                            );
+                          }}
+                          sx={muiCompactInputSx}
+                          renderInput={(params) => (
+                            <TextField
+                              {...params}
+                              required
+                              placeholder="Pilih jenis barang..."
+                            />
+                          )}
+                        />
+                      </td>
+
+                      <td className="px-3 py-2 text-center">
+                        <TextField
                           type="number"
                           value={row.qty || ""}
                           onChange={(e) =>
@@ -688,7 +907,7 @@ export default function PemotonganClient() {
               </tbody>
               <tfoot>
                 <tr className="border-t border-[var(--glass-border)] bg-black/[0.015]">
-                  <td colSpan={3} className="px-3 py-3 text-right font-bold">
+                  <td colSpan={4} className="px-3 py-3 text-right font-bold">
                     Total Semua:
                   </td>
                   <td className="px-3 py-3 text-right font-bold text-[var(--brand)]">

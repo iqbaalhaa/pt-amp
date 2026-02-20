@@ -10,6 +10,8 @@
    | "production:Pemotongan"
    | "production:Penjemuran"
   | "production:Pengemasan"
+  | "production:Pensortiran"
+  | "production:QC Potong & Sortir"
   | "production:Produksi Lainnya";
  
  const TABS: { key: TabKey; label: string }[] = [
@@ -20,6 +22,8 @@
    { key: "production:Pemotongan", label: "Pemotongan" },
    { key: "production:Penjemuran", label: "Penjemuran" },
    { key: "production:Pengemasan", label: "Pengemasan" },
+  { key: "production:Pensortiran", label: "Pensortiran" },
+  { key: "production:QC Potong & Sortir", label: "QC Potong & Sortir" },
   { key: "production:Produksi Lainnya", label: "Produksi Lainnya" },
  ];
  
