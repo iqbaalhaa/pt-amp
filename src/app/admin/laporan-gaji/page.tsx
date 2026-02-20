@@ -2,6 +2,7 @@ import React from "react";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { toCurrency } from "@/components/admin/ledger/formatters";
+import LaporanGajiHeaderWithDownload from "@/components/admin/laporan-gaji/HeaderWithDownload";
 
 export const metadata = {
   title: "Laporan Gaji | PT AMP Dashboard",
@@ -542,15 +543,9 @@ export default async function LaporanGajiPage({
       </section>
 
       <section className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-100">
-        <div className="mb-3 flex items-center justify-between">
-          
-          <Link
-            href="/admin/ledger?type=production"
-            className="text-[11px] font-medium text-slate-600 hover:text-slate-900"
-          >
-            Lihat detail di Pembukuan &rarr;
-          </Link>
-        </div>
+        <LaporanGajiHeaderWithDownload
+          title={`${TABS.find((t) => t.key === activeTabKey)?.label} - Weekly Report`}
+        />
 
         <div className="overflow-x-auto rounded-lg border border-slate-200">
           <table className="w-full min-w-[1200px] border-collapse text-[11px]">
