@@ -1,6 +1,7 @@
 FROM node:22-alpine AS base
 WORKDIR /app
-RUN apk add --no-cache libc6-compat openssl vips vips-dev
+RUN apk add --no-cache libc6-compat openssl
+ENV SHARP_IGNORE_GLOBAL_LIBVIPS=1
 RUN corepack enable
 
 FROM base AS deps
