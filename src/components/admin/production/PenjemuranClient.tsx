@@ -44,6 +44,7 @@ type Row = {
   nama: string;
   hadir: "HADIR" | "TIDAK_HADIR";
   lemburJam: number;
+  hari?: number;
 };
 
 const filter = createFilterOptions<WorkerDTO>();
@@ -197,6 +198,7 @@ export default function PenjemuranClient() {
         next.push({
           id: nextId,
           nama: w.name,
+          hadir: "HADIR",
           hari: 1,
           lemburJam: 0,
         });
@@ -413,7 +415,6 @@ export default function PenjemuranClient() {
     <div className="space-y-4">
       <PageHeader
         title="Penjemuran"
-        subtitle="Catat hari kerja dan lembur penjemuran."
         actions={
           <>
             <Link

@@ -11,6 +11,7 @@ import {
   User,
   Tag,
   Eye,
+  Image as ImageIcon,
 } from "lucide-react";
 import BlogEditor from "./BlogEditor";
 import { createPost, updatePost, deletePost } from "@/actions/blog-actions";

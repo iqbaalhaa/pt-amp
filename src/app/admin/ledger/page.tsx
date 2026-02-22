@@ -658,7 +658,6 @@ export default async function AdminLedgerPage({
       itemCount: p.pengikisanItems.length,
       productionCost: total,
       subType: "Pengikisan",
-      shift: p.shift,
       pengikisanItems: p.pengikisanItems.map((it) => ({
         nama: it.nama,
         kaKg: Number(it.kaKg ?? 0),
@@ -689,7 +688,6 @@ export default async function AdminLedgerPage({
       itemCount: p.pemotonganItems.length,
       productionCost: total,
       subType: "Pemotongan",
-      shift: p.shift,
       pemotonganItems: p.pemotonganItems.map((it) => ({
         nama: it.nama,
         qty: Number(it.qty ?? 0),
@@ -747,7 +745,6 @@ export default async function AdminLedgerPage({
       itemCount: p.pengemasanItems.length,
       productionCost: total,
       subType: "Pengemasan",
-      shift: p.shift,
       pengemasanItems: p.pengemasanItems.map((it) => ({
         nama: it.nama,
         bungkus: Number(it.bungkus ?? 0),

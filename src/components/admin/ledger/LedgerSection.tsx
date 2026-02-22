@@ -102,6 +102,8 @@ export function LedgerSection({
     rate1?: number; // upahPerKg, upahPerHari, upahPerBungkus
     rate2?: number; // upahLemburPerJam
     shift?: "siang" | "malam";
+    str1?: string; // nama pekerjaan, etc
+    str2?: string; // satuan, etc
     _row: number;
   };
   const [massRows, setMassRows] = useState<MassRow[] | null>(null);
@@ -447,7 +449,9 @@ export function LedgerSection({
       subType !== "Pemotongan" &&
       subType !== "Penjemuran" &&
       subType !== "Pengemasan" &&
-      subType !== "Produksi Lainnya"
+      subType !== "Produksi Lainnya" &&
+      subType !== "Pensortiran" &&
+      subType !== "QC Potong & Sortir"
     )
       return;
 
@@ -530,35 +534,8 @@ export function LedgerSection({
             typeof it.total === "number" ? it.total : Number(it.total ?? 0);
           if (qty > 0) {
             const harga = total && qty ? total / qty : 0;
-            const row = ensureRow(name, "KG", harga, entry.shift);
+            const row = ensureRow(name, "KG", harga, entry.shift ?? undefined);
             row.values[dateKey] = (row.values[dateKey] ?? 0) + qty;
-          }
-          if (total > 0) {
-            totalUpahByNamePdf.set(
-              name,
-              (totalUpahByNamePdf.get(name) ?? 0) + total
-            );
-          }
-        });
-      } else if (subType === "Pengikisan") {
-        entry.pengikisanItems?.forEach((it) => {
-          const name = it.nama || "-";
-          const ka =
-            typeof it.kaKg === "number" ? it.kaKg : Number(it.kaKg ?? 0);
-          const stik =
-            typeof it.stikKg === "number" ? it.stikKg : Number(it.stikKg ?? 0);
-          const total =
-            typeof it.total === "number" ? it.total : Number(it.total ?? 0);
-
-          if (ka > 0) {
-            const upahKa = Number((it as any).upahKa ?? 0);
-            const row = ensureRow(name, "KA", upahKa, entry.shift);
-            row.values[dateKey] = (row.values[dateKey] ?? 0) + ka;
-          }
-          if (stik > 0) {
-            const upahStik = Number((it as any).upahStik ?? 0);
-            const row = ensureRow(name, "STIK", upahStik, entry.shift);
-            row.values[dateKey] = (row.values[dateKey] ?? 0) + stik;
           }
           if (total > 0) {
             totalUpahByNamePdf.set(
@@ -603,7 +580,12 @@ export function LedgerSection({
               typeof it.upahPerBungkus === "number"
                 ? it.upahPerBungkus
                 : Number(it.upahPerBungkus ?? 0);
-            const row = ensureRow(name, "BKS", harga, entry.shift);
+            const row = ensureRow(
+              name,
+              "BKS",
+              harga,
+              entry.shift ?? undefined
+            );
             row.values[dateKey] = (row.values[dateKey] ?? 0) + bungkus;
           }
           if (total > 0) {
@@ -960,11 +942,21 @@ export function LedgerSection({
             : Number(it.upahStik ?? 0);
 
         if (ka > 0) {
-          const rowKa = ensureRow(baseName, "KA", upahKa, entry.shift);
+          const rowKa = ensureRow(
+            baseName,
+            "KA",
+            upahKa,
+            entry.shift ?? undefined
+          );
           rowKa.values[dateKey] = (rowKa.values[dateKey] ?? 0) + ka;
         }
         if (stik > 0) {
-          const rowStik = ensureRow(baseName, "STIK", upahStik, entry.shift);
+          const rowStik = ensureRow(
+            baseName,
+            "STIK",
+            upahStik,
+            entry.shift ?? undefined
+          );
           rowStik.values[dateKey] = (rowStik.values[dateKey] ?? 0) + stik;
         }
       });
@@ -1180,11 +1172,21 @@ export function LedgerSection({
             : Number(it.upahStik ?? 0);
 
         if (ka > 0) {
-          const rowKa = ensureRow(baseName, "KA", upahKa, entry.shift);
+          const rowKa = ensureRow(
+            baseName,
+            "KA",
+            upahKa,
+            entry.shift ?? undefined
+          );
           rowKa.values[dateKey] = (rowKa.values[dateKey] ?? 0) + ka;
         }
         if (stik > 0) {
-          const rowStik = ensureRow(baseName, "STIK", upahStik, entry.shift);
+          const rowStik = ensureRow(
+            baseName,
+            "STIK",
+            upahStik,
+            entry.shift ?? undefined
+          );
           rowStik.values[dateKey] = (rowStik.values[dateKey] ?? 0) + stik;
         }
       });
@@ -1629,7 +1631,9 @@ export function LedgerSection({
       subType !== "Pemotongan" &&
       subType !== "Penjemuran" &&
       subType !== "Pengemasan" &&
-      subType !== "Produksi Lainnya"
+      subType !== "Produksi Lainnya" &&
+      subType !== "Pensortiran" &&
+      subType !== "QC Potong & Sortir"
     )
       return;
 
@@ -2600,6 +2604,7 @@ export function LedgerSection({
               items: items.map((r) => ({
                 nama: r.item,
                 bungkus: String(r.val1 || 0),
+                itemTypeId: "",
               })),
             });
           } else if (subType === "Pensortiran") {

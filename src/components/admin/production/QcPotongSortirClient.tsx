@@ -417,7 +417,6 @@ export default function QcPotongSortirClient() {
     <div className="space-y-4">
       <PageHeader
         title="QC Potong & Sortir"
-        subtitle="Catat hari kerja dan lembur QC potong & sortir."
         actions={
           <>
             <button

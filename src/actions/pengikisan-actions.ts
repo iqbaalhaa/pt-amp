@@ -55,7 +55,7 @@ export async function createPengikisan(input: PengikisanInput) {
   const pengikisan = await prisma.pengikisan.create({
     data: {
       date: new Date(input.date),
-      shift: input.shift as any,
+      shift: input.shift,
       petugas: currentUserName || input.petugas,
       notes: input.notes ?? null,
       totalUpah: totalUpah.toString(),

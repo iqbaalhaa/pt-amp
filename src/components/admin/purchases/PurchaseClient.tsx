@@ -359,7 +359,6 @@ export default function PurchaseClient() {
     <div className="space-y-4">
       <PageHeader
         title="Pembelian"
-        subtitle="Catat pembelian barang dari supplier, kelola stok, dan cetak invoice."
         icon={
           <ShoppingCartRoundedIcon
             sx={{ fontSize: 24 }}

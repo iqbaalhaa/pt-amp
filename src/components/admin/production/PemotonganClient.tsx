@@ -338,6 +338,8 @@ export default function PemotonganClient() {
         qty: 0,
       },
     ]);
+    setShift("siang");
+    setUpahPerKg(1500);
     setNotes("");
   };
 
@@ -373,6 +375,7 @@ export default function PemotonganClient() {
       if (res?.success) {
         setLastSavedId(res.id);
         setOpenPreview(true);
+        resetForm();
       } else {
         alert("Gagal menyimpan data");
       }
@@ -524,7 +527,6 @@ export default function PemotonganClient() {
     <div className="space-y-4">
       <PageHeader
         title="Pemotongan"
-        subtitle="Catat hasil kerja pemotongan (kg)."
         actions={
           <>
             <Link
@@ -768,8 +770,16 @@ export default function PemotonganClient() {
                           }}
                           renderOption={(props, option) => {
                             const { key, ...optionProps } = props;
+                            let optionKey: string;
+                            if (typeof option === "string") {
+                              optionKey = `str-${option}`;
+                            } else if ((option as any).inputValue) {
+                              optionKey = `new-${(option as any).inputValue}`;
+                            } else {
+                              optionKey = `worker-${option.id}`;
+                            }
                             return (
-                              <li key={key} {...optionProps}>
+                              <li {...optionProps} key={optionKey}>
                                 {option.name}
                               </li>
                             );
@@ -834,8 +844,9 @@ export default function PemotonganClient() {
                           }}
                           renderOption={(props, option) => {
                             const { key, ...optionProps } = props;
+                            const optionKey = `rate-${option.id}`;
                             return (
-                              <li key={key} {...optionProps}>
+                              <li {...optionProps} key={optionKey}>
                                 {option.name}
                               </li>
                             );

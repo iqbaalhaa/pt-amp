@@ -43,6 +43,7 @@ type Row = {
   nama: string;
   kaKg: number;
   stikKg: number;
+  shift?: string;
 };
 
 const filter = createFilterOptions<WorkerDTO>();
@@ -75,7 +76,7 @@ function cx(...classes: Array<string | false | null | undefined>) {
 
 export default function PengikisanClient() {
   const [rows, setRows] = useState<Row[]>([
-    { id: 1, nama: "", kaKg: 0, stikKg: 0 },
+    { id: 1, nama: "", kaKg: 0, stikKg: 0, shift: "" },
   ]);
 
   const [date, setDate] = useState(
@@ -220,11 +221,11 @@ export default function PengikisanClient() {
       {
         id: 1,
         nama: "",
-        shift: "",
         kaKg: 0,
         stikKg: 0,
       },
     ]);
+    setShift("siang");
     setNotes("");
   };
 
@@ -266,6 +267,7 @@ export default function PengikisanClient() {
       if (res?.success) {
         setLastSavedId(res.id);
         setOpenPreview(true);
+        resetForm();
       } else {
         alert("Gagal menyimpan data");
       }
@@ -456,7 +458,7 @@ export default function PengikisanClient() {
       <form onSubmit={handleSubmit}>
         <div className="w-full border border-[var(--glass-border)] bg-transparent rounded-xl p-4 md:p-5">
           {/* Top Controls */}
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-3 mb-4">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-2 mb-4">
             <div className="md:col-span-3">
               <label className="text-[11px] font-semibold text-black/70 flex items-center gap-1.5 mb-1">
                 <EventRoundedIcon

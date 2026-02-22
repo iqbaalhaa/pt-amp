@@ -460,7 +460,6 @@ export default function PensortiranClient() {
     <div className="space-y-4">
       <PageHeader
         title="Pensortiran"
-        subtitle="Catat hasil kerja pensortiran (kg)."
         actions={
           <>
             <button
@@ -674,8 +673,9 @@ export default function PensortiranClient() {
                           }}
                           renderOption={(props, option) => {
                             const { key, ...optionProps } = props;
+                            const optionKey = `rate-${option.id}`;
                             return (
-                              <li key={key} {...optionProps}>
+                              <li {...optionProps} key={optionKey}>
                                 {option.name}
                               </li>
                             );

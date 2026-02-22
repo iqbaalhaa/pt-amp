@@ -79,12 +79,7 @@ function createEmptyValues(): Record<number, Record<ShiftKey, number>> {
   return values;
 }
 
-function addValue(
-  row: WeeklyRow,
-  date: Date,
-  amount: number,
-  shift: ShiftKey = "siang"
-) {
+function addValue(row: WeeklyRow, date: Date, amount: number, shift: ShiftKey) {
   if (!Number.isFinite(amount) || amount === 0) return;
   const dayIdx = date.getDay();
   row.values[dayIdx][shift] += amount;
@@ -110,9 +105,9 @@ export default async function LaporanGajiPage({
     weekStart.setDate(thisWeek.getDate() - 7);
   }
   const weekEndExclusive = new Date(weekStart);
-  weekEndExclusive.setDate(weekStart.getDate() + 7);
+  weekEndExclusive.setDate(weekStart.getDate() + 8);
   const weekEndDisplay = new Date(weekStart);
-  weekEndDisplay.setDate(weekStart.getDate() + 6);
+  weekEndDisplay.setDate(weekStart.getDate() + 7);
 
   const weekLabel = formatDateRangeLabel(weekStart, weekEndDisplay);
 
@@ -209,6 +204,7 @@ export default async function LaporanGajiPage({
     const map = new Map<string, WeeklyRow>();
     for (const p of pengikisanList) {
       const d = new Date(p.date);
+      const shiftKey: ShiftKey = (p as any).shift === "malam" ? "malam" : "siang";
       for (const it of p.pengikisanItems) {
         const nama = it.nama || "-";
         const ka = Number(it.kaKg ?? 0);
@@ -227,9 +223,7 @@ export default async function LaporanGajiPage({
             });
           }
           const row = map.get(key)!;
-          const dayIdx = d.getDay();
-          row.values[dayIdx].siang += ka;
-          row.jumlah += ka * upahKa;
+          addValue(row, d, ka, shiftKey);
           row.upahPerUnit = upahKa || row.upahPerUnit || 0;
         }
         if (stik > 0) {
@@ -244,9 +238,7 @@ export default async function LaporanGajiPage({
             });
           }
           const row = map.get(key)!;
-          const dayIdx = d.getDay();
-          row.values[dayIdx].siang += stik;
-          row.jumlah += stik * upahStik;
+          addValue(row, d, stik, shiftKey);
           row.upahPerUnit = upahStik || row.upahPerUnit || 0;
         }
       }
@@ -263,6 +255,8 @@ export default async function LaporanGajiPage({
     const map = new Map<string, WeeklyRow>();
     for (const p of pemotonganList) {
       const d = new Date(p.date);
+      const shiftKey: ShiftKey =
+        (p as any).shift === "malam" ? "malam" : "siang";
       for (const it of p.pemotonganItems) {
         const nama = it.nama || "-";
         const total = Number(it.total ?? 0);
@@ -275,7 +269,7 @@ export default async function LaporanGajiPage({
             upahPerUnit: 0,
           });
         }
-        addValue(map.get(nama)!, d, total, "siang");
+        addValue(map.get(nama)!, d, total, shiftKey);
       }
     }
     return Array.from(map.values()).sort((a, b) =>
@@ -323,7 +317,10 @@ export default async function LaporanGajiPage({
             upahPerUnit: 0,
           });
         }
-        addValue(map.get(nama)!, d, total, "siang");
+        const shiftRaw = ((it as any).shift as string | null) || "";
+        const shiftKey: ShiftKey =
+          shiftRaw.toUpperCase() === "MALAM" ? "malam" : "siang";
+        addValue(map.get(nama)!, d, total, shiftKey);
       }
     }
     return Array.from(map.values()).sort((a, b) =>
@@ -335,6 +332,8 @@ export default async function LaporanGajiPage({
     const map = new Map<string, WeeklyRow>();
     for (const p of pengemasanList) {
       const d = new Date(p.date);
+      const shiftKey: ShiftKey =
+        (p as any).shift === "malam" ? "malam" : "siang";
       for (const it of p.pengemasanItems) {
         const nama = it.nama || "-";
         const total = Number(it.total ?? 0);
@@ -347,7 +346,7 @@ export default async function LaporanGajiPage({
             upahPerUnit: 0,
           });
         }
-        addValue(map.get(nama)!, d, total, "siang");
+        addValue(map.get(nama)!, d, total, shiftKey);
       }
     }
     return Array.from(map.values()).sort((a, b) =>

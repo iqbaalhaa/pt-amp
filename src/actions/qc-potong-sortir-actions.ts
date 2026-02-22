@@ -61,7 +61,6 @@ export async function createQcPotongSortir(input: QcPotongSortirInput) {
       totalUpah: totalUpah.toString(),
       upahPerHari: upahPerHari || null,
       upahLemburPerJam: upahLemburPerJam || null,
-      petugas: currentUserName || input.petugas,
       ...(cleanedItems.length > 0
         ? {
             qcPotongSortirItems: {
@@ -89,7 +88,6 @@ export async function getQcPotongSortirHistory() {
   return data.map((item) => ({
     id: String(item.id),
     date: item.date,
-    petugas: item.petugas,
     notes: item.notes,
     totalUpah: Number(item.totalUpah ?? 0),
     items: item.qcPotongSortirItems.map((sub) => ({

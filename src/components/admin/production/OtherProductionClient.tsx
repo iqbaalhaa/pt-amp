@@ -46,6 +46,7 @@ type Row = {
   qty: number;
   satuan: string;
   upah: number;
+  tipeUpah?: "per_qty" | "per_hari";
 };
 
 const filter = createFilterOptions<WorkerDTO>();
@@ -459,7 +460,6 @@ export default function OtherProductionClient() {
     <div className="space-y-4">
       <PageHeader
         title="Produksi Lainnya"
-        subtitle="Catat pekerjaan & upah tambahan dengan format rapi, cepat, dan siap cetak."
         actions={
           <>
             <Link

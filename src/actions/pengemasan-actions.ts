@@ -49,7 +49,7 @@ export async function createPengemasan(input: PengemasanInput) {
   const pengemasan = await prisma.pengemasan.create({
     data: {
       date: new Date(input.date),
-      shift: input.shift as any,
+      shift: input.shift,
       petugas: currentUserName || input.petugas,
       notes: input.notes ?? null,
       totalUpah: totalUpah.toString(),

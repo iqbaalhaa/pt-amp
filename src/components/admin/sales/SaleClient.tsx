@@ -345,7 +345,6 @@ export default function SaleClient() {
 		<div className="space-y-4">
 			<PageHeader
 				title="Penjualan"
-				subtitle="Catat penjualan barang ke pelanggan dan buat invoice."
 				icon={
 					<SellRoundedIcon
 						sx={{ fontSize: 24 }}

@@ -230,6 +230,8 @@ export default function PengemasanClient() {
         bungkus: 0,
       },
     ]);
+    setShift("siang");
+    setUpahPerBungkus(500);
     setNotes("");
   };
 
@@ -270,6 +272,7 @@ export default function PengemasanClient() {
       if (res?.success) {
         setLastSavedId(res.id);
         setOpenPreview(true);
+        resetForm();
       } else {
         alert("Gagal menyimpan data");
       }
@@ -421,7 +424,6 @@ export default function PengemasanClient() {
     <div className="space-y-4">
       <PageHeader
         title="Pengemasan"
-        subtitle="Catat hasil kerja pengemasan (bungkus)."
         actions={
           <>
             <Link
