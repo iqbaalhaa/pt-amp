@@ -200,56 +200,83 @@ export default async function LaporanGajiPage({
 		})(),
 	]);
 
-  const pengikisanRows = (() => {
-    const map = new Map<string, WeeklyRow>();
-    for (const p of pengikisanList) {
-      const d = new Date(p.date);
-      const shiftKey: ShiftKey = (p as any).shift === "malam" ? "malam" : "siang";
-      for (const it of p.pengikisanItems) {
-        const nama = it.nama || "-";
-        const ka = Number(it.kaKg ?? 0);
-        const stik = Number(it.stikKg ?? 0);
-        const upahKa = Number(it.upahKa ?? 0);
-        const upahStik = Number(it.upahStik ?? 0);
-        if (ka > 0) {
-          const key = `${nama}::KA`;
-          if (!map.has(key)) {
-            map.set(key, {
-              nama,
-              ket: "KA",
-              values: createEmptyValues(),
-              jumlah: 0,
-              upahPerUnit: 0,
-            });
-          }
-          const row = map.get(key)!;
-          addValue(row, d, ka, shiftKey);
-          row.upahPerUnit = upahKa || row.upahPerUnit || 0;
-        }
-        if (stik > 0) {
-          const key = `${nama}::Stik`;
-          if (!map.has(key)) {
-            map.set(key, {
-              nama,
-              ket: "Stik",
-              values: createEmptyValues(),
-              jumlah: 0,
-              upahPerUnit: 0,
-            });
-          }
-          const row = map.get(key)!;
-          addValue(row, d, stik, shiftKey);
-          row.upahPerUnit = upahStik || row.upahPerUnit || 0;
-        }
-      }
-    }
-    return Array.from(map.values()).sort((a, b) => {
-      if (a.nama === b.nama) {
-        return a.ket.localeCompare(b.ket, "id-ID");
-      }
-      return a.nama.localeCompare(b.nama, "id-ID");
-    });
-  })();
+	const pengikisanRows = (() => {
+		const map = new Map<string, WeeklyRow>();
+
+		const sameDay = (a: Date, b: Date) =>
+			a.getFullYear() === b.getFullYear() &&
+			a.getMonth() === b.getMonth() &&
+			a.getDate() === b.getDate();
+
+		for (const p of pengikisanList) {
+			const d = new Date(p.date);
+			const shiftKey: ShiftKey =
+				(p as any).shift === "malam" ? "malam" : "siang";
+
+			const dateOnly = new Date(
+				d.getFullYear(),
+				d.getMonth(),
+				d.getDate(),
+			);
+
+			let rowWeekStart = getWeekStart(dateOnly);
+
+			if (dateOnly.getDay() === 0 && shiftKey === "siang") {
+				const prev = new Date(dateOnly);
+				prev.setDate(prev.getDate() - 1);
+				rowWeekStart = getWeekStart(prev);
+			}
+
+			if (!sameDay(rowWeekStart, weekStart)) {
+				continue;
+			}
+
+			for (const it of p.pengikisanItems) {
+				const rawNama = it.nama || "-";
+				const keyNama = rawNama.trim().toUpperCase();
+				const ka = Number(it.kaKg ?? 0);
+				const stik = Number(it.stikKg ?? 0);
+				const upahKa = Number(it.upahKa ?? 0);
+				const upahStik = Number(it.upahStik ?? 0);
+				if (ka > 0) {
+					const key = `${keyNama}::KA`;
+					if (!map.has(key)) {
+						map.set(key, {
+							nama: rawNama,
+							ket: "KA",
+							values: createEmptyValues(),
+							jumlah: 0,
+							upahPerUnit: 0,
+						});
+					}
+					const row = map.get(key)!;
+					addValue(row, d, ka, shiftKey);
+					row.upahPerUnit = upahKa || row.upahPerUnit || 0;
+				}
+				if (stik > 0) {
+					const key = `${keyNama}::Stik`;
+					if (!map.has(key)) {
+						map.set(key, {
+							nama: rawNama,
+							ket: "Stik",
+							values: createEmptyValues(),
+							jumlah: 0,
+							upahPerUnit: 0,
+						});
+					}
+					const row = map.get(key)!;
+					addValue(row, d, stik, shiftKey);
+					row.upahPerUnit = upahStik || row.upahPerUnit || 0;
+				}
+			}
+		}
+		return Array.from(map.values()).sort((a, b) => {
+			if (a.nama === b.nama) {
+				return a.ket.localeCompare(b.ket, "id-ID");
+			}
+			return a.nama.localeCompare(b.nama, "id-ID");
+		});
+	})();
 
   const pemotonganRows = (() => {
     const map = new Map<string, WeeklyRow>();
@@ -446,10 +473,33 @@ export default async function LaporanGajiPage({
 	const totalUpahByNama: Map<string, number> | null =
 		activeTabKey === "pengikisan"
 			? rowsForActive.reduce((acc, row) => {
-					acc.set(row.nama, (acc.get(row.nama) ?? 0) + row.jumlah);
+					const totalKg = Object.values(row.values).reduce(
+						(sum, v) => sum + v.malam + v.siang,
+						0,
+					);
+					const upah = row.upahPerUnit ?? 0;
+					const jumlah = totalKg * upah;
+					acc.set(row.nama, (acc.get(row.nama) ?? 0) + jumlah);
 					return acc;
 				}, new Map<string, number>())
 			: null;
+
+	const grandTotalJumlahUpah =
+		activeTabKey === "pengikisan"
+			? Array.from(totalUpahByNama?.values() ?? []).reduce(
+					(sum, v) => sum + v,
+					0,
+				)
+			: rowsForActive.reduce((sum, row) => sum + row.jumlah, 0);
+
+	const footerColSpan =
+		activeTabKey === "pengikisan"
+			? 20
+			: activeTabKey === "pemotongan" ||
+					activeTabKey === "pengemasan" ||
+					activeTabKey === "pensortiran"
+				? 17
+				: 10;
 
 	const pengikisanGroups:
 		| {
@@ -541,12 +591,6 @@ export default async function LaporanGajiPage({
 			</section>
 
 			<section className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-100">
-				<LaporanGajiHeaderWithDownload
-					title={`${
-						TABS.find((t) => t.key === activeTabKey)?.label
-					} - Weekly Report`}
-				/>
-
 				<div className="overflow-x-auto rounded-lg border border-slate-200">
 					<table className="w-full min-w-[1200px] border-collapse text-[11px]">
 						<thead>
@@ -647,10 +691,10 @@ export default async function LaporanGajiPage({
 											(label) => (
 												<React.Fragment key={label}>
 													<th className="border border-slate-200 px-2 py-1 text-center">
-														Malam
+														Siang
 													</th>
 													<th className="border border-slate-200 px-2 py-1 text-center">
-														Siang
+														Malam
 													</th>
 												</React.Fragment>
 											),
@@ -660,7 +704,7 @@ export default async function LaporanGajiPage({
 										</th>
 									</tr>
 								</>
-							) : activeTabKey === "pemotongan" ? (
+							) : activeTabKey === "pemotongan" || activeTabKey === "pengemasan" || activeTabKey === "pensortiran" ? (
 								<>
 									<tr className="bg-slate-50 text-slate-700">
 										<th
@@ -738,10 +782,10 @@ export default async function LaporanGajiPage({
 											(label) => (
 												<React.Fragment key={label}>
 													<th className="border border-slate-200 px-2 py-1 text-center">
-														Malam
+														Siang
 													</th>
 													<th className="border border-slate-200 px-2 py-1 text-center">
-														Siang
+														Malam
 													</th>
 												</React.Fragment>
 											),
@@ -779,7 +823,7 @@ export default async function LaporanGajiPage({
 										colSpan={
 											activeTabKey === "pengikisan"
 												? 21
-												: activeTabKey === "pemotongan"
+												: activeTabKey === "pemotongan" || activeTabKey === "pengemasan" || activeTabKey === "pensortiran"
 													? 3 + 7 * 2 + 1
 													: 3 + DAY_LABELS.length + 1
 										}
@@ -805,16 +849,16 @@ export default async function LaporanGajiPage({
 											{[1, 2, 3, 4, 5, 6].map((dayIdx) => (
 												<React.Fragment key={dayIdx}>
 													<td className="border border-slate-200 px-2 py-1 text-right">
-														{row.values[dayIdx].malam
-															? row.values[dayIdx].malam.toLocaleString(
+														{row.values[dayIdx].siang
+															? row.values[dayIdx].siang.toLocaleString(
 																	"id-ID",
 																	{ maximumFractionDigits: 2 },
 																)
 															: ""}
 													</td>
 													<td className="border border-slate-200 px-2 py-1 text-right">
-														{row.values[dayIdx].siang
-															? row.values[dayIdx].siang.toLocaleString(
+														{row.values[dayIdx].malam
+															? row.values[dayIdx].malam.toLocaleString(
 																	"id-ID",
 																	{ maximumFractionDigits: 2 },
 																)
@@ -842,7 +886,7 @@ export default async function LaporanGajiPage({
 											0,
 										);
 										const upah = row.upahPerUnit ?? 0;
-										const jumlah = row.jumlah;
+										const jumlah = totalKg * upah;
 										return (
 											<>
 												<td className="border border-slate-200 px-2 py-1 text-right">
@@ -905,7 +949,7 @@ export default async function LaporanGajiPage({
 										</React.Fragment>
 									);
 								})
-							) : activeTabKey === "pemotongan" ? (
+							) : activeTabKey === "pemotongan" || activeTabKey === "pengemasan" || activeTabKey === "pensortiran" ? (
 								rowsForActive.map((row, idx) => (
 									<tr
 										key={`${row.nama}-${row.ket}-${idx}`}
@@ -928,13 +972,13 @@ export default async function LaporanGajiPage({
 										{[1, 2, 3, 4, 5, 6].map((dayIdx) => (
 											<React.Fragment key={dayIdx}>
 												<td className="border border-slate-200 px-2 py-1 text-right">
-													{row.values[dayIdx].malam
-														? toCurrency(row.values[dayIdx].malam)
+													{row.values[dayIdx].siang
+														? toCurrency(row.values[dayIdx].siang)
 														: ""}
 												</td>
 												<td className="border border-slate-200 px-2 py-1 text-right">
-													{row.values[dayIdx].siang
-														? toCurrency(row.values[dayIdx].siang)
+													{row.values[dayIdx].malam
+														? toCurrency(row.values[dayIdx].malam)
 														: ""}
 												</td>
 											</React.Fragment>
@@ -984,6 +1028,21 @@ export default async function LaporanGajiPage({
 								))
 							)}
 						</tbody>
+						{grandTotalJumlahUpah > 0 && (
+							<tfoot>
+								<tr className="bg-slate-50 text-slate-800 font-semibold">
+									<td
+										className="border border-slate-200 px-2 py-1 text-right"
+										colSpan={footerColSpan}
+									>
+										Total Jumlah Upah
+									</td>
+									<td className="border border-slate-200 px-2 py-1 text-right">
+										{toCurrency(grandTotalJumlahUpah)}
+									</td>
+								</tr>
+							</tfoot>
+						)}
 					</table>
 				</div>
 			</section>

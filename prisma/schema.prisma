@@ -543,6 +543,7 @@ model PensortiranItem {
   qty            Decimal  @db.Decimal(14, 4)
   upahPerKg      Decimal  @db.Decimal(14, 2) @map("upah_per_kg")
   total          Decimal  @db.Decimal(14, 2)
+  shift          Shift    @default(siang)
 
   pensortiran Pensortiran @relation(fields: [pensortiranId], references: [id], onDelete: Cascade)
 

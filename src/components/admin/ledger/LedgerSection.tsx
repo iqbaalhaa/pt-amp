@@ -2305,8 +2305,7 @@ export function LedgerSection({
             _row: rowNum,
           });
         } else if (type === "production") {
-          const c1 = (cols?.[1] ?? "").toString(); // Nama Pekerja (Item)
-          // Petugas diisi otomatis oleh session login
+          const c1 = (cols?.[1] ?? "").toString();
           const petugas = "";
 
           const worker = c1.trim().toUpperCase();
@@ -2341,11 +2340,9 @@ export function LedgerSection({
             const rate = parseFloat(
               (cols?.[3] ?? "0").toString().replace(/[^0-9.\-]/g, "")
             );
-            let shift: "siang" | "malam" | undefined = undefined;
-            if (subType === "Pemotongan") {
-              const shiftRaw = (cols?.[4] ?? "").toString().toLowerCase();
-              shift = shiftRaw === "malam" ? "malam" : "siang";
-            }
+            const shiftRaw = (cols?.[4] ?? "").toString().toLowerCase();
+            const shift: "siang" | "malam" =
+              shiftRaw === "malam" ? "malam" : "siang";
 
             valid.push({
               date,
@@ -2539,17 +2536,21 @@ export function LedgerSection({
           if (
             subType === "Pemotongan" ||
             subType === "Pengikisan" ||
-            subType === "Pengemasan"
+            subType === "Pengemasan" ||
+            subType === "Pensortiran"
           ) {
             keyObj.s = r.shift;
           }
-          if (subType === "Pemotongan" || subType === "Pengemasan") {
+          if (
+            subType === "Pemotongan" ||
+            subType === "Pengemasan" ||
+            subType === "Pensortiran"
+          ) {
             keyObj.r1 = r.rate1;
-          } else if (subType === "Penjemuran") {
+          } else if (subType === "Penjemuran" || subType === "QC Potong & Sortir") {
             keyObj.r1 = r.rate1;
             keyObj.r2 = r.rate2;
           }
-          // Pengikisan no rates needed in key (constants)
 
           const key = JSON.stringify(keyObj);
           const arr = byKey.get(key) ?? [];
@@ -2615,6 +2616,7 @@ export function LedgerSection({
               items: items.map((r) => ({
                 nama: r.item,
                 qty: String(r.val1 || 0),
+                shift: keyObj.s || "siang",
               })),
             });
           } else if (subType === "QC Potong & Sortir") {
@@ -3513,13 +3515,15 @@ export function LedgerSection({
                         "nama pekerja",
                         "ka (kg)",
                         "stik (kg)",
+                        "shift",
                       ];
-                    else if (subType === "Pemotongan")
+                    else if (subType === "Pemotongan" || subType === "Pensortiran")
                       headers = [
                         "tanggal",
                         "nama pekerja",
                         "qty (kg)",
                         "upah per kg",
+                        "shift",
                       ];
                     else if (subType === "Penjemuran")
                       headers = [
@@ -3536,6 +3540,7 @@ export function LedgerSection({
                         "nama pekerja",
                         "bungkus",
                         "upah per bungkus",
+                        "shift",
                       ];
                   }
 
@@ -3728,7 +3733,7 @@ export function LedgerSection({
                             Jumlah
                           </th>
                         )}
-                        {type === "production" && (
+                        {type === "production" && subType === "Pengikisan" && (
                           <>
                             <th className="border border-slate-200 px-2 py-1 text-right">
                               KA (kg)
@@ -3738,7 +3743,7 @@ export function LedgerSection({
                             </th>
                           </>
                         )}
-                        {subType === "Pemotongan" && (
+                        {(subType === "Pemotongan" || subType === "Pensortiran") && (
                           <>
                             <th className="border border-slate-200 px-2 py-1 text-right">
                               Qty (kg)
@@ -3774,6 +3779,15 @@ export function LedgerSection({
                             </th>
                           </>
                         )}
+                        {type === "production" &&
+                          (subType === "Pengikisan" ||
+                            subType === "Pemotongan" ||
+                            subType === "Pensortiran" ||
+                            subType === "Pengemasan") && (
+                            <th className="border border-slate-200 px-2 py-1 text-center">
+                              Shift
+                            </th>
+                          )}
                         <th className="border border-slate-200 px-2 py-1 w-20 text-center">
                           Baris
                         </th>
@@ -3813,7 +3827,7 @@ export function LedgerSection({
                               {r.price}
                             </td>
                           )}
-                          {type === "production" && (
+                          {type === "production" && subType === "Pengikisan" && (
                             <>
                               <td className="border border-slate-200 px-2 py-1 text-right">
                                 {r.val1}
@@ -3823,7 +3837,7 @@ export function LedgerSection({
                               </td>
                             </>
                           )}
-                          {subType === "Pemotongan" && (
+                          {(subType === "Pemotongan" || subType === "Pensortiran") && (
                             <>
                               <td className="border border-slate-200 px-2 py-1 text-right">
                                 {r.val1}
@@ -3859,6 +3873,15 @@ export function LedgerSection({
                               </td>
                             </>
                           )}
+                          {type === "production" &&
+                            (subType === "Pengikisan" ||
+                              subType === "Pemotongan" ||
+                              subType === "Pensortiran" ||
+                              subType === "Pengemasan") && (
+                              <td className="border border-slate-200 px-2 py-1 text-center">
+                                {r.shift}
+                              </td>
+                            )}
                           <td className="border border-slate-200 px-2 py-1 text-center">
                             {r._row}
                           </td>

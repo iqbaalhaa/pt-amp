@@ -1003,7 +1003,7 @@ export default async function AdminLedgerPage({
           return (
             <section className="mb-4">
               <LedgerSection
-                title="Rekap transaksi & pergerakan stok dari data yang terekam"
+                title="Pembelian"
                 type="purchase"
                 entries={sortedPurchases}
                 totalCount={purchaseCount}

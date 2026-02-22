@@ -273,6 +273,7 @@ export default function PensortiranClient() {
         qty: 0,
       },
     ]);
+    setDate(new Date().toISOString().split("T")[0]);
     setNotes("");
   };
 
@@ -302,6 +303,7 @@ export default function PensortiranClient() {
         items: validRows.map((r) => ({
           nama: r.nama,
           qty: String(r.qty),
+          shift: r.shift || "SIANG",
           itemTypeId: r.itemTypeId,
         })),
       };
@@ -310,6 +312,7 @@ export default function PensortiranClient() {
       if (res?.success) {
         setLastSavedId(res.id);
         setOpenPreview(true);
+        resetForm();
       } else {
         alert("Gagal menyimpan data");
       }
@@ -756,8 +759,9 @@ export default function PensortiranClient() {
                           }}
                           renderOption={(props, option) => {
                             const { key, ...optionProps } = props;
+                            const optionKey = `rate-${option.id}`;
                             return (
-                              <li key={key} {...optionProps}>
+                              <li {...optionProps} key={optionKey}>
                                 {option.name}
                               </li>
                             );
@@ -929,6 +933,42 @@ export default function PensortiranClient() {
               ))}
             </ul>
           )}
+        </div>
+      </SafeModal>
+
+      <SafeModal
+        open={openPreview}
+        title="Berhasil Disimpan"
+        onClose={() => setOpenPreview(false)}
+        footer={
+          <div className="flex gap-2">
+            <GlassButton
+              variant="secondary"
+              onClick={() => setOpenPreview(false)}
+            >
+              Tutup
+            </GlassButton>
+            <GlassButton variant="primary" onClick={handleDownloadPdf}>
+              Download PDF
+            </GlassButton>
+          </div>
+        }
+      >
+        <div className="flex flex-col items-center justify-center p-6 text-center">
+          <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mb-4">
+            <SaveRoundedIcon className="text-green-600 text-3xl" />
+          </div>
+          <h3 className="text-lg font-bold text-black mb-2">
+            Data Pensortiran Tersimpan!
+          </h3>
+          <p className="text-black/60 text-sm mb-6 max-w-xs">
+            Data pensortiran berhasil disimpan ke database. Anda dapat
+            mengunduh PDF sebagai arsip.
+          </p>
+          <div className="bg-blue-50 text-blue-800 text-xs px-4 py-3 rounded-lg w-full text-left">
+            <p className="font-semibold mb-1">ID Transaksi:</p>
+            <code className="font-mono">{lastSavedId || "-"}</code>
+          </div>
         </div>
       </SafeModal>
     </div>

@@ -236,6 +236,7 @@ export default function OtherProductionClient() {
         tipeUpah: "per_qty",
       },
     ]);
+    setDate(new Date().toISOString().split("T")[0]);
     setNotes("");
   };
 
@@ -301,6 +302,7 @@ export default function OtherProductionClient() {
       if (res?.success) {
         setLastSavedId(res.id);
         setOpenPreview(true);
+        resetForm();
       } else {
         alert("Gagal menyimpan data");
       }

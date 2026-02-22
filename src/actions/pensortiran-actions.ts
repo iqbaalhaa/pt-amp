@@ -8,6 +8,7 @@ import { headers } from "next/headers";
 export type PensortiranItemInput = {
   nama: string;
   qty: string;
+  shift?: string;
 };
 
 export type PensortiranInput = {
@@ -28,12 +29,16 @@ export async function createPensortiran(input: PensortiranInput) {
     .map((item) => {
       const qty = parseFloat(item.qty || "0");
       const total = qty * upahPerKg;
+      const shiftRaw = (item.shift || "").toString().toLowerCase();
+      const shift: "siang" | "malam" =
+        shiftRaw === "malam" ? "malam" : "siang";
 
       return {
         nama: item.nama,
         qty: item.qty || "0",
         upahPerKg: upahPerKg.toString(),
         total: total.toString(),
+        shift,
       };
     })
     .filter((it) => it.nama || parseFloat(it.qty) > 0);

@@ -221,6 +221,7 @@ export default function PenjemuranClient() {
 				lemburJam: 0,
 			},
 		]);
+		setDate(() => new Date().toISOString().split("T")[0]);
 		setNotes("");
 	};
 
@@ -257,6 +258,7 @@ export default function PenjemuranClient() {
 			if (res?.success) {
 				setLastSavedId(res.id);
 				setOpenPreview(true);
+				resetForm();
 			} else {
 				alert("Gagal menyimpan data");
 			}
