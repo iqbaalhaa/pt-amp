@@ -11,16 +11,16 @@ RUN apt-get update \
 ARG NODE_ENV=production
 ARG DATABASE_URL
 
+# Copy manifests, install deps at build time (including dev deps for build tooling)
+COPY package*.json ./
+RUN npm install --include=dev
+
 # Set runtime environment variables from build args
 ENV NODE_ENV=${NODE_ENV}
 ENV DATABASE_URL=${DATABASE_URL}
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
-
-# Copy manifests, install deps at build time (including dev deps for build tooling)
-COPY package.json ./
-RUN npm install
 
 # Copy application source (excluding node_modules via .dockerignore)
 COPY . .
