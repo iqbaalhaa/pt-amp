@@ -74,7 +74,7 @@ const groups: Group[] = [
         icon: <ReceiptLongIcon fontSize="small" />,
       },
       {
-        label: "Invoice Expense",
+        label: "Pengeluaran",
         href: "/admin/expenses",
         icon: <RequestQuoteIcon fontSize="small" />,
       },

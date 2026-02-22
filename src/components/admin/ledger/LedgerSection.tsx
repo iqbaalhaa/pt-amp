@@ -6,7 +6,8 @@ import { LedgerEntry } from "./types";
 import { toCurrency } from "./formatters";
 import { LedgerTable } from "./LedgerTable";
 import { approvePurchase } from "@/actions/purchase-actions";
-import { approveSale } from "@/actions/sale-actions";
+import { approveSale, createSale } from "@/actions/sale-actions";
+import { approveExpense, createExpense } from "@/actions/expense-actions";
 import GlassDialog from "@/components/ui/GlassDialog";
 import { TextField } from "@mui/material";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
@@ -22,6 +23,9 @@ import { createPengikisan } from "@/actions/pengikisan-actions";
 import { createPemotongan } from "@/actions/pemotongan-actions";
 import { createPenjemuran } from "@/actions/penjemuran-actions";
 import { createPengemasan } from "@/actions/pengemasan-actions";
+import { createPensortiran } from "@/actions/pensortiran-actions";
+import { createQcPotongSortir } from "@/actions/qc-potong-sortir-actions";
+import { createProduksiLainnya } from "@/actions/produksi-lainnya-actions";
 
 const REPORT_MARGIN_MM = 10;
 
@@ -97,6 +101,7 @@ export function LedgerSection({
     val2?: number; // stikKg, lemburJam
     rate1?: number; // upahPerKg, upahPerHari, upahPerBungkus
     rate2?: number; // upahLemburPerJam
+    shift?: "siang" | "malam";
     _row: number;
   };
   const [massRows, setMassRows] = useState<MassRow[] | null>(null);
@@ -182,8 +187,7 @@ export function LedgerSection({
             now.getDate() - 6
           ).toLocaleDateString("id-ID")} - ${now.toLocaleDateString("id-ID")}`;
 
-    const reportTitleBase =
-      type === "production" && subType ? subType : title;
+    const reportTitleBase = type === "production" && subType ? subType : title;
 
     pdf.setFont("helvetica", "bold");
     pdf.setFontSize(13);
@@ -226,12 +230,14 @@ export function LedgerSection({
     pdf.setFontSize(9);
 
     const colTanggalX = margin;
-    const colPetugasX = colTanggalX + 32;
+    const colShiftX = colTanggalX + 32;
+    const colPetugasX = colShiftX + 16;
     const colPihakX = colPetugasX + 32;
     const colTotalX = pageW - margin - 30;
     const colStatusX = pageW - margin;
 
     pdf.text("Tanggal", colTanggalX, y);
+    pdf.text("Shift", colShiftX, y);
     pdf.text("Petugas", colPetugasX, y);
     pdf.text("Pihak", colPihakX, y);
     pdf.text("Total", colTotalX, y, { align: "right" });
@@ -246,15 +252,17 @@ export function LedgerSection({
         y = margin;
       }
       const d = new Date(e.date);
-      const dateStr = `${d.toLocaleDateString(
-        "id-ID"
-      )} ${d.toLocaleTimeString("id-ID").slice(0, 5)}`;
+      const dateStr = `${d.toLocaleDateString("id-ID")} ${d
+        .toLocaleTimeString("id-ID")
+        .slice(0, 5)}`;
+      const shift = e.shift ? e.shift.toUpperCase() : "-";
       const petugas = e.createdByName || "-";
       const pihak = e.counterparty || "-";
       const totalVal = getProductionValue(e);
       const status = e.status.toUpperCase();
 
       pdf.text(dateStr, colTanggalX, y);
+      pdf.text(shift, colShiftX, y);
       pdf.text(petugas, colPetugasX, y);
       pdf.text(pihak, colPihakX, y);
       pdf.text(toCurrency(totalVal), colTotalX, y, { align: "right" });
@@ -376,12 +384,14 @@ export function LedgerSection({
     pdf.setFontSize(9);
 
     const colTanggalX = margin;
-    const colPetugasX = colTanggalX + 32;
+    const colShiftX = colTanggalX + 32;
+    const colPetugasX = colShiftX + 18;
     const colPihakX = colPetugasX + 32;
     const colTotalX = pageW - margin - 30;
     const colStatusX = pageW - margin;
 
     pdf.text("Tanggal", colTanggalX, y);
+    pdf.text("Shift", colShiftX, y);
     pdf.text("Petugas", colPetugasX, y);
     pdf.text("Pihak", colPihakX, y);
     pdf.text("Total", colTotalX, y, { align: "right" });
@@ -397,6 +407,7 @@ export function LedgerSection({
         pdf.setFont("helvetica", "bold");
         pdf.setFontSize(9);
         pdf.text("Tanggal", colTanggalX, y);
+        pdf.text("Shift", colShiftX, y);
         pdf.text("Petugas", colPetugasX, y);
         pdf.text("Pihak", colPihakX, y);
         pdf.text("Total", colTotalX, y, { align: "right" });
@@ -405,15 +416,17 @@ export function LedgerSection({
         pdf.setFont("helvetica", "normal");
       }
       const d = new Date(e.date);
-      const dateStr = `${d.toLocaleDateString(
-        "id-ID"
-      )} ${d.toLocaleTimeString("id-ID").slice(0, 5)}`;
+      const dateStr = `${d.toLocaleDateString("id-ID")} ${d
+        .toLocaleTimeString("id-ID")
+        .slice(0, 5)}`;
+      const shift = e.shift ? e.shift.toUpperCase() : "-";
       const petugas = e.createdByName || "-";
       const pihak = e.counterparty || "-";
       const totalVal = getProductionValue(e);
       const status = e.status.toUpperCase();
 
       pdf.text(dateStr, colTanggalX, y);
+      pdf.text(shift, colShiftX, y);
       pdf.text(petugas, colPetugasX, y);
       pdf.text(pihak, colPihakX, y);
       pdf.text(toCurrency(totalVal), colTotalX, y, { align: "right" });
@@ -422,12 +435,8 @@ export function LedgerSection({
     });
 
     const suffix =
-      reportMode === "range"
-        ? "range"
-        : `bulan-${reportMonth}-${reportYear}`;
-    pdf.save(
-      `laporan-produksi-${subType.toLowerCase()}-${suffix}.pdf`
-    );
+      reportMode === "range" ? "range" : `bulan-${reportMonth}-${reportYear}`;
+    pdf.save(`laporan-produksi-${subType.toLowerCase()}-${suffix}.pdf`);
     setOpenReport(false);
   };
 
@@ -483,17 +492,23 @@ export function LedgerSection({
       ket: string;
       values: Record<string, number>;
       harga: number;
+      shift?: string;
     };
 
     const dateKeySet = new Set<string>();
     const rowsMap = new Map<string, RowInfo>();
     const totalUpahByNamePdf = new Map<string, number>();
 
-    const ensureRow = (name: string, ket: string, harga: number) => {
-      const key = `${name}|${ket}`;
+    const ensureRow = (
+      name: string,
+      ket: string,
+      harga: number,
+      shift?: string
+    ) => {
+      const key = `${name}|${ket}|${shift || ""}`;
       let row = rowsMap.get(key);
       if (!row) {
-        row = { name, ket, values: {}, harga };
+        row = { name, ket, values: {}, harga, shift };
         rowsMap.set(key, row);
       }
       if (!row.harga && harga > 0) row.harga = harga;
@@ -510,14 +525,40 @@ export function LedgerSection({
       if (subType === "Pemotongan" || subType === "Pensortiran") {
         entry.pemotonganItems?.forEach((it) => {
           const name = it.nama || "-";
-          const qty =
-            typeof it.qty === "number" ? it.qty : Number(it.qty ?? 0);
+          const qty = typeof it.qty === "number" ? it.qty : Number(it.qty ?? 0);
           const total =
             typeof it.total === "number" ? it.total : Number(it.total ?? 0);
           if (qty > 0) {
             const harga = total && qty ? total / qty : 0;
-            const row = ensureRow(name, "KG", harga);
+            const row = ensureRow(name, "KG", harga, entry.shift);
             row.values[dateKey] = (row.values[dateKey] ?? 0) + qty;
+          }
+          if (total > 0) {
+            totalUpahByNamePdf.set(
+              name,
+              (totalUpahByNamePdf.get(name) ?? 0) + total
+            );
+          }
+        });
+      } else if (subType === "Pengikisan") {
+        entry.pengikisanItems?.forEach((it) => {
+          const name = it.nama || "-";
+          const ka =
+            typeof it.kaKg === "number" ? it.kaKg : Number(it.kaKg ?? 0);
+          const stik =
+            typeof it.stikKg === "number" ? it.stikKg : Number(it.stikKg ?? 0);
+          const total =
+            typeof it.total === "number" ? it.total : Number(it.total ?? 0);
+
+          if (ka > 0) {
+            const upahKa = Number((it as any).upahKa ?? 0);
+            const row = ensureRow(name, "KA", upahKa, entry.shift);
+            row.values[dateKey] = (row.values[dateKey] ?? 0) + ka;
+          }
+          if (stik > 0) {
+            const upahStik = Number((it as any).upahStik ?? 0);
+            const row = ensureRow(name, "STIK", upahStik, entry.shift);
+            row.values[dateKey] = (row.values[dateKey] ?? 0) + stik;
           }
           if (total > 0) {
             totalUpahByNamePdf.set(
@@ -562,7 +603,7 @@ export function LedgerSection({
               typeof it.upahPerBungkus === "number"
                 ? it.upahPerBungkus
                 : Number(it.upahPerBungkus ?? 0);
-            const row = ensureRow(name, "BKS", harga);
+            const row = ensureRow(name, "BKS", harga, entry.shift);
             row.values[dateKey] = (row.values[dateKey] ?? 0) + bungkus;
           }
           if (total > 0) {
@@ -577,8 +618,7 @@ export function LedgerSection({
           const name = it.namaPekerja || "-";
           const ketBase = it.satuan || it.namaPekerjaan || "-";
           const ket = ketBase.toString().toUpperCase();
-          const qty =
-            typeof it.qty === "number" ? it.qty : Number(it.qty ?? 0);
+          const qty = typeof it.qty === "number" ? it.qty : Number(it.qty ?? 0);
           const total =
             typeof it.total === "number" ? it.total : Number(it.total ?? 0);
           if (qty > 0) {
@@ -627,11 +667,7 @@ export function LedgerSection({
 
       pdf.setFont("helvetica", "bold");
       pdf.setFontSize(11);
-      pdf.text(
-        "PT AURORA MITRA PRAKARSA (AMP)",
-        margin + logoW + 6,
-        y + 5
-      );
+      pdf.text("PT AURORA MITRA PRAKARSA (AMP)", margin + logoW + 6, y + 5);
 
       pdf.setFont("helvetica", "normal");
       pdf.setFontSize(7);
@@ -643,14 +679,9 @@ export function LedgerSection({
 
       pdf.setFont("helvetica", "bold");
       pdf.setFontSize(9);
-      pdf.text(
-        `LAPORAN ${subType.toUpperCase()}`,
-        pageW - margin,
-        y + 5,
-        {
-          align: "right",
-        }
-      );
+      pdf.text(`LAPORAN ${subType.toUpperCase()}`, pageW - margin, y + 5, {
+        align: "right",
+      });
 
       y += logoH + 6;
 
@@ -799,7 +830,10 @@ export function LedgerSection({
           if (idx === 0) {
             pdf.text(String(counter), colNoX + 2, textY);
           }
-          pdf.text(row.name, colNamaX + 1, textY);
+          const labelName = row.shift
+            ? `${row.name} (${row.shift.toUpperCase()})`
+            : row.name;
+          pdf.text(labelName, colNamaX + 1, textY);
           pdf.text(row.ket, colKetX + 1, textY);
           perDate.forEach((val, i) => {
             const x = firstDateX + i * dateColWidth;
@@ -821,14 +855,9 @@ export function LedgerSection({
             });
           }
           if (idx === rowsForName.length - 1 && totalUpahName !== 0) {
-            pdf.text(
-              toCurrency(totalUpahName),
-              colJumlahUpahX + 24,
-              textY,
-              {
-                align: "right",
-              }
-            );
+            pdf.text(toCurrency(totalUpahName), colJumlahUpahX + 24, textY, {
+              align: "right",
+            });
           }
 
           y += rowHeight;
@@ -838,9 +867,7 @@ export function LedgerSection({
     });
 
     const suffix =
-      reportMode === "range"
-        ? "range"
-        : `bulan-${reportMonth}-${reportYear}`;
+      reportMode === "range" ? "range" : `bulan-${reportMonth}-${reportYear}`;
     pdf.save(`laporan-${subType.toLowerCase()}-${suffix}.pdf`);
     setOpenReport(false);
   };
@@ -856,8 +883,18 @@ export function LedgerSection({
       const e = new Date(reportEnd);
       if (isNaN(s.getTime()) || isNaN(e.getTime()) || s > e) return;
       startDate = new Date(s.getFullYear(), s.getMonth(), s.getDate());
-      endDate = new Date(e.getFullYear(), e.getMonth(), e.getDate(), 23, 59, 59, 999);
-      periodeLabel = `${s.toLocaleDateString("id-ID")} - ${e.toLocaleDateString("id-ID")}`;
+      endDate = new Date(
+        e.getFullYear(),
+        e.getMonth(),
+        e.getDate(),
+        23,
+        59,
+        59,
+        999
+      );
+      periodeLabel = `${s.toLocaleDateString("id-ID")} - ${e.toLocaleDateString(
+        "id-ID"
+      )}`;
     } else {
       if (!reportMonth || !reportYear) return;
       const yearNum = Number(reportYear);
@@ -884,16 +921,22 @@ export function LedgerSection({
       ket: "KA" | "STIK";
       values: Record<string, number>;
       harga: number;
+      shift?: string;
     };
 
     const dateKeySet = new Set<string>();
     const rowsMap = new Map<string, RowInfo>();
 
-    const ensureRow = (name: string, ket: "KA" | "STIK", harga: number) => {
-      const key = `${name}|${ket}`;
+    const ensureRow = (
+      name: string,
+      ket: "KA" | "STIK",
+      harga: number,
+      shift?: string
+    ) => {
+      const key = `${name}|${ket}|${shift || ""}`;
       let row = rowsMap.get(key);
       if (!row) {
-        row = { name, ket, values: {}, harga };
+        row = { name, ket, values: {}, harga, shift };
         rowsMap.set(key, row);
       }
       if (!row.harga && harga > 0) row.harga = harga;
@@ -907,16 +950,21 @@ export function LedgerSection({
       entry.pengikisanItems?.forEach((it) => {
         const baseName = it.nama || "-";
         const ka = typeof it.kaKg === "number" ? it.kaKg : Number(it.kaKg ?? 0);
-        const stik = typeof it.stikKg === "number" ? it.stikKg : Number(it.stikKg ?? 0);
-        const upahKa = typeof it.upahKa === "number" ? it.upahKa : Number(it.upahKa ?? 0);
-        const upahStik = typeof it.upahStik === "number" ? it.upahStik : Number(it.upahStik ?? 0);
+        const stik =
+          typeof it.stikKg === "number" ? it.stikKg : Number(it.stikKg ?? 0);
+        const upahKa =
+          typeof it.upahKa === "number" ? it.upahKa : Number(it.upahKa ?? 0);
+        const upahStik =
+          typeof it.upahStik === "number"
+            ? it.upahStik
+            : Number(it.upahStik ?? 0);
 
         if (ka > 0) {
-          const rowKa = ensureRow(baseName, "KA", upahKa);
+          const rowKa = ensureRow(baseName, "KA", upahKa, entry.shift);
           rowKa.values[dateKey] = (rowKa.values[dateKey] ?? 0) + ka;
         }
         if (stik > 0) {
-          const rowStik = ensureRow(baseName, "STIK", upahStik);
+          const rowStik = ensureRow(baseName, "STIK", upahStik, entry.shift);
           rowStik.values[dateKey] = (rowStik.values[dateKey] ?? 0) + stik;
         }
       });
@@ -929,7 +977,9 @@ export function LedgerSection({
       const d = new Date(key);
       const day = d.getDate().toString().padStart(2, "0");
       const month = (d.getMonth() + 1).toString().padStart(2, "0");
-      const weekday = d.toLocaleDateString("id-ID", { weekday: "short" }).toUpperCase();
+      const weekday = d
+        .toLocaleDateString("id-ID", { weekday: "short" })
+        .toUpperCase();
       return `${day}/${month} ${weekday}`;
     });
 
@@ -939,6 +989,7 @@ export function LedgerSection({
     const header: (string | number)[] = [
       "NO",
       "NAMA",
+      "SHIFT",
       "KET",
       ...dateHeaders,
       "JUMLAH",
@@ -954,11 +1005,15 @@ export function LedgerSection({
 
     const totalUpahByName = new Map<string, number>();
     names.forEach((name) => {
-      const rowKa = rowsMap.get(`${name}|KA`);
-      const rowStik = rowsMap.get(`${name}|STIK`);
+      // For total upah, we sum all rows for this name regardless of shift
+      // Or should we separate by shift? The current logic sums by name.
+      // But wait, the rowsMap now has keys like "name|KA|shift".
+      // We need to find all rows for this name.
+      const rowsForName = Array.from(rowsMap.values()).filter(
+        (r) => r.name === name
+      );
       let totalUpah = 0;
-      [rowKa, rowStik].forEach((row) => {
-        if (!row) return;
+      rowsForName.forEach((row) => {
         const jumlahRow = Object.values(row.values).reduce(
           (sum, v) => sum + v,
           0
@@ -971,11 +1026,25 @@ export function LedgerSection({
 
     let counter = 1;
     names.forEach((name) => {
-      const rowsForName: RowInfo[] = [];
-      const rowKa = rowsMap.get(`${name}|KA`);
-      const rowStik = rowsMap.get(`${name}|STIK`);
-      if (rowKa) rowsForName.push(rowKa);
-      if (rowStik) rowsForName.push(rowStik);
+      // Group rows by shift as well?
+      // The original code was:
+      // const rowKa = rowsMap.get(`${name}|KA`);
+      // const rowStik = rowsMap.get(`${name}|STIK`);
+      // Now we have multiple rows per name (for different shifts).
+
+      const rowsForName = Array.from(rowsMap.values()).filter(
+        (r) => r.name === name
+      );
+      // Sort rows: first by shift, then by KET (KA then STIK)
+      rowsForName.sort((a, b) => {
+        const shiftA = a.shift || "";
+        const shiftB = b.shift || "";
+        if (shiftA !== shiftB) return shiftA.localeCompare(shiftB);
+        if (a.ket === "KA" && b.ket === "STIK") return -1;
+        if (a.ket === "STIK" && b.ket === "KA") return 1;
+        return 0;
+      });
+
       rowsForName.forEach((row, idx) => {
         const jumlah = dateKeys.reduce(
           (sum, key) => sum + (row.values[key] ?? 0),
@@ -983,17 +1052,23 @@ export function LedgerSection({
         );
         const harga = row.harga || 0;
         const total = jumlah * harga;
-        const jumlahUpah = row.ket === "STIK" ? total : 0;
+        // Show total upah only on the last row for this name?
+        // Or per shift? The original code showed it on STIK row if available, or just summed it up.
+        // Let's show it on the last row for the name.
+        const isLast = idx === rowsForName.length - 1;
+        const jumlahUpah = isLast ? totalUpahByName.get(name) : 0;
+
         const perDate = dateKeys.map((key) => row.values[key] ?? 0);
         data.push([
           idx === 0 ? counter : "",
           row.name,
+          row.shift ? row.shift.toUpperCase() : "-",
           row.ket,
           ...perDate,
           jumlah,
           harga,
           total,
-          jumlahUpah,
+          jumlahUpah || "",
         ]);
       });
       counter += 1;
@@ -1010,9 +1085,7 @@ export function LedgerSection({
     const a = document.createElement("a");
     a.href = url;
     const suffix =
-      reportMode === "range"
-        ? "range"
-        : `bulan-${reportMonth}-${reportYear}`;
+      reportMode === "range" ? "range" : `bulan-${reportMonth}-${reportYear}`;
     a.download = `laporan-pengikisan-${suffix}.xlsx`;
     a.click();
     URL.revokeObjectURL(url);
@@ -1068,16 +1141,22 @@ export function LedgerSection({
       ket: "KA" | "STIK";
       values: Record<string, number>;
       harga: number;
+      shift?: string;
     };
 
     const dateKeySet = new Set<string>();
     const rowsMap = new Map<string, RowInfo>();
 
-    const ensureRow = (name: string, ket: "KA" | "STIK", harga: number) => {
-      const key = `${name}|${ket}`;
+    const ensureRow = (
+      name: string,
+      ket: "KA" | "STIK",
+      harga: number,
+      shift?: string
+    ) => {
+      const key = `${name}|${ket}|${shift || ""}`;
       let row = rowsMap.get(key);
       if (!row) {
-        row = { name, ket, values: {}, harga };
+        row = { name, ket, values: {}, harga, shift };
         rowsMap.set(key, row);
       }
       if (!row.harga && harga > 0) row.harga = harga;
@@ -1101,11 +1180,11 @@ export function LedgerSection({
             : Number(it.upahStik ?? 0);
 
         if (ka > 0) {
-          const rowKa = ensureRow(baseName, "KA", upahKa);
+          const rowKa = ensureRow(baseName, "KA", upahKa, entry.shift);
           rowKa.values[dateKey] = (rowKa.values[dateKey] ?? 0) + ka;
         }
         if (stik > 0) {
-          const rowStik = ensureRow(baseName, "STIK", upahStik);
+          const rowStik = ensureRow(baseName, "STIK", upahStik, entry.shift);
           rowStik.values[dateKey] = (rowStik.values[dateKey] ?? 0) + stik;
         }
       });
@@ -1122,11 +1201,11 @@ export function LedgerSection({
 
     const totalUpahByNamePdf = new Map<string, number>();
     names.forEach((name) => {
-      const rowKa = rowsMap.get(`${name}|KA`);
-      const rowStik = rowsMap.get(`${name}|STIK`);
+      const rowsForName = Array.from(rowsMap.values()).filter(
+        (r) => r.name === name
+      );
       let totalUpah = 0;
-      [rowKa, rowStik].forEach((row) => {
-        if (!row) return;
+      rowsForName.forEach((row) => {
         const jumlahRow = Object.values(row.values).reduce(
           (sum, v) => sum + v,
           0
@@ -1159,11 +1238,7 @@ export function LedgerSection({
 
       pdf.setFont("helvetica", "bold");
       pdf.setFontSize(11);
-      pdf.text(
-        "PT AURORA MITRA PRAKARSA (AMP)",
-        margin + logoW + 6,
-        y + 5
-      );
+      pdf.text("PT AURORA MITRA PRAKARSA (AMP)", margin + logoW + 6, y + 5);
 
       pdf.setFont("helvetica", "normal");
       pdf.setFontSize(7);
@@ -1247,8 +1322,7 @@ export function LedgerSection({
         const colKetX = colNamaX + 38;
         const dateColWidth = 14;
         const firstDateX = colKetX + 12;
-        const colJumlahX =
-          firstDateX + chunkHeaders.length * dateColWidth + 2;
+        const colJumlahX = firstDateX + chunkHeaders.length * dateColWidth + 2;
         const colHargaX = colJumlahX + 18;
         const colTotalX = colHargaX + 22;
         const colJumlahUpahX = colTotalX + 26;
@@ -1347,14 +1421,9 @@ export function LedgerSection({
               });
             }
             if (row.ket === "STIK" && totalUpahName !== 0) {
-              pdf.text(
-                toCurrency(totalUpahName),
-                colJumlahUpahX + 24,
-                textY,
-                {
-                  align: "right",
-                }
-              );
+              pdf.text(toCurrency(totalUpahName), colJumlahUpahX + 24, textY, {
+                align: "right",
+              });
             }
 
             y += rowHeight;
@@ -1531,14 +1600,9 @@ export function LedgerSection({
               row.ket === "STIK" &&
               totalUpahName !== 0
             ) {
-              pdf.text(
-                toCurrency(totalUpahName),
-                colJumlahUpahX + 24,
-                textY,
-                {
-                  align: "right",
-                }
-              );
+              pdf.text(toCurrency(totalUpahName), colJumlahUpahX + 24, textY, {
+                align: "right",
+              });
             }
 
             y += rowHeight;
@@ -1549,9 +1613,7 @@ export function LedgerSection({
     }
 
     const suffix =
-      reportMode === "range"
-        ? "range"
-        : `bulan-${reportMonth}-${reportYear}`;
+      reportMode === "range" ? "range" : `bulan-${reportMonth}-${reportYear}`;
     pdf.save(`laporan-pengikisan-${suffix}.pdf`);
     setOpenReport(false);
   };
@@ -1611,8 +1673,7 @@ export function LedgerSection({
       if (subType === "Pemotongan" || subType === "Pensortiran") {
         entry.pemotonganItems?.forEach((it) => {
           const name = it.nama || "-";
-          const qty =
-            typeof it.qty === "number" ? it.qty : Number(it.qty ?? 0);
+          const qty = typeof it.qty === "number" ? it.qty : Number(it.qty ?? 0);
           const total =
             typeof it.total === "number" ? it.total : Number(it.total ?? 0);
           if (qty > 0) {
@@ -1669,8 +1730,7 @@ export function LedgerSection({
           const name = it.namaPekerja || "-";
           const ketBase = it.satuan || it.namaPekerjaan || "-";
           const ket = ketBase.toString().toUpperCase();
-          const qty =
-            typeof it.qty === "number" ? it.qty : Number(it.qty ?? 0);
+          const qty = typeof it.qty === "number" ? it.qty : Number(it.qty ?? 0);
           const total =
             typeof it.total === "number" ? it.total : Number(it.total ?? 0);
           if (qty > 0) {
@@ -1715,11 +1775,7 @@ export function LedgerSection({
 
       pdf.setFont("helvetica", "bold");
       pdf.setFontSize(11);
-      pdf.text(
-        "PT AURORA MITRA PRAKARSA (AMP)",
-        margin + logoW + 6,
-        y + 5
-      );
+      pdf.text("PT AURORA MITRA PRAKARSA (AMP)", margin + logoW + 6, y + 5);
 
       pdf.setFont("helvetica", "normal");
       pdf.setFontSize(7);
@@ -1731,14 +1787,9 @@ export function LedgerSection({
 
       pdf.setFont("helvetica", "bold");
       pdf.setFontSize(9);
-      pdf.text(
-        `LAPORAN ${subType.toUpperCase()}`,
-        pageW - margin,
-        y + 5,
-        {
-          align: "right",
-        }
-      );
+      pdf.text(`LAPORAN ${subType.toUpperCase()}`, pageW - margin, y + 5, {
+        align: "right",
+      });
 
       y += logoH + 6;
 
@@ -1810,9 +1861,7 @@ export function LedgerSection({
     let counter = 1;
 
     chunks.forEach((chunk, chunkIndex) => {
-      const chunkHeaders = chunk.days.map((d) =>
-        d.toString().padStart(2, "0")
-      );
+      const chunkHeaders = chunk.days.map((d) => d.toString().padStart(2, "0"));
 
       if (chunkIndex === 0) {
         y = tableStartY;
@@ -1905,10 +1954,7 @@ export function LedgerSection({
           pdf.line(x, y, x, y + rowHeight);
         });
 
-        const jumlah = Object.values(row.values).reduce(
-          (sum, v) => sum + v,
-          0
-        );
+        const jumlah = Object.values(row.values).reduce((sum, v) => sum + v, 0);
         const totalUpahName = totalUpahByNamePdf.get(name) ?? 0;
         const perDate = chunk.days.map((day) => {
           const key = makeDateKey(day);
@@ -1934,14 +1980,9 @@ export function LedgerSection({
           colJumlahUpahX != null &&
           totalUpahName !== 0
         ) {
-          pdf.text(
-            toCurrency(totalUpahName),
-            colJumlahUpahX + 24,
-            textY,
-            {
-              align: "right",
-            }
-          );
+          pdf.text(toCurrency(totalUpahName), colJumlahUpahX + 24, textY, {
+            align: "right",
+          });
         }
 
         y += rowHeight;
@@ -2210,6 +2251,55 @@ export function LedgerSection({
             price,
             _row: rowNum,
           });
+        } else if (type === "invoice") {
+          const purpose = (cols?.[1] ?? "").toString().trim();
+          const amountRaw = (cols?.[2] ?? "0").toString();
+          const amount = parseFloat(amountRaw.replace(/[^0-9.\-]/g, ""));
+
+          if (!purpose) {
+            errors.push({ row: rowNum, reason: "keterangan kosong" });
+            return;
+          }
+          if (!isFinite(amount) || amount <= 0) {
+            errors.push({ row: rowNum, reason: "jumlah harus angka > 0" });
+            return;
+          }
+          valid.push({
+            date,
+            party: "",
+            item: purpose,
+            price: amount,
+            _row: rowNum,
+          });
+        } else if (type === "sale") {
+          const customer = (cols?.[1] ?? "").toString().trim().toUpperCase();
+          const item = (cols?.[2] ?? "").toString().trim().toUpperCase();
+          const qtyRaw = (cols?.[3] ?? "0").toString();
+          const priceRaw = (cols?.[4] ?? "0").toString();
+
+          const qty = parseFloat(qtyRaw.replace(/[^0-9.\-]/g, ""));
+          const price = parseFloat(priceRaw.replace(/[^0-9.\-]/g, ""));
+
+          if (!item) {
+            errors.push({ row: rowNum, reason: "nama barang kosong" });
+            return;
+          }
+          if (!isFinite(qty)) {
+            errors.push({ row: rowNum, reason: "qty harus angka" });
+            return;
+          }
+          if (!isFinite(price)) {
+            errors.push({ row: rowNum, reason: "harga harus angka" });
+            return;
+          }
+          valid.push({
+            date,
+            party: customer,
+            item,
+            qty,
+            price,
+            _row: rowNum,
+          });
         } else if (type === "production") {
           const c1 = (cols?.[1] ?? "").toString(); // Nama Pekerja (Item)
           // Petugas diisi otomatis oleh session login
@@ -2228,12 +2318,16 @@ export function LedgerSection({
             const stik = parseFloat(
               (cols?.[3] ?? "0").toString().replace(/[^0-9.\-]/g, "")
             );
+            const shiftRaw = (cols?.[4] ?? "").toString().toLowerCase();
+            const shift = shiftRaw === "malam" ? "malam" : "siang";
+
             valid.push({
               date,
               party: petugas,
               item: worker,
               val1: ka,
               val2: stik,
+              shift,
               _row: rowNum,
             });
           } else if (subType === "Pemotongan" || subType === "Pensortiran") {
@@ -2243,15 +2337,25 @@ export function LedgerSection({
             const rate = parseFloat(
               (cols?.[3] ?? "0").toString().replace(/[^0-9.\-]/g, "")
             );
+            let shift: "siang" | "malam" | undefined = undefined;
+            if (subType === "Pemotongan") {
+              const shiftRaw = (cols?.[4] ?? "").toString().toLowerCase();
+              shift = shiftRaw === "malam" ? "malam" : "siang";
+            }
+
             valid.push({
               date,
               party: petugas,
               item: worker,
               val1: qty,
               rate1: rate,
+              shift,
               _row: rowNum,
             });
-          } else if (subType === "Penjemuran" || subType === "QC Potong & Sortir") {
+          } else if (
+            subType === "Penjemuran" ||
+            subType === "QC Potong & Sortir"
+          ) {
             const hari = parseFloat(
               (cols?.[2] ?? "0").toString().replace(/[^0-9.\-]/g, "")
             );
@@ -2281,12 +2385,40 @@ export function LedgerSection({
             const rate = parseFloat(
               (cols?.[3] ?? "0").toString().replace(/[^0-9.\-]/g, "")
             );
+            const shiftRaw = (cols?.[4] ?? "").toString().toLowerCase();
+            const shift = shiftRaw === "malam" ? "malam" : "siang";
             valid.push({
               date,
               party: petugas,
               item: worker,
               val1: bungkus,
               rate1: rate,
+              shift,
+              _row: rowNum,
+            });
+          } else if (subType === "Produksi Lainnya") {
+            const job = (cols?.[2] ?? "").toString().trim();
+            const wage = parseFloat(
+              (cols?.[3] ?? "0").toString().replace(/[^0-9.\-]/g, "")
+            );
+            const qty = parseFloat(
+              (cols?.[4] ?? "0").toString().replace(/[^0-9.\-]/g, "")
+            );
+            const unit = (cols?.[5] ?? "").toString().trim();
+
+            if (!job) {
+              errors.push({ row: rowNum, reason: "pekerjaan kosong" });
+              return;
+            }
+
+            valid.push({
+              date,
+              party: petugas,
+              item: worker,
+              str1: job,
+              rate1: wage,
+              val1: qty,
+              str2: unit,
               _row: rowNum,
             });
           }
@@ -2347,6 +2479,52 @@ export function LedgerSection({
             items: itemInputs,
           });
         }
+      } else if (type === "invoice") {
+        const byDate = new Map<string, MassRow[]>();
+        massRows.forEach((r) => {
+          const key = r.date;
+          const arr = byDate.get(key) ?? [];
+          arr.push(r);
+          byDate.set(key, arr);
+        });
+
+        for (const [date, items] of byDate.entries()) {
+          const expenseItems = items.map((r) => ({
+            purpose: r.item,
+            amount: String(r.price),
+          }));
+          await createExpense({
+            date,
+            items: expenseItems,
+          });
+        }
+      } else if (type === "sale") {
+        const byKey = new Map<string, MassRow[]>();
+        massRows.forEach((r) => {
+          const key = JSON.stringify({ c: r.party, d: r.date });
+          const arr = byKey.get(key) ?? [];
+          arr.push(r);
+          byKey.set(key, arr);
+        });
+
+        for (const [key, items] of byKey.entries()) {
+          const { c: customer, d: date } = JSON.parse(key);
+          const itemInputs = [];
+          for (const r of items) {
+            const it = await quickCreateItemType(r.item);
+            itemInputs.push({
+              itemTypeId: it.id,
+              qty: String(r.qty),
+              unitPrice: String(r.price),
+            });
+          }
+          await createSale({
+            customer: customer || null,
+            date,
+            status: "draft",
+            items: itemInputs,
+          });
+        }
       } else if (type === "production") {
         // Group by date + petugas + rates
         // Construct key based on subType requirements
@@ -2354,6 +2532,13 @@ export function LedgerSection({
 
         massRows.forEach((r) => {
           let keyObj: any = { p: r.party, d: r.date };
+          if (
+            subType === "Pemotongan" ||
+            subType === "Pengikisan" ||
+            subType === "Pengemasan"
+          ) {
+            keyObj.s = r.shift;
+          }
           if (subType === "Pemotongan" || subType === "Pengemasan") {
             keyObj.r1 = r.rate1;
           } else if (subType === "Penjemuran") {
@@ -2376,6 +2561,7 @@ export function LedgerSection({
             await createPengikisan({
               date,
               petugas: petugas || null,
+              shift: keyObj.s || "siang",
               items: items.map((r) => ({
                 nama: r.item,
                 kaKg: String(r.val1 || 0),
@@ -2386,6 +2572,7 @@ export function LedgerSection({
             await createPemotongan({
               date,
               petugas: petugas || null,
+              shift: keyObj.s || "siang",
               upahPerKg: String(keyObj.r1 || 0),
               items: items.map((r) => ({
                 nama: r.item,
@@ -2408,10 +2595,46 @@ export function LedgerSection({
             await createPengemasan({
               date,
               petugas: petugas || null,
+              shift: keyObj.s || "siang",
               upahPerBungkus: String(keyObj.r1 || 0),
               items: items.map((r) => ({
                 nama: r.item,
                 bungkus: String(r.val1 || 0),
+              })),
+            });
+          } else if (subType === "Pensortiran") {
+            await createPensortiran({
+              date,
+              petugas: petugas || null,
+              upahPerKg: String(keyObj.r1 || 0),
+              items: items.map((r) => ({
+                nama: r.item,
+                qty: String(r.val1 || 0),
+              })),
+            });
+          } else if (subType === "QC Potong & Sortir") {
+            await createQcPotongSortir({
+              date,
+              petugas: petugas || null,
+              upahPerHari: String(keyObj.r1 || 0),
+              upahLemburPerJam: String(keyObj.r2 || 0),
+              items: items.map((r) => ({
+                nama: r.item,
+                hari: String(r.val1 || 0),
+                lemburJam: String(r.val2 || 0),
+              })),
+            });
+          } else if (subType === "Produksi Lainnya") {
+            await createProduksiLainnya({
+              date,
+              petugas: petugas || null,
+              items: items.map((r) => ({
+                namaPekerja: r.item,
+                namaPekerjaan: r.str1 || "",
+                upah: String(r.rate1 || 0),
+                qty: String(r.val1 || 0),
+                satuan: r.str2 || "",
+                tipeUpah: "per_qty",
               })),
             });
           }
@@ -2443,15 +2666,13 @@ export function LedgerSection({
             type === "invoice" ||
             type === "production") && (
             <div className="flex items-center gap-2">
-              {(type === "purchase" || type === "production") && (
-                <button
-                  onClick={() => setOpenMass(true)}
-                  className="flex items-center gap-1 rounded-md bg-indigo-600 px-2 py-1 text-[11px] text-white hover:bg-indigo-700"
-                >
-                  <UploadIcon fontSize="small" />
-                  Input Massal
-                </button>
-              )}
+              <button
+                onClick={() => setOpenMass(true)}
+                className="flex items-center gap-1 rounded-md bg-indigo-600 px-2 py-1 text-[11px] text-white hover:bg-indigo-700"
+              >
+                <UploadIcon fontSize="small" />
+                Input Massal
+              </button>
               {type === "production" && subType && (
                 <button
                   onClick={() => {
@@ -2463,8 +2684,7 @@ export function LedgerSection({
                       subType === "Produksi Lainnya";
                     if (shouldOpenModal) {
                       const now = new Date();
-                      if (!reportYear)
-                        setReportYear(String(now.getFullYear()));
+                      if (!reportYear) setReportYear(String(now.getFullYear()));
                       if (!reportMonth)
                         setReportMonth(String(now.getMonth() + 1));
                       setReportMode("month");
@@ -3113,137 +3333,146 @@ export function LedgerSection({
           subType === "Penjemuran" ||
           subType === "Pengemasan" ||
           subType === "Produksi Lainnya") && (
-        <GlassDialog
-          open={openReport}
-          title={`Download Laporan Produksi (${subType})`}
-          onClose={() => setOpenReport(false)}
-          fullWidth
-          maxWidth="sm"
-          actions={
-            <>
-              <button
-                onClick={() => setOpenReport(false)}
-                className="rounded-md bg-slate-100 px-3 py-1 text-[12px] text-slate-800 hover:bg-slate-200"
-              >
-                Batal
-              </button>
-              <button
-                onClick={() => {
-          if (subType === "Pengikisan") {
-                    handleDownloadPengikisanPdfReport();
-                  } else if (
-                    subType &&
-                    (subType === "Pemotongan" ||
-                      subType === "Penjemuran" ||
-                      subType === "Pengemasan" ||
-                      subType === "Produksi Lainnya")
-                  ) {
-                    if (reportMode === "month") {
-                      handleDownloadUpahMonthlyPdfReport();
-                    } else {
-                      handleDownloadUpahRangePdfReport();
-                    }
-                  } else {
-                    handleDownloadProductionRangePdfReport();
-                  }
-                }}
-                className="rounded-md bg-indigo-600 px-3 py-1 text-[12px] text-white hover:bg-indigo-700"
-              >
-                Download PDF
-              </button>
-            </>
-          }
-        >
-          <div className="flex flex-col gap-3 text-sm">
-            <div className="flex gap-4">
-              <label className="flex items-center gap-1 text-[13px]">
-                <input
-                  type="radio"
-                  className="h-3 w-3"
-                  checked={reportMode === "range"}
-                  onChange={() => setReportMode("range")}
-                />
-                <span>Per Tanggal</span>
-              </label>
-              <label className="flex items-center gap-1 text-[13px]">
-                <input
-                  type="radio"
-                  className="h-3 w-3"
-                  checked={reportMode === "month"}
-                  onChange={() => setReportMode("month")}
-                />
-                <span>Per Bulan</span>
-              </label>
-            </div>
-            {reportMode === "range" ? (
-              <div className="flex flex-col gap-2">
-                <div className="flex items-center gap-2">
-                  <span className="w-20 text-[13px] text-slate-700">
-                    Dari
-                  </span>
-                  <input
-                    type="date"
-                    value={reportStart}
-                    onChange={(e) => setReportStart(e.target.value)}
-                    className="flex-1 rounded-md border border-slate-200 px-2 py-1 text-[13px]"
-                  />
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="w-20 text-[13px] text-slate-700">
-                    Sampai
-                  </span>
-                  <input
-                    type="date"
-                    value={reportEnd}
-                    onChange={(e) => setReportEnd(e.target.value)}
-                    className="flex-1 rounded-md border border-slate-200 px-2 py-1 text-[13px]"
-                  />
-                </div>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2">
-                <span className="w-20 text-[13px] text-slate-700">Bulan</span>
-                <select
-                  value={reportMonth}
-                  onChange={(e) => setReportMonth(e.target.value)}
-                  className="rounded-md border border-slate-200 px-2 py-1 text-[13px]"
+          <GlassDialog
+            open={openReport}
+            title={`Download Laporan Produksi (${subType})`}
+            onClose={() => setOpenReport(false)}
+            fullWidth
+            maxWidth="sm"
+            actions={
+              <>
+                <button
+                  onClick={() => setOpenReport(false)}
+                  className="rounded-md bg-slate-100 px-3 py-1 text-[12px] text-slate-800 hover:bg-slate-200"
                 >
-                  <option value="">Pilih bulan</option>
-                  <option value="1">Januari</option>
-                  <option value="2">Februari</option>
-                  <option value="3">Maret</option>
-                  <option value="4">April</option>
-                  <option value="5">Mei</option>
-                  <option value="6">Juni</option>
-                  <option value="7">Juli</option>
-                  <option value="8">Agustus</option>
-                  <option value="9">September</option>
-                  <option value="10">Oktober</option>
-                  <option value="11">November</option>
-                  <option value="12">Desember</option>
-                </select>
-                <span className="text-[13px] text-slate-700">Tahun</span>
-                <input
-                  type="number"
-                  value={reportYear}
-                  onChange={(e) => setReportYear(e.target.value)}
-                  className="w-24 rounded-md border border-slate-200 px-2 py-1 text-[13px]"
-                />
+                  Batal
+                </button>
+                <button
+                  onClick={() => {
+                    if (subType === "Pengikisan") {
+                      handleDownloadPengikisanPdfReport();
+                    } else if (
+                      subType &&
+                      (subType === "Pemotongan" ||
+                        subType === "Penjemuran" ||
+                        subType === "Pengemasan" ||
+                        subType === "Produksi Lainnya")
+                    ) {
+                      if (reportMode === "month") {
+                        handleDownloadUpahMonthlyPdfReport();
+                      } else {
+                        handleDownloadUpahRangePdfReport();
+                      }
+                    } else {
+                      handleDownloadProductionRangePdfReport();
+                    }
+                  }}
+                  className="rounded-md bg-indigo-600 px-3 py-1 text-[12px] text-white hover:bg-indigo-700"
+                >
+                  Download PDF
+                </button>
+              </>
+            }
+          >
+            <div className="flex flex-col gap-3 text-sm">
+              <div className="flex gap-4">
+                <label className="flex items-center gap-1 text-[13px]">
+                  <input
+                    type="radio"
+                    className="h-3 w-3"
+                    checked={reportMode === "range"}
+                    onChange={() => setReportMode("range")}
+                  />
+                  <span>Per Tanggal</span>
+                </label>
+                <label className="flex items-center gap-1 text-[13px]">
+                  <input
+                    type="radio"
+                    className="h-3 w-3"
+                    checked={reportMode === "month"}
+                    onChange={() => setReportMode("month")}
+                  />
+                  <span>Per Bulan</span>
+                </label>
               </div>
-            )}
-            <div className="text-[11px] text-slate-500">
-              Laporan akan diunduh sebagai file Excel dengan format baris per
-              pekerja dan kolom tanggal, mirip dengan contoh yang Anda kirim.
+              {reportMode === "range" ? (
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center gap-2">
+                    <span className="w-20 text-[13px] text-slate-700">
+                      Dari
+                    </span>
+                    <input
+                      type="date"
+                      value={reportStart}
+                      onChange={(e) => setReportStart(e.target.value)}
+                      className="flex-1 rounded-md border border-slate-200 px-2 py-1 text-[13px]"
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="w-20 text-[13px] text-slate-700">
+                      Sampai
+                    </span>
+                    <input
+                      type="date"
+                      value={reportEnd}
+                      onChange={(e) => setReportEnd(e.target.value)}
+                      className="flex-1 rounded-md border border-slate-200 px-2 py-1 text-[13px]"
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <span className="w-20 text-[13px] text-slate-700">Bulan</span>
+                  <select
+                    value={reportMonth}
+                    onChange={(e) => setReportMonth(e.target.value)}
+                    className="rounded-md border border-slate-200 px-2 py-1 text-[13px]"
+                  >
+                    <option value="">Pilih bulan</option>
+                    <option value="1">Januari</option>
+                    <option value="2">Februari</option>
+                    <option value="3">Maret</option>
+                    <option value="4">April</option>
+                    <option value="5">Mei</option>
+                    <option value="6">Juni</option>
+                    <option value="7">Juli</option>
+                    <option value="8">Agustus</option>
+                    <option value="9">September</option>
+                    <option value="10">Oktober</option>
+                    <option value="11">November</option>
+                    <option value="12">Desember</option>
+                  </select>
+                  <span className="text-[13px] text-slate-700">Tahun</span>
+                  <input
+                    type="number"
+                    value={reportYear}
+                    onChange={(e) => setReportYear(e.target.value)}
+                    className="w-24 rounded-md border border-slate-200 px-2 py-1 text-[13px]"
+                  />
+                </div>
+              )}
+              <div className="text-[11px] text-slate-500">
+                Laporan akan diunduh sebagai file Excel dengan format baris per
+                pekerja dan kolom tanggal, mirip dengan contoh yang Anda kirim.
+              </div>
             </div>
-          </div>
-        </GlassDialog>
-      )}
+          </GlassDialog>
+        )}
 
-      {(type === "purchase" || type === "production") && (
+      {(type === "purchase" ||
+        type === "sale" ||
+        type === "invoice" ||
+        type === "production") && (
         <GlassDialog
           open={openMass}
           title={`Input Massal ${
-            type === "purchase" ? "Pembelian" : `Produksi (${subType})`
+            type === "purchase"
+              ? "Pembelian"
+              : type === "sale"
+              ? "Penjualan"
+              : type === "invoice"
+              ? "Pengeluaran"
+              : `Produksi (${subType})`
           }`}
           onClose={() => !massBusy && setOpenMass(false)}
           fullWidth
@@ -3262,6 +3491,16 @@ export function LedgerSection({
                       "qty",
                       "harga",
                     ];
+                  } else if (type === "sale") {
+                    headers = [
+                      "tanggal",
+                      "nama customer",
+                      "nama barang",
+                      "qty",
+                      "harga",
+                    ];
+                  } else if (type === "invoice") {
+                    headers = ["tanggal", "keterangan", "jumlah"];
                   } else if (type === "production") {
                     if (subType === "Pengikisan")
                       headers = [
@@ -3448,17 +3687,29 @@ export function LedgerSection({
                         <th className="border border-slate-200 px-2 py-1 w-24">
                           Tanggal
                         </th>
+                        {type !== "invoice" && (
+                          <th className="border border-slate-200 px-2 py-1">
+                            {type === "purchase"
+                              ? "Supplier"
+                              : type === "sale"
+                              ? "Customer"
+                              : "Petugas"}
+                          </th>
+                        )}
                         <th className="border border-slate-200 px-2 py-1">
-                          {type === "purchase" ? "Supplier" : "Petugas"}
+                          {type === "purchase" || type === "sale"
+                            ? "Nama Barang"
+                            : type === "invoice"
+                            ? "Keterangan"
+                            : "Nama Pekerja"}
                         </th>
-                        <th className="border border-slate-200 px-2 py-1">
-                          {type === "purchase" ? "Nama Barang" : "Nama Pekerja"}
-                        </th>
-                        {type === "purchase" && (
+                        {(type === "purchase" || type === "sale") && (
                           <>
-                            <th className="border border-slate-200 px-2 py-1">
-                              Satuan
-                            </th>
+                            {type === "purchase" && (
+                              <th className="border border-slate-200 px-2 py-1">
+                                Satuan
+                              </th>
+                            )}
                             <th className="border border-slate-200 px-2 py-1 text-right">
                               Qty
                             </th>
@@ -3467,7 +3718,12 @@ export function LedgerSection({
                             </th>
                           </>
                         )}
-                        {subType === "Pengikisan" && (
+                        {type === "invoice" && (
+                          <th className="border border-slate-200 px-2 py-1 text-right">
+                            Jumlah
+                          </th>
+                        )}
+                        {type === "production" && (
                           <>
                             <th className="border border-slate-200 px-2 py-1 text-right">
                               KA (kg)
@@ -3524,17 +3780,21 @@ export function LedgerSection({
                           <td className="border border-slate-200 px-2 py-1 text-center">
                             {r.date}
                           </td>
-                          <td className="border border-slate-200 px-2 py-1">
-                            {r.party}
-                          </td>
+                          {type !== "invoice" && (
+                            <td className="border border-slate-200 px-2 py-1">
+                              {r.party}
+                            </td>
+                          )}
                           <td className="border border-slate-200 px-2 py-1">
                             {r.item}
                           </td>
-                          {type === "purchase" && (
+                          {(type === "purchase" || type === "sale") && (
                             <>
-                              <td className="border border-slate-200 px-2 py-1">
-                                {r.unit}
-                              </td>
+                              {type === "purchase" && (
+                                <td className="border border-slate-200 px-2 py-1">
+                                  {r.unit}
+                                </td>
+                              )}
                               <td className="border border-slate-200 px-2 py-1 text-right">
                                 {r.qty}
                               </td>
@@ -3543,7 +3803,12 @@ export function LedgerSection({
                               </td>
                             </>
                           )}
-                          {subType === "Pengikisan" && (
+                          {type === "invoice" && (
+                            <td className="border border-slate-200 px-2 py-1 text-right">
+                              {r.price}
+                            </td>
+                          )}
+                          {type === "production" && (
                             <>
                               <td className="border border-slate-200 px-2 py-1 text-right">
                                 {r.val1}

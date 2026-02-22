@@ -25,6 +25,7 @@ import NumbersRoundedIcon from "@mui/icons-material/NumbersRounded";
 import SummarizeRoundedIcon from "@mui/icons-material/SummarizeRounded";
 import Inventory2RoundedIcon from "@mui/icons-material/Inventory2Rounded";
 import AttachMoneyRoundedIcon from "@mui/icons-material/AttachMoneyRounded";
+import AccessTimeRoundedIcon from "@mui/icons-material/AccessTimeRounded";
 
 import GlassButton from "@/components/ui/GlassButton";
 import PageHeader from "@/components/ui/PageHeader";
@@ -80,6 +81,7 @@ export default function PengemasanClient() {
   const [date, setDate] = useState(
     () => new Date().toISOString().split("T")[0]
   );
+  const [shift, setShift] = useState<"siang" | "malam">("siang");
   const [notes, setNotes] = useState("");
   const [upahPerBungkus, setUpahPerBungkus] = useState(500);
   const [saving, setSaving] = useState(false);
@@ -204,6 +206,7 @@ export default function PengemasanClient() {
         next.push({
           id: nextId,
           nama: w.name,
+          itemTypeId: "",
           bungkus: 0,
         });
       });
@@ -214,10 +217,7 @@ export default function PengemasanClient() {
   };
 
   const activeRows = useMemo(
-    () =>
-      rows.filter(
-        (r) => r.nama || r.bungkus > 0
-      ),
+    () => rows.filter((r) => r.nama || r.bungkus > 0),
     [rows]
   );
 
@@ -245,7 +245,9 @@ export default function PengemasanClient() {
     );
 
     if (validRows.length === 0) {
-      alert("Mohon isi minimal satu baris data dengan lengkap (Pekerja, Bungkus)");
+      alert(
+        "Mohon isi minimal satu baris data dengan lengkap (Pekerja, Bungkus)"
+      );
       return;
     }
 
@@ -254,6 +256,7 @@ export default function PengemasanClient() {
 
       const payload = {
         date,
+        shift,
         notes: notes || null,
         upahPerBungkus: String(upahPerBungkus),
         items: validRows.map((r) => ({
@@ -341,6 +344,7 @@ export default function PengemasanClient() {
       margin,
       y
     );
+    pdf.text(`Shift: ${shift.toUpperCase()}`, margin + 60, y);
     y += 5;
 
     if (notes) {
@@ -478,7 +482,33 @@ export default function PengemasanClient() {
               </div>
             </div>
 
-            <div className="md:col-span-9">
+            <div className="md:col-span-3">
+              <label className="text-[11px] font-semibold text-black/70 flex items-center gap-1.5 mb-1">
+                <AccessTimeRoundedIcon
+                  sx={{ fontSize: 16 }}
+                  className="text-[var(--brand)]"
+                />
+                Shift <span className="text-red-500">*</span>
+              </label>
+              <div className="relative">
+                <select
+                  value={shift}
+                  onChange={(e) =>
+                    setShift(e.target.value as "siang" | "malam")
+                  }
+                  className={cx(
+                    "w-full h-[38px] px-3 rounded-lg",
+                    "border border-[var(--glass-border)] bg-white/95 text-[12px]",
+                    "outline-none focus:ring-2 focus:ring-[var(--brand)]/25 focus:border-[var(--brand)]"
+                  )}
+                >
+                  <option value="siang">Siang</option>
+                  <option value="malam">Malam</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="md:col-span-6">
               <label className="text-[11px] font-semibold text-black/70 flex items-center gap-1.5 mb-1">
                 <StickyNote2RoundedIcon
                   sx={{ fontSize: 16 }}
@@ -588,9 +618,8 @@ export default function PengemasanClient() {
                       <td className="px-3 py-2">
                         <Autocomplete
                           value={
-                            workerOptions.find(
-                              (w) => w.name === row.nama
-                            ) || null
+                            workerOptions.find((w) => w.name === row.nama) ||
+                            null
                           }
                           onChange={async (_event, newValue) => {
                             if (newValue && (newValue as any).inputValue) {
@@ -604,11 +633,7 @@ export default function PengemasanClient() {
                                     ...prev,
                                     newWorker,
                                   ]);
-                                  handleChange(
-                                    row.id,
-                                    "nama",
-                                    newWorker.name
-                                  );
+                                  handleChange(row.id, "nama", newWorker.name);
                                 }
                               } catch (err) {
                                 console.error(err);
@@ -733,9 +758,7 @@ export default function PengemasanClient() {
                               InputProps={{
                                 ...params.InputProps,
                                 endAdornment: (
-                                  <>
-                                    {params.InputProps.endAdornment}
-                                  </>
+                                  <>{params.InputProps.endAdornment}</>
                                 ),
                               }}
                             />
@@ -929,8 +952,8 @@ export default function PengemasanClient() {
             Data Pengemasan Tersimpan!
           </h3>
           <p className="text-black/60 text-sm mb-6 max-w-xs">
-            Data pengemasan berhasil disimpan ke database. Anda dapat
-            mengunduh PDF sebagai arsip.
+            Data pengemasan berhasil disimpan ke database. Anda dapat mengunduh
+            PDF sebagai arsip.
           </p>
           <div className="bg-blue-50 text-blue-800 text-xs px-4 py-3 rounded-lg w-full text-left">
             <p className="font-semibold mb-1">ID Transaksi:</p>

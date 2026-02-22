@@ -13,6 +13,7 @@ export type PengemasanItemInput = {
 
 export type PengemasanInput = {
   date: string;
+  shift: "siang" | "malam";
   petugas?: string | null;
   notes?: string | null;
   upahPerBungkus: string;
@@ -48,6 +49,7 @@ export async function createPengemasan(input: PengemasanInput) {
   const pengemasan = await prisma.pengemasan.create({
     data: {
       date: new Date(input.date),
+      shift: input.shift as any,
       petugas: currentUserName || input.petugas,
       notes: input.notes ?? null,
       totalUpah: totalUpah.toString(),
@@ -76,6 +78,7 @@ export async function getPengemasanHistory() {
   return data.map((item) => ({
     id: String(item.id),
     date: item.date,
+    shift: (item as any).shift as "siang" | "malam",
     petugas: item.petugas,
     notes: item.notes,
     totalUpah: Number(item.totalUpah ?? 0),

@@ -26,6 +26,13 @@ export default async function PengikisanPrintPage({
   }
 
   const totalUpah = parseFloat(pengikisan.totalUpah?.toString() || "0");
+  const shiftText =
+    ((pengikisan as any).shift &&
+      String((pengikisan as any).shift).toLowerCase()) ||
+    null;
+  const shiftDisplay = shiftText
+    ? shiftText.charAt(0).toUpperCase() + shiftText.slice(1)
+    : "-";
 
   return (
     <main className="mx-auto w-full max-w-[210mm] p-6">
@@ -38,6 +45,10 @@ export default async function PengikisanPrintPage({
             <div>
               <span className="font-semibold">Tanggal: </span>
               <span>{pengikisan.date.toISOString().slice(0, 10)}</span>
+            </div>
+            <div>
+              <span className="font-semibold">Shift: </span>
+              <span>{shiftDisplay}</span>
             </div>
             <div>
               <span className="font-semibold">Petugas: </span>

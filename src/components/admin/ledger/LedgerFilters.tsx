@@ -10,6 +10,7 @@ type LedgerFilterParams = {
   itemType?: string;
   party?: string;
   page?: string;
+  shift?: string;
 };
 
 type Props = {
@@ -18,7 +19,11 @@ type Props = {
   itemTypeOptions?: Array<{ id: string; name: string }>;
 };
 
-export function LedgerFilters({ params, partyOptions = [], itemTypeOptions = [] }: Props) {
+export function LedgerFilters({
+  params,
+  partyOptions = [],
+  itemTypeOptions = [],
+}: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -29,7 +34,10 @@ export function LedgerFilters({ params, partyOptions = [], itemTypeOptions = [] 
     if (params.start && params.end) {
       const s = new Date(params.start);
       const e = new Date(params.end);
-      if (s.getFullYear() === e.getFullYear() && s.getMonth() === e.getMonth()) {
+      if (
+        s.getFullYear() === e.getFullYear() &&
+        s.getMonth() === e.getMonth()
+      ) {
         return String(s.getMonth() + 1).padStart(2, "0");
       }
     }
@@ -56,7 +64,7 @@ export function LedgerFilters({ params, partyOptions = [], itemTypeOptions = [] 
       if (qs === searchParams?.toString()) return;
       router.replace(qs ? `${pathname}?${qs}` : pathname);
     },
-    [router, pathname, searchParams],
+    [router, pathname, searchParams]
   );
 
   useEffect(() => {
@@ -98,8 +106,12 @@ export function LedgerFilters({ params, partyOptions = [], itemTypeOptions = [] 
             className="w-full rounded-md border border-slate-200 bg-white px-2 py-1.5 text-xs text-slate-900 shadow-sm focus:border-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-400"
           >
             <option value="">Semua</option>
-            {Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, "0")).map((m) => (
-              <option key={m} value={m}>{m}</option>
+            {Array.from({ length: 12 }, (_, i) =>
+              String(i + 1).padStart(2, "0")
+            ).map((m) => (
+              <option key={m} value={m}>
+                {m}
+              </option>
             ))}
           </select>
         </div>
@@ -115,10 +127,14 @@ export function LedgerFilters({ params, partyOptions = [], itemTypeOptions = [] 
             <option value="">Semua</option>
             {(() => {
               const now = new Date().getFullYear();
-              const years = Array.from({ length: 6 }, (_, i) => String(now - 4 + i));
+              const years = Array.from({ length: 6 }, (_, i) =>
+                String(now - 4 + i)
+              );
               return years;
             })().map((y) => (
-              <option key={y} value={y}>{y}</option>
+              <option key={y} value={y}>
+                {y}
+              </option>
             ))}
           </select>
         </div>
@@ -182,6 +198,20 @@ export function LedgerFilters({ params, partyOptions = [], itemTypeOptions = [] 
               />
             )}
           />
+        </div>
+        <div className="flex flex-col gap-1">
+          <label className="text-[11px] font-medium text-slate-600">
+            Shift
+          </label>
+          <select
+            value={params.shift ?? ""}
+            onChange={(e) => updateSearchParam("shift", e.target.value || null)}
+            className="w-full rounded-md border border-slate-200 bg-white px-2 py-1.5 text-xs text-slate-900 shadow-sm focus:border-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-400"
+          >
+            <option value="">Semua</option>
+            <option value="siang">Siang</option>
+            <option value="malam">Malam</option>
+          </select>
         </div>
       </div>
     </div>

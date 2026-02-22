@@ -292,6 +292,11 @@ model SaleItem {
   @@map("sale_items")
 }
 
+enum Shift {
+  siang
+  malam
+}
+
 // 4. PRODUKSI
 model Production {
   id               BigInt           @id @default(autoincrement())
@@ -377,6 +382,7 @@ model StockMovement {
 model Pengikisan {
   id        BigInt            @id @default(autoincrement())
   date      DateTime          @db.Date
+  shift     Shift             @default(siang)
   petugas   String?
   notes     String?
   totalUpah Decimal?          @db.Decimal(14, 2) @map("total_upah")
@@ -434,6 +440,7 @@ model PenjemuranItem {
 model Pengemasan {
   id        BigInt   @id @default(autoincrement())
   date      DateTime @db.Date
+  shift     Shift    @default(siang)
   petugas   String?
   notes     String?
   totalUpah Decimal? @db.Decimal(14, 2) @map("total_upah")
@@ -463,6 +470,7 @@ model PengemasanItem {
 model Pemotongan {
   id        BigInt            @id @default(autoincrement())
   date      DateTime          @db.Date
+  shift     Shift             @default(siang)
   petugas   String?
   notes     String?
   totalUpah Decimal?          @db.Decimal(14, 2) @map("total_upah")

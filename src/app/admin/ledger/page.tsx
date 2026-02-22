@@ -25,6 +25,7 @@ type SearchParams = {
   size?: string;
   selected?: string;
   id?: string;
+  shift?: "siang" | "malam";
 };
 
 function parseDateRange(params: SearchParams) {
@@ -51,6 +52,7 @@ function buildQuery(params: SearchParams, extra?: Record<string, string>) {
   setIf("max");
   setIf("size");
   setIf("page");
+  setIf("shift");
   if (extra) {
     for (const [k, v] of Object.entries(extra)) {
       if (typeof v === "string" && v.length > 0) usp.set(k, v);
@@ -203,6 +205,7 @@ export default async function AdminLedgerPage({
           where: {
             ...(start ? { date: { gte: start } } : {}),
             ...(end ? { date: { lte: end } } : {}),
+            ...(params.shift ? { shift: params.shift } : {}),
             ...(params.q
               ? { OR: [{ notes: { contains: params.q, mode: "insensitive" } }] }
               : {}),
@@ -213,7 +216,7 @@ export default async function AdminLedgerPage({
       } catch {
         if (process.env.NODE_ENV === "development") {
           console.warn(
-            "Failed to load pengikisan ledger data, returning empty list as fallback",
+            "Failed to load pengikisan ledger data, returning empty list as fallback"
           );
         }
         return [];
@@ -225,6 +228,7 @@ export default async function AdminLedgerPage({
           where: {
             ...(start ? { date: { gte: start } } : {}),
             ...(end ? { date: { lte: end } } : {}),
+            ...(params.shift ? { shift: params.shift } : {}),
             ...(params.q
               ? { OR: [{ notes: { contains: params.q, mode: "insensitive" } }] }
               : {}),
@@ -235,7 +239,7 @@ export default async function AdminLedgerPage({
       } catch {
         if (process.env.NODE_ENV === "development") {
           console.warn(
-            "Failed to load pemotongan ledger data, returning empty list as fallback",
+            "Failed to load pemotongan ledger data, returning empty list as fallback"
           );
         }
         return [];
@@ -258,6 +262,7 @@ export default async function AdminLedgerPage({
           where: {
             ...(start ? { date: { gte: start } } : {}),
             ...(end ? { date: { lte: end } } : {}),
+            ...(params.shift ? { shift: params.shift } : {}),
             ...(params.q
               ? { OR: [{ notes: { contains: params.q, mode: "insensitive" } }] }
               : {}),
@@ -268,7 +273,7 @@ export default async function AdminLedgerPage({
       } catch {
         if (process.env.NODE_ENV === "development") {
           console.warn(
-            "Failed to load pengemasan ledger data, returning empty list as fallback",
+            "Failed to load pengemasan ledger data, returning empty list as fallback"
           );
         }
         return [];
@@ -292,7 +297,7 @@ export default async function AdminLedgerPage({
       } catch {
         if (process.env.NODE_ENV === "development") {
           console.warn(
-            "Failed to load produksi_lainnya ledger data, returning empty list as fallback",
+            "Failed to load produksi_lainnya ledger data, returning empty list as fallback"
           );
         }
         return [];
@@ -314,7 +319,7 @@ export default async function AdminLedgerPage({
       } catch {
         if (process.env.NODE_ENV === "development") {
           console.warn(
-            "Failed to load pensortiran ledger data, returning empty list as fallback",
+            "Failed to load pensortiran ledger data, returning empty list as fallback"
           );
         }
         return [];
@@ -336,7 +341,7 @@ export default async function AdminLedgerPage({
       } catch {
         if (process.env.NODE_ENV === "development") {
           console.warn(
-            "Failed to load qc_potong_sortir ledger data, returning empty list as fallback",
+            "Failed to load qc_potong_sortir ledger data, returning empty list as fallback"
           );
         }
         return [];
@@ -653,6 +658,7 @@ export default async function AdminLedgerPage({
       itemCount: p.pengikisanItems.length,
       productionCost: total,
       subType: "Pengikisan",
+      shift: p.shift,
       pengikisanItems: p.pengikisanItems.map((it) => ({
         nama: it.nama,
         kaKg: Number(it.kaKg ?? 0),
@@ -683,6 +689,7 @@ export default async function AdminLedgerPage({
       itemCount: p.pemotonganItems.length,
       productionCost: total,
       subType: "Pemotongan",
+      shift: p.shift,
       pemotonganItems: p.pemotonganItems.map((it) => ({
         nama: it.nama,
         qty: Number(it.qty ?? 0),
@@ -740,6 +747,7 @@ export default async function AdminLedgerPage({
       itemCount: p.pengemasanItems.length,
       productionCost: total,
       subType: "Pengemasan",
+      shift: p.shift,
       pengemasanItems: p.pengemasanItems.map((it) => ({
         nama: it.nama,
         bungkus: Number(it.bungkus ?? 0),
@@ -1024,7 +1032,7 @@ export default async function AdminLedgerPage({
           return (
             <section className="mb-4">
               <LedgerSection
-                title="Invoice"
+                title="Pengeluaran"
                 type="invoice"
                 entries={sortedExpenses}
                 totalCount={expenseCount}
@@ -1084,6 +1092,12 @@ export default async function AdminLedgerPage({
                 <div>
                   <span className="font-medium">Sub Jenis:</span>{" "}
                   {selected.subType}
+                </div>
+              )}
+              {selected.shift && (
+                <div>
+                  <span className="font-medium">Shift:</span>{" "}
+                  <span className="capitalize">{selected.shift}</span>
                 </div>
               )}
               <div>

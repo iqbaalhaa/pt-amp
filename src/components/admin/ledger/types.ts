@@ -26,6 +26,7 @@ export type LedgerEntry = {
   itemCount: number;
   productionCost?: number | null;
   subType?: string;
+  shift?: "siang" | "malam" | null;
   lines?: LedgerLine[];
   pengikisanItems?: {
     nama: string;

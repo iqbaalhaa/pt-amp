@@ -74,6 +74,7 @@ export function LedgerTable({
               ) : null}
             </th>
             {renderHeader("Tanggal", "date")}
+            {renderHeader("Shift", "shift")}
             {renderHeader("Petugas", "createdByName")}
             {renderHeader("Pihak", "counterparty")}
             {renderHeader("Total (Rp)", "total")}
@@ -96,6 +97,7 @@ export function LedgerTable({
                   ) : null}
                 </td>
                 <td className="px-3 py-2">{dStr}</td>
+                <td className="px-3 py-2 capitalize">{e.shift || "-"}</td>
                 <td className="px-3 py-2">{e.createdByName || "-"}</td>
                 <td className="px-3 py-2">{e.counterparty || "-"}</td>
                 <td className="px-3 py-2 text-right">

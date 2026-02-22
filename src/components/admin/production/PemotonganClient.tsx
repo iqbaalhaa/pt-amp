@@ -26,6 +26,7 @@ import NumbersRoundedIcon from "@mui/icons-material/NumbersRounded";
 import SummarizeRoundedIcon from "@mui/icons-material/SummarizeRounded";
 import ContentCutRoundedIcon from "@mui/icons-material/ContentCutRounded";
 import AttachMoneyRoundedIcon from "@mui/icons-material/AttachMoneyRounded";
+import AccessTimeRoundedIcon from "@mui/icons-material/AccessTimeRounded";
 
 import GlassButton from "@/components/ui/GlassButton";
 import PageHeader from "@/components/ui/PageHeader";
@@ -41,7 +42,6 @@ import { formatRupiah } from "@/lib/currency";
 type Row = {
   id: number;
   nama: string;
-  shift: "" | "SIANG" | "MALAM";
   itemTypeId: string;
   qty: number;
 };
@@ -80,10 +80,11 @@ function cx(...classes: Array<string | false | null | undefined>) {
 
 export default function PemotonganClient() {
   const [rows, setRows] = useState<Row[]>([
-    { id: 1, nama: "", shift: "", itemTypeId: "", qty: 0 },
+    { id: 1, nama: "", itemTypeId: "", qty: 0 },
   ]);
 
   const [date, setDate] = useState("");
+  const [shift, setShift] = useState<"siang" | "malam">("siang");
   const [notes, setNotes] = useState("");
   const [upahPerKg, setUpahPerKg] = useState(1500);
   const [saving, setSaving] = useState(false);
@@ -112,9 +113,7 @@ export default function PemotonganClient() {
             setUpahPerKg(parsed.pemotonganPerKg);
           }
 
-          const rates: PemotonganRate[] = Array.isArray(
-            parsed.pemotonganRates,
-          )
+          const rates: PemotonganRate[] = Array.isArray(parsed.pemotonganRates)
             ? parsed.pemotonganRates.map((r: any, idx: number) => ({
                 id: r.id || `rate-${idx}`,
                 name: String(r.name ?? "").trim() || `Jenis ${idx + 1}`,
@@ -199,7 +198,6 @@ export default function PemotonganClient() {
         {
           id: nextId,
           nama: "",
-          shift: "",
           itemTypeId: "",
           qty: 0,
         },
@@ -213,7 +211,6 @@ export default function PemotonganClient() {
         {
           id: 1,
           nama: "",
-          shift: "",
           itemTypeId: "",
           qty: 0,
         },
@@ -230,7 +227,7 @@ export default function PemotonganClient() {
           ? {
               ...r,
               [field]:
-                field === "nama" || field === "shift" || field === "itemTypeId"
+                field === "nama" || field === "itemTypeId"
                   ? value
                   : Number.isFinite(parseFloat(value))
                   ? parseFloat(value)
@@ -260,7 +257,7 @@ export default function PemotonganClient() {
 
         if (Array.isArray(parsed.pemotonganRates) && row.itemTypeId) {
           const match = parsed.pemotonganRates.find(
-            (r: any) => r.id === row.itemTypeId,
+            (r: any) => r.id === row.itemTypeId
           );
           if (match && typeof match.rate === "number") {
             rate = match.rate;
@@ -268,7 +265,7 @@ export default function PemotonganClient() {
         } else if (row.itemTypeId) {
           const typeName = String(
             pemotonganRateOptions.find((r) => r.id === row.itemTypeId)?.name ??
-              "",
+              ""
           ).toUpperCase();
           if (typeName.includes("STIK 25")) {
             rate = parsed.pemotonganStik25 ?? rate;
@@ -328,10 +325,7 @@ export default function PemotonganClient() {
   };
 
   const activeRows = useMemo(
-    () =>
-      rows.filter(
-        (r) => r.nama || r.qty > 0
-      ),
+    () => rows.filter((r) => r.nama || r.qty > 0),
     [rows]
   );
 
@@ -354,9 +348,7 @@ export default function PemotonganClient() {
       return;
     }
 
-    const validRows = rows.filter(
-      (r) => r.nama && r.qty > 0 && r.itemTypeId
-    );
+    const validRows = rows.filter((r) => r.nama && r.qty > 0 && r.itemTypeId);
 
     if (validRows.length === 0) {
       alert("Mohon isi minimal satu baris data dengan lengkap (Pekerja, Qty)");
@@ -368,12 +360,12 @@ export default function PemotonganClient() {
 
       const payload = {
         date,
+        shift,
         notes: notes || null,
         upahPerKg: String(upahPerKg),
         items: validRows.map((r) => ({
           nama: r.nama,
           qty: String(r.qty),
-          itemTypeId: r.itemTypeId,
         })),
       };
 
@@ -455,6 +447,7 @@ export default function PemotonganClient() {
       margin,
       y
     );
+    pdf.text(`Shift: ${shift.toUpperCase()}`, margin + 60, y);
     y += 5;
 
     if (notes) {
@@ -592,7 +585,33 @@ export default function PemotonganClient() {
               </div>
             </div>
 
-            <div className="md:col-span-9">
+            <div className="md:col-span-3">
+              <label className="text-[11px] font-semibold text-black/70 flex items-center gap-1.5 mb-1">
+                <AccessTimeRoundedIcon
+                  sx={{ fontSize: 16 }}
+                  className="text-[var(--brand)]"
+                />
+                Shift <span className="text-red-500">*</span>
+              </label>
+              <div className="relative">
+                <select
+                  value={shift}
+                  onChange={(e) =>
+                    setShift(e.target.value as "siang" | "malam")
+                  }
+                  className={cx(
+                    "w-full h-[38px] px-3 rounded-lg",
+                    "border border-[var(--glass-border)] bg-white/95 text-[12px]",
+                    "outline-none focus:ring-2 focus:ring-[var(--brand)]/25 focus:border-[var(--brand)]"
+                  )}
+                >
+                  <option value="siang">Siang</option>
+                  <option value="malam">Malam</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="md:col-span-6">
               <label className="text-[11px] font-semibold text-black/70 flex items-center gap-1.5 mb-1">
                 <StickyNote2RoundedIcon
                   sx={{ fontSize: 16 }}
@@ -612,22 +631,6 @@ export default function PemotonganClient() {
                 placeholder="Catatan tambahan (opsional)"
               />
             </div>
-
-            {/* <div className="md:col-span-3">
-              <label className="text-[11px] font-semibold text-black/70 flex items-center gap-1.5 mb-1">
-                <AttachMoneyRoundedIcon
-                  sx={{ fontSize: 16 }}
-                  className="text-[var(--brand)]"
-                />
-                Upah/Kg (dari Pengaturan Upah)
-              </label>
-              <div className="h-[38px] flex items-center rounded-lg border border-[var(--glass-border)] bg-zinc-50 px-3 text-[12px] text-black/80">
-                <span className="mr-1 text-black/50">Rp</span>
-                <span className="font-semibold">
-                  {upahPerKg.toLocaleString("id-ID")}
-                </span>
-              </div>
-            </div> */}
           </div>
 
           {/* Table */}
@@ -651,11 +654,6 @@ export default function PemotonganClient() {
                         className="text-black/45"
                       />
                       Pekerja <span className="text-red-500">*</span>
-                    </span>
-                  </th>
-                  <th className="px-3 py-3 text-center min-w-[120px]">
-                    <span className="inline-flex items-center gap-1.5 justify-center">
-                      Shift
                     </span>
                   </th>
                   <th className="px-3 py-3 min-w-[200px]">
@@ -707,9 +705,8 @@ export default function PemotonganClient() {
                       <td className="px-3 py-2">
                         <Autocomplete
                           value={
-                            workerOptions.find(
-                              (w) => w.name === row.nama
-                            ) || null
+                            workerOptions.find((w) => w.name === row.nama) ||
+                            null
                           }
                           onChange={async (_event, newValue) => {
                             if (newValue && (newValue as any).inputValue) {
@@ -723,11 +720,7 @@ export default function PemotonganClient() {
                                     ...prev,
                                     newWorker,
                                   ]);
-                                  handleChange(
-                                    row.id,
-                                    "nama",
-                                    newWorker.name
-                                  );
+                                  handleChange(row.id, "nama", newWorker.name);
                                 }
                               } catch (err) {
                                 console.error(err);
@@ -805,22 +798,6 @@ export default function PemotonganClient() {
                             />
                           )}
                         />
-                      </td>
-
-                      <td className="px-3 py-2 text-center">
-                        <TextField
-                          select
-                          value={row.shift || ""}
-                          onChange={(e) =>
-                            handleChange(row.id, "shift", e.target.value)
-                          }
-                          sx={muiCompactInputSx}
-                          size="small"
-                        >
-                          <MenuItem value="">-</MenuItem>
-                          <MenuItem value="SIANG">Siang</MenuItem>
-                          <MenuItem value="MALAM">Malam</MenuItem>
-                        </TextField>
                       </td>
 
                       <td className="px-3 py-2">
@@ -1059,8 +1036,8 @@ export default function PemotonganClient() {
             Data Pemotongan Tersimpan!
           </h3>
           <p className="text-black/60 text-sm mb-6 max-w-xs">
-            Data pemotongan berhasil disimpan ke database. Anda dapat
-            mengunduh PDF sebagai arsip.
+            Data pemotongan berhasil disimpan ke database. Anda dapat mengunduh
+            PDF sebagai arsip.
           </p>
           <div className="bg-blue-50 text-blue-800 text-xs px-4 py-3 rounded-lg w-full text-left">
             <p className="font-semibold mb-1">ID Transaksi:</p>

@@ -12,7 +12,7 @@ export default async function ExpensesPage() {
   return (
     <main className="w-full px-4 py-6">
       <section className="mb-4">
-        <h1 className="text-2xl font-semibold text-slate-900">Invoice Expense</h1>
+        <h1 className="text-2xl font-semibold text-slate-900">Pengeluaran</h1>
       </section>
       <ExpenseForm inputBy={inputBy} />
     </main>

@@ -12,6 +12,7 @@ export type PemotonganItemInput = {
 
 export type PemotonganInput = {
   date: string;
+  shift: "siang" | "malam";
   petugas?: string | null;
   notes?: string | null;
   upahPerKg: string;
@@ -46,6 +47,7 @@ export async function createPemotongan(input: PemotonganInput) {
   const pemotongan = await prisma.pemotongan.create({
     data: {
       date: new Date(input.date),
+      shift: input.shift as any,
       petugas: currentUserName || input.petugas,
       notes: input.notes ?? null,
       totalUpah: totalUpah.toString(),
@@ -74,6 +76,7 @@ export async function getPemotonganHistory() {
   return data.map((item) => ({
     id: String(item.id),
     date: item.date,
+    shift: (item as any).shift as "siang" | "malam",
     petugas: item.petugas,
     notes: item.notes,
     totalUpah: Number(item.totalUpah ?? 0),
