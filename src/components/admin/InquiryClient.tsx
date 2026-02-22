@@ -12,209 +12,254 @@ import GlassTable, { Column } from "@/components/ui/GlassTable";
 import GlassButton from "@/components/ui/GlassButton";
 import StatusBadge from "@/components/ui/StatusBadge";
 import GlassDialog from "@/components/ui/GlassDialog";
+import ConfirmationDialog from "@/components/ui/ConfirmationDialog";
 
 interface InquiryClientProps {
-	initialInquiries: Inquiry[];
+  initialInquiries: Inquiry[];
 }
 
 export default function InquiryClient({
-	initialInquiries,
+  initialInquiries,
 }: InquiryClientProps) {
-	const router = useRouter();
-	const [inquiries, setInquiries] = useState<Inquiry[]>(initialInquiries);
-	const [selectedInquiry, setSelectedInquiry] = useState<Inquiry | null>(null);
+  const router = useRouter();
+  const [inquiries, setInquiries] = useState<Inquiry[]>(initialInquiries);
+  const [selectedInquiry, setSelectedInquiry] = useState<Inquiry | null>(null);
 
-	useEffect(() => {
-		setInquiries(initialInquiries);
-	}, [initialInquiries]);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmBusy, setConfirmBusy] = useState(false);
+  const [confirmConfig, setConfirmConfig] = useState<{
+    title: string;
+    message: string;
+    onConfirm: () => Promise<void>;
+    variant?: "danger" | "primary";
+    confirmText?: string;
+  } | null>(null);
 
-	const handleView = async (inquiry: Inquiry) => {
-		setSelectedInquiry(inquiry);
-		if (inquiry.status === "NEW") {
-			await updateInquiryStatus(inquiry.id, "READ");
-			router.refresh();
-		}
-	};
+  const openConfirm = (cfg: {
+    title: string;
+    message: string;
+    onConfirm: () => Promise<void>;
+    variant?: "danger" | "primary";
+    confirmText?: string;
+  }) => {
+    setConfirmConfig(cfg);
+    setConfirmOpen(true);
+  };
 
-	const handleClose = () => {
-		setSelectedInquiry(null);
-	};
+  useEffect(() => {
+    setInquiries(initialInquiries);
+  }, [initialInquiries]);
 
-	const handleDelete = async (id: string) => {
-		if (confirm("Are you sure you want to delete this message?")) {
-			await deleteInquiry(id);
-			router.refresh();
-			if (selectedInquiry?.id === id) {
-				handleClose();
-			}
-		}
-	};
+  const handleView = async (inquiry: Inquiry) => {
+    setSelectedInquiry(inquiry);
+    if (inquiry.status === "NEW") {
+      await updateInquiryStatus(inquiry.id, "READ");
+      router.refresh();
+    }
+  };
 
-	const handleMarkReplied = async (id: string) => {
-		await updateInquiryStatus(id, "REPLIED");
-		router.refresh();
-		if (selectedInquiry?.id === id) {
-			handleClose();
-		}
-	};
+  const handleClose = () => {
+    setSelectedInquiry(null);
+  };
 
-	const getStatusVariant = (
-		status: InquiryStatus
-	): "success" | "warning" | "danger" | "info" | "neutral" => {
-		switch (status) {
-			case "NEW":
-				return "danger";
-			case "READ":
-				return "warning";
-			case "REPLIED":
-				return "success";
-			default:
-				return "neutral";
-		}
-	};
+  const handleDelete = async (id: string) => {
+    openConfirm({
+      title: "Delete Inquiry",
+      message: "Are you sure you want to delete this message?",
+      variant: "danger",
+      onConfirm: async () => {
+        await deleteInquiry(id);
+        router.refresh();
+        if (selectedInquiry?.id === id) {
+          handleClose();
+        }
+      },
+    });
+  };
 
-	const columns: Column<Inquiry>[] = [
-		{
-			header: "Date",
-			accessorKey: "createdAt",
-			cell: (row) => new Date(row.createdAt).toLocaleDateString(),
-		},
-		{
-			header: "Name",
-			cell: (row) => (
-				<Box>
-					<Typography variant="body2" fontWeight="medium">
-						{row.name}
-					</Typography>
-					<Typography variant="caption" color="text.secondary">
-						{row.email}
-					</Typography>
-				</Box>
-			),
-		},
-		{
-			header: "Subject",
-			accessorKey: "subject",
-		},
-		{
-			header: "Status",
-			cell: (row) => (
-				<StatusBadge
-					status={getStatusVariant(row.status)}
-				>
-					{row.status}
-				</StatusBadge>
-			),
-		},
-	];
+  const handleMarkReplied = async (id: string) => {
+    await updateInquiryStatus(id, "REPLIED");
+    router.refresh();
+    if (selectedInquiry?.id === id) {
+      handleClose();
+    }
+  };
 
-	return (
-		<Box>
-			<Box sx={{ display: "flex", justifyContent: "space-between", mb: 3 }}>
-				<Typography variant="h4" component="h1" fontWeight="bold">
-					Inquiries
-				</Typography>
-			</Box>
+  const getStatusVariant = (
+    status: InquiryStatus
+  ): "success" | "warning" | "danger" | "info" | "neutral" => {
+    switch (status) {
+      case "NEW":
+        return "danger";
+      case "READ":
+        return "warning";
+      case "REPLIED":
+        return "success";
+      default:
+        return "neutral";
+    }
+  };
 
-			<GlassTable
-				columns={columns}
-				data={inquiries}
-				showNumber
-				actions={(row) => (
-					<>
-						<GlassButton
-							variant="primary"
-							size="icon"
-							onClick={() => handleView(row)}
-						>
-							<VisibilityIcon fontSize="small" />
-						</GlassButton>
-						<GlassButton
-							variant="danger"
-							size="icon"
-							onClick={() => handleDelete(row.id)}
-						>
-							<DeleteIcon fontSize="small" />
-						</GlassButton>
-					</>
-				)}
-			/>
+  const columns: Column<Inquiry>[] = [
+    {
+      header: "Date",
+      accessorKey: "createdAt",
+      cell: (row) => new Date(row.createdAt).toLocaleDateString(),
+    },
+    {
+      header: "Name",
+      cell: (row) => (
+        <Box>
+          <Typography variant="body2" fontWeight="medium">
+            {row.name}
+          </Typography>
+          <Typography variant="caption" color="text.secondary">
+            {row.email}
+          </Typography>
+        </Box>
+      ),
+    },
+    {
+      header: "Subject",
+      accessorKey: "subject",
+    },
+    {
+      header: "Status",
+      cell: (row) => (
+        <StatusBadge status={getStatusVariant(row.status)}>
+          {row.status}
+        </StatusBadge>
+      ),
+    },
+  ];
 
-			<GlassDialog
-				open={!!selectedInquiry}
-				onClose={handleClose}
-				maxWidth="sm"
-				fullWidth
-				title="Message Details"
-				actions={
-					selectedInquiry && (
-						<>
-							<GlassButton
-								variant="danger"
-								onClick={() => handleDelete(selectedInquiry.id)}
-							>
-								Delete
-							</GlassButton>
-							<GlassButton variant="ghost" onClick={handleClose}>
-								Close
-							</GlassButton>
-							{selectedInquiry.status !== "REPLIED" && (
-								<GlassButton
-									variant="success"
-									onClick={() => handleMarkReplied(selectedInquiry.id)}
-								>
-									<CheckCircleIcon className="mr-2" fontSize="small" />
-									Mark as Replied
-								</GlassButton>
-							)}
-						</>
-					)
-				}
-			>
-				{selectedInquiry && (
-					<>
-						<Box sx={{ mb: 2 }}>
-							<Typography variant="subtitle2" color="text.secondary">
-								From
-							</Typography>
-							<Typography variant="body1">
-								{selectedInquiry.name} ({selectedInquiry.email})
-							</Typography>
-							{selectedInquiry.phone && (
-								<Typography variant="body2" color="text.secondary">
-									{selectedInquiry.phone}
-								</Typography>
-							)}
-						</Box>
-						<Box sx={{ mb: 2 }}>
-							<Typography variant="subtitle2" color="text.secondary">
-								Subject
-							</Typography>
-							<Typography variant="body1" fontWeight="medium">
-								{selectedInquiry.subject}
-							</Typography>
-						</Box>
-						<Box sx={{ mb: 2 }}>
-							<Typography variant="subtitle2" color="text.secondary">
-								Message
-							</Typography>
-							<Paper variant="outlined" sx={{ p: 2, bgcolor: "grey.50" }}>
-								<Typography variant="body2" style={{ whiteSpace: "pre-wrap" }}>
-									{selectedInquiry.message}
-								</Typography>
-							</Paper>
-						</Box>
-						<Box>
-							<Typography variant="subtitle2" color="text.secondary">
-								Date
-							</Typography>
-							<Typography variant="caption">
-								{new Date(selectedInquiry.createdAt).toLocaleString()}
-							</Typography>
-						</Box>
-					</>
-				)}
-			</GlassDialog>
-		</Box>
-	);
+  return (
+    <Box>
+      <Box sx={{ display: "flex", justifyContent: "space-between", mb: 3 }}>
+        <Typography variant="h4" component="h1" fontWeight="bold">
+          Inquiries
+        </Typography>
+      </Box>
+
+      <GlassTable
+        columns={columns}
+        data={inquiries}
+        showNumber
+        actions={(row) => (
+          <>
+            <GlassButton
+              variant="primary"
+              size="icon"
+              onClick={() => handleView(row)}
+            >
+              <VisibilityIcon fontSize="small" />
+            </GlassButton>
+            <GlassButton
+              variant="danger"
+              size="icon"
+              onClick={() => handleDelete(row.id)}
+            >
+              <DeleteIcon fontSize="small" />
+            </GlassButton>
+          </>
+        )}
+      />
+
+      <GlassDialog
+        open={!!selectedInquiry}
+        onClose={handleClose}
+        maxWidth="sm"
+        fullWidth
+        title="Message Details"
+        actions={
+          selectedInquiry && (
+            <>
+              <GlassButton
+                variant="danger"
+                onClick={() => handleDelete(selectedInquiry.id)}
+              >
+                Delete
+              </GlassButton>
+              <GlassButton variant="ghost" onClick={handleClose}>
+                Close
+              </GlassButton>
+              {selectedInquiry.status !== "REPLIED" && (
+                <GlassButton
+                  variant="success"
+                  onClick={() => handleMarkReplied(selectedInquiry.id)}
+                >
+                  <CheckCircleIcon className="mr-2" fontSize="small" />
+                  Mark as Replied
+                </GlassButton>
+              )}
+            </>
+          )
+        }
+      >
+        {selectedInquiry && (
+          <>
+            <Box sx={{ mb: 2 }}>
+              <Typography variant="subtitle2" color="text.secondary">
+                From
+              </Typography>
+              <Typography variant="body1">
+                {selectedInquiry.name} ({selectedInquiry.email})
+              </Typography>
+              {selectedInquiry.phone && (
+                <Typography variant="body2" color="text.secondary">
+                  {selectedInquiry.phone}
+                </Typography>
+              )}
+            </Box>
+            <Box sx={{ mb: 2 }}>
+              <Typography variant="subtitle2" color="text.secondary">
+                Subject
+              </Typography>
+              <Typography variant="body1" fontWeight="medium">
+                {selectedInquiry.subject}
+              </Typography>
+            </Box>
+            <Box sx={{ mb: 2 }}>
+              <Typography variant="subtitle2" color="text.secondary">
+                Message
+              </Typography>
+              <Paper variant="outlined" sx={{ p: 2, bgcolor: "grey.50" }}>
+                <Typography variant="body2" style={{ whiteSpace: "pre-wrap" }}>
+                  {selectedInquiry.message}
+                </Typography>
+              </Paper>
+            </Box>
+            <Box>
+              <Typography variant="subtitle2" color="text.secondary">
+                Date
+              </Typography>
+              <Typography variant="caption">
+                {new Date(selectedInquiry.createdAt).toLocaleString()}
+              </Typography>
+            </Box>
+          </>
+        )}
+      </GlassDialog>
+
+      <ConfirmationDialog
+        open={confirmOpen}
+        onClose={() => (confirmBusy ? null : setConfirmOpen(false))}
+        onConfirm={async () => {
+          if (!confirmConfig) return;
+          try {
+            setConfirmBusy(true);
+            await confirmConfig.onConfirm();
+            setConfirmOpen(false);
+          } finally {
+            setConfirmBusy(false);
+          }
+        }}
+        loading={confirmBusy}
+        title={confirmConfig?.title}
+        content={confirmConfig?.message}
+        variant={confirmConfig?.variant}
+        confirmText={confirmConfig?.confirmText}
+      />
+    </Box>
+  );
 }

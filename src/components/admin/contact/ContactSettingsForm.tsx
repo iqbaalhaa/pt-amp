@@ -2,11 +2,19 @@
 
 import { useState } from "react";
 import { updateContactInfo } from "@/actions/contact-info-actions";
-import { 
-  Button, TextField, Box, Typography, Snackbar, Alert, 
-  InputAdornment, Paper, Stack,
-  CircularProgress
+import {
+  Button,
+  TextField,
+  Box,
+  Typography,
+  Snackbar,
+  Alert,
+  InputAdornment,
+  Paper,
+  Stack,
+  CircularProgress,
 } from "@mui/material";
+import ConfirmationDialog from "@/components/ui/ConfirmationDialog";
 import SaveIcon from "@mui/icons-material/Save";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import PhoneIcon from "@mui/icons-material/Phone";
@@ -15,38 +23,70 @@ import WhatsAppIcon from "@mui/icons-material/WhatsApp";
 import BusinessIcon from "@mui/icons-material/Business";
 import type { ContactInfo } from "@prisma/client";
 
-export function ContactSettingsForm({ initialData }: { initialData: ContactInfo | null }) {
+export function ContactSettingsForm({
+  initialData,
+}: {
+  initialData: ContactInfo | null;
+}) {
   const [loading, setLoading] = useState(false);
-  const [notification, setNotification] = useState<{ open: boolean; message: string; severity: "success" | "error" }>({
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [formDataState, setFormDataState] = useState<FormData | null>(null);
+  const [notification, setNotification] = useState<{
+    open: boolean;
+    message: string;
+    severity: "success" | "error";
+  }>({
     open: false,
     message: "",
     severity: "success",
   });
 
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setLoading(true);
     const formData = new FormData(event.currentTarget);
-    
-    const result = await updateContactInfo(formData);
-    
+    setFormDataState(formData);
+    setConfirmOpen(true);
+  };
+
+  const handleConfirmSave = async () => {
+    if (!formDataState) return;
+
+    setLoading(true);
+    const result = await updateContactInfo(formDataState);
+
     setLoading(false);
+    setConfirmOpen(false);
     if (result.success) {
-      setNotification({ open: true, message: "Informasi kontak berhasil disimpan", severity: "success" });
+      setNotification({
+        open: true,
+        message: "Informasi kontak berhasil disimpan",
+        severity: "success",
+      });
     } else {
-      setNotification({ open: true, message: result.error || "Gagal menyimpan perubahan", severity: "error" });
+      setNotification({
+        open: true,
+        message: result.error || "Gagal menyimpan perubahan",
+        severity: "error",
+      });
     }
-  }
+  };
 
   return (
     <Box component="form" onSubmit={handleSubmit} noValidate>
       <Paper variant="outlined" sx={{ borderRadius: 2, overflow: "hidden" }}>
-        <Box sx={{ p: 3, bgcolor: "grey.50", borderBottom: 1, borderColor: "divider" }}>
+        <Box
+          sx={{
+            p: 3,
+            bgcolor: "grey.50",
+            borderBottom: 1,
+            borderColor: "divider",
+          }}
+        >
           <Stack direction="row" alignItems="center" spacing={1}>
-             <BusinessIcon color="primary" />
-             <Typography variant="h6" fontWeight="bold">
-               Kontak Perusahaan
-             </Typography>
+            <BusinessIcon color="primary" />
+            <Typography variant="h6" fontWeight="bold">
+              Kontak Perusahaan
+            </Typography>
           </Stack>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
             Perbarui detail alamat, email, dan nomor telepon perusahaan.
@@ -121,13 +161,28 @@ export function ContactSettingsForm({ initialData }: { initialData: ContactInfo 
           </Stack>
         </Box>
 
-        <Box sx={{ p: 3, bgcolor: "grey.50", borderTop: 1, borderColor: "divider", display: "flex", justifyContent: "flex-end" }}>
+        <Box
+          sx={{
+            p: 3,
+            bgcolor: "grey.50",
+            borderTop: 1,
+            borderColor: "divider",
+            display: "flex",
+            justifyContent: "flex-end",
+          }}
+        >
           <Button
             type="submit"
             variant="contained"
             size="large"
             disabled={loading}
-            startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
+            startIcon={
+              loading ? (
+                <CircularProgress size={20} color="inherit" />
+              ) : (
+                <SaveIcon />
+              )
+            }
             sx={{ minWidth: 150, borderRadius: 2 }}
           >
             {loading ? "Menyimpan..." : "Simpan Kontak"}
@@ -141,8 +196,8 @@ export function ContactSettingsForm({ initialData }: { initialData: ContactInfo 
         onClose={() => setNotification({ ...notification, open: false })}
         anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
       >
-        <Alert 
-          onClose={() => setNotification({ ...notification, open: false })} 
+        <Alert
+          onClose={() => setNotification({ ...notification, open: false })}
           severity={notification.severity}
           variant="filled"
           sx={{ width: "100%" }}
@@ -150,8 +205,15 @@ export function ContactSettingsForm({ initialData }: { initialData: ContactInfo 
           {notification.message}
         </Alert>
       </Snackbar>
+
+      <ConfirmationDialog
+        open={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        onConfirm={handleConfirmSave}
+        loading={loading}
+        title="Simpan Kontak"
+        content="Apakah Anda yakin ingin menyimpan perubahan informasi kontak ini?"
+      />
     </Box>
   );
 }
-
-

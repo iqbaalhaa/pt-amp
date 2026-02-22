@@ -51,7 +51,7 @@ export async function createPengemasan(input: PengemasanInput) {
       petugas: currentUserName || input.petugas,
       notes: input.notes ?? null,
       totalUpah: totalUpah.toString(),
-      upahPerBungkus: upahPerBungkus || null,
+      upahPerBungkus: upahPerBungkus.toString(),
       ...(cleanedItems.length > 0
         ? {
             pengemasanItems: {
@@ -65,14 +65,11 @@ export async function createPengemasan(input: PengemasanInput) {
   return { success: true, id: String(pengemasan.id) };
 }
 
-export async function getPengemasanHistory() {
-  const data = await prisma.pengemasan.findMany({
-    orderBy: { date: "desc" },
-    include: {
-      pengemasanItems: true,
-    },
-  });
+export async function bulkCreatePengemasan(inputs: PengemasanInput[]) {
+  const session = await auth.api.getSession({ headers: await headers() });
+  const currentUserName = session?.user.name ?? null;
 
+<<<<<<< HEAD
   return data.map((item) => ({
     id: String(item.id),
     date: item.date,
@@ -86,17 +83,55 @@ export async function getPengemasanHistory() {
     })),
   }));
 }
+=======
+  let successCount = 0;
+  let errors: string[] = [];
+>>>>>>> e0c72936a410aeab850975a346a34fb9bf258026
 
-export async function deletePengemasan(id: string) {
-  try {
-    await prisma.pengemasan.delete({
-      where: { id: BigInt(id) },
-    });
-    revalidatePath("/admin/pengemasan");
-    revalidatePath("/admin/ledger");
-    return { success: true };
-  } catch (error) {
-    console.error("Error deleting pengemasan:", error);
-    return { success: false, error: "Gagal menghapus data" };
+  for (const input of inputs) {
+    try {
+      const upahPerBungkus = parseFloat(input.upahPerBungkus || "0");
+
+      const cleanedItems = input.items
+        .map((item) => {
+          const bungkus = parseFloat(item.bungkus || "0");
+          const total = bungkus * upahPerBungkus;
+
+          return {
+            nama: item.nama,
+            bungkus: item.bungkus || "0",
+            upahPerBungkus: upahPerBungkus.toString(),
+            total: total.toString(),
+          };
+        })
+        .filter((it) => it.nama || parseFloat(it.bungkus) > 0);
+
+      if (cleanedItems.length === 0) continue;
+
+      const totalUpah = cleanedItems.reduce(
+        (sum, it) => sum + parseFloat(it.total),
+        0
+      );
+
+      await prisma.pengemasan.create({
+        data: {
+          date: new Date(input.date),
+          petugas: currentUserName || input.petugas,
+          notes: input.notes ?? null,
+          totalUpah: totalUpah.toString(),
+          upahPerBungkus: upahPerBungkus.toString(),
+          pengemasanItems: {
+            create: cleanedItems,
+          },
+        },
+      });
+      successCount++;
+    } catch (e: any) {
+      errors.push(`Error for date ${input.date}: ${e.message}`);
+    }
   }
+
+  revalidatePath("/admin/pengemasan");
+  revalidatePath("/admin/ledger");
+  return { success: true, count: successCount, errors };
 }

@@ -30,6 +30,7 @@ import AttachMoneyRoundedIcon from "@mui/icons-material/AttachMoneyRounded";
 import GlassButton from "@/components/ui/GlassButton";
 import PageHeader from "@/components/ui/PageHeader";
 import SafeModal from "@/components/ui/SafeModal";
+import ConfirmationDialog from "@/components/ui/ConfirmationDialog";
 import { createPemotongan } from "@/actions/pemotongan-actions";
 import {
   getWorkers,
@@ -89,6 +90,7 @@ export default function PemotonganClient() {
   const [saving, setSaving] = useState(false);
 
   const [openPreview, setOpenPreview] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const [lastSavedId, setLastSavedId] = useState<string | null>(null);
 
   const [workerOptions, setWorkerOptions] = useState<WorkerDTO[]>([]);
@@ -347,7 +349,7 @@ export default function PemotonganClient() {
     setNotes("");
   };
 
-  const handleSubmit = async (e: FormEvent) => {
+  const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (!date) {
       alert("Tanggal harus diisi");
@@ -362,6 +364,14 @@ export default function PemotonganClient() {
       alert("Mohon isi minimal satu baris data dengan lengkap (Pekerja, Qty)");
       return;
     }
+
+    setConfirmOpen(true);
+  };
+
+  const handleConfirmSave = async () => {
+    const validRows = rows.filter(
+      (r) => r.nama && r.qty > 0
+    );
 
     try {
       setSaving(true);
@@ -381,6 +391,7 @@ export default function PemotonganClient() {
       if (res?.success) {
         setLastSavedId(res.id);
         setOpenPreview(true);
+        setConfirmOpen(false);
       } else {
         alert("Gagal menyimpan data");
       }
@@ -534,6 +545,7 @@ export default function PemotonganClient() {
         subtitle="Catat hasil kerja pemotongan (kg)."
         actions={
           <>
+            <PemotonganBulkImport />
             <Link
               href="/admin/pemotongan/riwayat"
               className={cx(
@@ -1068,6 +1080,15 @@ export default function PemotonganClient() {
           </div>
         </div>
       </SafeModal>
+
+      <ConfirmationDialog
+        open={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        onConfirm={handleConfirmSave}
+        loading={saving}
+        title="Simpan Pemotongan"
+        content="Apakah Anda yakin ingin menyimpan data pemotongan ini?"
+      />
     </div>
   );
 }

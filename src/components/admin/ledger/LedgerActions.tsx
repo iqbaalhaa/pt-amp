@@ -18,7 +18,7 @@ import { LedgerEntry } from "./types";
 
 type Props = {
   id: string;
-  type: "purchase" | "sale" | "production" | "invoice";
+  type: "purchase" | "sale" | "production" | "pengeluaran";
   status: "draft" | "posted" | "cancelled";
   entry?: LedgerEntry;
   onView?: (entry: LedgerEntry) => void;
@@ -46,6 +46,7 @@ function loadLogoImage() {
 export function LedgerActions({ id, type, status, entry, onView }: Props) {
   const router = useRouter();
   const canPrint =
+<<<<<<< HEAD
     type === "purchase" ||
     type === "sale" ||
     type === "invoice" ||
@@ -55,10 +56,13 @@ export function LedgerActions({ id, type, status, entry, onView }: Props) {
         entry?.subType === "Penjemuran" ||
         entry?.subType === "Pengemasan" ||
         entry?.subType === "Produksi Lainnya"));
+=======
+    type === "purchase" || type === "sale" || type === "pengeluaran";
+>>>>>>> e0c72936a410aeab850975a346a34fb9bf258026
   const isCancelled = status === "cancelled";
   const canApprove =
     status === "draft" &&
-    (type === "purchase" || type === "sale" || type === "invoice");
+    (type === "purchase" || type === "sale" || type === "pengeluaran");
   const canReject = status !== "cancelled";
   const [openApprove, setOpenApprove] = useState(false);
   const [openReject, setOpenReject] = useState(false);
@@ -96,7 +100,7 @@ export function LedgerActions({ id, type, status, entry, onView }: Props) {
         } else {
           await revokeProduction(id, reason);
         }
-      } else if (type === "invoice") {
+      } else if (type === "pengeluaran") {
         const { revokeExpense } = await import("@/actions/expense-actions");
         await revokeExpense(id, reason);
       }
@@ -115,7 +119,7 @@ export function LedgerActions({ id, type, status, entry, onView }: Props) {
         await approvePurchase(id);
       } else if (type === "sale") {
         await approveSale(id);
-      } else if (type === "invoice") {
+      } else if (type === "pengeluaran") {
         const { approveExpense } = await import("@/actions/expense-actions");
         await approveExpense(id);
       }
@@ -611,6 +615,7 @@ export function LedgerActions({ id, type, status, entry, onView }: Props) {
           <CheckCircleIcon fontSize="small" /> Setujui
         </button>
       )}
+<<<<<<< HEAD
       {type === "production" && entry?.subType === "Pengikisan" ? (
         <button
           onClick={handlePrintPengikisan}
@@ -666,6 +671,25 @@ export function LedgerActions({ id, type, status, entry, onView }: Props) {
           <PrintIcon fontSize="small" /> Print Invoice
         </Link>
       )}
+=======
+      <Link
+        href={
+          canPrint
+            ? `/admin/invoice/print?type=${
+                type === "pengeluaran" ? "expense" : type
+              }&id=${id}`
+            : "#"
+        }
+        aria-disabled={!canPrint}
+        className={`flex items-center gap-1 rounded-md px-2 py-1 text-[11px] ${
+          canPrint
+            ? "bg-slate-100 text-slate-800 hover:bg-slate-200"
+            : "bg-slate-50 text-slate-400 cursor-not-allowed"
+        }`}
+      >
+        <PrintIcon fontSize="small" /> Print Invoice
+      </Link>
+>>>>>>> e0c72936a410aeab850975a346a34fb9bf258026
       {canReject && (
         <button
           onClick={() => setOpenReject(true)}

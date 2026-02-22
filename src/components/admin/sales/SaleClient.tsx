@@ -31,6 +31,7 @@ import {
 	quickCreateItemType,
 } from "@/actions/item-type-actions";
 import SuccessModal from "@/components/admin/purchases/SuccessModal";
+import ConfirmationDialog from "@/components/ui/ConfirmationDialog";
 import { authClient } from "@/lib/auth-client";
 
 // Icons
@@ -85,9 +86,16 @@ export default function SaleClient() {
 	const router = useRouter();
 	const { data: session } = authClient.useSession();
 
+<<<<<<< HEAD
 	// Data State
 	const [itemTypes, setItemTypes] = useState<ItemTypeDTO[]>([]);
 	const [loadingData, setLoadingData] = useState(true);
+=======
+  // Data State
+  const [itemTypes, setItemTypes] = useState<ItemTypeDTO[]>([]);
+  const [loadingData, setLoadingData] = useState(true);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+>>>>>>> e0c72936a410aeab850975a346a34fb9bf258026
 
 	// Form State
 	const [customer, setCustomer] = useState<string>("");
@@ -107,10 +115,16 @@ export default function SaleClient() {
 		},
 	]);
 
+<<<<<<< HEAD
 	// UI State
 	const [creatingItemType, setCreatingItemType] = useState(false);
 	const [showSuccessModal, setShowSuccessModal] = useState(false);
 	const [saving, setSaving] = useState(false);
+=======
+  // UI State
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [saving, setSaving] = useState(false);
+>>>>>>> e0c72936a410aeab850975a346a34fb9bf258026
 
 	// Refs
 	const invoicePrintRef = useRef<HTMLDivElement>(null);
@@ -182,8 +196,13 @@ export default function SaleClient() {
 		[items],
 	);
 
+<<<<<<< HEAD
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
+=======
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+>>>>>>> e0c72936a410aeab850975a346a34fb9bf258026
 
 		if (!customer) {
 			alert("Nama Pembeli / Customer wajib diisi");
@@ -195,6 +214,7 @@ export default function SaleClient() {
 			return;
 		}
 
+<<<<<<< HEAD
 		setSaving(true);
 		try {
 			const validItems = items.filter(
@@ -229,6 +249,65 @@ export default function SaleClient() {
 			setSaving(false);
 		}
 	};
+=======
+    const validItems = items.filter(
+      (r) => r.itemTypeId && r.qty && r.unitPrice
+    );
+
+    if (validItems.length === 0) {
+      alert("Mohon isi minimal satu item dengan lengkap");
+      return;
+    }
+
+    // Validate Stock
+    for (const item of validItems) {
+      const type = itemTypes.find((t) => t.id === item.itemTypeId);
+      if (!type) continue;
+      const stock = parseFloat(type.stock || "0");
+      const qty = parseFloat(item.qty);
+
+      if (qty > stock) {
+        alert(
+          `Stok tidak cukup untuk barang: ${type.name}. Stok tersedia: ${stock}`
+        );
+        return;
+      }
+    }
+
+    setConfirmOpen(true);
+  };
+
+  const handleConfirmSave = async () => {
+    setSaving(true);
+    try {
+      const validItems = items.filter(
+        (r) => r.itemTypeId && r.qty && r.unitPrice
+      );
+
+      const payload = {
+        customer: customer || null,
+        date,
+        status,
+        notes: notes || null,
+        items: validItems.map(({ id, ...rest }) => rest),
+      };
+
+      const res = await createSale(payload);
+      if (res && res.success) {
+        setShowSuccessModal(true);
+        setConfirmOpen(false);
+        router.refresh();
+      } else {
+        alert("Gagal membuat penjualan");
+      }
+    } catch (error) {
+      console.error("Save error:", error);
+      alert("Terjadi kesalahan");
+    } finally {
+      setSaving(false);
+    }
+  };
+>>>>>>> e0c72936a410aeab850975a346a34fb9bf258026
 
 	const handleNewSale = () => {
 		setCustomer("");
@@ -396,6 +475,7 @@ export default function SaleClient() {
 				</div>
 			</div>
 
+<<<<<<< HEAD
 			<div className="flex flex-col xl:flex-row gap-6 items-start">
 				<div className="flex-1 w-full min-w-0">
 					<form onSubmit={handleSubmit}>
@@ -424,6 +504,34 @@ export default function SaleClient() {
 										/>
 									</div>
 								</div>
+=======
+      <ConfirmationDialog
+        open={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        onConfirm={handleConfirmSave}
+        loading={saving}
+        title="Simpan Penjualan"
+        content={`Apakah Anda yakin ingin menyimpan transaksi penjualan ini dengan total ${formatRupiah(
+          grandTotal
+        )}?`}
+      />
+
+      {/* Hidden Invoice for generating PDF */}
+      <div className="absolute left-[-9999px] top-0">
+        <div ref={invoicePrintRef}>
+          <div
+            style={{
+              width: `${A5_W_MM}mm`,
+              minHeight: `${A5_H_MM}mm`,
+              padding: "20px",
+              backgroundColor: "white",
+            }}
+          >
+            <InvoiceComponent data={invoiceData} />
+          </div>
+        </div>
+      </div>
+>>>>>>> e0c72936a410aeab850975a346a34fb9bf258026
 
 								<div className="md:col-span-4">
 									<label className="text-[11px] font-semibold text-black/70 flex items-center gap-1.5 mb-1">
@@ -621,6 +729,7 @@ export default function SaleClient() {
 														/>
 													</td>
 
+<<<<<<< HEAD
 													<td className="px-3 py-2">
 														<div
 															className={cx(
@@ -631,6 +740,75 @@ export default function SaleClient() {
 															{selectedItem?.unit || "-"}
 														</div>
 													</td>
+=======
+                          <td className="px-3 py-2">
+                            <Autocomplete
+                              value={selectedItem || null}
+                              onChange={(event, newValue) => {
+                                updateItem(
+                                  row.id,
+                                  "itemTypeId",
+                                  newValue?.id || ""
+                                );
+                              }}
+                              selectOnFocus
+                              clearOnBlur
+                              handleHomeEndKeys
+                              options={activeItemTypes}
+                              getOptionLabel={(option) => {
+                                if (typeof option === "string") return option;
+                                return option.name;
+                              }}
+                              renderOption={(props, option) => {
+                                const { key, ...optionProps } = props as any;
+                                const stock = parseFloat(option.stock || "0");
+                                const stockDisplay =
+                                  stock > 0
+                                    ? `(Stok: ${stock})`
+                                    : "(Stok Habis)";
+                                return (
+                                  <li key={key} {...optionProps}>
+                                    <div className="flex justify-between w-full">
+                                      <span>{option.name}</span>
+                                      <span
+                                        className={`text-xs ${
+                                          stock > 0
+                                            ? "text-green-600"
+                                            : "text-red-600"
+                                        }`}
+                                      >
+                                        {stockDisplay}
+                                      </span>
+                                    </div>
+                                  </li>
+                                );
+                              }}
+                              size="small"
+                              fullWidth
+                              sx={muiCompactInputSx}
+                              renderInput={(params) => (
+                                <TextField
+                                  {...params}
+                                  placeholder="Pilih Barang"
+                                />
+                              )}
+                            />
+                            {selectedItem && (
+                              <div className="text-[10px] text-gray-500 mt-1 px-1">
+                                Stok tersedia:{" "}
+                                <span
+                                  className={
+                                    parseFloat(selectedItem.stock || "0") > 0
+                                      ? "text-green-600 font-medium"
+                                      : "text-red-600 font-medium"
+                                  }
+                                >
+                                  {selectedItem.stock || "0"}
+                                </span>
+                              </div>
+                            )}
+                          </td>
+>>>>>>> e0c72936a410aeab850975a346a34fb9bf258026
 
 													<td className="px-3 py-2">
 														<input
@@ -754,6 +932,7 @@ export default function SaleClient() {
 					</form>
 				</div>
 
+<<<<<<< HEAD
 				<div className="w-full 2xl:w-[400px] shrink-0 sticky top-6">
 					<div className="bg-white rounded-xl border border-[var(--glass-border)] shadow-sm overflow-hidden">
 						<div className="p-4 border-b border-gray-100 bg-gray-50/50 flex items-center justify-between">
@@ -779,4 +958,75 @@ export default function SaleClient() {
 			</div>
 		</div>
 	);
+=======
+              <div className="mt-6 flex justify-end">
+                <button
+                  type="submit"
+                  disabled={saving}
+                  className={cx(
+                    "inline-flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-bold text-white shadow-lg transition-all",
+                    "bg-gradient-to-r from-[var(--brand)] to-blue-600 hover:shadow-blue-500/25 active:scale-[0.98]",
+                    saving ? "opacity-70 cursor-not-allowed" : ""
+                  )}
+                >
+                  {saving ? (
+                    <>
+                      <CircularProgress
+                        size={16}
+                        color="inherit"
+                        className="mr-2"
+                      />
+                      Menyimpan...
+                    </>
+                  ) : (
+                    <>
+                      <SummarizeRoundedIcon fontSize="small" />
+                      Simpan Penjualan
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        {/* Right Side: Live Preview */}
+        <div className="w-full 2xl:w-[400px] shrink-0 sticky top-6">
+          <div className="bg-white rounded-xl border border-[var(--glass-border)] shadow-sm overflow-hidden">
+            <div className="p-4 border-b border-gray-100 bg-gray-50/50 flex items-center justify-between">
+              <h3 className="font-semibold text-gray-700 text-sm">
+                Live Preview
+              </h3>
+              <div className="text-[10px] text-gray-400">A5 Portrait</div>
+            </div>
+            <div className="p-4 bg-gray-100/50 flex justify-center overflow-auto min-h-[300px] max-h-[calc(100vh-200px)]">
+              <div
+                className="bg-white shadow-lg origin-top"
+                style={{
+                  width: `${A5_W_MM}mm`,
+                  minHeight: `${A5_H_MM}mm`,
+                  padding: "20px",
+                  transform: "scale(0.65)", // Scaled down for preview
+                }}
+              >
+                <InvoiceComponent data={invoiceData} />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <ConfirmationDialog
+        open={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        onConfirm={handleConfirmSave}
+        loading={saving}
+        title="Simpan Penjualan"
+        content={`Apakah Anda yakin ingin menyimpan penjualan ini dengan total ${formatRupiah(
+          grandTotal
+        )}?`}
+      />
+    </div>
+  );
+>>>>>>> e0c72936a410aeab850975a346a34fb9bf258026
 }

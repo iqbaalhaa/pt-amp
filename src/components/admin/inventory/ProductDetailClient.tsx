@@ -2,7 +2,7 @@
 
 import { Box, Typography, Stack, IconButton, Button } from "@mui/material";
 import GlassTable, { Column } from "@/components/ui/GlassTable";
-import { InventoryItemDTO, InventoryHistoryDTO } from "@/actions/inventory-actions";
+import { InventoryItemDTO, StockMovementDTO } from "@/actions/inventory-actions";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { useRouter } from "next/navigation";
 import { formatRupiah } from "@/lib/currency";
@@ -11,13 +11,13 @@ import { id } from "date-fns/locale";
 
 type Props = {
   summary: InventoryItemDTO;
-  purchases: InventoryHistoryDTO[];
+  movements: StockMovementDTO[];
 };
 
-export default function ProductDetailClient({ summary, purchases }: Props) {
+export default function ProductDetailClient({ summary, movements }: Props) {
   const router = useRouter();
 
-  const columns: Column<InventoryHistoryDTO>[] = [
+  const columns: Column<StockMovementDTO>[] = [
     {
       header: "#",
       accessorKey: "id",
@@ -39,38 +39,31 @@ export default function ProductDetailClient({ summary, purchases }: Props) {
       ),
     },
     {
-      header: "Supplier",
-      accessorKey: "supplier",
-      cell: (row) => <span className="text-zinc-700 font-semibold uppercase text-sm">{row.supplier || "-"}</span>,
+      header: "Tipe",
+      accessorKey: "type",
+      cell: (row) => (
+        <span className={`text-sm font-semibold ${row.qty > 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+          {row.type}
+        </span>
+      ),
     },
     {
-      header: "Harga",
-      accessorKey: "unitCost",
-      className: "text-right",
-      cell: (row) => <span className="font-semibold text-emerald-600">{formatRupiah(row.unitCost, 0)}</span>,
+      header: "Referensi",
+      accessorKey: "reference",
+      cell: (row) => <span className="text-zinc-600 text-sm">{row.reference}</span>,
     },
     {
       header: "Jumlah",
       accessorKey: "qty",
       className: "text-right",
-      cell: (row) => <span className="font-bold text-zinc-800">{row.qty.toLocaleString("id-ID")}</span>,
-    },
-    {
-      header: "Aksi",
-      accessorKey: "purchaseId",
-      className: "text-right",
-      cell: (row) => (
-        <Button
-          size="small"
-          variant="outlined"
-          onClick={(e) => {
-            e.stopPropagation();
-            router.push(`/admin/ledger?type=purchase&page=1&id=${row.purchaseId}&selected=${row.purchaseId}`);
-          }}
-        >
-          Kunjungi Transaksi
-        </Button>
-      ),
+      cell: (row) => {
+        const isPositive = row.qty > 0;
+        return (
+          <span className={`font-bold ${isPositive ? 'text-emerald-600' : 'text-red-600'}`}>
+            {isPositive ? '+' : ''}{row.qty.toLocaleString("id-ID")}
+          </span>
+        );
+      },
     },
   ];
 
@@ -132,10 +125,10 @@ export default function ProductDetailClient({ summary, purchases }: Props) {
 
       <Box>
         <Typography variant="h6" className="font-bold text-zinc-800 mb-4">
-          Riwayat Pembelian
+          Riwayat Pergerakan Stok
         </Typography>
         <GlassTable
-          data={purchases}
+          data={movements}
           columns={columns}
           className="shadow-xl"
         />

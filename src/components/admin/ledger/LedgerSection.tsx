@@ -2027,7 +2027,7 @@ export function LedgerSection({
       for (const id of draftSelectedIds) await approvePurchase(id);
     } else if (type === "sale") {
       for (const id of draftSelectedIds) await approveSale(id);
-    } else if (type === "invoice") {
+    } else if (type === "pengeluaran") {
       const { approveExpense } = await import("@/actions/expense-actions");
       for (const id of draftSelectedIds) await approveExpense(id);
     }
@@ -2047,7 +2047,7 @@ export function LedgerSection({
       const { revokeSale } = await import("@/actions/sale-actions");
       for (const id of cancellableSelectedIds)
         await revokeSale(id, rejectReason.trim());
-    } else if (type === "invoice") {
+    } else if (type === "pengeluaran") {
       const { revokeExpense } = await import("@/actions/expense-actions");
       for (const id of cancellableSelectedIds)
         await revokeExpense(id, rejectReason.trim());
@@ -2436,7 +2436,7 @@ export function LedgerSection({
           {extraHeaderContent}
           {(type === "purchase" ||
             type === "sale" ||
-            type === "invoice" ||
+            type === "pengeluaran" ||
             type === "production") && (
             <div className="flex items-center gap-2">
               {(type === "purchase" || type === "production") && (
@@ -2526,7 +2526,7 @@ export function LedgerSection({
                   const titleMap: Record<string, string> = {
                     purchase: "Pembelian",
                     sale: "Penjualan",
-                    invoice: "Invoice",
+                    pengeluaran: "Pengeluaran",
                     production: "Produksi",
                   };
                   const reportTitle = titleMap[type] || "Laporan";
@@ -2614,6 +2614,7 @@ export function LedgerSection({
         sortColumn={sortColumn}
         sortDirection={sortDirection}
         onSort={handleSort}
+        counterpartyHeader={type === "production" ? "Total Pekerja" : "Pihak"}
       />
 
       {entries.length > 0 && (
@@ -3041,9 +3042,41 @@ export function LedgerSection({
                       <th className="border border-slate-200 px-2 py-1 text-left">
                         Barang
                       </th>
-                      <th className="border border-slate-200 px-2 py-1 text-left">
-                        Qty - Satuan
-                      </th>
+                      {selectedEntry.type !== "production" && (
+                        <th className="border border-slate-200 px-2 py-1 text-left">
+                          Qty - Satuan
+                        </th>
+                      )}
+                      {selectedEntry.subType === "Pengikisan" && (
+                        <>
+                          <th className="border border-slate-200 px-2 py-1 text-right">
+                            KA (kg)
+                          </th>
+                          <th className="border border-slate-200 px-2 py-1 text-right">
+                            Stik (kg)
+                          </th>
+                        </>
+                      )}
+                      {selectedEntry.subType === "Pemotongan" && (
+                        <th className="border border-slate-200 px-2 py-1 text-right">
+                          Qty (kg)
+                        </th>
+                      )}
+                      {selectedEntry.subType === "Penjemuran" && (
+                        <>
+                          <th className="border border-slate-200 px-2 py-1 text-right">
+                            Hari
+                          </th>
+                          <th className="border border-slate-200 px-2 py-1 text-right">
+                            Lembur (Jam)
+                          </th>
+                        </>
+                      )}
+                      {selectedEntry.subType === "Pengemasan" && (
+                        <th className="border border-slate-200 px-2 py-1 text-right">
+                          Bungkus
+                        </th>
+                      )}
                       <th className="border border-slate-200 px-2 py-1 text-right">
                         Harga
                       </th>
@@ -3061,9 +3094,41 @@ export function LedgerSection({
                         <td className="border border-slate-200 px-2 py-1">
                           {ln.name}
                         </td>
-                        <td className="border border-slate-200 px-2 py-1">
-                          {ln.qty} {ln.unit ?? ""}
-                        </td>
+                        {selectedEntry.type !== "production" && (
+                          <td className="border border-slate-200 px-2 py-1">
+                            {ln.qty} {ln.unit ?? ""}
+                          </td>
+                        )}
+                        {selectedEntry.subType === "Pengikisan" && (
+                          <>
+                            <td className="border border-slate-200 px-2 py-1 text-right">
+                              {ln.kaKg}
+                            </td>
+                            <td className="border border-slate-200 px-2 py-1 text-right">
+                              {ln.stikKg}
+                            </td>
+                          </>
+                        )}
+                        {selectedEntry.subType === "Pemotongan" && (
+                          <td className="border border-slate-200 px-2 py-1 text-right">
+                            {ln.pemotonganQty}
+                          </td>
+                        )}
+                        {selectedEntry.subType === "Penjemuran" && (
+                          <>
+                            <td className="border border-slate-200 px-2 py-1 text-right">
+                              {ln.penjemuranHari}
+                            </td>
+                            <td className="border border-slate-200 px-2 py-1 text-right">
+                              {ln.penjemuranLembur}
+                            </td>
+                          </>
+                        )}
+                        {selectedEntry.subType === "Pengemasan" && (
+                          <td className="border border-slate-200 px-2 py-1 text-right">
+                            {ln.pengemasanBungkus}
+                          </td>
+                        )}
                         <td className="border border-slate-200 px-2 py-1 text-right">
                           {toCurrency(ln.price)}
                         </td>
@@ -3077,7 +3142,14 @@ export function LedgerSection({
                     <tr>
                       <td
                         className="border border-slate-200 px-2 py-1 font-semibold"
-                        colSpan={4}
+                        colSpan={
+                          selectedEntry.type !== "production"
+                            ? 4
+                            : selectedEntry.subType === "Pengikisan" ||
+                              selectedEntry.subType === "Penjemuran"
+                            ? 5
+                            : 4
+                        }
                       >
                         Total
                       </td>

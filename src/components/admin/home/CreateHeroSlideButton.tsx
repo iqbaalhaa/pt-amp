@@ -4,9 +4,36 @@ import { useState } from "react";
 import { createHeroSlide } from "@/actions/cms-actions";
 import { Plus, X, Image as ImageIcon, Video } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { GlassButton } from "@/components/ui/GlassButton";
+import { ConfirmationDialog } from "@/components/ui/ConfirmationDialog";
 
-export default function CreateHeroSlideButton({ nextOrder }: { nextOrder: number }) {
+export default function CreateHeroSlideButton({
+  nextOrder,
+}: {
+  nextOrder: number;
+}) {
   const [isOpen, setIsOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [confirmConfig, setConfirmConfig] = useState<{
+    title: string;
+    content: string;
+    action: () => Promise<void>;
+  } | null>(null);
+  const [confirmBusy, setConfirmBusy] = useState(false);
+
+  const handleConfirm = async () => {
+    if (!confirmConfig) return;
+
+    setConfirmBusy(true);
+    try {
+      await confirmConfig.action();
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setConfirmBusy(false);
+      setConfirmConfig(null);
+    }
+  };
 
   return (
     <>
@@ -41,7 +68,9 @@ export default function CreateHeroSlideButton({ nextOrder }: { nextOrder: number
               className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl overflow-hidden"
             >
               <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-100 bg-white">
-                <h2 className="text-lg font-bold text-zinc-900">Tambah Slide Baru</h2>
+                <h2 className="text-lg font-bold text-zinc-900">
+                  Tambah Slide Baru
+                </h2>
                 <button
                   onClick={() => setIsOpen(false)}
                   className="p-2 rounded-full hover:bg-zinc-100 text-zinc-500 transition-colors"
@@ -52,9 +81,18 @@ export default function CreateHeroSlideButton({ nextOrder }: { nextOrder: number
 
               <div className="p-6">
                 <form
-                  action={async (formData) => {
-                    await createHeroSlide(formData);
-                    setIsOpen(false);
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    const formData = new FormData(e.currentTarget);
+                    setConfirmConfig({
+                      title: "Buat Slide Baru?",
+                      content:
+                        "Apakah Anda yakin ingin membuat slide baru ini?",
+                      action: async () => {
+                        await createHeroSlide(formData);
+                        setIsOpen(false);
+                      },
+                    });
                   }}
                   className="space-y-4"
                 >
@@ -131,20 +169,35 @@ export default function CreateHeroSlideButton({ nextOrder }: { nextOrder: number
                     />
                   </div>
 
-                  <div className="pt-2">
-                    <button
-                      type="submit"
-                      className="w-full py-2 bg-zinc-900 text-white rounded-lg text-xs font-bold hover:bg-zinc-800 transition-colors"
-                    >
-                      Buat Slide
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </motion.div>
+          <div className="flex justify-end gap-2 pt-4">
+            <GlassButton
+              type="button"
+              variant="secondary"
+              onClick={() => setIsOpen(false)}
+              disabled={isLoading}
+            >
+              Batal
+            </GlassButton>
+            <GlassButton
+              type="submit"
+              variant="primary"
+              disabled={isLoading}
+              isLoading={isLoading}
+            >
+              Simpan
+            </GlassButton>
           </div>
-        )}
-      </AnimatePresence>
+        </form>
+      </SafeModal>
+
+      <ConfirmationDialog
+        open={!!confirmConfig}
+        onClose={() => setConfirmConfig(null)}
+        onConfirm={handleConfirm}
+        loading={confirmBusy}
+        title={confirmConfig?.title}
+        content={confirmConfig?.content}
+      />
     </>
   );
 }

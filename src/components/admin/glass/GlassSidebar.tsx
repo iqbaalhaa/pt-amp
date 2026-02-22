@@ -74,7 +74,7 @@ const groups: Group[] = [
         icon: <ReceiptLongIcon fontSize="small" />,
       },
       {
-        label: "Invoice Expense",
+        label: "Pengeluaran",
         href: "/admin/expenses",
         icon: <RequestQuoteIcon fontSize="small" />,
       },
@@ -145,6 +145,10 @@ const groups: Group[] = [
       },
     ],
   },
+<<<<<<< HEAD
+=======
+
+>>>>>>> e0c72936a410aeab850975a346a34fb9bf258026
   {
     title: "Master Data",
     items: [

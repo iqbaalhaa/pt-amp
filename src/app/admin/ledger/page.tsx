@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { LedgerSection } from "@/components/admin/ledger/LedgerSection";
 import { LedgerTabs } from "@/components/admin/ledger/LedgerTabs";
+import PengikisanBulkImport from "@/components/admin/production/PengikisanBulkImport";
 import { ProductionCostSummary } from "@/components/admin/ledger/ProductionCostSummary";
 import { LedgerEntry } from "@/components/admin/ledger/types";
 import {
@@ -12,7 +13,7 @@ import LedgerFiltersClient from "@/components/admin/ledger/LedgerFiltersClient";
 type SearchParams = {
   start?: string;
   end?: string;
-  type?: "purchase" | "sale" | "production" | "invoice";
+  type?: "purchase" | "sale" | "production" | "pengeluaran";
   subType?: string;
   status?: "draft" | "posted" | "cancelled";
   affectStockOnly?: "true" | "false";
@@ -610,7 +611,7 @@ export default async function AdminLedgerPage({
     const totalValue = total > 0 ? total : null;
     return {
       id: e.id.toString(),
-      type: "invoice",
+      type: "pengeluaran",
       date: e.date.toISOString(),
       status: e.status as any,
       reference: e.id.toString(),
@@ -636,23 +637,29 @@ export default async function AdminLedgerPage({
 
   const pengikisanEntries: LedgerEntry[] = pengikisanList.map((p) => {
     const total = parseFloat(p.totalUpah?.toString() || "0");
-    const names = Array.from(
-      new Set(p.pengikisanItems.map((i) => i.nama))
-    ).join(", ");
+    const count = p.pengikisanItems.length;
+    const counterpartyLabel = count > 0 ? `${count} Org` : "-";
+
     return {
       id: `pengikisan-${p.id}`,
       type: "production",
       date: p.date.toISOString(),
       status: "completed" as any,
       reference: `PK-${p.id}`,
+<<<<<<< HEAD
       createdByName: p.petugas || null,
       counterparty: names || "-",
+=======
+      createdByName: p.namaPetugas || null,
+      counterparty: counterpartyLabel,
+>>>>>>> e0c72936a410aeab850975a346a34fb9bf258026
       total: total > 0 ? total : null,
       stockImpact: "NEUTRAL",
       notes: p.notes,
-      itemCount: p.pengikisanItems.length,
+      itemCount: count,
       productionCost: total,
       subType: "Pengikisan",
+<<<<<<< HEAD
       pengikisanItems: p.pengikisanItems.map((it) => ({
         nama: it.nama,
         kaKg: Number(it.kaKg ?? 0),
@@ -660,56 +667,97 @@ export default async function AdminLedgerPage({
         upahKa: Number(it.upahKa ?? 0),
         upahStik: Number(it.upahStik ?? 0),
         total: Number(it.total ?? 0),
+=======
+      lines: p.pengikisanItems.map((i) => ({
+        name: i.nama,
+        qty: 1,
+        unit: "org",
+        price: parseFloat(i.total.toString()),
+        subtotal: parseFloat(i.total.toString()),
+        kaKg: parseFloat(i.kaKg.toString()),
+        stikKg: parseFloat(i.stikKg.toString()),
+>>>>>>> e0c72936a410aeab850975a346a34fb9bf258026
       })),
     };
   });
 
   const pemotonganEntries: LedgerEntry[] = pemotonganList.map((p) => {
     const total = parseFloat(p.totalUpah?.toString() || "0");
-    const names = Array.from(
+    const uniqueNames = Array.from(
       new Set(p.pemotonganItems.map((i) => i.nama))
-    ).join(", ");
+    );
+    const nameStr = uniqueNames.join(", ");
+    const count = p.pemotonganItems.length;
+    const counterpartyLabel =
+      uniqueNames.length > 0 ? `${nameStr} (${count} Org)` : "-";
+
     return {
       id: `pemotongan-${p.id}`,
       type: "production",
       date: p.date.toISOString(),
       status: "completed" as any,
       reference: `PM-${p.id}`,
+<<<<<<< HEAD
       createdByName: (p as any).petugas || null,
       counterparty: names || "-",
+=======
+      createdByName: p.petugas || null,
+      counterparty: counterpartyLabel,
+>>>>>>> e0c72936a410aeab850975a346a34fb9bf258026
       total: total > 0 ? total : null,
       stockImpact: "NEUTRAL",
       notes: p.notes,
-      itemCount: p.pemotonganItems.length,
+      itemCount: count,
       productionCost: total,
       subType: "Pemotongan",
+<<<<<<< HEAD
       pemotonganItems: p.pemotonganItems.map((it) => ({
         nama: it.nama,
         qty: Number(it.qty ?? 0),
         total: Number(it.total ?? 0),
+=======
+      lines: p.pemotonganItems.map((i) => ({
+        name: i.nama,
+        qty: 1,
+        unit: "org",
+        price: parseFloat(i.total.toString()),
+        subtotal: parseFloat(i.total.toString()),
+        pemotonganQty: parseFloat(i.qty.toString()),
+>>>>>>> e0c72936a410aeab850975a346a34fb9bf258026
       })),
     };
   });
 
   const penjemuranEntries: LedgerEntry[] = penjemuranList.map((p) => {
     const total = parseFloat(p.totalUpah?.toString() || "0");
-    const names = Array.from(
+    const uniqueNames = Array.from(
       new Set(p.penjemuranItems.map((i) => i.nama))
-    ).join(", ");
+    );
+    const nameStr = uniqueNames.join(", ");
+    const count = p.penjemuranItems.length;
+    const counterpartyLabel =
+      uniqueNames.length > 0 ? `${nameStr} (${count} Org)` : "-";
+
     return {
       id: `penjemuran-${p.id}`,
       type: "production",
       date: p.date.toISOString(),
       status: "completed" as any,
       reference: `PJ-${p.id}`,
+<<<<<<< HEAD
       createdByName: (p as any).petugas || null,
       counterparty: names || "-",
+=======
+      createdByName: p.petugas || null,
+      counterparty: counterpartyLabel,
+>>>>>>> e0c72936a410aeab850975a346a34fb9bf258026
       total: total > 0 ? total : null,
       stockImpact: "NEUTRAL",
       notes: p.notes,
-      itemCount: p.penjemuranItems.length,
+      itemCount: count,
       productionCost: total,
       subType: "Penjemuran",
+<<<<<<< HEAD
       penjemuranItems: p.penjemuranItems.map((it) => ({
         nama: it.nama,
         hari: Number(it.hari ?? 0),
@@ -717,29 +765,45 @@ export default async function AdminLedgerPage({
         upahPerHari: Number(it.upahPerHari ?? 0),
         upahLemburPerJam: Number(it.upahLemburPerJam ?? 0),
         total: Number(it.total ?? 0),
+=======
+      lines: p.penjemuranItems.map((i) => ({
+        name: i.nama,
+        qty: 1,
+        unit: "org",
+        price: parseFloat(i.total.toString()),
+        subtotal: parseFloat(i.total.toString()),
+        penjemuranHari: parseFloat(i.hari.toString()),
+        penjemuranLembur: parseFloat(i.lemburJam.toString()),
+>>>>>>> e0c72936a410aeab850975a346a34fb9bf258026
       })),
     };
   });
 
   const pengemasanEntries: LedgerEntry[] = pengemasanList.map((p) => {
     const total = parseFloat(p.totalUpah?.toString() || "0");
-    const names = Array.from(
-      new Set(p.pengemasanItems.map((i) => i.nama))
-    ).join(", ");
+    const count = p.pengemasanItems.length;
+    const counterpartyLabel = count > 0 ? `${count} Org` : "-";
+
     return {
       id: `pengemasan-${p.id}`,
       type: "production",
       date: p.date.toISOString(),
       status: "completed" as any,
       reference: `PG-${p.id}`,
+<<<<<<< HEAD
       createdByName: (p as any).petugas || null,
       counterparty: names || "-",
+=======
+      createdByName: p.petugas || null,
+      counterparty: counterpartyLabel,
+>>>>>>> e0c72936a410aeab850975a346a34fb9bf258026
       total: total > 0 ? total : null,
       stockImpact: "NEUTRAL",
       notes: p.notes,
-      itemCount: p.pengemasanItems.length,
+      itemCount: count,
       productionCost: total,
       subType: "Pengemasan",
+<<<<<<< HEAD
       pengemasanItems: p.pengemasanItems.map((it) => ({
         nama: it.nama,
         bungkus: Number(it.bungkus ?? 0),
@@ -832,6 +896,15 @@ export default async function AdminLedgerPage({
         upahPerHari: Number(it.upahPerHari ?? 0),
         upahLemburPerJam: Number(it.upahLemburPerJam ?? 0),
         total: Number(it.total ?? 0),
+=======
+      lines: p.pengemasanItems.map((i) => ({
+        name: i.nama,
+        qty: 1,
+        unit: "org",
+        price: parseFloat(i.total.toString()),
+        subtotal: parseFloat(i.total.toString()),
+        pengemasanBungkus: parseFloat(i.bungkus.toString()),
+>>>>>>> e0c72936a410aeab850975a346a34fb9bf258026
       })),
     };
   });
@@ -876,7 +949,7 @@ export default async function AdminLedgerPage({
     if (typeFilter !== "purchase") filteredPurchases = [];
     if (typeFilter !== "sale") filteredSales = [];
     if (typeFilter !== "production") filteredProductions = [];
-    if (typeFilter !== "invoice") filteredExpenses = [];
+    if (typeFilter !== "pengeluaran") filteredExpenses = [];
   }
 
   const min = params.min ? parseFloat(params.min) : undefined;
@@ -972,11 +1045,17 @@ export default async function AdminLedgerPage({
 
   return (
     <main className="w-full px-4 py-6">
-      <section className="mb-4">
-        <h1 className="text-2xl font-semibold text-slate-900">Pembukuan</h1>
-        <p className="text-sm text-slate-600">
-          Rekap transaksi & pergerakan stok dari data yang terekam
-        </p>
+      <section className="mb-4 flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold text-slate-900">Pembukuan</h1>
+          <p className="text-sm text-slate-600">
+            Rekap transaksi & pergerakan stok dari data yang terekam
+          </p>
+        </div>
+        {params.type === "production" &&
+          (!params.subType || params.subType === "Pengikisan") && (
+            <PengikisanBulkImport />
+          )}
       </section>
 
       <section className="mb-4 rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-100">
@@ -1020,12 +1099,12 @@ export default async function AdminLedgerPage({
             </section>
           );
         }
-        if (typeParam === "invoice") {
+        if (typeParam === "pengeluaran") {
           return (
             <section className="mb-4">
               <LedgerSection
-                title="Invoice"
-                type="invoice"
+                title="Pengeluaran"
+                type="pengeluaran"
                 entries={sortedExpenses}
                 totalCount={expenseCount}
                 totalNominal={expenseNominal}

@@ -3,7 +3,15 @@
 import { useState } from "react";
 import { authClient } from "@/lib/auth-client";
 import GlassButton from "@/components/ui/GlassButton";
-import { Alert, CircularProgress, IconButton, InputAdornment, Stack, TextField } from "@mui/material";
+import ConfirmationDialog from "@/components/ui/ConfirmationDialog";
+import {
+  Alert,
+  CircularProgress,
+  IconButton,
+  InputAdornment,
+  Stack,
+  TextField,
+} from "@mui/material";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 
@@ -11,30 +19,35 @@ export default function ChangePasswordForm() {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  
+
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [message, setMessage] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    setMessage(null);
-
     if (newPassword !== confirmPassword) {
       setMessage({ type: "error", text: "Password baru tidak cocok." });
-      setLoading(false);
       return;
     }
 
     if (newPassword.length < 8) {
-        setMessage({ type: "error", text: "Password minimal 8 karakter." });
-        setLoading(false);
-        return;
+      setMessage({ type: "error", text: "Password minimal 8 karakter." });
+      return;
     }
+    setConfirmOpen(true);
+  };
+
+  const handleConfirmSave = async () => {
+    setLoading(true);
+    setMessage(null);
 
     try {
       const { data, error } = await authClient.changePassword({
@@ -44,12 +57,16 @@ export default function ChangePasswordForm() {
       });
 
       if (error) {
-        setMessage({ type: "error", text: error.message || "Gagal mengubah password." });
+        setMessage({
+          type: "error",
+          text: error.message || "Gagal mengubah password.",
+        });
       } else {
         setMessage({ type: "success", text: "Password berhasil diubah!" });
         setCurrentPassword("");
         setNewPassword("");
         setConfirmPassword("");
+        setConfirmOpen(false);
       }
     } catch (err) {
       setMessage({ type: "error", text: "Terjadi kesalahan." });
@@ -58,7 +75,9 @@ export default function ChangePasswordForm() {
     }
   };
 
-  const handleClickShowPassword = (setter: React.Dispatch<React.SetStateAction<boolean>>) => {
+  const handleClickShowPassword = (
+    setter: React.Dispatch<React.SetStateAction<boolean>>
+  ) => {
     setter((show) => !show);
   };
 
@@ -84,7 +103,9 @@ export default function ChangePasswordForm() {
             endAdornment: (
               <InputAdornment position="end">
                 <IconButton
-                  onClick={() => handleClickShowPassword(setShowCurrentPassword)}
+                  onClick={() =>
+                    handleClickShowPassword(setShowCurrentPassword)
+                  }
                   edge="end"
                 >
                   {showCurrentPassword ? <VisibilityOff /> : <Visibility />}
@@ -129,7 +150,9 @@ export default function ChangePasswordForm() {
             endAdornment: (
               <InputAdornment position="end">
                 <IconButton
-                  onClick={() => handleClickShowPassword(setShowConfirmPassword)}
+                  onClick={() =>
+                    handleClickShowPassword(setShowConfirmPassword)
+                  }
                   edge="end"
                 >
                   {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
@@ -140,16 +163,28 @@ export default function ChangePasswordForm() {
         />
 
         <div className="flex justify-end pt-2">
-          <GlassButton 
-              type="submit" 
-              variant="primary" 
-              disabled={loading}
-              className="w-full sm:w-auto"
+          <GlassButton
+            type="submit"
+            variant="primary"
+            disabled={loading}
+            className="w-full sm:w-auto"
           >
-            {loading ? <CircularProgress size={20} color="inherit" /> : "Ganti Password"}
+            {loading ? (
+              <CircularProgress size={20} color="inherit" />
+            ) : (
+              "Ganti Password"
+            )}
           </GlassButton>
         </div>
       </Stack>
+      <ConfirmationDialog
+        open={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        onConfirm={handleConfirmSave}
+        loading={loading}
+        title="Ganti Password"
+        content="Apakah Anda yakin ingin mengganti password akun Anda?"
+      />
     </form>
   );
 }

@@ -21,6 +21,18 @@ export async function getItemTypes(): Promise<ItemTypeDTO[]> {
 		orderBy: { name: "asc" },
 	});
 
+	const stockAggregates = await prisma.stockMovement.groupBy({
+		by: ["itemTypeId"],
+		_sum: {
+			qty: true,
+		},
+	});
+
+	const stockMap = new Map<string, number>();
+	stockAggregates.forEach((agg) => {
+		stockMap.set(agg.itemTypeId.toString(), Number(agg._sum.qty || 0));
+	});
+
 	return itemTypes.map((it) => ({
 		id: it.id.toString(),
 		name: it.name,
@@ -30,6 +42,7 @@ export async function getItemTypes(): Promise<ItemTypeDTO[]> {
 		unit: it.unit,
 		isPublic: it.isPublic,
 		isActive: it.isActive,
+		stock: stockMap.get(it.id.toString())?.toString() || "0",
 	}));
 }
 

@@ -29,6 +29,7 @@ import AttachMoneyRoundedIcon from "@mui/icons-material/AttachMoneyRounded";
 import GlassButton from "@/components/ui/GlassButton";
 import PageHeader from "@/components/ui/PageHeader";
 import SafeModal from "@/components/ui/SafeModal";
+import ConfirmationDialog from "@/components/ui/ConfirmationDialog";
 import { createPengemasan } from "@/actions/pengemasan-actions";
 import { ItemTypeDTO } from "@/actions/item-type-actions";
 import { getInventorySummary } from "@/actions/inventory-actions";
@@ -73,9 +74,13 @@ function cx(...classes: Array<string | false | null | undefined>) {
 }
 
 export default function PengemasanClient() {
+<<<<<<< HEAD
   const [rows, setRows] = useState<Row[]>([
     { id: 1, nama: "", itemTypeId: "", bungkus: 0 },
   ]);
+=======
+  const [rows, setRows] = useState<Row[]>([{ id: 1, nama: "", bungkus: 0 }]);
+>>>>>>> e0c72936a410aeab850975a346a34fb9bf258026
 
   const [date, setDate] = useState(
     () => new Date().toISOString().split("T")[0]
@@ -85,6 +90,7 @@ export default function PengemasanClient() {
   const [saving, setSaving] = useState(false);
 
   const [openPreview, setOpenPreview] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const [lastSavedId, setLastSavedId] = useState<string | null>(null);
 
   const [workerOptions, setWorkerOptions] = useState<WorkerDTO[]>([]);
@@ -214,10 +220,7 @@ export default function PengemasanClient() {
   };
 
   const activeRows = useMemo(
-    () =>
-      rows.filter(
-        (r) => r.nama || r.bungkus > 0
-      ),
+    () => rows.filter((r) => r.nama || r.bungkus > 0),
     [rows]
   );
 
@@ -233,21 +236,33 @@ export default function PengemasanClient() {
     setNotes("");
   };
 
-  const handleSubmit = async (e: FormEvent) => {
+  const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (!date) {
       alert("Tanggal harus diisi");
       return;
     }
 
+<<<<<<< HEAD
     const validRows = rows.filter(
       (r) => r.nama && r.bungkus > 0 && r.itemTypeId
     );
+=======
+    const validRows = rows.filter((r) => r.nama && r.bungkus > 0);
+>>>>>>> e0c72936a410aeab850975a346a34fb9bf258026
 
     if (validRows.length === 0) {
-      alert("Mohon isi minimal satu baris data dengan lengkap (Pekerja, Bungkus)");
+      alert(
+        "Mohon isi minimal satu baris data dengan lengkap (Pekerja, Bungkus)"
+      );
       return;
     }
+
+    setConfirmOpen(true);
+  };
+
+  const handleConfirmSave = async () => {
+    const validRows = rows.filter((r) => r.nama && r.bungkus > 0);
 
     try {
       setSaving(true);
@@ -267,6 +282,7 @@ export default function PengemasanClient() {
       if (res?.success) {
         setLastSavedId(res.id);
         setOpenPreview(true);
+        setConfirmOpen(false);
       } else {
         alert("Gagal menyimpan data");
       }
@@ -420,6 +436,7 @@ export default function PengemasanClient() {
         subtitle="Catat hasil kerja pengemasan (bungkus)."
         actions={
           <>
+            <PengemasanBulkImport />
             <Link
               href="/admin/pengemasan/riwayat"
               className={cx(
@@ -507,6 +524,7 @@ export default function PengemasanClient() {
                 />
                 Upah/Bungkus (dari Pengaturan Upah)
               </label>
+<<<<<<< HEAD
               <div className="h-[38px] flex items-center rounded-lg border border-[var(--glass-border)] bg-zinc-50 px-3 text-[12px] text-black/80">
                 <span className="mr-1 text-black/50">Rp</span>
                 <span className="font-semibold">
@@ -514,6 +532,22 @@ export default function PengemasanClient() {
                 </span>
               </div>
             </div> */}
+=======
+              <TextField
+                type="number"
+                value={upahPerBungkus}
+                onChange={(e) =>
+                  setUpahPerBungkus(parseFloat(e.target.value) || 0)
+                }
+                sx={muiCompactInputSx}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">Rp</InputAdornment>
+                  ),
+                }}
+              />
+            </div>
+>>>>>>> e0c72936a410aeab850975a346a34fb9bf258026
           </div>
 
           {/* Table */}
@@ -588,9 +622,8 @@ export default function PengemasanClient() {
                       <td className="px-3 py-2">
                         <Autocomplete
                           value={
-                            workerOptions.find(
-                              (w) => w.name === row.nama
-                            ) || null
+                            workerOptions.find((w) => w.name === row.nama) ||
+                            null
                           }
                           onChange={async (_event, newValue) => {
                             if (newValue && (newValue as any).inputValue) {
@@ -604,11 +637,7 @@ export default function PengemasanClient() {
                                     ...prev,
                                     newWorker,
                                   ]);
-                                  handleChange(
-                                    row.id,
-                                    "nama",
-                                    newWorker.name
-                                  );
+                                  handleChange(row.id, "nama", newWorker.name);
                                 }
                               } catch (err) {
                                 console.error(err);
@@ -929,8 +958,8 @@ export default function PengemasanClient() {
             Data Pengemasan Tersimpan!
           </h3>
           <p className="text-black/60 text-sm mb-6 max-w-xs">
-            Data pengemasan berhasil disimpan ke database. Anda dapat
-            mengunduh PDF sebagai arsip.
+            Data pengemasan berhasil disimpan ke database. Anda dapat mengunduh
+            PDF sebagai arsip.
           </p>
           <div className="bg-blue-50 text-blue-800 text-xs px-4 py-3 rounded-lg w-full text-left">
             <p className="font-semibold mb-1">ID Transaksi:</p>
@@ -938,6 +967,15 @@ export default function PengemasanClient() {
           </div>
         </div>
       </SafeModal>
+
+      <ConfirmationDialog
+        open={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        onConfirm={handleConfirmSave}
+        loading={saving}
+        title="Simpan Data Pengemasan"
+        content="Apakah Anda yakin ingin menyimpan data pengemasan ini? Pastikan semua data sudah benar."
+      />
     </div>
   );
 }

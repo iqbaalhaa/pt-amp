@@ -49,7 +49,7 @@ export async function createPemotongan(input: PemotonganInput) {
       petugas: currentUserName || input.petugas,
       notes: input.notes ?? null,
       totalUpah: totalUpah.toString(),
-      upahPerKg: upahPerKg || null,
+      upahPerKg: upahPerKg.toString(),
       ...(cleanedItems.length > 0
         ? {
             pemotonganItems: {
@@ -63,14 +63,11 @@ export async function createPemotongan(input: PemotonganInput) {
   return { success: true, id: String(pemotongan.id) };
 }
 
-export async function getPemotonganHistory() {
-  const data = await prisma.pemotongan.findMany({
-    orderBy: { date: "desc" },
-    include: {
-      pemotonganItems: true,
-    },
-  });
+export async function bulkCreatePemotongan(inputs: PemotonganInput[]) {
+  const session = await auth.api.getSession({ headers: await headers() });
+  const currentUserName = session?.user.name ?? null;
 
+<<<<<<< HEAD
   return data.map((item) => ({
     id: String(item.id),
     date: item.date,
@@ -84,17 +81,55 @@ export async function getPemotonganHistory() {
     })),
   }));
 }
+=======
+  let successCount = 0;
+  let errors: string[] = [];
+>>>>>>> e0c72936a410aeab850975a346a34fb9bf258026
 
-export async function deletePemotongan(id: string) {
-  try {
-    await prisma.pemotongan.delete({
-      where: { id: BigInt(id) },
-    });
-    revalidatePath("/admin/pemotongan");
-    revalidatePath("/admin/ledger");
-    return { success: true };
-  } catch (error) {
-    console.error("Error deleting pemotongan:", error);
-    return { success: false, error: "Gagal menghapus data" };
+  for (const input of inputs) {
+    try {
+      const upahPerKg = parseFloat(input.upahPerKg || "0");
+
+      const cleanedItems = input.items
+        .map((item) => {
+          const qty = parseFloat(item.qty || "0");
+          const total = qty * upahPerKg;
+
+          return {
+            nama: item.nama,
+            qty: item.qty || "0",
+            upahPerKg: upahPerKg.toString(),
+            total: total.toString(),
+          };
+        })
+        .filter((it) => it.nama || parseFloat(it.qty) > 0);
+
+      if (cleanedItems.length === 0) continue;
+
+      const totalUpah = cleanedItems.reduce(
+        (sum, it) => sum + parseFloat(it.total),
+        0
+      );
+
+      await prisma.pemotongan.create({
+        data: {
+          date: new Date(input.date),
+          petugas: currentUserName || input.petugas,
+          notes: input.notes ?? null,
+          totalUpah: totalUpah.toString(),
+          upahPerKg: upahPerKg.toString(),
+          pemotonganItems: {
+            create: cleanedItems,
+          },
+        },
+      });
+      successCount++;
+    } catch (e: any) {
+      errors.push(`Error for date ${input.date}: ${e.message}`);
+    }
   }
+
+  revalidatePath("/admin/pemotongan");
+  revalidatePath("/admin/ledger");
+  return { success: true, count: successCount, errors };
 }

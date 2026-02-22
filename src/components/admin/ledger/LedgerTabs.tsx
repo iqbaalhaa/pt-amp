@@ -3,6 +3,7 @@
  import { usePathname, useRouter, useSearchParams } from "next/navigation";
  
  type TabKey =
+<<<<<<< HEAD
    | "purchase"
    | "sale"
    | "invoice"
@@ -19,6 +20,21 @@
    { key: "sale", label: "Penjualan" },
   { key: "invoice", label: "Invoice" },
    { key: "production:Pengikisan", label: "Pengikisan" },
+=======
+  | "purchase"
+  | "sale"
+  | "pengeluaran"
+  | "production:Pengikisan"
+  | "production:Pemotongan"
+  | "production:Penjemuran"
+  | "production:Pengemasan";
+
+const TABS: { key: TabKey; label: string }[] = [
+  { key: "purchase", label: "Pembelian" },
+  { key: "sale", label: "Penjualan" },
+  { key: "pengeluaran", label: "Pengeluaran" },
+  { key: "production:Pengikisan", label: "Pengikisan" },
+>>>>>>> e0c72936a410aeab850975a346a34fb9bf258026
    { key: "production:Pemotongan", label: "Pemotongan" },
    { key: "production:Penjemuran", label: "Penjemuran" },
    { key: "production:Pengemasan", label: "Pengemasan" },
