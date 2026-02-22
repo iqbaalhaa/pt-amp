@@ -18,11 +18,11 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
 
-# Copy package.json only and install dependencies with npm (ignore lockfile)
+# Copy manifests, install deps at build time (including dev deps for build tooling)
 COPY package.json ./
-RUN npm install --omit=dev
+RUN npm install
 
-# Copy application source
+# Copy application source (excluding node_modules via .dockerignore)
 COPY . .
 
 # Generate Prisma client and build Next.js app at image build time
