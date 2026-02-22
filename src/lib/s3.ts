@@ -1,4 +1,5 @@
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import sharp from "sharp";
 
 const endpoint = process.env.S3_ENDPOINT;
 const region = process.env.S3_REGION;
@@ -27,7 +28,7 @@ function buildObjectKey(prefix: string, filename: string) {
 	const timestamp = Date.now();
 	const random = Math.random().toString(36).slice(2, 10);
 	const name = filename.replace(/[^a-zA-Z0-9.\-_]/g, "_");
-	const parts = [];
+	const parts: string[] = [];
 	if (safeRoot) parts.push(safeRoot);
 	if (safePrefix) parts.push(safePrefix);
 	parts.push(`${timestamp}-${random}-${name}`);
@@ -40,11 +41,28 @@ export async function uploadToS3(options: {
 	contentType?: string;
 }): Promise<string> {
 	const { prefix, file } = options;
-	const contentType = options.contentType || file.type || "application/octet-stream";
+	let contentType = options.contentType || file.type || "application/octet-stream";
 
-	const key = buildObjectKey(prefix, file.name || "file.bin");
+	const originalName = file.name || "file.bin";
+	let uploadName = originalName;
+
 	const arrayBuffer = await file.arrayBuffer();
-	const body = new Uint8Array(arrayBuffer);
+
+	let body: Uint8Array | Buffer;
+	if (contentType.startsWith("image/") && contentType !== "image/webp") {
+		const input = Buffer.from(arrayBuffer);
+		const webpBuffer = await sharp(input).webp({ quality: 80 }).toBuffer();
+		body = webpBuffer;
+		contentType = "image/webp";
+
+		const dotIndex = originalName.lastIndexOf(".");
+		const baseName = dotIndex > 0 ? originalName.slice(0, dotIndex) : originalName;
+		uploadName = `${baseName}.webp`;
+	} else {
+		body = new Uint8Array(arrayBuffer);
+	}
+
+	const key = buildObjectKey(prefix, uploadName);
 
 	await s3Client.send(
 		new PutObjectCommand({
@@ -62,4 +80,3 @@ export async function uploadToS3(options: {
 
 	return `${protocol}//${host}/${bucket}/${key}`;
 }
-

@@ -2,24 +2,15 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import { promises as fs } from "fs";
-import path from "path";
+import { uploadToS3 } from "@/lib/s3";
 
-// Utility to handle file uploads
+// Utility to handle file uploads (now using S3)
 async function saveUploadToPublic(file: File): Promise<string | null> {
   try {
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-    const uploadsDir = path.join(process.cwd(), "public", "uploads");
-    await fs.mkdir(uploadsDir, { recursive: true });
-    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-    const timestamp = Date.now();
-    const ext = path.extname(safeName) || ".png";
-    const base = path.basename(safeName, ext);
-    const filename = `${base}-${timestamp}${ext}`;
-    const filePath = path.join(uploadsDir, filename);
-    await fs.writeFile(filePath, buffer);
-    return `/uploads/${filename}`;
+    return await uploadToS3({
+      prefix: "blog",
+      file,
+    });
   } catch {
     return null;
   }
