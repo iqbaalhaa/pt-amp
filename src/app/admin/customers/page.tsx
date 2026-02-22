@@ -1,27 +1,19 @@
-import { Paper, Stack, Typography, Box } from "@mui/material";
-import Grid from "@mui/material/Grid";
+export const metadata = {
+  title: "Customers | PT AMP Dashboard",
+};
 
-export default async function CustomersPage() {
+export default function AdminCustomersPage() {
   return (
-    <Stack spacing={3}>
-      <Box>
-        <Typography variant="h4" sx={{ fontWeight: 800 }}>
-          Customers
-        </Typography>
-        <Typography variant="body2" sx={{ color: "text.secondary" }}>
-          Modul Customer sudah dihapus dari schema
-        </Typography>
-      </Box>
-
-      <Grid container spacing={2}>
-        <Grid size={{ xs: 12 }}>
-          <Paper sx={{ p: 2, borderRadius: 2 }}>
-            <Typography variant="body2" sx={{ color: "text.secondary" }}>
-              Halaman ini dinonaktifkan karena model Customer sudah dihapus.
-            </Typography>
-          </Paper>
-        </Grid>
-      </Grid>
-    </Stack>
+    <div className="space-y-4">
+      <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">
+        Customers
+      </h1>
+      <p className="text-sm text-zinc-600">
+        Halaman Customers belum diimplementasikan. Page ini dibuat untuk
+        menstabilkan build setelah merge, nanti bisa diisi dengan fitur
+        manajemen customer.
+      </p>
+    </div>
   );
 }
+

@@ -1,21 +1,42 @@
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import AdminShell from "@/components/admin/AdminShell";
+import GlassAdminShell from "@/components/admin/GlassAdminShell";
+import { prisma } from "@/lib/prisma";
 
 export default async function AdminLayout({
-	children,
+  children,
 }: {
-	children: React.ReactNode;
+  children: React.ReactNode;
 }) {
-	const session = await auth.api.getSession({ headers: await headers() });
+  const session = await auth.api.getSession({ headers: await headers() });
 
-	if (!session) redirect("/login");
-	if (session.user.role !== "SUPERADMIN") redirect("/");
+  if (!session) redirect("/login");
+  // Determine allowed paths for sidebar (hide menus for STAFF)
+  const pivotRoles = await prisma.userRole.findMany({
+    where: { userId: session.user.id },
+    include: { role: true },
+  });
+  const roleNames = pivotRoles.map((r) => r.role.name);
+  const isAdmin =
+    roleNames.includes("ADMIN") ||
+    roleNames.includes("SUPERADMIN") ||
+    session.user.role === "SUPERADMIN";
 
-	return (
-		<AdminShell userEmail={session.user.email} role={session.user.role}>
-			{children}
-		</AdminShell>
-	);
+  const allowedPaths = isAdmin
+    ? null
+    : [
+        "/admin/purchases",
+        "/admin/sales",
+        "/admin/pengikisan",
+        "/admin/pemotongan",
+        "/admin/penjemuran",
+        "/admin/pengemasan",
+      ];
+
+  return (
+    <GlassAdminShell allowedPaths={allowedPaths ?? undefined}>
+      {children}
+    </GlassAdminShell>
+  );
 }

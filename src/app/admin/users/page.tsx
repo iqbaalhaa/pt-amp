@@ -1,54 +1,49 @@
-import { Paper, Stack, Typography, Button, Box } from "@mui/material";
+import { Stack, Typography, Box } from "@mui/material";
 import Grid from "@mui/material/Grid";
+import UserCard from "@/components/admin/users/UserCard";
+import AddUserButton from "@/components/admin/users/AddUserButton";
+import { getUsers } from "@/actions/user-actions";
 
-export default function UsersPage() {
-	return (
-		<Stack spacing={3}>
-			<Box>
-				<Typography variant="h4" sx={{ fontWeight: 800 }}>
-					Users
-				</Typography>
-				<Typography variant="body2" sx={{ color: "text.secondary" }}>
-					Manajemen akun dan peran staff
-				</Typography>
-			</Box>
+export const dynamic = "force-dynamic";
 
-			<Grid container spacing={2}>
-				<Grid size={{ xs: 12, md: 8 }}>
-					<Paper sx={{ p: 2, borderRadius: 2 }}>
-						<Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>
-							Daftar Staff
-						</Typography>
-						<Typography variant="body2" sx={{ color: "text.secondary", mb: 2 }}>
-							Placeholder: tabel staff akan ditampilkan di sini.
-						</Typography>
-						<Button variant="outlined" sx={{ borderColor: "var(--brand)", color: "var(--brand)" }}>
-							Export
-						</Button>
-					</Paper>
-				</Grid>
-				<Grid size={{ xs: 12, md: 4 }}>
-					<Paper
-						sx={{
-							p: 2,
-							borderRadius: 2,
-							border: "1px solid rgba(213,14,12,0.2)",
-							background:
-								"linear-gradient(180deg, rgba(213,14,12,0.06), rgba(255,138,0,0.04))",
-						}}
-					>
-						<Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>
-							Tambah Staff
-						</Typography>
-						<Typography variant="body2" sx={{ color: "text.secondary", mb: 2 }}>
-							Placeholder: form pembuatan staff singkat.
-						</Typography>
-						<Button variant="contained" sx={{ backgroundColor: "var(--brand)" }}>
-							Buat Akun
-						</Button>
-					</Paper>
-				</Grid>
-			</Grid>
-		</Stack>
-	);
+export default async function UsersPage() {
+  const { users, error } = await getUsers();
+
+  return (
+    <Stack spacing={3}>
+      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <Box>
+          <Typography variant="h4" sx={{ fontWeight: 800 }}>
+            Users
+          </Typography>
+          <Typography variant="body2" sx={{ color: "text.secondary" }}>
+            Manajemen akun dan peran staff
+          </Typography>
+        </Box>
+        <AddUserButton />
+      </Box>
+
+      {error ? (
+        <Box className="p-4 bg-red-50 text-red-600 rounded-lg">
+          {error}
+        </Box>
+      ) : (
+        <Grid container spacing={3}>
+          {users?.map((user) => (
+            <Grid key={user.id} size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+              <UserCard user={user} />
+            </Grid>
+          ))}
+          
+          {users?.length === 0 && (
+            <Grid size={{ xs: 12 }}>
+                <div className="text-center py-20 bg-zinc-50 rounded-xl border border-dashed border-zinc-300">
+                    <p className="text-zinc-500">Belum ada user terdaftar.</p>
+                </div>
+            </Grid>
+          )}
+        </Grid>
+      )}
+    </Stack>
+  );
 }

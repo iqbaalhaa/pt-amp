@@ -1,5 +1,8 @@
-import { Paper, Stack, Typography, Button, Box } from "@mui/material";
+import { Stack, Typography, Box } from "@mui/material";
 import Grid from "@mui/material/Grid";
+import GlassButton from "@/components/ui/GlassButton";
+import GlassCard from "@/components/ui/GlassCard";
+import ChangePasswordForm from "@/components/admin/settings/ChangePasswordForm";
 
 export default function SettingsPage() {
 	return (
@@ -14,38 +17,28 @@ export default function SettingsPage() {
 			</Box>
 			<Grid container spacing={2}>
 				<Grid size={{ xs: 12, md: 6 }}>
-					<Paper sx={{ p: 2, borderRadius: 2 }}>
+					<GlassCard className="p-6">
 						<Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>
-							Umum
+							Profil Perusahaan
 						</Typography>
-						<Typography variant="body2" sx={{ color: "text.secondary", mb: 2 }}>
-							Placeholder: pengaturan nama perusahaan, logo, dll.
+						<Typography variant="body2" sx={{ color: "text.secondary", mb: 3 }}>
+							Pengaturan informasi dasar perusahaan yang akan ditampilkan di website.
 						</Typography>
-						<Button variant="contained" sx={{ backgroundColor: "var(--brand)" }}>
-							Simpan
-						</Button>
-					</Paper>
+						<div className="p-4 bg-zinc-50 rounded-lg border border-dashed border-zinc-300 text-center text-zinc-500 text-sm">
+							Fitur ini sedang dalam pengembangan
+						</div>
+					</GlassCard>
 				</Grid>
 				<Grid size={{ xs: 12, md: 6 }}>
-					<Paper
-						sx={{
-							p: 2,
-							borderRadius: 2,
-							border: "1px solid rgba(213,14,12,0.2)",
-							background:
-								"linear-gradient(180deg, rgba(213,14,12,0.06), rgba(255,138,0,0.04))",
-						}}
-					>
+					<GlassCard className="p-6 bg-red-glass/10">
 						<Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>
-							Keamanan
+							Keamanan Akun
 						</Typography>
-						<Typography variant="body2" sx={{ color: "text.secondary", mb: 2 }}>
-							Placeholder: kebijakan password, 2FA, peran akses.
+						<Typography variant="body2" sx={{ color: "text.secondary", mb: 3 }}>
+							Ganti password akun Anda secara berkala untuk menjaga keamanan.
 						</Typography>
-						<Button variant="outlined" sx={{ borderColor: "var(--brand)", color: "var(--brand)" }}>
-							Atur
-						</Button>
-					</Paper>
+						<ChangePasswordForm />
+					</GlassCard>
 				</Grid>
 			</Grid>
 		</Stack>

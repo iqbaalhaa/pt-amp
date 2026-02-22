@@ -1,10 +1,10 @@
 import { Navbar } from "@/components/Navbar";
-import { getProducts } from "@/actions/product-actions";
+import { getPublicItemTypes } from "@/actions/item-type-actions";
 import Link from "next/link";
 import { ArrowRight, Check, Package } from "lucide-react";
 
 export default async function ProductsPage() {
-  const products = await getProducts();
+  const products = await getPublicItemTypes();
 
   return (
     <div className="flex flex-col flex-1">

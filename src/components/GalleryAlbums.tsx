@@ -6,104 +6,30 @@ import { X, Play, Image as ImageIcon, ChevronLeft, ChevronRight, Maximize2 } fro
 type MediaType = "image" | "video";
 
 interface MediaItem {
-  type: MediaType;
+  id: string;
+  type: MediaType | string;
   src: string;
-  thumbnail?: string;
-  caption?: string;
+  thumbnail?: string | null;
+  caption?: string | null;
+  order?: number | null;
 }
 
-interface Album {
+export interface Album {
   id: string;
   title: string;
   description: string;
   coverImage: string;
   items: MediaItem[];
+  order?: number | null;
 }
 
-// Mock Data
-const albums: Album[] = [
-  {
-    id: "process",
-    title: "Proses Produksi",
-    description: "Tahapan pengolahan kulit manis dari bahan mentah hingga siap ekspor.",
-    coverImage: "https://images.unsplash.com/photo-1605333396915-47ed6b68a00e?q=80&w=2070&auto=format&fit=crop",
-    items: [
-      {
-        type: "image",
-        src: "https://images.unsplash.com/photo-1605333396915-47ed6b68a00e?q=80&w=2070&auto=format&fit=crop",
-        caption: "Pengeringan Kulit Manis"
-      },
-      {
-        type: "image",
-        src: "https://images.unsplash.com/photo-1599940778173-e276d4acb2e7?q=80&w=2070&auto=format&fit=crop",
-        caption: "Sortir Kualitas"
-      },
-      {
-        type: "video",
-        src: "https://videos.pexels.com/video-files/4440816/4440816-hd_1920_1080_30fps.mp4",
-        caption: "Proses Pembersihan Manual"
-      },
-      {
-        type: "image",
-        src: "https://images.unsplash.com/photo-1627568349272-3531b23c2806?q=80&w=2070&auto=format&fit=crop",
-        caption: "Detail Tekstur"
-      },
-      {
-         type: "image",
-         src: "https://images.unsplash.com/photo-1588612760636-f0331073867c?q=80&w=2070&auto=format&fit=crop",
-         caption: "Pemeriksaan Akhir"
-       }
-    ]
-  },
-  {
-    id: "facility",
-    title: "Fasilitas & Gudang",
-    description: "Gudang penyimpanan standar internasional dan area kerja yang higienis.",
-    coverImage: "https://images.unsplash.com/photo-1596483582103-605b7668636b?q=80&w=2070&auto=format&fit=crop",
-    items: [
-      {
-        type: "image",
-        src: "https://images.unsplash.com/photo-1596483582103-605b7668636b?q=80&w=2070&auto=format&fit=crop",
-        caption: "Gudang Utama"
-      },
-      {
-        type: "image",
-        src: "https://images.unsplash.com/photo-1615485925763-867862f80933?q=80&w=2074&auto=format&fit=crop",
-        caption: "Area Packing"
-      },
-      {
-        type: "image",
-        src: "https://images.unsplash.com/photo-1587293852726-70cdb56c2866?q=80&w=2072&auto=format&fit=crop",
-        caption: "Loading Dock"
-      }
-    ]
-  },
-  {
-    id: "products",
-    title: "Varian Produk",
-    description: "Berbagai grade kulit manis yang kami sediakan.",
-    coverImage: "https://images.unsplash.com/photo-1615485400323-952445c71b47?q=80&w=2074&auto=format&fit=crop",
-    items: [
-      {
-        type: "image",
-        src: "https://images.unsplash.com/photo-1615485400323-952445c71b47?q=80&w=2074&auto=format&fit=crop",
-        caption: "Grade A Export"
-      },
-      {
-        type: "image",
-        src: "https://images.unsplash.com/photo-1611080626919-7cf5a9dbab5a?q=80&w=2000&auto=format&fit=crop",
-        caption: "Broken & Powder"
-      },
-      {
-        type: "image",
-        src: "https://images.unsplash.com/photo-1599525433649-0d122245c388?q=80&w=2070&auto=format&fit=crop",
-        caption: "Stick Cinnamon"
-      }
-    ]
-  }
-];
+interface GalleryAlbumsProps {
+  albums: Album[];
+  showTitle?: boolean;
+  className?: string;
+}
 
-export function GalleryAlbums() {
+export function GalleryAlbums({ albums, showTitle = true, className }: GalleryAlbumsProps) {
   const [selectedAlbum, setSelectedAlbum] = useState<Album | null>(null);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -157,15 +83,17 @@ export function GalleryAlbums() {
   };
 
   return (
-    <section className="py-24 bg-zinc-50 min-h-screen">
+    <section className={`min-h-screen ${className ? className : 'py-24 bg-zinc-50'}`}>
       <div className="container mx-auto px-4 md:px-6 lg:px-8">
-        <div className="text-center max-w-2xl mx-auto mb-20 animate-in fade-in slide-in-from-bottom-4 duration-700">
-          <span className="text-[var(--brand)] font-semibold tracking-wider text-sm uppercase mb-3 block">Dokumentasi</span>
-          <h1 className="text-4xl md:text-5xl font-bold mb-6 text-zinc-900 tracking-tight">Galeri Aktivitas</h1>
-          <p className="text-lg text-zinc-600 leading-relaxed">
-            Menelusuri jejak kualitas dari petani hingga pengiriman.
-          </p>
-        </div>
+        {showTitle && (
+          <div className="text-center max-w-2xl mx-auto mb-20 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <span className="text-[var(--brand)] font-semibold tracking-wider text-sm uppercase mb-3 block">Dokumentasi</span>
+            <h1 className="text-4xl md:text-5xl font-bold mb-6 text-zinc-900 tracking-tight">Galeri Aktivitas</h1>
+            <p className="text-lg text-zinc-600 leading-relaxed">
+              Menelusuri jejak kualitas dari petani hingga pengiriman.
+            </p>
+          </div>
+        )}
 
         {/* Album Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-10">
@@ -319,9 +247,9 @@ export function GalleryAlbums() {
                 className="max-w-full max-h-[80vh] rounded-lg shadow-2xl ring-1 ring-white/10"
               />
             ) : (
-              <img 
-                src={selectedAlbum.items[lightboxIndex].src} 
-                alt={selectedAlbum.items[lightboxIndex].caption}
+              <img
+                src={selectedAlbum.items[lightboxIndex].src}
+                alt={selectedAlbum.items[lightboxIndex].caption ?? ""}
                 className="max-w-full max-h-[80vh] object-contain rounded-lg shadow-2xl ring-1 ring-white/10"
               />
             )}
