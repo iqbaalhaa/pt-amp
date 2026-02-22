@@ -1,9 +1,11 @@
 ARG NODE_VERSION=22
-FROM node:${NODE_VERSION}-alpine
+FROM node:${NODE_VERSION}-bookworm-slim
 
 WORKDIR /app
 
-RUN apk add --no-cache libc6-compat openssl
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends ca-certificates openssl \
+  && rm -rf /var/lib/apt/lists/*
 
 # Build-time arguments that can be passed from docker-compose
 ARG NODE_ENV=production
