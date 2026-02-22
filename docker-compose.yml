@@ -1,0 +1,22 @@
+services:
+  app:
+    build:
+      context: .
+      args:
+        NODE_VERSION: 22
+        NODE_ENV: ${NODE_ENV:-production}
+        DATABASE_URL: "postgresql://postgres:postgres@db-host:5432/ptamp?schema=public"
+    image: ptamp-app
+    container_name: ptamp-app
+    restart: unless-stopped
+    extra_hosts:
+      - "db-host:host-gateway"
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      DATABASE_URL: "postgresql://postgres:postgres@db-host:5432/ptamp?schema=public"
+    command: sh -c "npx prisma db push --skip-generate && npm run start"
+    ports:
+      - "3000:3000"
+
