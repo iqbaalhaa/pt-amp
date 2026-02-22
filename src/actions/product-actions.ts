@@ -1,6 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
+import { uploadToS3 } from "@/lib/s3";
 import { revalidatePath } from "next/cache";
 import { ProductType } from "@/generated/prisma";
 
@@ -56,9 +57,20 @@ export async function createProduct(formData: FormData) {
 	const description = (formData.get("description") as string) || null;
 	const type = formData.get("type") as ProductType;
 	const unit = (formData.get("unit") as string) || "kg";
-	const image = (formData.get("image") as string) || null;
 	const isActiveRaw = formData.get("isActive");
 	const isActive = isActiveRaw === null ? true : String(isActiveRaw) === "true";
+
+	let image: string | null = null;
+	const file = formData.get("imageFile");
+	if (file && file instanceof File && file.size > 0) {
+		image = await uploadToS3({
+			prefix: "products",
+			file,
+		});
+	} else {
+		const imageUrl = (formData.get("imageUrl") as string) || (formData.get("image") as string) || null;
+		image = imageUrl;
+	}
 
 	await prisma.product.create({
 		data: {
@@ -80,8 +92,19 @@ export async function updateProduct(id: string, formData: FormData) {
 	const description = (formData.get("description") as string) || null;
 	const type = formData.get("type") as ProductType;
 	const unit = (formData.get("unit") as string) || "kg";
-	const image = (formData.get("image") as string) || null;
 	const isActive = String(formData.get("isActive")) === "true";
+
+	let image: string | null = null;
+	const file = formData.get("imageFile");
+	if (file && file instanceof File && file.size > 0) {
+		image = await uploadToS3({
+			prefix: "products",
+			file,
+		});
+	} else {
+		const imageUrl = (formData.get("imageUrl") as string) || (formData.get("image") as string) || null;
+		image = imageUrl;
+	}
 
 	await prisma.product.update({
 		where: { id: BigInt(id) },

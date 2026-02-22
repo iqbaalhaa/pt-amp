@@ -51,9 +51,10 @@ export default function ProductClient({ initialProducts }: ProductClientProps) {
     description: "",
     type: "raw",
     unit: "kg",
-    image: "",
+    imageUrl: "",
     isActive: true,
   });
+  const [imageFile, setImageFile] = useState<File | null>(null);
 
   const handleOpen = (product?: ProductDTO) => {
     if (product) {
@@ -63,9 +64,10 @@ export default function ProductClient({ initialProducts }: ProductClientProps) {
         description: product.description || "",
         type: product.type,
         unit: product.unit,
-        image: product.image || "",
+        imageUrl: product.image || "",
         isActive: product.isActive,
       });
+      setImageFile(null);
     } else {
       setEditingProduct(null);
       setFormData({
@@ -73,9 +75,10 @@ export default function ProductClient({ initialProducts }: ProductClientProps) {
         description: "",
         type: "raw",
         unit: "kg",
-        image: "",
+        imageUrl: "",
         isActive: true,
       });
+      setImageFile(null);
     }
     setOpen(true);
   };
@@ -90,10 +93,24 @@ export default function ProductClient({ initialProducts }: ProductClientProps) {
     setFormData({ ...formData, [name]: value });
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null;
+    setImageFile(file);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const data = new FormData();
-    Object.entries(formData).forEach(([key, value]) => data.append(key, String(value)));
+    data.append("name", formData.name);
+    data.append("description", formData.description);
+    data.append("type", formData.type);
+    data.append("unit", formData.unit);
+    data.append("isActive", String(formData.isActive));
+    if (imageFile) {
+      data.append("imageFile", imageFile);
+    } else if (formData.imageUrl) {
+      data.append("imageUrl", formData.imageUrl);
+    }
 
     if (editingProduct) {
       await updateProduct(editingProduct.id, data);
@@ -236,14 +253,25 @@ export default function ProductClient({ initialProducts }: ProductClientProps) {
                 />
               </Grid>
               <Grid size={{ xs: 12 }}>
-                <TextField
-                  fullWidth
-                  label="Image URL"
-                  name="image"
-                  value={formData.image}
-                  onChange={handleChange}
-                  placeholder="https://..."
-                />
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-zinc-700">
+                    Product Image (upload to S3)
+                  </label>
+                  <input
+                    type="file"
+                    name="imageFile"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                  />
+                  <TextField
+                    fullWidth
+                    label="Or Image URL"
+                    name="imageUrl"
+                    value={formData.imageUrl}
+                    onChange={handleChange}
+                    placeholder="https://..."
+                  />
+                </div>
               </Grid>
               <Grid size={{ xs: 12 }}>
                 <TextField
