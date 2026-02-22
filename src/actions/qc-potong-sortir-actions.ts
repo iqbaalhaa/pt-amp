@@ -2,8 +2,6 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
 
 export type QcPotongSortirItemInput = {
   nama: string;
@@ -21,9 +19,6 @@ export type QcPotongSortirInput = {
 };
 
 export async function createQcPotongSortir(input: QcPotongSortirInput) {
-  const session = await auth.api.getSession({ headers: await headers() });
-  const currentUserName = session?.user.name ?? null;
-
   const upahPerHari = parseFloat(input.upahPerHari || "0");
   const upahLemburPerJam = parseFloat(input.upahLemburPerJam || "0");
 
@@ -61,7 +56,6 @@ export async function createQcPotongSortir(input: QcPotongSortirInput) {
       totalUpah: totalUpah.toString(),
       upahPerHari: upahPerHari || null,
       upahLemburPerJam: upahLemburPerJam || null,
-      petugas: currentUserName || input.petugas,
       ...(cleanedItems.length > 0
         ? {
             qcPotongSortirItems: {
