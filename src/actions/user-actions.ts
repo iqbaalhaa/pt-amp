@@ -17,12 +17,25 @@ export async function createUser(data: { name: string; email: string; password: 
         });
 
         if (result?.user) {
-            // Update role manually since it might not be settable via signUp depending on config
             await prisma.user.update({
                 where: { id: result.user.id },
                 data: { role: data.role }
             });
-            
+
+            const pivotRoleName = data.role === "SUPERADMIN" ? "ADMIN" : data.role;
+            const pivotRole = await prisma.role.findUnique({
+                where: { name: pivotRoleName }
+            });
+
+            if (pivotRole) {
+                await prisma.userRole.create({
+                    data: {
+                        userId: result.user.id,
+                        roleId: pivotRole.id
+                    }
+                });
+            }
+
             revalidatePath("/admin/users");
             return { success: true, user: result.user };
         }
@@ -47,6 +60,26 @@ export async function updateUser(userId: string, data: { name?: string; email?: 
                 role: data.role
             }
         });
+
+        if (data.role) {
+            const pivotRoleName = data.role === "SUPERADMIN" ? "ADMIN" : data.role;
+            const pivotRole = await prisma.role.findUnique({
+                where: { name: pivotRoleName }
+            });
+
+            if (pivotRole) {
+                await prisma.userRole.deleteMany({
+                    where: { userId }
+                });
+
+                await prisma.userRole.create({
+                    data: {
+                        userId,
+                        roleId: pivotRole.id
+                    }
+                });
+            }
+        }
         
         revalidatePath("/admin/users");
         return { success: true };

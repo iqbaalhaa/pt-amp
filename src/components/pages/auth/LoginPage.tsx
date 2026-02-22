@@ -10,10 +10,11 @@ export default function LoginPage() {
 				{/* Background Pattern/Image */}
 				<div className="absolute inset-0 z-0">
 					<div className="absolute inset-0 bg-gradient-to-br from-zinc-900 via-zinc-800 to-black opacity-90" />
-					<div 
+					<div
 						className="absolute inset-0 opacity-20"
 						style={{
-							backgroundImage: "url('https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2070&auto=format&fit=crop')",
+							backgroundImage:
+								"url('https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2070&auto=format&fit=crop')",
 							backgroundSize: "cover",
 							backgroundPosition: "center",
 						}}
@@ -29,21 +30,25 @@ export default function LoginPage() {
 						<div className="bg-white/10 p-2 rounded-lg backdrop-blur-sm border border-white/10">
 							<Building2 className="w-6 h-6" />
 						</div>
-						<span className="text-xl font-bold tracking-tight">PT AMP Dashboard</span>
+						<span className="text-xl font-bold tracking-tight">
+							PT AMP Dashboard
+						</span>
 					</div>
-					
+
 					<div className="space-y-6 max-w-lg">
 						<h2 className="text-4xl font-bold text-white leading-tight">
 							Sistem Manajemen Produksi & Inventaris Terpadu
 						</h2>
 						<p className="text-lg text-zinc-400 leading-relaxed">
-							Kelola seluruh proses bisnis dari hulu ke hilir dalam satu platform yang efisien, aman, dan real-time.
+							Kelola seluruh proses bisnis dari hulu ke hilir dalam satu
+							platform yang efisien, aman, dan real-time.
 						</p>
 					</div>
 				</div>
 
 				<div className="relative z-10 text-zinc-500 text-sm">
-					&copy; {new Date().getFullYear()} PT Agam Mitra Persada. All rights reserved.
+					&copy; {new Date().getFullYear()} PT Agam Mitra Persada. All rights
+					reserved.
 				</div>
 			</div>
 
@@ -75,13 +80,6 @@ export default function LoginPage() {
 					</div>
 
 					<LoginForm />
-
-					<p className="text-center text-sm text-zinc-500">
-						Belum punya akun?{" "}
-						<Link href="/register" className="font-semibold text-[var(--brand)] hover:underline">
-							Daftar sekarang
-						</Link>
-					</p>
 				</div>
 			</div>
 		</div>

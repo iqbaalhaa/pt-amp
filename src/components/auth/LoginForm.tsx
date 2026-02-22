@@ -35,7 +35,7 @@ export function LoginForm() {
 					setError(ctx.error.message);
 					setIsLoading(false);
 				},
-			}
+			},
 		);
 	};
 
@@ -67,9 +67,7 @@ export function LoginForm() {
 				</div>
 
 				<div className="space-y-2">
-					<label className="text-sm font-medium text-zinc-800">
-						Password
-					</label>
+					<label className="text-sm font-medium text-zinc-800">Password</label>
 					<div className="relative">
 						<Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
 						<input
@@ -96,16 +94,6 @@ export function LoginForm() {
 								<Eye className="h-4 w-4" />
 							)}
 						</button>
-					</div>
-
-					<div className="flex items-center justify-between pt-1">
-						
-						<a
-							href="#"
-							className="text-xs font-medium text-[var(--brand)] hover:opacity-80"
-						>
-							Lupa password?
-						</a>
 					</div>
 				</div>
 

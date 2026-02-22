@@ -1,12 +1,7 @@
 "use client";
 
-import KPIStatCard from "@/components/ui/KPIStatCard";
+import { useEffect, useState } from "react";
 import GlassCard from "@/components/ui/GlassCard";
-import StatusBadge from "@/components/ui/StatusBadge";
-import GlassButton from "@/components/ui/GlassButton";
-import GlassTable, { Column } from "@/components/ui/GlassTable";
-import DashboardChart from "@/components/ui/DashboardChart";
-import { formatRupiah } from "@/lib/currency";
 
 type DashboardData = {
 	kpi: {
@@ -34,193 +29,91 @@ type DashboardData = {
 	}[];
 };
 
-type Props = {
-	data: DashboardData;
+type CurrentUser = {
+	name?: string | null;
+	email?: string | null;
 };
 
-export default function DashboardView({ data }: Props) {
-	const { kpi, charts, recentProductions } = data;
+type Props = {
+	data: DashboardData;
+	currentUser?: CurrentUser;
+};
 
-	const columns: Column<(typeof recentProductions)[0]>[] = [
-		{
-			header: "ID",
-			accessorKey: "id",
-			className: "font-semibold",
-		},
-		{ header: "Tipe", accessorKey: "type" },
-		{ header: "Tanggal", accessorKey: "date", className: "text-gray-500" },
-		{ header: "Input", accessorKey: "input" },
-		{ header: "Output", accessorKey: "output" },
-		{
-			header: "Status",
-			cell: (row) => (
-				<StatusBadge status={row.status}>
-					{row.status.toUpperCase()}
-				</StatusBadge>
-			),
-		},
-	];
+export default function DashboardView({ data, currentUser }: Props) {
+	void data;
+
+	const [now, setNow] = useState<Date | null>(() => null);
+
+	useEffect(() => {
+		const interval = setInterval(() => {
+			setNow(new Date());
+		}, 1000);
+
+		return () => clearInterval(interval);
+	}, []);
+
+	const displayName =
+		currentUser && currentUser.name && currentUser.name.trim().length > 0
+			? currentUser.name
+			: currentUser && currentUser.email
+				? currentUser.email
+				: "Pengguna";
+
+	const formattedDate =
+		now &&
+		now.toLocaleDateString("id-ID", {
+			weekday: "long",
+			day: "numeric",
+			month: "long",
+			year: "numeric",
+		});
+
+	const formattedTime =
+		now &&
+		now.toLocaleTimeString("id-ID", {
+			hour: "2-digit",
+			minute: "2-digit",
+			second: "2-digit",
+		});
 
 	return (
-		<>
-			<GlassCard className="p-6 md:p-8 shadow-lg rounded-xl">
-				<div className="flex items-center gap-4">
-					<div className="w-12 h-12 rounded-full bg-[#D33E3E] text-white flex items-center justify-center">
-						◆
-					</div>
-					<div className="flex-1">
-						<div className="text-3xl font-bold text-gray-900">Dashboard</div>
-						<div className="text-gray-600 text-sm">
-							Ringkasan cepat operasional ERP + CMS
+		<div className="min-h-[calc(100vh-5rem)] px-4">
+			<GlassCard className="relative w-full overflow-hidden rounded-3xl border border-white/60 bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950 px-6 py-8 md:px-10 md:py-12 shadow-[0_24px_80px_rgba(0,0,0,0.6)]">
+				<div className="pointer-events-none absolute inset-0">
+					<div className="absolute -top-24 -right-24 h-72 w-72 rounded-full bg-[var(--brand)]/18 blur-3xl" />
+					<div className="absolute -bottom-32 -left-16 h-80 w-80 rounded-full bg-emerald-400/12 blur-3xl" />
+					<div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.16),_transparent_55%)]" />
+				</div>
+				<div className="relative flex flex-col gap-10 md:flex-row md:items-center md:justify-between">
+					<div className="space-y-6 max-w-2xl">
+						<span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-3 py-1 text-xs font-medium tracking-[0.25em] uppercase text-zinc-200">
+							<span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_0_4px_rgba(16,185,129,0.35)]" />
+							Panel Admin PT AMP
+						</span>
+						<h1 className="text-3xl md:text-4xl lg:text-5xl font-semibold tracking-tight text-white">
+							Selamat datang di ruang kendali
+							<span className="block text-[var(--brand)]">ERP PT AMP</span>
+						</h1>
+						<div className="inline-flex flex-wrap items-center gap-2 rounded-full bg-white/5 px-4 py-2 text-xs md:text-sm text-zinc-100">
+							<span className="font-medium text-zinc-300">Masuk sebagai</span>
+							<span className="rounded-full bg-black/30 px-3 py-1 text-xs font-semibold tracking-wide text-white">
+								{displayName}
+							</span>
 						</div>
 					</div>
-					<StatusBadge status="info">Live</StatusBadge>
+					<div className="flex flex-col items-end gap-2 text-right text-zinc-100 md:min-w-[220px]">
+						<div className="text-[10px] uppercase tracking-[0.2em] text-zinc-400">
+							Hari ini
+						</div>
+						<div className="text-sm md:text-base font-medium text-zinc-200">
+							{formattedDate}
+						</div>
+						<div className="text-3xl md:text-4xl font-semibold tabular-nums text-white">
+							{formattedTime}
+						</div>
+					</div>
 				</div>
 			</GlassCard>
-
-			<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 md:gap-6 mt-8">
-				<KPIStatCard
-					title="Total Pembelian"
-					value={`${kpi.totalPurchasing.toLocaleString("id-ID")} Unit`}
-					delta="Bulan Ini"
-					status="info"
-				/>
-				<KPIStatCard
-					title="Total Pengikisan"
-					value={`${kpi.totalScraping.toLocaleString("id-ID")} kg`}
-					delta="Bulan Ini"
-					status="warning"
-				/>
-				<KPIStatCard
-					title="Total Pemotongan"
-					value={`${kpi.totalCutting.toLocaleString("id-ID")} kg`}
-					delta="Bulan Ini"
-					status="danger"
-				/>
-				<KPIStatCard
-					title="Biaya Penjemuran"
-					value={formatRupiah(kpi.totalDrying)}
-					delta="Bulan Ini"
-					status="info"
-				/>
-				<KPIStatCard
-					title="Total Penjualan"
-					value={formatRupiah(kpi.totalRevenue)}
-					delta="Bulan Ini"
-					status="success"
-				/>
-			</div>
-
-			<div className="mt-8 mb-4">
-				<h2 className="text-xl font-bold text-gray-900 mb-2">
-					Grafik Operasional
-				</h2>
-				<p className="text-gray-600 text-sm">
-					Monitoring aktivitas per divisi dalam 7 hari terakhir
-				</p>
-			</div>
-
-			<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-				{/* Pembelian */}
-				<GlassCard className="p-6 shadow-lg rounded-xl">
-					<DashboardChart
-						title="Pembelian Bahan Baku (Kg)"
-						labels={charts.labels}
-						data={charts.purchasing}
-						color="#3b82f6" // Blue
-						type="bar"
-					/>
-				</GlassCard>
-
-				{/* Pengikisan */}
-				<GlassCard className="p-6 shadow-lg rounded-xl">
-					<DashboardChart
-						title="Pengikisan (Kg Output)"
-						labels={charts.labels}
-						data={charts.scraping}
-						color="#f59e0b" // Amber
-						type="area"
-					/>
-				</GlassCard>
-
-				{/* Pemotongan */}
-				<GlassCard className="p-6 shadow-lg rounded-xl">
-					<DashboardChart
-						title="Pemotongan (Kg Output)"
-						labels={charts.labels}
-						data={charts.cutting}
-						color="#ef4444" // Red
-						type="line"
-					/>
-				</GlassCard>
-
-				{/* Penjemuran */}
-				<GlassCard className="p-6 shadow-lg rounded-xl">
-					<DashboardChart
-						title="Biaya Penjemuran (Rp)"
-						labels={charts.labels}
-						data={charts.drying}
-						color="#eab308" // Yellow
-						type="bar"
-					/>
-				</GlassCard>
-
-				{/* Penjualan */}
-				<GlassCard className="p-6 shadow-lg rounded-xl">
-					<DashboardChart
-						title="Penjualan (Rp Revenue)"
-						labels={charts.labels}
-						data={charts.sales}
-						color="#22c55e" // Green
-						type="line"
-					/>
-				</GlassCard>
-
-				{/* Aktivitas Terbaru */}
-				<GlassCard className="p-6 shadow-lg rounded-xl flex flex-col">
-					<div className="text-lg font-semibold text-gray-900 mb-4">
-						Aktivitas Terbaru
-					</div>
-					<div className="space-y-4 text-gray-900 flex-1">
-						{recentProductions.length > 0 ? (
-							recentProductions.slice(0, 3).map((prod) => (
-								<div
-									key={prod.id}
-									className="flex items-center justify-between"
-								>
-									<div className="font-semibold text-sm">
-										Batch #{prod.id}{" "}
-										{prod.status === "success" ? "selesai" : "diproses"}
-									</div>
-									<div className="text-xs text-gray-500">{prod.date}</div>
-								</div>
-							))
-						) : (
-							<div className="text-sm text-gray-500 text-center py-4">
-								Belum ada aktivitas produksi
-							</div>
-						)}
-					</div>
-					<GlassButton variant="primary" className="mt-4 w-full justify-center">
-						Lihat Semua
-					</GlassButton>
-				</GlassCard>
-			</div>
-
-			<GlassCard className="p-6 md:p-8 mt-8 shadow-lg rounded-xl">
-				<div className="flex items-center justify-between mb-4">
-					<div className="text-2xl font-semibold text-gray-900">
-						Produksi Terkini
-					</div>
-					<GlassButton variant="primary">Produksi Baru</GlassButton>
-				</div>
-				<GlassTable
-					columns={columns}
-					data={recentProductions}
-					showNumber
-					className="bg-white/95"
-				/>
-			</GlassCard>
-		</>
+		</div>
 	);
 }
