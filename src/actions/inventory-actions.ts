@@ -5,22 +5,28 @@ import { prisma } from "@/lib/prisma";
 export type InventoryItemDTO = {
   itemTypeId: string;
   itemTypeName: string;
+  image: string | null;
   totalQty: number;
   totalExpense: number;
   avgPrice: number;
   lastPurchaseDate: string | null;
-   packagingBungkus: number;
+  packagingBungkus: number;
 };
 
 export async function getInventorySummary(): Promise<InventoryItemDTO[]> {
   // 1. Ambil semua ItemType yang aktif
   const itemTypes = await prisma.itemType.findMany({
     where: { isActive: true },
+    select: {
+      id: true,
+      name: true,
+      image: true,
+    },
   });
 
   // 2. Ambil Stock Movements (Real Stock)
   const stockSummary = await prisma.stockMovement.groupBy({
-    by: ['itemTypeId'],
+    by: ["itemTypeId"],
     _sum: {
       qty: true,
     },
@@ -28,16 +34,16 @@ export async function getInventorySummary(): Promise<InventoryItemDTO[]> {
 
   // 3. Ambil Purchase Info (untuk Avg Price & Last Purchase Date)
   const purchaseSummary = await prisma.purchaseItem.groupBy({
-    by: ['itemTypeId'],
+    by: ["itemTypeId"],
     _sum: {
       qty: true,
       unitCost: true,
     },
     where: {
       purchase: {
-        status: 'posted',
-      }
-    }
+        status: "posted",
+      },
+    },
   });
 
   const pengemasanItems = await prisma.pengemasanItem.findMany();
@@ -56,19 +62,19 @@ export async function getInventorySummary(): Promise<InventoryItemDTO[]> {
   const results: InventoryItemDTO[] = await Promise.all(
     itemTypes.map(async (itemType) => {
       const typeId = itemType.id;
-      
+
       // Stock Real
-      const stockItem = stockSummary.find(s => s.itemTypeId === typeId);
+      const stockItem = stockSummary.find((s) => s.itemTypeId === typeId);
       const totalQty = Number(stockItem?._sum.qty || 0);
 
       // Purchase Data (untuk Avg Price)
       // Kita perlu fetch detail untuk item ini jika ada pembelian posted
       const purchaseItems = await prisma.purchaseItem.findMany({
-        where: { 
+        where: {
           itemTypeId: typeId,
-          purchase: { status: 'posted' }
+          purchase: { status: "posted" },
         },
-        include: { purchase: true }
+        include: { purchase: true },
       });
 
       // Hitung Avg Price dari pembelian
@@ -77,21 +83,31 @@ export async function getInventorySummary(): Promise<InventoryItemDTO[]> {
       let lastPurchaseDate: string | null = null;
 
       if (purchaseItems.length > 0) {
-        totalPurchaseQty = purchaseItems.reduce((acc, curr) => acc + Number(curr.qty), 0);
-        totalPurchaseExpense = purchaseItems.reduce((acc, curr) => acc + (Number(curr.qty) * Number(curr.unitCost)), 0);
-        
-        lastPurchaseDate = purchaseItems.reduce((latest, curr) => {
+        totalPurchaseQty = purchaseItems.reduce(
+          (acc, curr) => acc + Number(curr.qty),
+          0
+        );
+        totalPurchaseExpense = purchaseItems.reduce(
+          (acc, curr) => acc + Number(curr.qty) * Number(curr.unitCost),
+          0
+        );
+
+        lastPurchaseDate = purchaseItems
+          .reduce((latest, curr) => {
             return curr.purchase.date > latest ? curr.purchase.date : latest;
-          }, purchaseItems[0].purchase.date).toISOString();
+          }, purchaseItems[0].purchase.date)
+          .toISOString();
       }
 
-      const avgPrice = totalPurchaseQty > 0 ? totalPurchaseExpense / totalPurchaseQty : 0;
-      
+      const avgPrice =
+        totalPurchaseQty > 0 ? totalPurchaseExpense / totalPurchaseQty : 0;
+
       const totalExpense = totalQty * avgPrice;
 
       return {
         itemTypeId: typeId.toString(),
         itemTypeName: itemType.name,
+        image: itemType.image,
         totalQty,
         totalExpense,
         avgPrice,
@@ -106,28 +122,30 @@ export async function getInventorySummary(): Promise<InventoryItemDTO[]> {
     .sort((a, b) => a.itemTypeName.localeCompare(b.itemTypeName));
 }
 
-export async function getInventoryItemSummary(itemTypeId: string): Promise<InventoryItemDTO | null> {
+export async function getInventoryItemSummary(
+  itemTypeId: string
+): Promise<InventoryItemDTO | null> {
   // 1. Stock Real
   const stockSum = await prisma.stockMovement.aggregate({
     _sum: { qty: true },
-    where: { itemTypeId: BigInt(itemTypeId) }
+    where: { itemTypeId: BigInt(itemTypeId) },
   });
   const totalQty = Number(stockSum._sum.qty || 0);
 
   // 2. Item Details
   const itemType = await prisma.itemType.findUnique({
-    where: { id: BigInt(itemTypeId) }
+    where: { id: BigInt(itemTypeId) },
   });
-  
+
   if (!itemType) return null;
 
   // 3. Purchase Data (Avg Price)
   const purchaseItems = await prisma.purchaseItem.findMany({
-    where: { 
+    where: {
       itemTypeId: BigInt(itemTypeId),
-      purchase: { status: 'posted' }
+      purchase: { status: "posted" },
     },
-    include: { purchase: true }
+    include: { purchase: true },
   });
 
   let totalPurchaseQty = 0;
@@ -135,15 +153,24 @@ export async function getInventoryItemSummary(itemTypeId: string): Promise<Inven
   let lastPurchaseDate: string | null = null;
 
   if (purchaseItems.length > 0) {
-    totalPurchaseQty = purchaseItems.reduce((acc, curr) => acc + Number(curr.qty), 0);
-    totalPurchaseExpense = purchaseItems.reduce((acc, curr) => acc + (Number(curr.qty) * Number(curr.unitCost)), 0);
-    
-    lastPurchaseDate = purchaseItems.reduce((latest, curr) => {
+    totalPurchaseQty = purchaseItems.reduce(
+      (acc, curr) => acc + Number(curr.qty),
+      0
+    );
+    totalPurchaseExpense = purchaseItems.reduce(
+      (acc, curr) => acc + Number(curr.qty) * Number(curr.unitCost),
+      0
+    );
+
+    lastPurchaseDate = purchaseItems
+      .reduce((latest, curr) => {
         return curr.purchase.date > latest ? curr.purchase.date : latest;
-      }, purchaseItems[0].purchase.date).toISOString();
+      }, purchaseItems[0].purchase.date)
+      .toISOString();
   }
 
-  const avgPrice = totalPurchaseQty > 0 ? totalPurchaseExpense / totalPurchaseQty : 0;
+  const avgPrice =
+    totalPurchaseQty > 0 ? totalPurchaseExpense / totalPurchaseQty : 0;
   const totalExpense = totalQty * avgPrice;
 
   const pengemasanItems = await prisma.pengemasanItem.findMany();
@@ -158,6 +185,7 @@ export async function getInventoryItemSummary(itemTypeId: string): Promise<Inven
   return {
     itemTypeId: itemTypeId,
     itemTypeName: itemType.name,
+    image: itemType.image,
     totalQty,
     totalExpense,
     avgPrice,
@@ -188,50 +216,58 @@ export type InventoryHistoryDTO = {
   createdBy: string | null;
 };
 
-export async function getProductStockMovements(itemTypeId: string): Promise<StockMovementDTO[]> {
+export async function getProductStockMovements(
+  itemTypeId: string
+): Promise<StockMovementDTO[]> {
   const movements = await prisma.stockMovement.findMany({
     where: { itemTypeId: BigInt(itemTypeId) },
-    orderBy: { createdAt: 'desc' },
+    orderBy: { createdAt: "desc" },
   });
 
   // Collect source IDs
   const purchaseItemIds = movements
-    .filter(m => m.sourceType === 'purchase_item')
-    .map(m => m.sourceId);
-  
+    .filter((m) => m.sourceType === "purchase_item")
+    .map((m) => m.sourceId);
+
   const saleItemIds = movements
-    .filter(m => m.sourceType === 'sale_item')
-    .map(m => m.sourceId);
+    .filter((m) => m.sourceType === "sale_item")
+    .map((m) => m.sourceId);
 
   // Fetch sources
-  const purchaseItems = purchaseItemIds.length > 0 ? await prisma.purchaseItem.findMany({
-    where: { id: { in: purchaseItemIds } },
-    include: { purchase: true }
-  }) : [];
+  const purchaseItems =
+    purchaseItemIds.length > 0
+      ? await prisma.purchaseItem.findMany({
+          where: { id: { in: purchaseItemIds } },
+          include: { purchase: true },
+        })
+      : [];
 
-  const saleItems = saleItemIds.length > 0 ? await prisma.saleItem.findMany({
-    where: { id: { in: saleItemIds } },
-    include: { sale: true }
-  }) : [];
+  const saleItems =
+    saleItemIds.length > 0
+      ? await prisma.saleItem.findMany({
+          where: { id: { in: saleItemIds } },
+          include: { sale: true },
+        })
+      : [];
 
   // Map movements to DTO
-  return movements.map(m => {
+  return movements.map((m) => {
     let date = m.createdAt.toISOString();
-    let type = 'Unknown';
-    let reference = '-';
+    let type = "Unknown";
+    let reference = "-";
 
-    if (m.sourceType === 'purchase_item') {
-      const pItem = purchaseItems.find(p => p.id === m.sourceId);
+    if (m.sourceType === "purchase_item") {
+      const pItem = purchaseItems.find((p) => p.id === m.sourceId);
       if (pItem) {
         date = pItem.purchase.date.toISOString();
-        type = 'Pembelian';
+        type = "Pembelian";
         reference = `Purchase #${pItem.purchase.id}`;
       }
-    } else if (m.sourceType === 'sale_item') {
-      const sItem = saleItems.find(s => s.id === m.sourceId);
+    } else if (m.sourceType === "sale_item") {
+      const sItem = saleItems.find((s) => s.id === m.sourceId);
       if (sItem) {
         date = sItem.sale.date.toISOString();
-        type = 'Penjualan';
+        type = "Penjualan";
         reference = `Sale #${sItem.sale.id}`;
       }
     }
@@ -248,13 +284,15 @@ export async function getProductStockMovements(itemTypeId: string): Promise<Stoc
   });
 }
 
-export async function getInventoryHistory(itemTypeId: string): Promise<InventoryHistoryDTO[]> {
+export async function getInventoryHistory(
+  itemTypeId: string
+): Promise<InventoryHistoryDTO[]> {
   const items = await prisma.purchaseItem.findMany({
     where: {
       itemTypeId: BigInt(itemTypeId),
       purchase: {
-        status: 'posted'
-      }
+        status: "posted",
+      },
     },
     include: {
       purchase: true,
@@ -262,9 +300,9 @@ export async function getInventoryHistory(itemTypeId: string): Promise<Inventory
     },
     orderBy: {
       purchase: {
-        date: 'desc'
-      }
-    }
+        date: "desc",
+      },
+    },
   });
 
   return items.map((i) => ({

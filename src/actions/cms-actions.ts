@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { promises as fs } from "fs";
 import path from "path";
+import { uploadToS3, MAX_FILE_SIZE, MAX_FILE_SIZE_MB } from "@/lib/s3";
 
 export async function getHomePageData() {
   return await prisma.homePage.findFirst();
@@ -116,19 +117,37 @@ export async function deleteHeroButton(id: string) {
 
 async function saveUploadToPublic(file: File): Promise<string | null> {
   try {
+    if (file.size > MAX_FILE_SIZE) {
+      console.error(
+        `File size ${file.size} exceeds limit of ${MAX_FILE_SIZE_MB}MB`
+      );
+      // Optional: return null or throw error depending on UX needs.
+      // Here we return null to skip upload.
+      return null;
+    }
+
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
-    const uploadsDir = path.join(process.cwd(), "public", "uploads");
-    await fs.mkdir(uploadsDir, { recursive: true });
     const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
     const timestamp = Date.now();
     const ext = path.extname(safeName) || ".png";
     const base = path.basename(safeName, ext);
     const filename = `${base}-${timestamp}${ext}`;
-    const filePath = path.join(uploadsDir, filename);
-    await fs.writeFile(filePath, buffer);
-    return `/uploads/${filename}`;
-  } catch {
+
+    // Determine content type
+    let contentType = file.type;
+    if (!contentType) {
+      if (ext === ".jpg" || ext === ".jpeg") contentType = "image/jpeg";
+      else if (ext === ".png") contentType = "image/png";
+      else if (ext === ".webp") contentType = "image/webp";
+      else if (ext === ".mp4") contentType = "video/mp4";
+      else contentType = "application/octet-stream";
+    }
+
+    const url = await uploadToS3(buffer, filename, contentType);
+    return url;
+  } catch (e) {
+    console.error("Upload error:", e);
     return null;
   }
 }
@@ -182,16 +201,34 @@ export async function updateAboutPage(formData: FormData) {
   const heroDescription = (formData.get("heroDescription") as string) || "";
   const mainTitle = (formData.get("mainTitle") as string) || "";
   const mainDescription = (formData.get("mainDescription") as string) || "";
-  const mainImage = (formData.get("mainImage") as string) || "";
+  let mainImage = (formData.get("mainImage") as string) || "";
+
+  const file = formData.get("mainImageFile") as File | null;
+  if (file && file.size > 0) {
+    const uploaded = await saveUploadToPublic(file);
+    if (uploaded) mainImage = uploaded;
+  }
 
   if (id) {
     await prisma.aboutPage.update({
       where: { id },
-      data: { heroTitle, heroDescription, mainTitle, mainDescription, mainImage },
+      data: {
+        heroTitle,
+        heroDescription,
+        mainTitle,
+        mainDescription,
+        mainImage,
+      },
     });
   } else {
     await prisma.aboutPage.create({
-      data: { heroTitle, heroDescription, mainTitle, mainDescription, mainImage },
+      data: {
+        heroTitle,
+        heroDescription,
+        mainTitle,
+        mainDescription,
+        mainImage,
+      },
     });
   }
 

@@ -2,25 +2,40 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import { promises as fs } from "fs";
 import path from "path";
+import { uploadToS3, MAX_FILE_SIZE, MAX_FILE_SIZE_MB } from "@/lib/s3";
 
 // Utility to handle file uploads
 async function saveUploadToPublic(file: File): Promise<string | null> {
   try {
+    if (file.size > MAX_FILE_SIZE) {
+      console.error(
+        `File size ${file.size} exceeds limit of ${MAX_FILE_SIZE_MB}MB`
+      );
+      throw new Error(`File size exceeds limit of ${MAX_FILE_SIZE_MB}MB`);
+    }
+
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
-    const uploadsDir = path.join(process.cwd(), "public", "uploads");
-    await fs.mkdir(uploadsDir, { recursive: true });
     const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
     const timestamp = Date.now();
     const ext = path.extname(safeName) || ".png";
     const base = path.basename(safeName, ext);
     const filename = `${base}-${timestamp}${ext}`;
-    const filePath = path.join(uploadsDir, filename);
-    await fs.writeFile(filePath, buffer);
-    return `/uploads/${filename}`;
-  } catch {
+
+    // Determine content type
+    let contentType = file.type;
+    if (!contentType) {
+      if (ext === ".jpg" || ext === ".jpeg") contentType = "image/jpeg";
+      else if (ext === ".png") contentType = "image/png";
+      else if (ext === ".webp") contentType = "image/webp";
+      else contentType = "application/octet-stream";
+    }
+
+    const url = await uploadToS3(buffer, filename, contentType);
+    return url;
+  } catch (e) {
+    console.error("Upload error:", e);
     return null;
   }
 }
@@ -45,9 +60,9 @@ export async function getPosts(page: number = 1, pageSize: number = 10) {
       },
     },
   });
-  
+
   const total = await prisma.post.count();
-  
+
   return {
     posts,
     total,
@@ -71,7 +86,7 @@ export async function createPost(formData: FormData) {
   const content = (formData.get("content") as string) || "";
   const published = formData.get("published") === "true";
   const authorId = (formData.get("authorId") as string) || "";
-  
+
   let image = "";
   const file = formData.get("imageFile") as File | null;
   if (file && file.size > 0) {
@@ -107,7 +122,7 @@ export async function updatePost(id: string, formData: FormData) {
   const content = (formData.get("content") as string) || "";
   const published = formData.get("published") === "true";
   const existingImage = (formData.get("existingImage") as string) || "";
-  
+
   let image = existingImage;
   const file = formData.get("imageFile") as File | null;
   if (file && file.size > 0) {
@@ -152,10 +167,10 @@ export async function togglePublish(id: string, currentState: boolean) {
 }
 
 export async function uploadImage(formData: FormData) {
-    const file = formData.get("file") as File | null;
-    if (!file || file.size === 0) return { success: false, url: "" };
+  const file = formData.get("file") as File | null;
+  if (!file || file.size === 0) return { success: false, url: "" };
 
-    const url = await saveUploadToPublic(file);
-    if (url) return { success: true, url };
-    return { success: false, url: "" };
+  const url = await saveUploadToPublic(file);
+  if (url) return { success: true, url };
+  return { success: false, url: "" };
 }

@@ -1,6 +1,7 @@
 import { listPosts } from "@/lib/blog";
 import Link from "next/link";
 import { Calendar, User, ArrowRight, FileText } from "lucide-react";
+import { BlogListImage } from "./BlogListImage";
 
 function formatDate(dateStr: string) {
   return new Date(dateStr).toLocaleDateString("id-ID", {
@@ -24,7 +25,8 @@ export default async function BlogPage() {
             Blog Industri Rempah
           </h1>
           <p className="text-xl text-zinc-600 leading-relaxed max-w-2xl mx-auto">
-            Informasi terkini tentang tren pasar, budidaya kulit manis, dan kegiatan perusahaan.
+            Informasi terkini tentang tren pasar, budidaya kulit manis, dan
+            kegiatan perusahaan.
           </p>
         </div>
       </section>
@@ -32,34 +34,35 @@ export default async function BlogPage() {
       {/* Blog List Section */}
       <section className="py-20 bg-white">
         <div className="container mx-auto px-4 md:px-6 lg:px-8">
-          
           {posts.length === 0 ? (
             <div className="text-center py-20 bg-zinc-50 rounded-3xl border border-zinc-100">
-               <FileText className="w-16 h-16 text-zinc-300 mx-auto mb-4" />
-               <h3 className="text-xl font-bold text-zinc-900 mb-2">Belum ada artikel</h3>
-               <p className="text-zinc-500">Kunjungi kembali nanti untuk update terbaru.</p>
+              <FileText className="w-16 h-16 text-zinc-300 mx-auto mb-4" />
+              <h3 className="text-xl font-bold text-zinc-900 mb-2">
+                Belum ada artikel
+              </h3>
+              <p className="text-zinc-500">
+                Kunjungi kembali nanti untuk update terbaru.
+              </p>
             </div>
           ) : (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
               {posts.map((post) => (
-                <article key={post.slug} className="flex flex-col bg-white border border-zinc-200 rounded-2xl overflow-hidden hover:shadow-lg hover:border-[var(--brand)]/30 transition-all duration-300 group">
-                  <Link href={`/blog/${post.slug}`} className="block overflow-hidden aspect-[16/9] relative">
-                    {post.image ? (
-                        <div className="w-full h-full bg-zinc-200 group-hover:scale-105 transition-transform duration-500">
-                            <img src={post.image} alt={post.title} className="w-full h-full object-cover" />
-                        </div>
-                    ) : (
-                        <div className="w-full h-full bg-zinc-200 group-hover:scale-105 transition-transform duration-500 flex items-center justify-center">
-                            <FileText className="w-12 h-12 text-zinc-300" />
-                        </div>
-                    )}
+                <article
+                  key={post.slug}
+                  className="flex flex-col bg-white border border-zinc-200 rounded-2xl overflow-hidden hover:shadow-lg hover:border-[var(--brand)]/30 transition-all duration-300 group"
+                >
+                  <Link
+                    href={`/blog/${post.slug}`}
+                    className="block overflow-hidden aspect-[16/9] relative"
+                  >
+                    <BlogListImage image={post.image} title={post.title} />
                     {post.tags && post.tags.length > 0 && (
-                        <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-bold text-[var(--brand)] shadow-sm">
+                      <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-bold text-[var(--brand)] shadow-sm">
                         {post.tags[0]}
-                        </div>
+                      </div>
                     )}
                   </Link>
-                  
+
                   <div className="p-6 flex flex-col flex-1">
                     <div className="flex items-center gap-4 text-xs text-zinc-500 mb-4">
                       <div className="flex items-center gap-1.5">
@@ -73,16 +76,14 @@ export default async function BlogPage() {
                     </div>
 
                     <h2 className="text-xl font-bold text-zinc-900 mb-3 line-clamp-2 group-hover:text-[var(--brand)] transition-colors">
-                      <Link href={`/blog/${post.slug}`}>
-                        {post.title}
-                      </Link>
+                      <Link href={`/blog/${post.slug}`}>{post.title}</Link>
                     </h2>
-                    
+
                     <p className="text-zinc-600 text-sm leading-relaxed mb-6 line-clamp-3 flex-1">
                       {post.summary}
                     </p>
 
-                    <Link 
+                    <Link
                       href={`/blog/${post.slug}`}
                       className="inline-flex items-center text-[var(--brand)] font-semibold text-sm hover:underline"
                     >
@@ -94,7 +95,6 @@ export default async function BlogPage() {
               ))}
             </div>
           )}
-
         </div>
       </section>
     </div>

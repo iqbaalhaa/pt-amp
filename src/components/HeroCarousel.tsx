@@ -119,20 +119,69 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
               className="relative rounded-2xl h-64 md:h-96 w-full bg-zinc-100 shadow-inner overflow-hidden border border-zinc-100 animate-in fade-in zoom-in-95 duration-500"
             >
               {slides[current].type === "video" ? (
-                <video
-                  ref={videoRef}
-                  src={slides[current].src}
-                  className="w-full h-full object-cover"
-                  autoPlay
-                  muted
-                  loop
-                  playsInline
-                />
+                <div className="relative w-full h-full bg-zinc-200">
+                  <video
+                    ref={videoRef}
+                    src={slides[current].src}
+                    className="w-full h-full object-cover"
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    onError={(e) => {
+                      e.currentTarget.style.display = "none";
+                      e.currentTarget.parentElement?.querySelector(".video-fallback")?.classList.remove("hidden");
+                    }}
+                  />
+                  <div className="video-fallback hidden absolute inset-0 flex items-center justify-center text-zinc-400">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="48"
+                      height="48"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="opacity-50"
+                    >
+                      <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
+                      <circle cx="9" cy="9" r="2" />
+                      <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
+                    </svg>
+                  </div>
+                </div>
               ) : (
-                <div 
-                  className="w-full h-full bg-cover bg-center"
-                  style={{ backgroundImage: `url('${slides[current].src}')` }}
-                />
+                <div className="relative w-full h-full bg-zinc-200">
+                  <img
+                    src={slides[current].src}
+                    alt={slides[current].title}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.currentTarget.style.display = "none";
+                      e.currentTarget.parentElement?.querySelector(".image-fallback")?.classList.remove("hidden");
+                    }}
+                  />
+                  <div className="image-fallback hidden absolute inset-0 flex items-center justify-center text-zinc-400">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="48"
+                      height="48"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="opacity-50"
+                    >
+                      <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
+                      <circle cx="9" cy="9" r="2" />
+                      <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
+                    </svg>
+                  </div>
+                </div>
               )}
             </div>
           </div>

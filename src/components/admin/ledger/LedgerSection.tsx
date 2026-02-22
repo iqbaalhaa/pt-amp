@@ -2095,6 +2095,10 @@ export function LedgerSection({
   };
 
   const handleMassUpload = async (file: File) => {
+    if (file.size > 50 * 1024 * 1024) {
+      alert("File size exceeds 50MB");
+      return;
+    }
     setMassBusy(true);
     setMassReport(null);
     setMassRows(null);

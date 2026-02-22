@@ -85,9 +85,17 @@ export default function BlogCard({ post, currentUserId }: BlogCardProps) {
         {/* Cover Image */}
         <div className="relative aspect-video bg-zinc-100 overflow-hidden">
           {post.image ? (
-            <div 
-              className="w-full h-full bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
-              style={{ backgroundImage: `url('${post.image}')` }}
+            <img
+              src={post.image}
+              alt={post.title}
+              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+              onError={(e) => {
+                e.currentTarget.style.display = "none";
+                e.currentTarget.parentElement?.classList.add("bg-zinc-200");
+                // Show fallback icon if image fails
+                const fallback = e.currentTarget.parentElement?.querySelector(".fallback-icon");
+                if (fallback) fallback.classList.remove("hidden");
+              }}
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-zinc-100 to-zinc-200 text-zinc-300">
@@ -95,6 +103,11 @@ export default function BlogCard({ post, currentUserId }: BlogCardProps) {
             </div>
           )}
           
+          {/* Fallback Icon (Hidden by default, shown on error) */}
+          <div className="fallback-icon hidden absolute inset-0 flex items-center justify-center bg-zinc-200 text-zinc-300">
+             <FileText size={48} opacity={0.5} />
+          </div>
+
           {/* Status Badge */}
           <div className="absolute top-3 left-3">
             <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider shadow-sm ${

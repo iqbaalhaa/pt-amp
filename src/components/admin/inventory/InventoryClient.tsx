@@ -21,8 +21,27 @@ export default function InventoryClient({ initialData }: { initialData: Inventor
       className: "w-[35%]", // Memberikan porsi lebar yang cukup
       cell: (row) => (
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[rgba(213,14,12,0.1)] to-[rgba(213,14,12,0.05)] flex items-center justify-center text-[var(--brand)] shadow-sm">
-            <CategoryIcon fontSize="small" />
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[rgba(213,14,12,0.1)] to-[rgba(213,14,12,0.05)] flex items-center justify-center text-[var(--brand)] shadow-sm overflow-hidden relative">
+            {row.image ? (
+              <img
+                src={row.image}
+                alt={row.itemTypeName}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.currentTarget.style.display = "none";
+                  e.currentTarget.parentElement
+                    ?.querySelector(".fallback-icon")
+                    ?.classList.remove("hidden");
+                }}
+              />
+            ) : null}
+            <div
+              className={`fallback-icon ${
+                row.image ? "hidden" : ""
+              } absolute inset-0 flex items-center justify-center`}
+            >
+              <CategoryIcon fontSize="small" />
+            </div>
           </div>
           <div className="flex flex-col">
             <span className="font-bold text-zinc-800 tracking-wide uppercase text-sm">

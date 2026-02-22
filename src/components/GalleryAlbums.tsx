@@ -1,7 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X, Play, Image as ImageIcon, ChevronLeft, ChevronRight, Maximize2 } from "lucide-react";
+import {
+  X,
+  Play,
+  Image as ImageIcon,
+  ChevronLeft,
+  ChevronRight,
+  Maximize2,
+} from "lucide-react";
 
 type MediaType = "image" | "video";
 
@@ -29,7 +36,11 @@ interface GalleryAlbumsProps {
   className?: string;
 }
 
-export function GalleryAlbums({ albums, showTitle = true, className }: GalleryAlbumsProps) {
+export function GalleryAlbums({
+  albums,
+  showTitle = true,
+  className,
+}: GalleryAlbumsProps) {
   const [selectedAlbum, setSelectedAlbum] = useState<Album | null>(null);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -69,7 +80,9 @@ export function GalleryAlbums({ albums, showTitle = true, className }: GalleryAl
     if (selectedAlbum && lightboxIndex !== null) {
       setIsAnimating(true);
       setTimeout(() => setIsAnimating(false), 300);
-      setLightboxIndex((prev) => (prev !== null && prev < selectedAlbum.items.length - 1 ? prev + 1 : 0));
+      setLightboxIndex((prev) =>
+        prev !== null && prev < selectedAlbum.items.length - 1 ? prev + 1 : 0
+      );
     }
   };
 
@@ -78,17 +91,25 @@ export function GalleryAlbums({ albums, showTitle = true, className }: GalleryAl
     if (selectedAlbum && lightboxIndex !== null) {
       setIsAnimating(true);
       setTimeout(() => setIsAnimating(false), 300);
-      setLightboxIndex((prev) => (prev !== null && prev > 0 ? prev - 1 : selectedAlbum.items.length - 1));
+      setLightboxIndex((prev) =>
+        prev !== null && prev > 0 ? prev - 1 : selectedAlbum.items.length - 1
+      );
     }
   };
 
   return (
-    <section className={`min-h-screen ${className ? className : 'py-24 bg-zinc-50'}`}>
+    <section
+      className={`min-h-screen ${className ? className : "py-24 bg-zinc-50"}`}
+    >
       <div className="container mx-auto px-4 md:px-6 lg:px-8">
         {showTitle && (
           <div className="text-center max-w-2xl mx-auto mb-20 animate-in fade-in slide-in-from-bottom-4 duration-700">
-            <span className="text-[var(--brand)] font-semibold tracking-wider text-sm uppercase mb-3 block">Dokumentasi</span>
-            <h1 className="text-4xl md:text-5xl font-bold mb-6 text-zinc-900 tracking-tight">Galeri Aktivitas</h1>
+            <span className="text-[var(--brand)] font-semibold tracking-wider text-sm uppercase mb-3 block">
+              Dokumentasi
+            </span>
+            <h1 className="text-4xl md:text-5xl font-bold mb-6 text-zinc-900 tracking-tight">
+              Galeri Aktivitas
+            </h1>
             <p className="text-lg text-zinc-600 leading-relaxed">
               Menelusuri jejak kualitas dari petani hingga pengiriman.
             </p>
@@ -98,7 +119,7 @@ export function GalleryAlbums({ albums, showTitle = true, className }: GalleryAl
         {/* Album Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-10">
           {albums.map((album, idx) => (
-            <div 
+            <div
               key={album.id}
               onClick={() => openAlbum(album)}
               className="group cursor-pointer perspective-1000"
@@ -108,17 +129,36 @@ export function GalleryAlbums({ albums, showTitle = true, className }: GalleryAl
                 {/* Stack Effect Layers */}
                 <div className="absolute inset-0 bg-zinc-200 rounded-2xl transform translate-x-2 translate-y-2 -z-10 transition-transform group-hover:translate-x-3 group-hover:translate-y-3 group-hover:rotate-2"></div>
                 <div className="absolute inset-0 bg-zinc-300 rounded-2xl transform translate-x-1 translate-y-1 -z-20 transition-transform group-hover:translate-x-1.5 group-hover:translate-y-1.5 group-hover:rotate-1"></div>
-                
+
                 {/* Main Card */}
                 <div className="bg-white rounded-2xl overflow-hidden shadow-sm group-hover:shadow-2xl transition-all duration-500 border border-zinc-100">
                   <div className="aspect-[4/3] relative overflow-hidden">
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60 z-10 transition-opacity duration-300 group-hover:opacity-40"></div>
-                    <img 
-                      src={album.coverImage} 
+                    <img
+                      src={album.coverImage}
                       alt={album.title}
                       className="w-full h-full object-cover transform transition-transform duration-700 group-hover:scale-110"
+                      onError={(e) => {
+                        e.currentTarget.style.display = "none";
+                        e.currentTarget.parentElement?.classList.add(
+                          "bg-zinc-200"
+                        );
+                        const fallback =
+                          e.currentTarget.parentElement?.querySelector(
+                            ".fallback-icon"
+                          );
+                        if (fallback) fallback.classList.remove("hidden");
+                      }}
                     />
-                    
+
+                    {/* Fallback Icon */}
+                    <div className="fallback-icon hidden absolute inset-0 flex items-center justify-center z-0 pointer-events-none">
+                      <ImageIcon
+                        size={48}
+                        className="text-zinc-300 opacity-50"
+                      />
+                    </div>
+
                     {/* Floating Badge */}
                     <div className="absolute top-4 right-4 z-20 bg-white/90 backdrop-blur-md px-3 py-1 rounded-full shadow-lg transform translate-y-[-10px] opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 delay-100">
                       <span className="text-xs font-bold text-zinc-800 flex items-center gap-1">
@@ -147,7 +187,7 @@ export function GalleryAlbums({ albums, showTitle = true, className }: GalleryAl
       {/* Album Modal */}
       {selectedAlbum && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
-          <div 
+          <div
             className="absolute inset-0 bg-zinc-900/80 backdrop-blur-sm animate-in fade-in duration-300"
             onClick={closeAlbum}
           />
@@ -155,10 +195,14 @@ export function GalleryAlbums({ albums, showTitle = true, className }: GalleryAl
             {/* Modal Header */}
             <div className="p-6 border-b border-zinc-100 flex items-center justify-between bg-white/80 backdrop-blur-md sticky top-0 z-30">
               <div>
-                <h2 className="text-2xl font-bold text-zinc-900 tracking-tight">{selectedAlbum.title}</h2>
-                <p className="text-zinc-500 text-sm">{selectedAlbum.items.length} foto & video</p>
+                <h2 className="text-2xl font-bold text-zinc-900 tracking-tight">
+                  {selectedAlbum.title}
+                </h2>
+                <p className="text-zinc-500 text-sm">
+                  {selectedAlbum.items.length} foto & video
+                </p>
               </div>
-              <button 
+              <button
                 onClick={closeAlbum}
                 className="p-2 bg-zinc-100 hover:bg-zinc-200 rounded-full transition-colors text-zinc-600"
               >
@@ -170,46 +214,71 @@ export function GalleryAlbums({ albums, showTitle = true, className }: GalleryAl
             <div className="flex-1 overflow-y-auto p-6 bg-zinc-50 custom-scrollbar">
               <div className="columns-2 md:columns-3 lg:columns-4 gap-4 space-y-4">
                 {selectedAlbum.items.map((item, index) => (
-                  <div 
+                  <div
                     key={index}
                     onClick={() => openLightbox(index)}
                     className="break-inside-avoid relative group rounded-xl overflow-hidden cursor-pointer shadow-sm hover:shadow-lg transition-all duration-300"
                   >
                     <div className="relative">
-                      {item.type === 'video' ? (
+                      {item.type === "video" ? (
                         <div className="relative aspect-video bg-zinc-900">
-                           <video 
-                            src={item.src} 
+                          <video
+                            src={item.src}
                             className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
                             muted
                             loop
                             playsInline
-                            onMouseOver={e => e.currentTarget.play()}
-                            onMouseOut={e => e.currentTarget.pause()}
+                            onMouseOver={(e) => e.currentTarget.play()}
+                            onMouseOut={(e) => e.currentTarget.pause()}
                           />
                           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                             <div className="bg-white/20 backdrop-blur-sm p-3 rounded-full">
-                                <Play className="text-white fill-white" size={20} />
+                              <Play
+                                className="text-white fill-white"
+                                size={20}
+                              />
                             </div>
                           </div>
                         </div>
                       ) : (
-                        <img 
-                          src={item.src} 
+                        <img
+                          src={item.src}
                           alt={item.caption || ""}
                           className="w-full h-auto object-cover transform transition-transform duration-700 group-hover:scale-110"
+                          onError={(e) => {
+                            e.currentTarget.style.display = "none";
+                            e.currentTarget.parentElement?.classList.add(
+                              "bg-zinc-200"
+                            );
+                            e.currentTarget.parentElement
+                              ?.querySelector(".fallback-icon")
+                              ?.classList.remove("hidden");
+                          }}
                         />
                       )}
-                      
+
+                      {/* Fallback Icon */}
+                      <div className="fallback-icon hidden absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <ImageIcon
+                          size={32}
+                          className="text-zinc-400 opacity-50"
+                        />
+                      </div>
+
                       {/* Overlay */}
                       <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-end p-4">
                         <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 transform translate-y-2 group-hover:translate-y-0">
                           {item.caption && (
-                             <p className="text-white text-xs font-medium drop-shadow-md">{item.caption}</p>
+                            <p className="text-white text-xs font-medium drop-shadow-md">
+                              {item.caption}
+                            </p>
                           )}
                         </div>
                         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 scale-75 group-hover:scale-100">
-                           <Maximize2 className="text-white drop-shadow-lg" size={24} />
+                          <Maximize2
+                            className="text-white drop-shadow-lg"
+                            size={24}
+                          />
                         </div>
                       </div>
                     </div>
@@ -224,36 +293,52 @@ export function GalleryAlbums({ albums, showTitle = true, className }: GalleryAl
       {/* Lightbox (Full Screen View) */}
       {selectedAlbum && lightboxIndex !== null && (
         <div className="fixed inset-0 z-[60] bg-black/95 backdrop-blur-xl flex items-center justify-center animate-in fade-in duration-200">
-          <button 
+          <button
             onClick={closeLightbox}
             className="absolute top-6 right-6 text-white/50 hover:text-white p-2 z-50 transition-colors bg-white/10 hover:bg-white/20 rounded-full"
           >
             <X size={24} />
           </button>
 
-          <button 
+          <button
             onClick={prevLightbox}
             className="absolute left-6 text-white/50 hover:text-white p-3 z-50 hidden md:block transition-colors bg-white/5 hover:bg-white/10 rounded-full backdrop-blur-sm"
           >
             <ChevronLeft size={32} />
           </button>
 
-          <div className={`w-full h-full flex flex-col items-center justify-center p-4 md:p-12 transition-opacity duration-300 ${isAnimating ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`}>
-            {selectedAlbum.items[lightboxIndex].type === 'video' ? (
-              <video 
-                src={selectedAlbum.items[lightboxIndex].src} 
+          <div
+            className={`w-full h-full flex flex-col items-center justify-center p-4 md:p-12 transition-opacity duration-300 ${
+              isAnimating ? "opacity-0 scale-95" : "opacity-100 scale-100"
+            }`}
+          >
+            {selectedAlbum.items[lightboxIndex].type === "video" ? (
+              <video
+                src={selectedAlbum.items[lightboxIndex].src}
                 controls
                 autoPlay
                 className="max-w-full max-h-[80vh] rounded-lg shadow-2xl ring-1 ring-white/10"
               />
             ) : (
-              <img
-                src={selectedAlbum.items[lightboxIndex].src}
-                alt={selectedAlbum.items[lightboxIndex].caption ?? ""}
-                className="max-w-full max-h-[80vh] object-contain rounded-lg shadow-2xl ring-1 ring-white/10"
-              />
+              <>
+                <img
+                  src={selectedAlbum.items[lightboxIndex].src}
+                  alt={selectedAlbum.items[lightboxIndex].caption ?? ""}
+                  className="max-w-full max-h-[80vh] object-contain rounded-lg shadow-2xl ring-1 ring-white/10"
+                  onError={(e) => {
+                    e.currentTarget.style.display = "none";
+                    e.currentTarget.parentElement
+                      ?.querySelector(".lightbox-fallback")
+                      ?.classList.remove("hidden");
+                  }}
+                />
+                <div className="lightbox-fallback hidden flex flex-col items-center justify-center text-white/50">
+                  <ImageIcon size={64} className="mb-4 opacity-50" />
+                  <p>Gagal memuat gambar</p>
+                </div>
+              </>
             )}
-            
+
             {selectedAlbum.items[lightboxIndex].caption && (
               <div className="mt-6 bg-black/40 backdrop-blur-md px-6 py-3 rounded-full border border-white/10">
                 <p className="text-white/90 text-lg font-medium text-center">
@@ -261,13 +346,13 @@ export function GalleryAlbums({ albums, showTitle = true, className }: GalleryAl
                 </p>
               </div>
             )}
-            
+
             <div className="absolute bottom-8 text-white/30 text-xs font-mono tracking-widest">
               {lightboxIndex + 1} / {selectedAlbum.items.length}
             </div>
           </div>
 
-          <button 
+          <button
             onClick={nextLightbox}
             className="absolute right-6 text-white/50 hover:text-white p-3 z-50 hidden md:block transition-colors bg-white/5 hover:bg-white/10 rounded-full backdrop-blur-sm"
           >

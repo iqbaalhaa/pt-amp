@@ -2,8 +2,12 @@
 
 import { Box, Typography, Stack, IconButton, Button } from "@mui/material";
 import GlassTable, { Column } from "@/components/ui/GlassTable";
-import { InventoryItemDTO, InventoryHistoryDTO } from "@/actions/inventory-actions";
+import {
+  InventoryItemDTO,
+  InventoryHistoryDTO,
+} from "@/actions/inventory-actions";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import CategoryIcon from "@mui/icons-material/Category";
 import { useRouter } from "next/navigation";
 import { formatRupiah } from "@/lib/currency";
 import { format } from "date-fns";
@@ -22,7 +26,9 @@ export default function ProductDetailClient({ summary, purchases }: Props) {
       header: "#",
       accessorKey: "id",
       className: "w-[5%]",
-      cell: (_row, idx) => <span className="text-zinc-500 text-xs">{idx + 1}</span>,
+      cell: (_row, idx) => (
+        <span className="text-zinc-500 text-xs">{idx + 1}</span>
+      ),
     },
     {
       header: "Tanggal",
@@ -41,19 +47,31 @@ export default function ProductDetailClient({ summary, purchases }: Props) {
     {
       header: "Supplier",
       accessorKey: "supplier",
-      cell: (row) => <span className="text-zinc-700 font-semibold uppercase text-sm">{row.supplier || "-"}</span>,
+      cell: (row) => (
+        <span className="text-zinc-700 font-semibold uppercase text-sm">
+          {row.supplier || "-"}
+        </span>
+      ),
     },
     {
       header: "Harga",
       accessorKey: "unitCost",
       className: "text-right",
-      cell: (row) => <span className="font-semibold text-emerald-600">{formatRupiah(row.unitCost, 0)}</span>,
+      cell: (row) => (
+        <span className="font-semibold text-emerald-600">
+          {formatRupiah(row.unitCost, 0)}
+        </span>
+      ),
     },
     {
       header: "Jumlah",
       accessorKey: "qty",
       className: "text-right",
-      cell: (row) => <span className="font-bold text-zinc-800">{row.qty.toLocaleString("id-ID")}</span>,
+      cell: (row) => (
+        <span className="font-bold text-zinc-800">
+          {row.qty.toLocaleString("id-ID")}
+        </span>
+      ),
     },
     {
       header: "Aksi",
@@ -65,7 +83,9 @@ export default function ProductDetailClient({ summary, purchases }: Props) {
           variant="outlined"
           onClick={(e) => {
             e.stopPropagation();
-            router.push(`/admin/ledger?type=purchase&page=1&id=${row.purchaseId}&selected=${row.purchaseId}`);
+            router.push(
+              `/admin/ledger?type=purchase&page=1&id=${row.purchaseId}&selected=${row.purchaseId}`
+            );
           }}
         >
           Kunjungi Transaksi
@@ -77,11 +97,41 @@ export default function ProductDetailClient({ summary, purchases }: Props) {
   return (
     <Stack spacing={4}>
       <Box className="flex items-center gap-4">
-        <IconButton onClick={() => router.back()} className="bg-white/50 hover:bg-white/80">
+        <IconButton
+          onClick={() => router.back()}
+          className="bg-white/50 hover:bg-white/80"
+        >
           <ArrowBackIcon />
         </IconButton>
+
+        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-red-50 to-orange-50 flex items-center justify-center text-red-600 shadow-sm border border-red-100/50 overflow-hidden relative">
+          {summary.image ? (
+            <img
+              src={summary.image}
+              alt={summary.itemTypeName}
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                e.currentTarget.style.display = "none";
+                e.currentTarget.parentElement
+                  ?.querySelector(".fallback-icon")
+                  ?.classList.remove("hidden");
+              }}
+            />
+          ) : null}
+          <div
+            className={`fallback-icon ${
+              summary.image ? "hidden" : ""
+            } absolute inset-0 flex items-center justify-center`}
+          >
+            <CategoryIcon sx={{ fontSize: 32 }} />
+          </div>
+        </div>
+
         <Box>
-          <Typography variant="h4" className="font-black text-zinc-800 tracking-tight">
+          <Typography
+            variant="h4"
+            className="font-black text-zinc-800 tracking-tight"
+          >
             {summary.itemTypeName}
           </Typography>
           <Typography variant="body2" className="text-zinc-500 font-medium">
@@ -96,7 +146,8 @@ export default function ProductDetailClient({ summary, purchases }: Props) {
             Total Stok Saat Ini
           </Typography>
           <Typography className="text-3xl font-black text-zinc-900">
-            {summary.totalQty.toLocaleString("id-ID")} <span className="text-base font-normal text-zinc-500">Satuan</span>
+            {summary.totalQty.toLocaleString("id-ID")}{" "}
+            <span className="text-base font-normal text-zinc-500">Satuan</span>
           </Typography>
         </Box>
 
@@ -134,11 +185,7 @@ export default function ProductDetailClient({ summary, purchases }: Props) {
         <Typography variant="h6" className="font-bold text-zinc-800 mb-4">
           Riwayat Pembelian
         </Typography>
-        <GlassTable
-          data={purchases}
-          columns={columns}
-          className="shadow-xl"
-        />
+        <GlassTable data={purchases} columns={columns} className="shadow-xl" />
       </Box>
     </Stack>
   );

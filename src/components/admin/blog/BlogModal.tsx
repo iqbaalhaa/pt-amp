@@ -2,7 +2,16 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Loader2, Trash2, Save, Calendar, User, Tag, Eye } from "lucide-react";
+import {
+  X,
+  Loader2,
+  Trash2,
+  Save,
+  Calendar,
+  User,
+  Tag,
+  Eye,
+} from "lucide-react";
 import BlogEditor from "./BlogEditor";
 import { createPost, updatePost, deletePost } from "@/actions/blog-actions";
 import { useRouter } from "next/navigation";
@@ -26,7 +35,12 @@ interface BlogModalProps {
   authorId: string; // Current user ID for new posts
 }
 
-export default function BlogModal({ isOpen, onClose, post, authorId }: BlogModalProps) {
+export default function BlogModal({
+  isOpen,
+  onClose,
+  post,
+  authorId,
+}: BlogModalProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [title, setTitle] = useState("");
@@ -63,11 +77,11 @@ export default function BlogModal({ isOpen, onClose, post, authorId }: BlogModal
       formData.append("content", content);
       formData.append("published", String(published));
       formData.append("authorId", authorId);
-      
+
       if (imageFile) {
         formData.append("imageFile", imageFile);
       }
-      
+
       if (post) {
         // Update
         formData.append("existingImage", post.image || "");
@@ -76,7 +90,7 @@ export default function BlogModal({ isOpen, onClose, post, authorId }: BlogModal
         // Create
         await createPost(formData);
       }
-      
+
       router.refresh();
       onClose();
     } catch (error) {
@@ -111,6 +125,10 @@ export default function BlogModal({ isOpen, onClose, post, authorId }: BlogModal
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      if (file.size > 50 * 1024 * 1024) {
+        alert("File size exceeds 50MB");
+        return;
+      }
       setImageFile(file);
       setPreviewImage(URL.createObjectURL(file));
     }
@@ -148,170 +166,244 @@ export default function BlogModal({ isOpen, onClose, post, authorId }: BlogModal
 
             {/* Body */}
             <div className="flex-1 overflow-hidden bg-zinc-50 w-full flex relative min-h-0">
-              <form id="blog-form" onSubmit={handleSubmit} className="flex flex-col md:flex-row w-full h-full">
+              <form
+                id="blog-form"
+                onSubmit={handleSubmit}
+                className="flex flex-col md:flex-row w-full h-full"
+              >
                 {/* Left Column - Editor */}
                 <div className="w-full md:w-[70%] md:max-w-[70%] md:flex-shrink-0 overflow-y-auto p-6 custom-scrollbar h-full border-r border-zinc-200 bg-zinc-50">
                   <div className="space-y-6">
-                      {/* Title */}
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium text-zinc-700">Judul Artikel</label>
-                        <input
-                          type="text"
-                          value={title}
-                          onChange={(e) => setTitle(e.target.value)}
-                          required
-                          className="w-full px-4 py-2 rounded-lg border border-zinc-300 focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/20 focus:border-[var(--brand)] transition-all font-medium text-lg"
-                          placeholder="Masukkan judul menarik..."
-                        />
-                      </div>
+                    {/* Title */}
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-zinc-700">
+                        Judul Artikel
+                      </label>
+                      <input
+                        type="text"
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
+                        required
+                        className="w-full px-4 py-2 rounded-lg border border-zinc-300 focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/20 focus:border-[var(--brand)] transition-all font-medium text-lg"
+                        placeholder="Masukkan judul menarik..."
+                      />
+                    </div>
 
-                      {/* Editor */}
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium text-zinc-700">Konten</label>
-                        <BlogEditor content={content} onChange={setContent} />
-                      </div>
+                    {/* Editor */}
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-zinc-700">
+                        Konten
+                      </label>
+                      <BlogEditor content={content} onChange={setContent} />
+                    </div>
 
-                      {/* Settings Grid */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-zinc-200">
-                        {/* Status */}
-                        <div className="bg-white p-4 rounded-xl border border-zinc-200 shadow-sm space-y-4">
-                          <h3 className="text-sm font-semibold text-zinc-900 border-b border-zinc-100 pb-2">Status Publikasi</h3>
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm text-zinc-600">Publish ke Website</span>
-                            <label className="relative inline-flex items-center cursor-pointer">
-                              <input 
-                                type="checkbox" 
-                                checked={published} 
-                                onChange={(e) => setPublished(e.target.checked)} 
-                                className="sr-only peer" 
-                              />
-                              <div className="w-11 h-6 bg-zinc-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-500/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
-                            </label>
-                          </div>
+                    {/* Settings Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-zinc-200">
+                      {/* Status */}
+                      <div className="bg-white p-4 rounded-xl border border-zinc-200 shadow-sm space-y-4">
+                        <h3 className="text-sm font-semibold text-zinc-900 border-b border-zinc-100 pb-2">
+                          Status Publikasi
+                        </h3>
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-zinc-600">
+                            Publish ke Website
+                          </span>
+                          <label className="relative inline-flex items-center cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={published}
+                              onChange={(e) => setPublished(e.target.checked)}
+                              className="sr-only peer"
+                            />
+                            <div className="w-11 h-6 bg-zinc-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-500/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
+                          </label>
                         </div>
+                      </div>
 
-                        {/* Cover Image */}
-                        <div className="bg-white p-4 rounded-xl border border-zinc-200 shadow-sm space-y-4">
-                          <h3 className="text-sm font-semibold text-zinc-900 border-b border-zinc-100 pb-2">Gambar Sampul</h3>
-                          
-                          <div className="flex gap-4 items-start">
-                            <div className="relative w-24 aspect-[3/2] bg-zinc-100 rounded-lg overflow-hidden border border-dashed border-zinc-300 flex-shrink-0 flex items-center justify-center group">
-                              {previewImage ? (
-                                <>
-                                  <img src={previewImage} alt="Cover" className="w-full h-full object-cover" />
-                                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                    <span className="text-white text-[10px] font-medium text-center px-1">Ganti</span>
-                                  </div>
-                                </>
-                              ) : (
-                                <span className="text-[10px] text-zinc-400 text-center px-1">Upload</span>
-                              )}
-                              <input 
-                                type="file" 
-                                accept="image/*" 
+                      {/* Cover Image */}
+                      <div className="bg-white p-4 rounded-xl border border-zinc-200 shadow-sm space-y-4">
+                        <h3 className="text-sm font-semibold text-zinc-900 border-b border-zinc-100 pb-2">
+                          Gambar Sampul
+                        </h3>
+
+                        <div className="flex gap-4 items-start">
+                          <div className="relative w-24 aspect-[3/2] bg-zinc-100 rounded-lg overflow-hidden border border-dashed border-zinc-300 flex-shrink-0 flex items-center justify-center group">
+                            {previewImage ? (
+                              <>
+                                <img
+                                src={previewImage}
+                                alt="Cover"
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  e.currentTarget.style.display = "none";
+                                  e.currentTarget.parentElement?.classList.add(
+                                    "bg-zinc-200"
+                                  );
+                                  const fallbackIcon = e.currentTarget.parentElement?.querySelector(".fallback-icon");
+                                  if (fallbackIcon) {
+                                    fallbackIcon.classList.remove("hidden");
+                                  }
+                                }}
+                              />
+                              <div className="fallback-icon hidden absolute inset-0 flex items-center justify-center pointer-events-none">
+                                <ImageIcon
+                                  size={24}
+                                  className="text-zinc-400 opacity-50"
+                                />
+                              </div>
+                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                  <span className="text-white text-[10px] font-medium text-center px-1">
+                                    Ganti
+                                  </span>
+                                </div>
+                              </>
+                            ) : (
+                              <span className="text-[10px] text-zinc-400 text-center px-1">
+                                Upload
+                              </span>
+                            )}
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={handleImageChange}
+                              className="absolute inset-0 opacity-0 cursor-pointer"
+                            />
+                          </div>
+                          <div className="flex-1 space-y-2">
+                            <p className="text-xs text-zinc-500">
+                              Format: JPG, PNG. Max 50MB. Rasio disarankan 16:9.
+                            </p>
+                            <button
+                              type="button"
+                              className="text-xs text-[var(--brand)] font-medium hover:underline relative"
+                            >
+                              Pilih File
+                              <input
+                                type="file"
+                                accept="image/*"
                                 onChange={handleImageChange}
                                 className="absolute inset-0 opacity-0 cursor-pointer"
                               />
-                            </div>
-                            <div className="flex-1 space-y-2">
-                                <p className="text-xs text-zinc-500">
-                                  Format: JPG, PNG. Max 5MB. Rasio disarankan 16:9.
-                                </p>
-                                <button type="button" className="text-xs text-[var(--brand)] font-medium hover:underline relative">
-                                    Pilih File
-                                    <input 
-                                        type="file" 
-                                        accept="image/*" 
-                                        onChange={handleImageChange}
-                                        className="absolute inset-0 opacity-0 cursor-pointer"
-                                    />
-                                </button>
-                            </div>
+                            </button>
                           </div>
                         </div>
                       </div>
                     </div>
+                  </div>
                 </div>
 
                 {/* Right Column - Live Preview */}
                 <div className="hidden md:flex flex-col w-[30%] max-w-[30%] flex-shrink-0 bg-zinc-100/50 h-full overflow-hidden border-l border-zinc-200">
                   <div className="p-3 border-b border-zinc-200 bg-white flex items-center justify-between shadow-sm z-10 shrink-0">
-                        <div className="flex items-center gap-2 text-zinc-600">
-                            <Eye size={14} />
-                            <span className="text-xs font-bold uppercase tracking-wider">Live Preview</span>
-                        </div>
+                    <div className="flex items-center gap-2 text-zinc-600">
+                      <Eye size={14} />
+                      <span className="text-xs font-bold uppercase tracking-wider">
+                        Live Preview
+                      </span>
                     </div>
-                    
-                    <div className="flex-1 overflow-y-auto p-4 custom-scrollbar overflow-x-hidden">
-                        <div className="bg-white rounded-2xl shadow-sm border border-zinc-200 overflow-hidden min-h-[500px] origin-top w-full max-w-full relative">
-                            {/* Header Section */}
-                            <div className="bg-zinc-900 p-6 text-center relative overflow-hidden">
-                                <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
-                                <div className="relative z-10">
-                                    <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-600/20 text-red-400 border border-red-500/30 text-[10px] font-bold uppercase tracking-wider mb-3">
-                                        <Tag size={10} />
-                                        <span>Preview</span>
-                                    </div>
-                                    <h1 className="text-xl font-bold text-white mb-3 leading-tight">
-                                        {title || "Judul Artikel Akan Muncul Disini"}
-                                    </h1>
-                                    <div className="flex flex-wrap items-center justify-center gap-2 text-[10px] text-zinc-400">
-                                        <div className="flex items-center bg-white/5 rounded-full px-2 py-1">
-                                            <Calendar size={10} className="mr-1 text-[var(--brand)]" />
-                                            <span>{new Date().toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}</span>
-                                        </div>
-                                        <div className="flex items-center bg-white/5 rounded-full px-2 py-1">
-                                            <User size={10} className="mr-1 text-[var(--brand)]" />
-                                            <span>Admin</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                  </div>
 
-                            {/* Featured Image */}
-                            <div className="px-4 -mt-4 relative z-20">
-                                <div className="aspect-video bg-zinc-100 rounded-lg shadow-lg border-2 border-white overflow-hidden relative">
-                                    {previewImage ? (
-                                        <div className="absolute inset-0 flex items-center justify-center bg-zinc-900">
-                                            <img 
-                                                src={previewImage} 
-                                                alt="Preview" 
-                                                className="w-full h-full object-contain" 
-                                            />
-                                            <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 hover:opacity-100 transition-opacity flex items-end justify-center pb-2 pointer-events-none">
-                                                <span className="text-[10px] text-white/80 font-medium">Fit to Screen</span>
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        <div className="w-full h-full flex items-center justify-center bg-zinc-100">
-                                            <span className="text-xs text-zinc-400">No Cover Image</span>
-                                        </div>
-                                    )}
-                                </div>
+                  <div className="flex-1 overflow-y-auto p-4 custom-scrollbar overflow-x-hidden">
+                    <div className="bg-white rounded-2xl shadow-sm border border-zinc-200 overflow-hidden min-h-[500px] origin-top w-full max-w-full relative">
+                      {/* Header Section */}
+                      <div className="bg-zinc-900 p-6 text-center relative overflow-hidden">
+                        <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
+                        <div className="relative z-10">
+                          <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-600/20 text-red-400 border border-red-500/30 text-[10px] font-bold uppercase tracking-wider mb-3">
+                            <Tag size={10} />
+                            <span>Preview</span>
+                          </div>
+                          <h1 className="text-xl font-bold text-white mb-3 leading-tight">
+                            {title || "Judul Artikel Akan Muncul Disini"}
+                          </h1>
+                          <div className="flex flex-wrap items-center justify-center gap-2 text-[10px] text-zinc-400">
+                            <div className="flex items-center bg-white/5 rounded-full px-2 py-1">
+                              <Calendar
+                                size={10}
+                                className="mr-1 text-[var(--brand)]"
+                              />
+                              <span>
+                                {new Date().toLocaleDateString("id-ID", {
+                                  day: "numeric",
+                                  month: "short",
+                                  year: "numeric",
+                                })}
+                              </span>
                             </div>
+                            <div className="flex items-center bg-white/5 rounded-full px-2 py-1">
+                              <User
+                                size={10}
+                                className="mr-1 text-[var(--brand)]"
+                              />
+                              <span>Admin</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
 
-                            {/* Content */}
-                            <div className="p-4 md:p-6">
-                                <div className="prose prose-sm prose-red max-w-none">
-                                    {content ? (
-                                        <div dangerouslySetInnerHTML={{ __html: content }} />
-                                    ) : (
-                                        <div className="space-y-2">
-                                            <div className="h-2 bg-zinc-100 rounded w-full"></div>
-                                            <div className="h-2 bg-zinc-100 rounded w-5/6"></div>
-                                            <div className="h-2 bg-zinc-100 rounded w-4/6"></div>
-                                            <p className="text-xs text-zinc-400 italic mt-4">Konten artikel akan muncul di sini...</p>
-                                        </div>
-                                    )}
-                                </div>
+                      {/* Featured Image */}
+                      <div className="px-4 -mt-4 relative z-20">
+                        <div className="aspect-video bg-zinc-100 rounded-lg shadow-lg border-2 border-white overflow-hidden relative">
+                          {previewImage ? (
+                            <div className="absolute inset-0 flex items-center justify-center bg-zinc-900">
+                              <img
+                                src={previewImage}
+                                alt="Preview"
+                                className="w-full h-full object-contain"
+                                onError={(e) => {
+                                  e.currentTarget.style.display = "none";
+                                  e.currentTarget.parentElement?.classList.add(
+                                    "bg-zinc-800"
+                                  );
+                                }}
+                              />
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 hover:opacity-100 transition-opacity flex items-end justify-center pb-2 pointer-events-none">
+                                <span className="text-[10px] text-white/80 font-medium">
+                                  Fit to Screen
+                                </span>
+                              </div>
                             </div>
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-zinc-100">
+                              <span className="text-xs text-zinc-400">
+                                No Cover Image
+                              </span>
+                            </div>
+                          )}
                         </div>
-                        
-                        {/* make text transparent */}
-                        <div className="text-center mt-4 text-[10px] text-zinc-400" style={{ opacity: 0 }}>
-                            * Preview ini adalah representasi visual. Tampilan sebenarnya mungkin sedikit berbeda tergantung perangkat user.
+                      </div>
+
+                      {/* Content */}
+                      <div className="p-4 md:p-6">
+                        <div className="prose prose-sm prose-red max-w-none">
+                          {content ? (
+                            <div
+                              dangerouslySetInnerHTML={{ __html: content }}
+                            />
+                          ) : (
+                            <div className="space-y-2">
+                              <div className="h-2 bg-zinc-100 rounded w-full"></div>
+                              <div className="h-2 bg-zinc-100 rounded w-5/6"></div>
+                              <div className="h-2 bg-zinc-100 rounded w-4/6"></div>
+                              <p className="text-xs text-zinc-400 italic mt-4">
+                                Konten artikel akan muncul di sini...
+                              </p>
+                            </div>
+                          )}
                         </div>
+                      </div>
                     </div>
+
+                    {/* make text transparent */}
+                    <div
+                      className="text-center mt-4 text-[10px] text-zinc-400"
+                      style={{ opacity: 0 }}
+                    >
+                      * Preview ini adalah representasi visual. Tampilan
+                      sebenarnya mungkin sedikit berbeda tergantung perangkat
+                      user.
+                    </div>
+                  </div>
                 </div>
               </form>
             </div>
@@ -346,7 +438,11 @@ export default function BlogModal({ isOpen, onClose, post, authorId }: BlogModal
                   disabled={loading}
                   className="flex items-center gap-2 px-6 py-2 bg-[var(--brand)] hover:bg-[var(--brand)]/90 text-white rounded-lg text-sm font-medium transition-colors shadow-sm disabled:opacity-50"
                 >
-                  {loading ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+                  {loading ? (
+                    <Loader2 size={16} className="animate-spin" />
+                  ) : (
+                    <Save size={16} />
+                  )}
                   {post ? "Simpan Perubahan" : "Terbitkan"}
                 </button>
               </div>
@@ -360,18 +456,20 @@ export default function BlogModal({ isOpen, onClose, post, authorId }: BlogModal
           >
             <div className="flex flex-col gap-4">
               <p className="text-zinc-600">
-                Apakah Anda yakin ingin menghapus artikel <strong>"{post?.title}"</strong>? Tindakan ini tidak dapat dibatalkan.
+                Apakah Anda yakin ingin menghapus artikel{" "}
+                <strong>"{post?.title}"</strong>? Tindakan ini tidak dapat
+                dibatalkan.
               </p>
               <div className="flex justify-end gap-2 mt-2">
-                <GlassButton 
-                  variant="secondary" 
+                <GlassButton
+                  variant="secondary"
                   onClick={() => setIsDeleteModalOpen(false)}
                   disabled={loading}
                 >
                   Batal
                 </GlassButton>
-                <GlassButton 
-                  variant="danger" 
+                <GlassButton
+                  variant="danger"
                   onClick={confirmDelete}
                   disabled={loading}
                 >

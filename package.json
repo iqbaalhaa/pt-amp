@@ -18,13 +18,14 @@
     "seed:pengikisan-feb": "tsx prisma/seed-pengikisan-february.ts"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.995.0",
     "@emotion/cache": "^11.14.0",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
     "@mui/icons-material": "^7.3.8",
     "@mui/material": "^7.3.8",
     "@mui/material-nextjs": "^7.3.6",
-    "@prisma/adapter-pg": "^7.4.0",
+    "@prisma/adapter-pg": "^7.4.1",
     "@prisma/client": "^7.2.0",
     "@tiptap/extension-color": "^3.15.3",
     "@tiptap/extension-image": "^3.15.3",
@@ -51,11 +52,11 @@
     "next": "16.1.1",
     "pg": "^8.18.0",
     "prisma": "^7.2.0",
-    "xlsx": "^0.18.5",
     "react": "19.2.3",
     "react-chartjs-2": "^5.3.1",
     "react-dom": "19.2.3",
-    "react-to-print": "^3.2.0"
+    "react-to-print": "^3.2.0",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

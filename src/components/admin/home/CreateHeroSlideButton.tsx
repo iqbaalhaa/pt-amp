@@ -5,7 +5,11 @@ import { createHeroSlide } from "@/actions/cms-actions";
 import { Plus, X, Image as ImageIcon, Video } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-export default function CreateHeroSlideButton({ nextOrder }: { nextOrder: number }) {
+export default function CreateHeroSlideButton({
+  nextOrder,
+}: {
+  nextOrder: number;
+}) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -41,7 +45,9 @@ export default function CreateHeroSlideButton({ nextOrder }: { nextOrder: number
               className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl overflow-hidden"
             >
               <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-100 bg-white">
-                <h2 className="text-lg font-bold text-zinc-900">Tambah Slide Baru</h2>
+                <h2 className="text-lg font-bold text-zinc-900">
+                  Tambah Slide Baru
+                </h2>
                 <button
                   onClick={() => setIsOpen(false)}
                   className="p-2 rounded-full hover:bg-zinc-100 text-zinc-500 transition-colors"
@@ -127,8 +133,17 @@ export default function CreateHeroSlideButton({ nextOrder }: { nextOrder: number
                       type="file"
                       name="file"
                       accept="image/*,video/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file && file.size > 50 * 1024 * 1024) {
+                          alert("File size exceeds 50MB");
+                          e.target.value = "";
+                          return;
+                        }
+                      }}
                       className="block w-full text-xs text-zinc-500 file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-zinc-100 file:text-zinc-700 hover:file:bg-zinc-200"
                     />
+                    <span className="text-[10px] text-zinc-400">Max 50MB</span>
                   </div>
 
                   <div className="pt-2">

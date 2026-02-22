@@ -81,6 +81,10 @@ export default function BlogEditor({ content, onChange }: BlogEditorProps) {
       input.onchange = async () => {
           if (input.files?.length) {
               const file = input.files[0];
+              if (file.size > 50 * 1024 * 1024) {
+                  alert("File size exceeds 50MB");
+                  return;
+              }
               const formData = new FormData();
               formData.append('file', file);
               
