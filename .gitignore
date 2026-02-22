@@ -35,13 +35,13 @@ yarn-error.log*
 !.env.example
 
 # vercel
-.vercel
 
 # typescript
+.vercel
 *.tsbuildinfo
 next-env.d.ts
 
 /src/generated
-
+docker-compose.yml
 
 *.mp4

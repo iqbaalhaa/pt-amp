@@ -546,6 +546,7 @@ model QcPotongSortir {
   totalUpah Decimal? @db.Decimal(14, 2) @map("total_upah")
   upahPerHari      Decimal? @db.Decimal(14, 2) @map("upah_per_hari")
   upahLemburPerJam Decimal? @db.Decimal(14, 2) @map("upah_lembur_per_jam")
+  petugas   String?  @map("petugas")
 
   qcPotongSortirItems QcPotongSortirItem[]
 
