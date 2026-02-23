@@ -29,5 +29,5 @@ RUN npx prisma generate && npm run build
 
 EXPOSE 3000
 
-# On container start: sync schema and start app (no rebuild)
-CMD ["sh", "-c", "npx prisma db push --skip-generate && npm run start"]
+# On container start: sync schema and start app
+CMD ["sh", "-c", "npx prisma db push && npm run start"]
