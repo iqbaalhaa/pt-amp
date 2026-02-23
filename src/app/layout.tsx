@@ -4,33 +4,34 @@ import { AppRouterCacheProvider } from "@mui/material-nextjs/v16-appRouter";
 import "./globals.css";
 
 const plusJakarta = Plus_Jakarta_Sans({
-	variable: "--font-geist-sans",
-	subsets: ["latin"],
-	weight: ["400","500","600","700","800"],
+  variable: "--font-geist-sans",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
 });
 
 const geistMono = Geist_Mono({
-	variable: "--font-geist-mono",
-	subsets: ["latin"],
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
-	title: "PT AMP",
-	description: "Website for PT AMP",
+  title: "PT AMP",
+  description: "Website for PT AMP",
 };
 
 export default function RootLayout({
-	children,
+  children,
 }: {
-	children: React.ReactNode;
+  children: React.ReactNode;
 }) {
-		return (
-			<html lang="id" suppressHydrationWarning>
-			<body className={`${plusJakarta.variable} ${geistMono.variable}`} suppressHydrationWarning>
-				<AppRouterCacheProvider>
-					{children}
-				</AppRouterCacheProvider>
-			</body>
-			</html>
-	);
+  return (
+    <html lang="id" suppressHydrationWarning>
+      <body
+        className={`${plusJakarta.variable} ${geistMono.variable}`}
+        suppressHydrationWarning
+      >
+        <AppRouterCacheProvider>{children}</AppRouterCacheProvider>
+      </body>
+    </html>
+  );
 }
