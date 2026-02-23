@@ -5,8 +5,8 @@ services:
       args:
         NODE_VERSION: 22
         NODE_ENV: ${NODE_ENV:-production}
-        DATABASE_URL: "postgresql://postgres:postgres@db-host:5432/ptamp?schema=public"
-        BUILD_DATABASE_URL: "postgresql://postgres:postgres@host.docker.internal:5432/ptamp?schema=public"
+        DATABASE_URL: "postgresql://vpsdepati:Vpsdepati.123!@db-host:5432/ptamp?schema=public"
+        BUILD_DATABASE_URL: "postgresql://vpsdepati:Vpsdepati.123!@localhost:5432/ptamp?schema=public"
     image: ptamp-app
     container_name: ptamp-app
     restart: unless-stopped
@@ -16,7 +16,7 @@ services:
       - .env
     environment:
       NODE_ENV: ${NODE_ENV:-production}
-      DATABASE_URL: "postgresql://postgres:postgres@db-host:5432/ptamp?schema=public"
+      DATABASE_URL: "postgresql://vpsdepati:Vpsdepati.123!@db-host:5432/ptamp?schema=public"
     command: sh -c "npx prisma db push --skip-generate && npm run start"
     ports:
       - "3000:3000"
