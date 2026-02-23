@@ -7,13 +7,17 @@ RUN apt-get update \
   && apt-get install -y --no-install-recommends ca-certificates openssl \
   && rm -rf /var/lib/apt/lists/*
 
-# Build-time arguments that can be passed from docker-compose
 ARG NODE_ENV=production
 ARG DATABASE_URL
+# Optional separate DB URL for build-time (can point to host.docker.internal)
+ARG BUILD_DATABASE_URL
 
 # Copy manifests, install deps at build time (including dev deps for build tooling)
 COPY package*.json ./
 RUN npm install --include=dev
+
+# Copy application source (excluding node_modules via .dockerignore)
+COPY . .
 
 # Set runtime environment variables from build args
 ENV NODE_ENV=${NODE_ENV}
@@ -22,11 +26,10 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
 
-# Copy application source (excluding node_modules via .dockerignore)
-COPY . .
-
-# Generate Prisma client and build Next.js app at image build time
-RUN npx prisma generate && npm run build
+# Generate Prisma client and build Next.js app at image build time.
+# Use BUILD_DATABASE_URL if provided so build can reach DB (e.g. host.docker.internal).
+RUN DATABASE_URL=${BUILD_DATABASE_URL:-$DATABASE_URL} npx prisma generate \
+  && DATABASE_URL=${BUILD_DATABASE_URL:-$DATABASE_URL} npm run build
 
 EXPOSE 3000
 

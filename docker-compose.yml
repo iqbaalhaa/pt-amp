@@ -6,6 +6,7 @@ services:
         NODE_VERSION: 22
         NODE_ENV: ${NODE_ENV:-production}
         DATABASE_URL: "postgresql://postgres:postgres@db-host:5432/ptamp?schema=public"
+        BUILD_DATABASE_URL: "postgresql://postgres:postgres@host.docker.internal:5432/ptamp?schema=public"
     image: ptamp-app
     container_name: ptamp-app
     restart: unless-stopped
