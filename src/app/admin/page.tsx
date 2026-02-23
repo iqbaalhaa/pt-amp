@@ -5,6 +5,8 @@ import { headers } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 
+export const dynamic = "force-dynamic";
+
 export default async function AdminDashboard() {
 	const session = await auth.api.getSession({ headers: await headers() });
 	if (!session) redirect("/login");

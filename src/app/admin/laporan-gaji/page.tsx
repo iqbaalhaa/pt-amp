@@ -9,6 +9,8 @@ export const metadata = {
 	description: "Laporan gaji berdasarkan data produksi.",
 };
 
+export const dynamic = "force-dynamic";
+
 type SearchParams = {
 	jenis?: string;
 	weekStart?: string;

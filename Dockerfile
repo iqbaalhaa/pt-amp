@@ -9,8 +9,6 @@ RUN apt-get update \
 
 ARG NODE_ENV=production
 ARG DATABASE_URL
-# Optional separate DB URL for build-time (can point to host.docker.internal)
-ARG BUILD_DATABASE_URL
 
 # Copy manifests, install deps at build time (including dev deps for build tooling)
 COPY package*.json ./
@@ -27,9 +25,7 @@ ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
 
 # Generate Prisma client and build Next.js app at image build time.
-# Use BUILD_DATABASE_URL if provided so build can reach DB (e.g. host.docker.internal).
-RUN DATABASE_URL=${BUILD_DATABASE_URL:-$DATABASE_URL} npx prisma generate \
-  && DATABASE_URL=${BUILD_DATABASE_URL:-$DATABASE_URL} npm run build
+RUN npx prisma generate && npm run build
 
 EXPOSE 3000
 

@@ -9,6 +9,8 @@ import {
 } from "@/components/admin/ledger/formatters";
 import LedgerFiltersClient from "@/components/admin/ledger/LedgerFiltersClient";
 
+export const dynamic = "force-dynamic";
+
 type SearchParams = {
   start?: string;
   end?: string;

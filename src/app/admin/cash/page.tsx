@@ -4,6 +4,8 @@ import { id } from "date-fns/locale/id";
 import { ArrowDownRight, ArrowUpRight, Filter, Wallet } from "lucide-react";
 import CashExportClient from "@/components/admin/cash/CashExportClient";
 
+export const dynamic = "force-dynamic";
+
 function toCurrency(n: number) {
 	try {
 		return new Intl.NumberFormat("id-ID", {
