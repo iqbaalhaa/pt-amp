@@ -778,8 +778,28 @@ model ExpenseItem {
 }
 
 // =========================================================
+// CASH ADJUSTMENTS
+// =========================================================
+
+model CashAdjustment {
+  id        BigInt   @id @default(autoincrement())
+  date      DateTime @db.Date
+  amount    Decimal  @db.Decimal(14, 2)
+  type      AdjustmentType
+  notes     String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("cash_adjustments")
+}
+
+// =========================================================
 // ENUMS
 // =========================================================
+
+enum AdjustmentType {
+  IN
+  OUT
+}
 
 enum InquiryStatus {
   NEW

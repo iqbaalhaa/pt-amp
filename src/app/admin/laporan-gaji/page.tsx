@@ -3,6 +3,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { toCurrency } from "@/components/admin/ledger/formatters";
 import LaporanGajiHeaderWithDownload from "@/components/admin/laporan-gaji/HeaderWithDownload";
+import SalaryReportPrintClient from "@/components/admin/laporan-gaji/PrintButton";
 
 export const metadata = {
 	title: "Laporan Gaji | PT AMP Dashboard",
@@ -533,7 +534,7 @@ export default async function LaporanGajiPage({
 						Weekly report upah pegawai berdasarkan data produksi.
 					</p>
 				</div>
-				<div className="flex flex-col items-start gap-2 text-xs md:flex-row md:items-center">
+				<div className="flex flex-col items-start gap-3 text-xs md:flex-row md:items-center">
 					<div className="flex items-center gap-2">
 						<Link
 							href={buildWeekHref(prevWeekStart)}
@@ -551,21 +552,24 @@ export default async function LaporanGajiPage({
 							Minggu berikutnya &rarr;
 						</Link>
 					</div>
-					<form method="GET" className="flex items-center gap-2">
-						<input type="hidden" name="jenis" value={activeTabKey} />
-						<input
-							type="date"
-							name="weekStart"
-							defaultValue={fmtParamDate(weekStart)}
-							className="rounded-md border border-slate-300 px-2 py-1 text-xs"
-						/>
-						<button
-							type="submit"
-							className="rounded-md bg-slate-900 px-2 py-1 text-[11px] font-semibold text-white hover:bg-slate-800"
-						>
-							Pilih minggu
-						</button>
-					</form>
+					<div className="flex items-center gap-2">
+						<form method="GET" className="flex items-center gap-2">
+							<input type="hidden" name="jenis" value={activeTabKey} />
+							<input
+								type="date"
+								name="weekStart"
+								defaultValue={fmtParamDate(weekStart)}
+								className="rounded-md border border-slate-300 px-2 py-1 text-xs"
+							/>
+							<button
+								type="submit"
+								className="rounded-md bg-slate-900 px-2 py-1 text-[11px] font-semibold text-white hover:bg-slate-800"
+							>
+								Pilih minggu
+							</button>
+						</form>
+						<SalaryReportPrintClient />
+					</div>
 				</div>
 			</section>
 

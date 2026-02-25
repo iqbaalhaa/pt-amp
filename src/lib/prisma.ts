@@ -2,6 +2,7 @@ import { PrismaClient } from "../generated/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { Pool } from "pg";
 
+// Prisma client singleton with PG adapter
 const prismaClientSingleton = () => {
   const connectionString = process.env.DATABASE_URL;
   const pool = new Pool({ connectionString });

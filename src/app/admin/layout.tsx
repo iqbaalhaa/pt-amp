@@ -34,6 +34,14 @@ export default async function AdminLayout({
         "/admin/pengemasan",
       ];
 
+  const headersList = await headers();
+  const pathname = headersList.get("x-pathname") || "";
+  const isPrintPage = pathname.includes("/print-view");
+
+  if (isPrintPage) {
+    return <div className="bg-white min-h-screen">{children}</div>;
+  }
+
   return (
     <GlassAdminShell allowedPaths={allowedPaths ?? undefined}>
       {children}
