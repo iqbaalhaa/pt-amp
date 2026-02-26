@@ -267,7 +267,7 @@ export default function PengikisanClient() {
       if (res?.success) {
         setLastSavedId(res.id);
         setOpenPreview(true);
-        resetForm();
+        // Form will be reset when closing the preview modal
       } else {
         alert("Gagal menyimpan data");
       }
@@ -603,8 +603,13 @@ export default function PengikisanClient() {
                         <Autocomplete
                           value={
                             workerOptions.find((w) => w.name === row.nama) ||
-                            null
+                            (row.nama ? row.nama : null)
                           }
+                          onInputChange={(_event, newInputValue, reason) => {
+                            if (reason === "input" || reason === "clear") {
+                              handleChange(row.id, "nama", newInputValue);
+                            }
+                          }}
                           onChange={async (_event, newValue) => {
                             if (newValue && (newValue as any).inputValue) {
                               setCreatingWorkerId(row.id);
@@ -872,12 +877,18 @@ export default function PengikisanClient() {
       <SafeModal
         open={openPreview}
         title="Berhasil Disimpan"
-        onClose={() => setOpenPreview(false)}
+        onClose={() => {
+          setOpenPreview(false);
+          resetForm();
+        }}
         footer={
           <div className="flex gap-2">
             <GlassButton
               variant="secondary"
-              onClick={() => setOpenPreview(false)}
+              onClick={() => {
+                setOpenPreview(false);
+                resetForm();
+              }}
             >
               Tutup
             </GlassButton>

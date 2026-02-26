@@ -46,6 +46,17 @@ function loadReportLogo() {
   return reportLogoPromise;
 }
 
+function downloadBlob(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
 type Props = {
   title: string;
   type: LedgerEntry["type"];
@@ -88,6 +99,11 @@ export function LedgerSection({
   const [reportMonth, setReportMonth] = useState("");
   const [reportYear, setReportYear] = useState("");
 
+  const saleStatusLabel = (s: LedgerEntry["status"]) =>
+    s === "posted" ? "Selesai" : s === "cancelled" ? "Batal" : "Perkiraan";
+  const labelForEntry = (e: LedgerEntry) =>
+    e.type === "sale" ? saleStatusLabel(e.status) : e.status.toUpperCase();
+
   type MassRow = {
     date: string;
     party: string; // supplier or petugas
@@ -111,17 +127,25 @@ export function LedgerSection({
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
 
   const sortedEntries = useMemo(() => {
+    const getComparable = (e: LedgerEntry, col: keyof LedgerEntry) => {
+      const v = e[col] as any;
+      if (col === "date") {
+        const t = new Date(String(v)).getTime();
+        return isFinite(t) ? t : Number.NEGATIVE_INFINITY;
+      }
+      if (col === "total" || col === "productionCost" || col === "itemCount") {
+        const n = Number(v);
+        return isFinite(n) ? n : Number.NEGATIVE_INFINITY;
+      }
+      if (v == null) return "";
+      return String(v).toLowerCase();
+    };
     const sorted = [...entries].sort((a, b) => {
-      const aVal = a[sortColumn];
-      const bVal = b[sortColumn];
-
-      if (aVal === bVal) return 0;
-      if (aVal === null || aVal === undefined) return 1;
-      if (bVal === null || bVal === undefined) return -1;
-
-      if (aVal < bVal) return sortDirection === "asc" ? -1 : 1;
-      if (aVal > bVal) return sortDirection === "asc" ? 1 : -1;
-      return 0;
+      const av = getComparable(a, sortColumn);
+      const bv = getComparable(b, sortColumn);
+      if (av === bv) return 0;
+      if (av < bv) return sortDirection === "asc" ? -1 : 1;
+      return sortDirection === "asc" ? 1 : -1;
     });
     return sorted;
   }, [entries, sortColumn, sortDirection]);
@@ -159,8 +183,10 @@ export function LedgerSection({
   };
 
   const handleDownloadReport = (mode: "monthly" | "weekly") => {
+    const now = new Date();
     const reportEntries = getReportEntriesForRange(mode);
     if (reportEntries.length === 0) {
+      alert("Tidak ada data untuk periode ini");
       return;
     }
 
@@ -176,18 +202,19 @@ export function LedgerSection({
 
     let y = margin;
 
-    const now = new Date();
+    const times = reportEntries
+      .map((e) => new Date(e.date).getTime())
+      .filter((t) => isFinite(t));
+    const minT = Math.min(...times);
+    const maxT = Math.max(...times);
     const rangeLabel =
-      mode === "monthly"
-        ? now.toLocaleString("id-ID", {
-            month: "long",
-            year: "numeric",
-          })
-        : `${new Date(
-            now.getFullYear(),
-            now.getMonth(),
-            now.getDate() - 6
-          ).toLocaleDateString("id-ID")} - ${now.toLocaleDateString("id-ID")}`;
+      isFinite(minT) && isFinite(maxT)
+        ? minT === maxT
+          ? new Date(minT).toLocaleDateString("id-ID")
+          : `${new Date(minT).toLocaleDateString("id-ID")} - ${new Date(
+              maxT
+            ).toLocaleDateString("id-ID")}`
+        : "Sesuai filter";
 
     const reportTitleBase = type === "production" && subType ? subType : title;
 
@@ -231,17 +258,36 @@ export function LedgerSection({
     pdf.setFont("helvetica", "bold");
     pdf.setFontSize(9);
 
+    const shouldShowShift =
+      type === "production" &&
+      (subType === "Pengikisan" ||
+        subType === "Pemotongan" ||
+        subType === "Pengemasan");
+
+    const showParty = !(
+      type === "production" &&
+      (subType === "Pengikisan" ||
+        subType === "Pemotongan" ||
+        subType === "Pengemasan" ||
+        subType === "Pensortiran" ||
+        subType === "QC Potong & Sortir")
+    );
+
     const colTanggalX = margin;
     const colShiftX = colTanggalX + 32;
-    const colPetugasX = colShiftX + 16;
-    const colPihakX = colPetugasX + 32;
+    const colPetugasX = shouldShowShift ? colShiftX + 16 : colTanggalX + 32;
+    const colPihakX = colPetugasX + (shouldShowShift ? 32 : 48);
     const colTotalX = pageW - margin - 30;
     const colStatusX = pageW - margin;
 
     pdf.text("Tanggal", colTanggalX, y);
-    pdf.text("Shift", colShiftX, y);
+    if (shouldShowShift) {
+      pdf.text("Shift", colShiftX, y);
+    }
     pdf.text("Petugas", colPetugasX, y);
-    pdf.text("Pihak", colPihakX, y);
+    if (showParty) {
+      pdf.text("Pihak", colPihakX, y);
+    }
     pdf.text("Total", colTotalX, y, { align: "right" });
     pdf.text("Status", colStatusX, y, { align: "right" });
     y += 5;
@@ -261,12 +307,16 @@ export function LedgerSection({
       const petugas = e.createdByName || "-";
       const pihak = e.counterparty || "-";
       const totalVal = getProductionValue(e);
-      const status = e.status.toUpperCase();
+      const status = labelForEntry(e);
 
       pdf.text(dateStr, colTanggalX, y);
-      pdf.text(shift, colShiftX, y);
+      if (shouldShowShift) {
+        pdf.text(shift, colShiftX, y);
+      }
       pdf.text(petugas, colPetugasX, y);
-      pdf.text(pihak, colPihakX, y);
+      if (showParty) {
+        pdf.text(pihak, colPihakX, y);
+      }
       pdf.text(toCurrency(totalVal), colTotalX, y, { align: "right" });
       pdf.text(status, colStatusX, y, { align: "right" });
       y += 5;
@@ -285,8 +335,14 @@ export function LedgerSection({
   };
 
   const handleDownloadProductionRangePdfReport = async () => {
-    if (entries.length === 0) return;
-    if (type !== "production" || !subType) return;
+    if (entries.length === 0) {
+      alert("Tidak ada data untuk periode ini");
+      return;
+    }
+    if (type !== "production" || !subType) {
+      alert("Sub jenis produksi tidak valid");
+      return;
+    }
 
     let startDate: Date | null = null;
     let endDate: Date | null = null;
@@ -425,7 +481,7 @@ export function LedgerSection({
       const petugas = e.createdByName || "-";
       const pihak = e.counterparty || "-";
       const totalVal = getProductionValue(e);
-      const status = e.status.toUpperCase();
+      const status = labelForEntry(e);
 
       pdf.text(dateStr, colTanggalX, y);
       pdf.text(shift, colShiftX, y);
@@ -443,8 +499,14 @@ export function LedgerSection({
   };
 
   const handleDownloadUpahRangePdfReport = async () => {
-    if (entries.length === 0) return;
-    if (type !== "production" || !subType) return;
+    if (entries.length === 0) {
+      alert("Tidak ada data untuk periode ini");
+      return;
+    }
+    if (type !== "production" || !subType) {
+      alert("Sub jenis produksi tidak valid");
+      return;
+    }
     if (
       subType !== "Pemotongan" &&
       subType !== "Penjemuran" &&
@@ -580,12 +642,7 @@ export function LedgerSection({
               typeof it.upahPerBungkus === "number"
                 ? it.upahPerBungkus
                 : Number(it.upahPerBungkus ?? 0);
-            const row = ensureRow(
-              name,
-              "BKS",
-              harga,
-              entry.shift ?? undefined
-            );
+            const row = ensureRow(name, "BKS", harga, entry.shift ?? undefined);
             row.values[dateKey] = (row.values[dateKey] ?? 0) + bungkus;
           }
           if (total > 0) {
@@ -780,9 +837,16 @@ export function LedgerSection({
       pdf.setFont("helvetica", "normal");
 
       names.forEach((name) => {
-        const rowsForName: RowInfo[] = Array.from(rowsMap.values()).filter(
-          (r) => r.name === name
-        );
+        const rowsForName: RowInfo[] = Array.from(rowsMap.values())
+          .filter((r) => r.name === name)
+          .sort((a, b) => {
+            const sa = a.shift || "";
+            const sb = b.shift || "";
+            if (sa !== sb) return sa.localeCompare(sb);
+            if (a.ket === "KA" && b.ket === "STIK") return -1;
+            if (a.ket === "STIK" && b.ket === "KA") return 1;
+            return 0;
+          });
         if (rowsForName.length === 0) return;
 
         const totalUpahName = totalUpahByNamePdf.get(name) ?? 0;
@@ -1073,14 +1137,9 @@ export function LedgerSection({
     const blob = new Blob([wbout], {
       type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
     const suffix =
       reportMode === "range" ? "range" : `bulan-${reportMonth}-${reportYear}`;
-    a.download = `laporan-pengikisan-${suffix}.xlsx`;
-    a.click();
-    URL.revokeObjectURL(url);
+    downloadBlob(blob, `laporan-pengikisan-${suffix}.xlsx`);
     setOpenReport(false);
   };
 
@@ -1089,6 +1148,21 @@ export function LedgerSection({
     let startDate: Date | null = null;
     let endDate: Date | null = null;
     let periodeLabel = "";
+    const ymd = (d: Date) => {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const da = String(d.getDate()).padStart(2, "0");
+      return `${y}-${m}-${da}`;
+    };
+    const parseLocal = (s: string) => {
+      const [datePart] = s.split("T");
+      const [y, m, d] = datePart.split("-").map((x) => Number(x));
+      if (isFinite(y) && isFinite(m) && isFinite(d)) {
+        return new Date(y, m - 1, d);
+      }
+      const t = new Date(s);
+      return isNaN(t.getTime()) ? new Date() : t;
+    };
     if (reportMode === "range") {
       if (!reportStart || !reportEnd) return;
       const s = new Date(reportStart);
@@ -1123,10 +1197,13 @@ export function LedgerSection({
     const filtered = entries.filter((e) => {
       if (e.type !== "production" || e.subType !== "Pengikisan") return false;
       if (!e.pengikisanItems || e.pengikisanItems.length === 0) return false;
-      const d = new Date(e.date);
+      const d = parseLocal(e.date);
       return d >= startDate! && d <= endDate!;
     });
-    if (filtered.length === 0) return;
+    if (filtered.length === 0) {
+      alert("Tidak ada data pengikisan untuk periode ini");
+      return;
+    }
 
     type RowInfo = {
       name: string;
@@ -1156,8 +1233,8 @@ export function LedgerSection({
     };
 
     filtered.forEach((entry) => {
-      const d = new Date(entry.date);
-      const dateKey = d.toISOString().slice(0, 10);
+      const d = parseLocal(entry.date);
+      const dateKey = ymd(d);
       dateKeySet.add(dateKey);
       entry.pengikisanItems?.forEach((it) => {
         const baseName = it.nama || "-";
@@ -1192,7 +1269,10 @@ export function LedgerSection({
       });
     });
 
-    if (rowsMap.size === 0) return;
+    if (rowsMap.size === 0) {
+      alert("Tidak ada data pengikisan untuk periode ini");
+      return;
+    }
 
     const dateKeys = Array.from(dateKeySet).sort();
     const isMonthlyReport = reportMode === "month";
@@ -1202,7 +1282,7 @@ export function LedgerSection({
     ).sort((a, b) => a.localeCompare(b));
 
     const totalUpahByNamePdf = new Map<string, number>();
-    names.forEach((name) => {
+    names.forEach((name, idx) => {
       const rowsForName = Array.from(rowsMap.values()).filter(
         (r) => r.name === name
       );
@@ -1216,6 +1296,11 @@ export function LedgerSection({
         totalUpah += jumlahRow * hargaRow;
       });
       totalUpahByNamePdf.set(name, totalUpah);
+    });
+
+    const nameNo = new Map<string, number>();
+    names.forEach((name, idx) => {
+      nameNo.set(name, idx + 1);
     });
 
     const pdf = new jsPDF({
@@ -1286,7 +1371,6 @@ export function LedgerSection({
     pdf.setFont("helvetica", "bold");
 
     const tableStartY = y;
-    let counter = 1;
 
     if (!isMonthlyReport) {
       const maxColsPerPage = 13;
@@ -1368,11 +1452,10 @@ export function LedgerSection({
         pdf.setFont("helvetica", "normal");
 
         names.forEach((name) => {
-          const rowsForName: RowInfo[] = [];
-          const rowKa = rowsMap.get(`${name}|KA`);
-          const rowStik = rowsMap.get(`${name}|STIK`);
-          if (rowKa) rowsForName.push(rowKa);
-          if (rowStik) rowsForName.push(rowStik);
+          const rowsForName: RowInfo[] = Array.from(rowsMap.values()).filter(
+            (r) => r.name === name
+          );
+          if (rowsForName.length === 0) return;
 
           const totalUpahName = totalUpahByNamePdf.get(name) ?? 0;
 
@@ -1399,9 +1482,15 @@ export function LedgerSection({
             const textY = y + 4;
 
             if (idx === 0) {
-              pdf.text(String(counter), colNoX + 2, textY);
+              const no = nameNo.get(name);
+              if (no != null) {
+                pdf.text(String(no), colNoX + 2, textY);
+              }
             }
-            pdf.text(row.name, colNamaX + 1, textY);
+            const labelName = row.shift
+              ? `${row.name} (${row.shift.toUpperCase()})`
+              : row.name;
+            pdf.text(labelName, colNamaX + 1, textY);
             pdf.text(row.ket, colKetX + 1, textY);
             perDate.forEach((val, i) => {
               const x = firstDateX + i * dateColWidth;
@@ -1422,7 +1511,7 @@ export function LedgerSection({
                 align: "right",
               });
             }
-            if (row.ket === "STIK" && totalUpahName !== 0) {
+            if (idx === rowsForName.length - 1 && totalUpahName !== 0) {
               pdf.text(toCurrency(totalUpahName), colJumlahUpahX + 24, textY, {
                 align: "right",
               });
@@ -1430,7 +1519,6 @@ export function LedgerSection({
 
             y += rowHeight;
           });
-          counter += 1;
         });
       });
     } else {
@@ -1464,10 +1552,13 @@ export function LedgerSection({
       }));
 
       const yearNum = startDate.getFullYear();
-      const monthNum = startDate.getMonth();
+      const monthIdx = startDate.getMonth();
 
       const makeDateKey = (day: number) =>
-        new Date(yearNum, monthNum, day).toISOString().slice(0, 10);
+        ymd(new Date(yearNum, monthIdx, day));
+
+      const nameNo = new Map<string, number>();
+      names.forEach((n, i) => nameNo.set(n, i + 1));
 
       chunks.forEach((chunk, chunkIndex) => {
         const chunkHeaders = chunk.days.map((d) =>
@@ -1550,11 +1641,16 @@ export function LedgerSection({
         pdf.setFont("helvetica", "normal");
 
         names.forEach((name) => {
-          const rowsForName: RowInfo[] = [];
-          const rowKa = rowsMap.get(`${name}|KA`);
-          const rowStik = rowsMap.get(`${name}|STIK`);
-          if (rowKa) rowsForName.push(rowKa);
-          if (rowStik) rowsForName.push(rowStik);
+          const rowsForName: RowInfo[] = Array.from(rowsMap.values())
+            .filter((r) => r.name === name)
+            .sort((a, b) => {
+              const sa = a.shift || "";
+              const sb = b.shift || "";
+              if (sa !== sb) return sa.localeCompare(sb);
+              if (a.ket === "KA" && b.ket === "STIK") return -1;
+              if (a.ket === "STIK" && b.ket === "KA") return 1;
+              return 0;
+            });
 
           rowsForName.forEach((row, idx) => {
             if (y > pageH - margin) {
@@ -1572,8 +1668,6 @@ export function LedgerSection({
               (sum, v) => sum + v,
               0
             );
-            const harga = row.harga || 0;
-            const total = jumlah * harga;
             const totalUpahName = totalUpahByNamePdf.get(name) ?? 0;
             const perDate = chunk.days.map((day) => {
               const key = makeDateKey(day);
@@ -1583,9 +1677,13 @@ export function LedgerSection({
             const textY = y + 4;
 
             if (idx === 0) {
-              pdf.text(String(counter), colNoX + 2, textY);
+              const no = nameNo.get(name);
+              if (no != null) pdf.text(String(no), colNoX + 2, textY);
             }
-            pdf.text(row.name, colNamaX + 1, textY);
+            const labelName = row.shift
+              ? `${row.name} (${row.shift.toUpperCase()})`
+              : row.name;
+            pdf.text(labelName, colNamaX + 1, textY);
             pdf.text(row.ket, colKetX + 1, textY);
             perDate.forEach((val, i) => {
               const x = firstDateX + i * dateColWidth;
@@ -1599,7 +1697,7 @@ export function LedgerSection({
             if (
               chunk.showJumlahUpah &&
               colJumlahUpahX != null &&
-              row.ket === "STIK" &&
+              idx === rowsForName.length - 1 &&
               totalUpahName !== 0
             ) {
               pdf.text(toCurrency(totalUpahName), colJumlahUpahX + 24, textY, {
@@ -1609,7 +1707,6 @@ export function LedgerSection({
 
             y += rowHeight;
           });
-          counter += 1;
         });
       });
     }
@@ -1622,7 +1719,7 @@ export function LedgerSection({
 
   const handleDownloadUpahMonthlyPdfReport = async () => {
     if (reportMode !== "month") {
-      handleDownloadProductionRangePdfReport();
+      handleDownloadUpahRangePdfReport();
       return;
     }
 
@@ -1637,7 +1734,10 @@ export function LedgerSection({
     )
       return;
 
-    if (!reportMonth || !reportYear) return;
+    if (!reportMonth || !reportYear) {
+      alert("Bulan dan tahun belum dipilih");
+      return;
+    }
     const yearNum = Number(reportYear);
     const monthNum = Number(reportMonth);
     if (!yearNum || !monthNum) return;
@@ -1751,7 +1851,10 @@ export function LedgerSection({
       }
     });
 
-    if (rowsMap.size === 0) return;
+    if (rowsMap.size === 0) {
+      alert("Tidak ada data untuk periode ini");
+      return;
+    }
 
     const names = Array.from(
       new Set(Array.from(rowsMap.values()).map((r) => r.name))
@@ -1860,9 +1963,13 @@ export function LedgerSection({
     }));
 
     const makeDateKey = (day: number) =>
-      new Date(yearNum, monthNum - 1, day).toISOString().slice(0, 10);
+      `${yearNum}-${String(monthNum).padStart(2, "0")}-${String(day).padStart(
+        2,
+        "0"
+      )}`;
 
-    let counter = 1;
+    const nameNo = new Map<string, number>();
+    names.forEach((n, i) => nameNo.set(n, i + 1));
 
     chunks.forEach((chunk, chunkIndex) => {
       const chunkHeaders = chunk.days.map((d) => d.toString().padStart(2, "0"));
@@ -1943,54 +2050,62 @@ export function LedgerSection({
       pdf.setFont("helvetica", "normal");
 
       names.forEach((name) => {
-        const row =
-          Array.from(rowsMap.values()).find((r) => r.name === name) || null;
-        if (!row) return;
+        const rowsForName = Array.from(rowsMap.values()).filter(
+          (r) => r.name === name
+        );
+        rowsForName.sort((a, b) => a.ket.localeCompare(b.ket));
+        if (rowsForName.length === 0) return;
 
-        if (y > pageH - margin) {
-          pdf.addPage("a4", "l");
-          y = margin;
-        }
-
-        const rowHeight = 6;
-        pdf.rect(colNoX, y, tableRightX - colNoX, rowHeight);
-        headerColumnXs.forEach((x) => {
-          pdf.line(x, y, x, y + rowHeight);
-        });
-
-        const jumlah = Object.values(row.values).reduce((sum, v) => sum + v, 0);
-        const totalUpahName = totalUpahByNamePdf.get(name) ?? 0;
-        const perDate = chunk.days.map((day) => {
-          const key = makeDateKey(day);
-          return row.values[key] ?? 0;
-        });
-
-        const textY = y + 4;
-
-        pdf.text(String(counter), colNoX + 2, textY);
-        pdf.text(row.name, colNamaX + 1, textY);
-        pdf.text(row.ket, colKetX + 1, textY);
-        perDate.forEach((val, i) => {
-          const x = firstDateX + i * dateColWidth;
-          if (val !== 0) {
-            pdf.text(String(val), x + 1, textY);
+        rowsForName.forEach((row, idxRow) => {
+          if (y > pageH - margin) {
+            pdf.addPage("a4", "l");
+            y = margin;
           }
-        });
-        if (chunk.showJml && colJumlahX != null && jumlah !== 0) {
-          pdf.text(String(jumlah), colJumlahX + 1, textY);
-        }
-        if (
-          chunk.showJumlahUpah &&
-          colJumlahUpahX != null &&
-          totalUpahName !== 0
-        ) {
-          pdf.text(toCurrency(totalUpahName), colJumlahUpahX + 24, textY, {
-            align: "right",
+          const rowHeight = 6;
+          pdf.rect(colNoX, y, tableRightX - colNoX, rowHeight);
+          headerColumnXs.forEach((x) => {
+            pdf.line(x, y, x, y + rowHeight);
           });
-        }
 
-        y += rowHeight;
-        counter += 1;
+          const jumlah = Object.values(row.values).reduce(
+            (sum, v) => sum + v,
+            0
+          );
+          const totalUpahName = totalUpahByNamePdf.get(name) ?? 0;
+          const perDate = chunk.days.map((day) => {
+            const key = makeDateKey(day);
+            return row.values[key] ?? 0;
+          });
+
+          const textY = y + 4;
+          if (idxRow === 0) {
+            const no = nameNo.get(name);
+            if (no != null) pdf.text(String(no), colNoX + 2, textY);
+          }
+          pdf.text(row.name, colNamaX + 1, textY);
+          pdf.text(row.ket, colKetX + 1, textY);
+          perDate.forEach((val, i) => {
+            const x = firstDateX + i * dateColWidth;
+            if (val !== 0) {
+              pdf.text(String(val), x + 1, textY);
+            }
+          });
+          if (chunk.showJml && colJumlahX != null && jumlah !== 0) {
+            pdf.text(String(jumlah), colJumlahX + 1, textY);
+          }
+          if (
+            chunk.showJumlahUpah &&
+            colJumlahUpahX != null &&
+            idxRow === rowsForName.length - 1 &&
+            totalUpahName !== 0
+          ) {
+            pdf.text(toCurrency(totalUpahName), colJumlahUpahX + 24, textY, {
+              align: "right",
+            });
+          }
+
+          y += rowHeight;
+        });
       });
     });
 
@@ -2073,7 +2188,6 @@ export function LedgerSection({
     } else if (type === "sale") {
       for (const id of draftSelectedIds) await approveSale(id);
     } else if (type === "invoice") {
-      const { approveExpense } = await import("@/actions/expense-actions");
       for (const id of draftSelectedIds) await approveExpense(id);
     }
     setSelectedIds([]);
@@ -2161,6 +2275,13 @@ export function LedgerSection({
       const valid: MassRow[] = [];
       const errors: { row: number; reason: string }[] = [];
 
+      const toLocalYmd = (d: Date) => {
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, "0");
+        const da = String(d.getDate()).padStart(2, "0");
+        return `${y}-${m}-${da}`;
+      };
+
       data.forEach((cols, idx) => {
         const rowNum = idx + 2; // 1-based including header
 
@@ -2170,7 +2291,7 @@ export function LedgerSection({
 
         if (rawC0 instanceof Date) {
           try {
-            dateStr = rawC0.toISOString().slice(0, 10);
+            dateStr = toLocalYmd(rawC0);
           } catch {
             dateStr = "";
           }
@@ -2186,7 +2307,7 @@ export function LedgerSection({
             const serial = Number(dateStr);
             // Excel base date correction
             const d = new Date(Math.round((serial - 25569) * 86400 * 1000));
-            dateStr = d.toISOString().slice(0, 10);
+            dateStr = toLocalYmd(d);
           }
         }
 
@@ -2213,7 +2334,7 @@ export function LedgerSection({
           });
           return;
         }
-        const date = d.toISOString().slice(0, 10);
+        const date = toLocalYmd(d);
 
         if (type === "purchase") {
           const c1 = (cols?.[1] ?? "").toString(); // Supplier
@@ -2547,7 +2668,10 @@ export function LedgerSection({
             subType === "Pensortiran"
           ) {
             keyObj.r1 = r.rate1;
-          } else if (subType === "Penjemuran" || subType === "QC Potong & Sortir") {
+          } else if (
+            subType === "Penjemuran" ||
+            subType === "QC Potong & Sortir"
+          ) {
             keyObj.r1 = r.rate1;
             keyObj.r2 = r.rate2;
           }
@@ -2597,16 +2721,21 @@ export function LedgerSection({
               })),
             });
           } else if (subType === "Pengemasan") {
+            const itemInputs = [];
+            for (const r of items) {
+              const it = await quickCreateItemType(r.item);
+              itemInputs.push({
+                nama: r.item,
+                bungkus: String(r.val1 || 0),
+                itemTypeId: it.id,
+              });
+            }
             await createPengemasan({
               date,
               petugas: petugas || null,
               shift: keyObj.s || "siang",
               upahPerBungkus: String(keyObj.r1 || 0),
-              items: items.map((r) => ({
-                nama: r.item,
-                bungkus: String(r.val1 || 0),
-                itemTypeId: "",
-              })),
+              items: itemInputs,
             });
           } else if (subType === "Pensortiran") {
             await createPensortiran({
@@ -2688,12 +2817,18 @@ export function LedgerSection({
                       subType === "Pemotongan" ||
                       subType === "Penjemuran" ||
                       subType === "Pengemasan" ||
-                      subType === "Produksi Lainnya";
+                      subType === "Produksi Lainnya" ||
+                      subType === "Pensortiran" ||
+                      subType === "QC Potong & Sortir";
                     if (shouldOpenModal) {
-                      const now = new Date();
-                      if (!reportYear) setReportYear(String(now.getFullYear()));
-                      if (!reportMonth)
-                        setReportMonth(String(now.getMonth() + 1));
+                      const seed =
+                        sortedEntries.length > 0
+                          ? new Date(sortedEntries[0].date)
+                          : new Date();
+                      const y = seed.getFullYear();
+                      const m = seed.getMonth() + 1; // 1..12
+                      setReportYear(String(y));
+                      setReportMonth(String(m));
                       setReportMode("month");
                       setOpenReport(true);
                     } else {
@@ -2726,7 +2861,7 @@ export function LedgerSection({
                   const rows = sortedEntries.map((e) => ({
                     Tanggal: new Date(e.date).toLocaleString(),
                     Jenis: e.type,
-                    Status: e.status.toUpperCase(),
+                    Status: labelForEntry(e),
                     Pihak: e.counterparty ?? "-",
                     Total: e.total != null ? toCurrency(e.total) : "-",
                     Catatan: e.notes ?? "-",
@@ -2742,11 +2877,18 @@ export function LedgerSection({
                   const tableHead = `<tr>${headers
                     .map((h) => `<th>${h}</th>`)
                     .join("")}</tr>`;
+                  const esc = (s: any) =>
+                    String(s ?? "")
+                      .replace(/&/g, "&amp;")
+                      .replace(/</g, "&lt;")
+                      .replace(/>/g, "&gt;")
+                      .replace(/"/g, "&quot;")
+                      .replace(/'/g, "&#039;");
                   const tableBody = rows
                     .map(
                       (r) =>
                         `<tr>${headers
-                          .map((h) => `<td>${(r as any)[h]}</td>`)
+                          .map((h) => `<td>${esc((r as any)[h])}</td>`)
                           .join("")}</tr>`
                     )
                     .join("");
@@ -2845,6 +2987,22 @@ export function LedgerSection({
         sortColumn={sortColumn}
         sortDirection={sortDirection}
         onSort={handleSort}
+        showShift={
+          type === "production" &&
+          (subType === "Pengikisan" ||
+            subType === "Pemotongan" ||
+            subType === "Pengemasan")
+        }
+        showParty={
+          !(
+            type === "production" &&
+            (subType === "Pengikisan" ||
+              subType === "Pemotongan" ||
+              subType === "Pengemasan" ||
+              subType === "Pensortiran" ||
+              subType === "QC Potong & Sortir")
+          )
+        }
       />
 
       {entries.length > 0 && (
@@ -3517,7 +3675,10 @@ export function LedgerSection({
                         "stik (kg)",
                         "shift",
                       ];
-                    else if (subType === "Pemotongan" || subType === "Pensortiran")
+                    else if (
+                      subType === "Pemotongan" ||
+                      subType === "Pensortiran"
+                    )
                       headers = [
                         "tanggal",
                         "nama pekerja",
@@ -3554,12 +3715,10 @@ export function LedgerSection({
                   const blob = new Blob([out], {
                     type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                   });
-                  const url = URL.createObjectURL(blob);
-                  const a = document.createElement("a");
-                  a.href = url;
-                  a.download = `template-${type}-${subType || "purchase"}.xlsx`;
-                  a.click();
-                  URL.revokeObjectURL(url);
+                  downloadBlob(
+                    blob,
+                    `template-${type}-${subType || "purchase"}.xlsx`
+                  );
                 }}
                 className="rounded-md bg-blue-600 px-3 py-1 text-[12px] text-white hover:bg-blue-700"
               >
@@ -3743,7 +3902,8 @@ export function LedgerSection({
                             </th>
                           </>
                         )}
-                        {(subType === "Pemotongan" || subType === "Pensortiran") && (
+                        {(subType === "Pemotongan" ||
+                          subType === "Pensortiran") && (
                           <>
                             <th className="border border-slate-200 px-2 py-1 text-right">
                               Qty (kg)
@@ -3827,17 +3987,19 @@ export function LedgerSection({
                               {r.price}
                             </td>
                           )}
-                          {type === "production" && subType === "Pengikisan" && (
-                            <>
-                              <td className="border border-slate-200 px-2 py-1 text-right">
-                                {r.val1}
-                              </td>
-                              <td className="border border-slate-200 px-2 py-1 text-right">
-                                {r.val2}
-                              </td>
-                            </>
-                          )}
-                          {(subType === "Pemotongan" || subType === "Pensortiran") && (
+                          {type === "production" &&
+                            subType === "Pengikisan" && (
+                              <>
+                                <td className="border border-slate-200 px-2 py-1 text-right">
+                                  {r.val1}
+                                </td>
+                                <td className="border border-slate-200 px-2 py-1 text-right">
+                                  {r.val2}
+                                </td>
+                              </>
+                            )}
+                          {(subType === "Pemotongan" ||
+                            subType === "Pensortiran") && (
                             <>
                               <td className="border border-slate-200 px-2 py-1 text-right">
                                 {r.val1}

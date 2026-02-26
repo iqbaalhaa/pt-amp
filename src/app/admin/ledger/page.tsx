@@ -30,10 +30,34 @@ type SearchParams = {
   shift?: "siang" | "malam";
 };
 
+function toLocalDateYmd(d: Date) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const da = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${da}`;
+}
+
+function toLocalDateTimeString(d: Date) {
+  return `${toLocalDateYmd(d)}T00:00:00`;
+}
+
 function parseDateRange(params: SearchParams) {
-  const start = params.start ? new Date(params.start) : undefined;
-  const end = params.end ? new Date(params.end) : undefined;
-  return { start, end };
+  const s = params.start ? new Date(params.start) : undefined;
+  const e = params.end ? new Date(params.end) : undefined;
+  return {
+    start: s && !Number.isNaN(s.getTime()) ? s : undefined,
+    end: e && !Number.isNaN(e.getTime()) ? e : undefined,
+  };
+}
+
+function safeBigInt(input?: string) {
+  if (!input) return undefined;
+  try {
+    if (!/^\d+$/.test(input)) return undefined;
+    return BigInt(input);
+  } catch {
+    return undefined;
+  }
 }
 
 function buildQuery(params: SearchParams, extra?: Record<string, string>) {
@@ -45,6 +69,7 @@ function buildQuery(params: SearchParams, extra?: Record<string, string>) {
   setIf("start");
   setIf("end");
   setIf("type");
+  setIf("subType");
   setIf("status");
   setIf("affectStockOnly");
   setIf("itemType");
@@ -55,6 +80,8 @@ function buildQuery(params: SearchParams, extra?: Record<string, string>) {
   setIf("size");
   setIf("page");
   setIf("shift");
+  setIf("id");
+  setIf("selected");
   if (extra) {
     for (const [k, v] of Object.entries(extra)) {
       if (typeof v === "string" && v.length > 0) usp.set(k, v);
@@ -70,6 +97,8 @@ export default async function AdminLedgerPage({
 }) {
   const params = (await searchParams) ?? {};
   const { start, end } = parseDateRange(params);
+  const idBigint = safeBigInt(params.id);
+  const itemTypeBigint = safeBigInt(params.itemType);
 
   const [
     purchases,
@@ -85,7 +114,7 @@ export default async function AdminLedgerPage({
   ] = await Promise.all([
     prisma.purchase.findMany({
       where: {
-        ...(params.id ? { id: BigInt(params.id) } : {}),
+        ...(idBigint ? { id: idBigint } : {}),
         ...(start ? { date: { gte: start } } : {}),
         ...(end ? { date: { lte: end } } : {}),
         ...(params.status ? { status: params.status } : {}),
@@ -102,10 +131,10 @@ export default async function AdminLedgerPage({
               ],
             }
           : {}),
-        ...(params.itemType
+        ...(itemTypeBigint
           ? {
               purchaseItems: {
-                some: { itemTypeId: BigInt(params.itemType) },
+                some: { itemTypeId: itemTypeBigint },
               },
             }
           : {}),
@@ -122,7 +151,7 @@ export default async function AdminLedgerPage({
     }),
     prisma.sale.findMany({
       where: {
-        ...(params.id ? { id: BigInt(params.id) } : {}),
+        ...(idBigint ? { id: idBigint } : {}),
         ...(start ? { date: { gte: start } } : {}),
         ...(end ? { date: { lte: end } } : {}),
         ...(params.status ? { status: params.status } : {}),
@@ -139,10 +168,10 @@ export default async function AdminLedgerPage({
               ],
             }
           : {}),
-        ...(params.itemType
+        ...(itemTypeBigint
           ? {
               saleItems: {
-                some: { itemTypeId: BigInt(params.itemType) },
+                some: { itemTypeId: itemTypeBigint },
               },
             }
           : {}),
@@ -173,17 +202,17 @@ export default async function AdminLedgerPage({
               },
             }
           : {}),
-        ...(params.itemType
+        ...(itemTypeBigint
           ? {
               OR: [
                 {
                   productionInputs: {
-                    some: { itemTypeId: BigInt(params.itemType) },
+                    some: { itemTypeId: itemTypeBigint },
                   },
                 },
                 {
                   productionOutputs: {
-                    some: { itemTypeId: BigInt(params.itemType) },
+                    some: { itemTypeId: itemTypeBigint },
                   },
                 },
               ],
@@ -358,11 +387,13 @@ export default async function AdminLedgerPage({
     createdByName: string | null;
     notes: string | null;
     items: Array<{ purpose: string; amount: any }>;
+    total?: string;
+    itemCountFallback?: number;
   }> = [];
   if (anyPrisma?.expense?.findMany) {
     expenses = (await prisma.expense.findMany({
       where: {
-        ...(params.id ? { id: BigInt(params.id) } : {}),
+        ...(idBigint ? { id: idBigint } : {}),
         ...(start ? { date: { gte: start } } : {}),
         ...(end ? { date: { lte: end } } : {}),
         ...(params.status ? { status: params.status } : {}),
@@ -442,15 +473,14 @@ export default async function AdminLedgerPage({
         `,
       ...paramsArr
     );
-    // Build minimal expense objects without line details
     expenses = headers.map((h) => ({
       id: h.id,
       date: h.date,
       status: h.status,
       createdByName: h.created_by_name,
       notes: h.notes,
-      // simpan total agregat untuk dipakai saat items tidak dimuat
       total: h.total,
+      itemCountFallback: Number(h.item_count || 0),
       items: [],
     })) as any;
   }
@@ -514,7 +544,7 @@ export default async function AdminLedgerPage({
     return {
       id: p.id.toString(),
       type: "purchase",
-      date: p.date.toISOString(),
+      date: toLocalDateTimeString(p.date),
       status: p.status,
       reference: p.id.toString(),
       counterparty: p.supplier,
@@ -551,7 +581,7 @@ export default async function AdminLedgerPage({
     return {
       id: s.id.toString(),
       type: "sale",
-      date: s.date.toISOString(),
+      date: toLocalDateTimeString(s.date),
       status: s.status,
       reference: s.id.toString(),
       counterparty: s.customer,
@@ -592,7 +622,7 @@ export default async function AdminLedgerPage({
     return {
       id: pr.id.toString(),
       type: "production",
-      date: pr.date.toISOString(),
+      date: toLocalDateTimeString(pr.date),
       status: pr.status as any,
       reference: pr.id.toString(),
       counterparty: workerNames || "-",
@@ -615,10 +645,14 @@ export default async function AdminLedgerPage({
         : parseFloat((e as any).total || "0");
     const total = isFinite(derivedTotal) ? derivedTotal : 0;
     const totalValue = total > 0 ? total : null;
+    const itemCount =
+      e.items && e.items.length > 0
+        ? e.items.length
+        : (e as any).itemCountFallback ?? 0;
     return {
       id: e.id.toString(),
       type: "invoice",
-      date: e.date.toISOString(),
+      date: toLocalDateTimeString(e.date),
       status: e.status as any,
       reference: e.id.toString(),
       counterparty: e.createdByName || "Expense",
@@ -626,7 +660,7 @@ export default async function AdminLedgerPage({
       total: totalValue,
       stockImpact: "NEUTRAL",
       notes: e.notes,
-      itemCount: e.items.length,
+      itemCount,
       lines: e.items.map((it) => {
         const price = parseFloat(it.amount.toString());
         const subtotal = isFinite(price) ? price : 0;
@@ -649,7 +683,7 @@ export default async function AdminLedgerPage({
     return {
       id: `pengikisan-${p.id}`,
       type: "production",
-      date: p.date.toISOString(),
+      date: toLocalDateTimeString(p.date),
       status: "completed" as any,
       reference: `PK-${p.id}`,
       createdByName: p.petugas || null,
@@ -660,6 +694,7 @@ export default async function AdminLedgerPage({
       itemCount: p.pengikisanItems.length,
       productionCost: total,
       subType: "Pengikisan",
+      shift: p.shift,
       pengikisanItems: p.pengikisanItems.map((it) => ({
         nama: it.nama,
         kaKg: Number(it.kaKg ?? 0),
@@ -679,7 +714,7 @@ export default async function AdminLedgerPage({
     return {
       id: `pemotongan-${p.id}`,
       type: "production",
-      date: p.date.toISOString(),
+      date: toLocalDateTimeString(p.date),
       status: "completed" as any,
       reference: `PM-${p.id}`,
       createdByName: (p as any).petugas || null,
@@ -690,6 +725,7 @@ export default async function AdminLedgerPage({
       itemCount: p.pemotonganItems.length,
       productionCost: total,
       subType: "Pemotongan",
+      shift: p.shift,
       pemotonganItems: p.pemotonganItems.map((it) => ({
         nama: it.nama,
         qty: Number(it.qty ?? 0),
@@ -706,7 +742,7 @@ export default async function AdminLedgerPage({
     return {
       id: `penjemuran-${p.id}`,
       type: "production",
-      date: p.date.toISOString(),
+      date: toLocalDateTimeString(p.date),
       status: "completed" as any,
       reference: `PJ-${p.id}`,
       createdByName: (p as any).petugas || null,
@@ -736,7 +772,7 @@ export default async function AdminLedgerPage({
     return {
       id: `pengemasan-${p.id}`,
       type: "production",
-      date: p.date.toISOString(),
+      date: toLocalDateTimeString(p.date),
       status: "completed" as any,
       reference: `PG-${p.id}`,
       createdByName: (p as any).petugas || null,
@@ -747,6 +783,7 @@ export default async function AdminLedgerPage({
       itemCount: p.pengemasanItems.length,
       productionCost: total,
       subType: "Pengemasan",
+      shift: p.shift,
       pengemasanItems: p.pengemasanItems.map((it) => ({
         nama: it.nama,
         bungkus: Number(it.bungkus ?? 0),
@@ -764,7 +801,7 @@ export default async function AdminLedgerPage({
     return {
       id: `produksi-lainnya-${p.id}`,
       type: "production",
-      date: p.date.toISOString(),
+      date: toLocalDateTimeString(p.date),
       status: "completed" as any,
       reference: `PL-${p.id}`,
       createdByName: p.petugas || null,
@@ -794,7 +831,7 @@ export default async function AdminLedgerPage({
     return {
       id: `pensortiran-${p.id}`,
       type: "production",
-      date: p.date.toISOString(),
+      date: toLocalDateTimeString(p.date),
       status: "completed" as any,
       reference: `PS-${p.id}`,
       createdByName: (p as any).petugas || null,
@@ -821,7 +858,7 @@ export default async function AdminLedgerPage({
     return {
       id: `qc-potong-sortir-${p.id}`,
       type: "production",
-      date: p.date.toISOString(),
+      date: toLocalDateTimeString(p.date),
       status: "completed" as any,
       reference: `QC-${p.id}`,
       createdByName: (p as any).petugas || null,
@@ -972,6 +1009,7 @@ export default async function AdminLedgerPage({
     ...sortedPurchases,
     ...sortedSales,
     ...sortedProductions,
+    ...sortedExpenses,
   ];
   const selected = selectedId
     ? allEntries.find((e) => e.id === selectedId)
@@ -1069,7 +1107,7 @@ export default async function AdminLedgerPage({
               Detail Transaksi
             </h2>
             <a
-              href={`/admin/ledger?${buildQuery(params)}`}
+              href={`/admin/ledger?${buildQuery(params, { selected: "" })}`}
               className="rounded-md bg-slate-100 px-2 py-1 text-[11px] text-slate-800 hover:bg-slate-200"
             >
               Tutup

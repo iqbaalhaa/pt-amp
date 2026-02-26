@@ -95,7 +95,7 @@ export default function PurchaseForm({ itemTypes, units: initialUnits, suppliers
 	const [showSuccessModal, setShowSuccessModal] = useState(false);
 	const { data: session } = authClient.useSession();
 
-	// A5 (1/2 A4) portrait: 148mm × 210mm
+	// A5 portrait base (digunakan untuk dimensi), kita akan render PDF dalam landscape (horizontal)
 	const A5_W_MM = 148;
 	const A5_H_MM = 210;
 	const PRINT_MARGIN_MM = 10;
@@ -463,44 +463,30 @@ export default function PurchaseForm({ itemTypes, units: initialUnits, suppliers
 
 		const imgData = canvas.toDataURL("image/png");
 
-		// PDF 1/2 A4 (A5)
+		// PDF A5 portrait satu halaman
 		const pdf = new jsPDF({
 			orientation: "p",
 			unit: "mm",
-			format: [A5_W_MM, A5_H_MM],
+			format: "a5",
 		});
 
-		const pageW = A5_W_MM;
-		const pageH = A5_H_MM;
+		const pageW = pdf.internal.pageSize.getWidth();
+		const pageH = pdf.internal.pageSize.getHeight();
 		const margin = PRINT_MARGIN_MM;
 
 		const contentW = pageW - margin * 2;
 		const contentH = pageH - margin * 2;
 
-		// tinggi gambar dalam mm mengikuti rasio
-		const imgHeightMm = (canvas.height * contentW) / canvas.width;
+		// Skalakan agar pas satu halaman (fit both width/height)
+		const scaleW = contentW / canvas.width;
+		const scaleH = contentH / canvas.height;
+		const scale = Math.min(scaleW, scaleH);
+		const targetW = canvas.width * scale;
+		const targetH = canvas.height * scale;
+		const offsetX = margin + (contentW - targetW) / 2;
+		const offsetY = margin + (contentH - targetH) / 2;
 
-		let heightLeft = imgHeightMm;
-		let offsetY = 0;
-
-		// page 1
-		pdf.addImage(imgData, "PNG", margin, margin, contentW, imgHeightMm);
-		heightLeft -= contentH;
-
-		// page berikutnya bila kepanjangan
-		while (heightLeft > 0) {
-			offsetY += contentH;
-			pdf.addPage([pageW, pageH], "p");
-			pdf.addImage(
-				imgData,
-				"PNG",
-				margin,
-				margin - offsetY,
-				contentW,
-				imgHeightMm,
-			);
-			heightLeft -= contentH;
-		}
+		pdf.addImage(imgData, "PNG", offsetX, offsetY, targetW, targetH);
 
 		pdf.save(`nota-purchase-${date || "draft"}.pdf`);
 	};
@@ -707,7 +693,7 @@ export default function PurchaseForm({ itemTypes, units: initialUnits, suppliers
 									p: 1,
 								}}
 							>
-								{/* Frame preview mengikuti rasio A6 */}
+								{/* Frame preview A5 portrait */}
 								<Box
 									sx={{
 										width: "100%",
@@ -745,6 +731,7 @@ export default function PurchaseForm({ itemTypes, units: initialUnits, suppliers
 					position: "fixed",
 					left: "-10000px",
 					top: 0,
+					// A5 portrait area
 					width: `${A5_W_MM}mm`,
 					bgcolor: "white",
 					zIndex: -1,

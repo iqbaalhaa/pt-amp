@@ -14,6 +14,8 @@ type Props = {
   sortColumn?: keyof LedgerEntry;
   sortDirection?: "asc" | "desc";
   onSort?: (column: keyof LedgerEntry) => void;
+  showShift?: boolean;
+  showParty?: boolean;
 };
 
 export function LedgerTable({
@@ -25,10 +27,15 @@ export function LedgerTable({
   sortColumn,
   sortDirection,
   onSort,
+  showShift = false,
+  showParty = true,
 }: Props) {
   const currentIds = useMemo(() => entries.map((e) => e.id), [entries]);
   const allSelected =
     currentIds.length > 0 && currentIds.every((id) => selectedIds.includes(id));
+
+  const saleStatusLabel = (s: LedgerEntry["status"]) =>
+    s === "posted" ? "Selesai" : s === "cancelled" ? "Batal" : "Perkiraan";
 
   const renderSortIcon = (column: keyof LedgerEntry) => {
     if (sortColumn !== column) return null;
@@ -74,9 +81,9 @@ export function LedgerTable({
               ) : null}
             </th>
             {renderHeader("Tanggal", "date")}
-            {renderHeader("Shift", "shift")}
+            {showShift && renderHeader("Shift", "shift")}
             {renderHeader("Petugas", "createdByName")}
-            {renderHeader("Pihak", "counterparty")}
+            {showParty && renderHeader("Pihak", "counterparty")}
             {renderHeader("Total (Rp)", "total")}
             {renderHeader("Status", "status")}
             <th className="px-3 py-2 text-right">Aksi</th>
@@ -97,9 +104,13 @@ export function LedgerTable({
                   ) : null}
                 </td>
                 <td className="px-3 py-2">{dStr}</td>
-                <td className="px-3 py-2 capitalize">{e.shift || "-"}</td>
+                {showShift && (
+                  <td className="px-3 py-2 capitalize">{e.shift || "-"}</td>
+                )}
                 <td className="px-3 py-2">{e.createdByName || "-"}</td>
-                <td className="px-3 py-2">{e.counterparty || "-"}</td>
+                {showParty && (
+                  <td className="px-3 py-2">{e.counterparty || "-"}</td>
+                )}
                 <td className="px-3 py-2 text-right">
                   {e.total != null ? toCurrency(e.total) : "-"}
                 </td>
@@ -113,7 +124,7 @@ export function LedgerTable({
                         : "bg-yellow-100 text-yellow-700"
                     }`}
                   >
-                    {e.status.toUpperCase()}
+                    {e.type === "sale" ? saleStatusLabel(e.status) : e.status.toUpperCase()}
                   </span>
                 </td>
                 <td className="px-3 py-2 text-right">

@@ -104,6 +104,16 @@ export default function PemotonganClient() {
     getWorkers().then((data) =>
       setWorkerOptions(data.filter((w) => w.isActive))
     );
+
+    const defaultRates: PemotonganRate[] = [
+      { id: "stik25", name: "Stik 25", unit: "Kg", rate: 1500 },
+      { id: "aaa8", name: "Aaa (8 cm)", unit: "Kg", rate: 1500 },
+      { id: "aa8", name: "Aa (8 cm)", unit: "Kg", rate: 1500 },
+      { id: "reject8", name: "Reject (8)", unit: "Kg", rate: 1500 },
+      { id: "reject6", name: "Reject (6)", unit: "Kg", rate: 1500 },
+      { id: "campuran8", name: "Campuran (8 cm)", unit: "Kg", rate: 1500 },
+    ];
+
     try {
       if (typeof window !== "undefined") {
         const raw = window.localStorage.getItem("upahSettings");
@@ -113,8 +123,9 @@ export default function PemotonganClient() {
             setUpahPerKg(parsed.pemotonganPerKg);
           }
 
-          const rates: PemotonganRate[] = Array.isArray(parsed.pemotonganRates)
-            ? parsed.pemotonganRates.map((r: any, idx: number) => ({
+          if (Array.isArray(parsed.pemotonganRates)) {
+            const rates: PemotonganRate[] = parsed.pemotonganRates.map(
+              (r: any, idx: number) => ({
                 id: r.id || `rate-${idx}`,
                 name: String(r.name ?? "").trim() || `Jenis ${idx + 1}`,
                 unit: String(r.unit ?? "Kg"),
@@ -122,70 +133,54 @@ export default function PemotonganClient() {
                   typeof r.rate === "number" && !Number.isNaN(r.rate)
                     ? r.rate
                     : 0,
-              }))
-            : [
-                {
-                  id: "stik25",
-                  name: "Stik 25",
-                  unit: "Kg",
-                  rate:
-                    typeof parsed.pemotonganStik25 === "number"
-                      ? parsed.pemotonganStik25
-                      : 1500,
-                },
-                {
-                  id: "aaa8",
-                  name: "Aaa (8 cm)",
-                  unit: "Kg",
-                  rate:
-                    typeof parsed.pemotonganAaa8 === "number"
-                      ? parsed.pemotonganAaa8
-                      : 1500,
-                },
-                {
-                  id: "aa8",
-                  name: "Aa (8 cm)",
-                  unit: "Kg",
-                  rate:
-                    typeof parsed.pemotonganAa8 === "number"
-                      ? parsed.pemotonganAa8
-                      : 1500,
-                },
-                {
-                  id: "reject8",
-                  name: "Reject (8)",
-                  unit: "Kg",
-                  rate:
-                    typeof parsed.pemotonganReject8 === "number"
-                      ? parsed.pemotonganReject8
-                      : 1500,
-                },
-                {
-                  id: "reject6",
-                  name: "Reject (6)",
-                  unit: "Kg",
-                  rate:
-                    typeof parsed.pemotonganReject6 === "number"
-                      ? parsed.pemotonganReject6
-                      : 1500,
-                },
-                {
-                  id: "campuran8",
-                  name: "Campuran (8 cm)",
-                  unit: "Kg",
-                  rate:
-                    typeof parsed.pemotonganCampuran8 === "number"
-                      ? parsed.pemotonganCampuran8
-                      : 1500,
-                },
-              ];
-
-          setPemotonganRateOptions(rates);
+              })
+            );
+            setPemotonganRateOptions(rates);
+          } else {
+            // Legacy fallback
+            const rates = defaultRates.map((d) => {
+              let rate = d.rate;
+              if (d.id === "stik25")
+                rate =
+                  typeof parsed.pemotonganStik25 === "number"
+                    ? parsed.pemotonganStik25
+                    : rate;
+              else if (d.id === "aaa8")
+                rate =
+                  typeof parsed.pemotonganAaa8 === "number"
+                    ? parsed.pemotonganAaa8
+                    : rate;
+              else if (d.id === "aa8")
+                rate =
+                  typeof parsed.pemotonganAa8 === "number"
+                    ? parsed.pemotonganAa8
+                    : rate;
+              else if (d.id === "reject8")
+                rate =
+                  typeof parsed.pemotonganReject8 === "number"
+                    ? parsed.pemotonganReject8
+                    : rate;
+              else if (d.id === "reject6")
+                rate =
+                  typeof parsed.pemotonganReject6 === "number"
+                    ? parsed.pemotonganReject6
+                    : rate;
+              else if (d.id === "campuran8")
+                rate =
+                  typeof parsed.pemotonganCampuran8 === "number"
+                    ? parsed.pemotonganCampuran8
+                    : rate;
+              return { ...d, rate };
+            });
+            setPemotonganRateOptions(rates);
+          }
+        } else {
+          setPemotonganRateOptions(defaultRates);
         }
       }
     } catch {
       setUpahPerKg(1500);
-      setPemotonganRateOptions([]);
+      setPemotonganRateOptions(defaultRates);
     }
     setDate(new Date().toISOString().split("T")[0]);
   }, []);
@@ -375,7 +370,6 @@ export default function PemotonganClient() {
       if (res?.success) {
         setLastSavedId(res.id);
         setOpenPreview(true);
-        resetForm();
       } else {
         alert("Gagal menyimpan data");
       }
@@ -462,7 +456,8 @@ export default function PemotonganClient() {
 
     const colNoX = margin;
     const colPekerjaX = colNoX + 10;
-    const colQtyX = colPekerjaX + 80;
+    const colItemTypeX = colPekerjaX + 60;
+    const colQtyX = colItemTypeX + 60;
     const colTotalX = colQtyX + 50;
 
     const rowHeight = 6;
@@ -472,8 +467,9 @@ export default function PemotonganClient() {
     pdf.setFontSize(9);
     pdf.text("No", colNoX, y);
     pdf.text("Pekerja", colPekerjaX, y);
+    pdf.text("Jenis Barang", colItemTypeX, y);
     pdf.text("Qty (Kg)", colQtyX, y);
-    pdf.text("Total (Rp)", colTotalX, y);
+    pdf.text("Total (Rp)", colTotalX, y, { align: "right" });
 
     y += 2;
 
@@ -492,9 +488,13 @@ export default function PemotonganClient() {
 
     rowsForPrint.forEach((row, idx) => {
       const total = getRowTotal(row);
+      const itemTypeName =
+        pemotonganRateOptions.find((opt) => opt.id === row.itemTypeId)?.name ||
+        "-";
 
       pdf.text(String(idx + 1), colNoX, y);
       pdf.text(row.nama || "-", colPekerjaX, y);
+      pdf.text(itemTypeName, colItemTypeX, y);
       pdf.text((row.qty || 0).toLocaleString("id-ID"), colQtyX, y);
       pdf.text(total.toLocaleString("id-ID"), colTotalX, y, { align: "right" });
 
@@ -1024,12 +1024,18 @@ export default function PemotonganClient() {
       <SafeModal
         open={openPreview}
         title="Berhasil Disimpan"
-        onClose={() => setOpenPreview(false)}
+        onClose={() => {
+          setOpenPreview(false);
+          resetForm();
+        }}
         footer={
           <div className="flex gap-2">
             <GlassButton
               variant="secondary"
-              onClick={() => setOpenPreview(false)}
+              onClick={() => {
+                setOpenPreview(false);
+                resetForm();
+              }}
             >
               Tutup
             </GlassButton>

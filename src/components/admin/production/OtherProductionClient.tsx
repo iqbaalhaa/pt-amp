@@ -109,7 +109,50 @@ export default function OtherProductionClient() {
     getWorkers().then((data) =>
       setWorkerOptions(data.filter((w) => w.isActive))
     );
-    getUnits().then((data) => setUnitOptions(data.filter((u) => u.isActive)));
+    getUnits().then((data) => {
+      const activeUnits = data.filter((u) => u.isActive);
+      if (activeUnits.length === 0) {
+        setUnitOptions([
+          {
+            id: "pcs",
+            name: "Pcs",
+            isActive: true,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
+          {
+            id: "kg",
+            name: "Kg",
+            isActive: true,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
+          {
+            id: "ikat",
+            name: "Ikat",
+            isActive: true,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
+          {
+            id: "batang",
+            name: "Batang",
+            isActive: true,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
+          {
+            id: "lembar",
+            name: "Lembar",
+            isActive: true,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
+        ]);
+      } else {
+        setUnitOptions(activeUnits);
+      }
+    });
   }, []);
 
   const addRow = () => {
@@ -215,11 +258,7 @@ export default function OtherProductionClient() {
   const activeRows = useMemo(
     () =>
       rows.filter(
-        (r) =>
-          r.namaPekerja ||
-          r.namaPekerjaan ||
-          r.qty > 0 ||
-          r.upah > 0
+        (r) => r.namaPekerja || r.namaPekerjaan || r.qty > 0 || r.upah > 0
       ),
     [rows]
   );
@@ -259,7 +298,9 @@ export default function OtherProductionClient() {
     });
 
     if (validRows.length === 0) {
-      alert("Mohon isi minimal satu baris data dengan lengkap (Pekerja, Pekerjaan, Qty, Upah)");
+      alert(
+        "Mohon isi minimal satu baris data dengan lengkap (Pekerja, Pekerjaan, Qty, Upah)"
+      );
       return;
     }
 
@@ -278,7 +319,9 @@ export default function OtherProductionClient() {
     });
 
     if (incompleteRows.length > 0) {
-      alert("Ada baris data yang belum lengkap. Mohon lengkapi atau hapus baris tersebut.");
+      alert(
+        "Ada baris data yang belum lengkap. Mohon lengkapi atau hapus baris tersebut."
+      );
       return;
     }
 
@@ -302,7 +345,6 @@ export default function OtherProductionClient() {
       if (res?.success) {
         setLastSavedId(res.id);
         setOpenPreview(true);
-        resetForm();
       } else {
         alert("Gagal menyimpan data");
       }
@@ -796,11 +838,7 @@ export default function OtherProductionClient() {
                           required={tipeUpah === "per_qty"}
                           value={tipeUpah === "per_hari" ? 1 : row.qty || ""}
                           onChange={(e) =>
-                            handleChange(
-                              row.id,
-                              "qty",
-                              e.target.value
-                            )
+                            handleChange(row.id, "qty", e.target.value)
                           }
                           sx={{ ...muiCompactInputSx, width: "80px" }}
                           inputProps={{
@@ -817,11 +855,7 @@ export default function OtherProductionClient() {
                             type="number"
                             value={row.satuan || ""}
                             onChange={(e) =>
-                              handleChange(
-                                row.id,
-                                "satuan",
-                                e.target.value
-                              )
+                              handleChange(row.id, "satuan", e.target.value)
                             }
                             sx={{ ...muiCompactInputSx, width: "120px" }}
                             inputProps={{ min: 0, step: "any" }}
@@ -1101,12 +1135,18 @@ export default function OtherProductionClient() {
       <SafeModal
         open={openPreview}
         title="Berhasil Disimpan"
-        onClose={() => setOpenPreview(false)}
+        onClose={() => {
+          setOpenPreview(false);
+          // resetForm(); // Don't auto-reset to allow re-download
+        }}
         footer={
           <div className="flex gap-2">
             <GlassButton
               variant="secondary"
-              onClick={() => setOpenPreview(false)}
+              onClick={() => {
+                setOpenPreview(false);
+                // resetForm(); // Don't auto-reset to allow re-download
+              }}
             >
               Tutup
             </GlassButton>

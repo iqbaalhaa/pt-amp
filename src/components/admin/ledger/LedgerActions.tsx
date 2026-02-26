@@ -8,7 +8,7 @@ import { revokePurchase } from "@/actions/purchase-actions";
 import { revokeSale } from "@/actions/sale-actions";
 import { revokeProduction } from "@/actions/production-actions";
 import { approvePurchase } from "@/actions/purchase-actions";
-import { approveSale } from "@/actions/sale-actions";
+import { approveSale, getSaleDetail, finalizeSale } from "@/actions/sale-actions";
 import GlassDialog from "@/components/ui/GlassDialog";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import PrintIcon from "@mui/icons-material/Print";
@@ -63,6 +63,11 @@ export function LedgerActions({ id, type, status, entry, onView }: Props) {
   const [openApprove, setOpenApprove] = useState(false);
   const [openReject, setOpenReject] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
+  const [openApproveSale, setOpenApproveSale] = useState(false);
+  const [approveBusy, setApproveBusy] = useState(false);
+  const [saleItems, setSaleItems] = useState<
+    Array<{ id: string; name: string; qty: string; unitPrice: string }>
+  >([]);
 
   const handleRejectConfirm = async () => {
     const reason = rejectReason.trim();
@@ -114,7 +119,19 @@ export function LedgerActions({ id, type, status, entry, onView }: Props) {
       if (type === "purchase") {
         await approvePurchase(id);
       } else if (type === "sale") {
-        await approveSale(id);
+        const detail = await getSaleDetail(id);
+        if (!detail) return;
+        setSaleItems(
+          (detail.items || []).map((it: { id: string; itemTypeName: string; qty: string; unitPrice: string }) => ({
+            id: it.id,
+            name: it.itemTypeName,
+            qty: it.qty,
+            unitPrice: it.unitPrice,
+          }))
+        );
+        setOpenApprove(false);
+        setOpenApproveSale(true);
+        return;
       } else if (type === "invoice") {
         const { approveExpense } = await import("@/actions/expense-actions");
         await approveExpense(id);
@@ -702,6 +719,107 @@ export function LedgerActions({ id, type, status, entry, onView }: Props) {
         </div>
       </GlassDialog>
 
+      <GlassDialog
+        open={openApproveSale}
+        title="Setujui Penjualan"
+        onClose={() => (approveBusy ? null : setOpenApproveSale(false))}
+        fullWidth
+        maxWidth="md"
+        actions={
+          <>
+            <button
+              onClick={() => setOpenApproveSale(false)}
+              className="rounded-md bg-slate-100 px-3 py-1 text-[12px] text-slate-800 hover:bg-slate-200"
+              disabled={approveBusy}
+            >
+              Batal
+            </button>
+            <button
+              onClick={async () => {
+                setApproveBusy(true);
+                try {
+                  await finalizeSale(
+                    id,
+                    saleItems.map((it) => ({
+                      id: it.id,
+                      qty: it.qty || "0",
+                      unitPrice: it.unitPrice || "0",
+                    }))
+                  );
+                  setOpenApproveSale(false);
+                  router.refresh();
+                } catch (e) {
+                  console.error(e);
+                } finally {
+                  setApproveBusy(false);
+                }
+              }}
+              className="rounded-md bg-emerald-600 px-3 py-1 text-[12px] text-white hover:bg-emerald-700 disabled:opacity-60"
+              disabled={approveBusy}
+            >
+              Simpan & Setujui
+            </button>
+          </>
+        }
+      >
+        <div className="max-h-[70vh] overflow-auto">
+          <table className="min-w-full border-collapse text-left text-xs">
+            <thead>
+              <tr className="bg-slate-50 text-slate-600">
+                <th className="border border-slate-200 px-2 py-1">Barang</th>
+                <th className="border border-slate-200 px-2 py-1 text-right w-28">Qty</th>
+                <th className="border border-slate-200 px-2 py-1 text-right w-36">Harga</th>
+                <th className="border border-slate-200 px-2 py-1 text-right w-36">Subtotal</th>
+              </tr>
+            </thead>
+            <tbody>
+              {saleItems.map((it, idx) => {
+                const q = parseFloat(it.qty || "0");
+                const p = parseFloat(it.unitPrice || "0");
+                const subtotal = (isFinite(q) ? q : 0) * (isFinite(p) ? p : 0);
+                return (
+                  <tr key={it.id}>
+                    <td className="border border-slate-200 px-2 py-1">{it.name}</td>
+                    <td className="border border-slate-200 px-2 py-1 text-right">
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={it.qty}
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          setSaleItems((prev) =>
+                            prev.map((row, i) => (i === idx ? { ...row, qty: v } : row))
+                          );
+                        }}
+                        className="w-full rounded border border-slate-300 px-2 py-1 text-right"
+                      />
+                    </td>
+                    <td className="border border-slate-200 px-2 py-1 text-right">
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={it.unitPrice}
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          setSaleItems((prev) =>
+                            prev.map((row, i) =>
+                              i === idx ? { ...row, unitPrice: v } : row
+                            )
+                          );
+                        }}
+                        className="w-full rounded border border-slate-300 px-2 py-1 text-right"
+                      />
+                    </td>
+                    <td className="border border-slate-200 px-2 py-1 text-right">
+                      {subtotal.toLocaleString("id-ID")}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </GlassDialog>
       <GlassDialog
         open={openReject}
         title="Konfirmasi Penolakan"
