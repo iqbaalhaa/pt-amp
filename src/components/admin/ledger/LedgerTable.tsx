@@ -14,6 +14,8 @@ type Props = {
   sortColumn?: keyof LedgerEntry;
   sortDirection?: "asc" | "desc";
   onSort?: (column: keyof LedgerEntry) => void;
+  showShift?: boolean;
+  showParty?: boolean;
 };
 
 export function LedgerTable({
@@ -25,6 +27,8 @@ export function LedgerTable({
   sortColumn,
   sortDirection,
   onSort,
+  showShift = false,
+  showParty = true,
 }: Props) {
   const currentIds = useMemo(() => entries.map((e) => e.id), [entries]);
   const allSelected =
@@ -74,9 +78,9 @@ export function LedgerTable({
               ) : null}
             </th>
             {renderHeader("Tanggal", "date")}
-            {renderHeader("Shift", "shift")}
+            {showShift && renderHeader("Shift", "shift")}
             {renderHeader("Petugas", "createdByName")}
-            {renderHeader("Pihak", "counterparty")}
+            {showParty && renderHeader("Pihak", "counterparty")}
             {renderHeader("Total (Rp)", "total")}
             {renderHeader("Status", "status")}
             <th className="px-3 py-2 text-right">Aksi</th>
@@ -97,9 +101,13 @@ export function LedgerTable({
                   ) : null}
                 </td>
                 <td className="px-3 py-2">{dStr}</td>
-                <td className="px-3 py-2 capitalize">{e.shift || "-"}</td>
+                {showShift && (
+                  <td className="px-3 py-2 capitalize">{e.shift || "-"}</td>
+                )}
                 <td className="px-3 py-2">{e.createdByName || "-"}</td>
-                <td className="px-3 py-2">{e.counterparty || "-"}</td>
+                {showParty && (
+                  <td className="px-3 py-2">{e.counterparty || "-"}</td>
+                )}
                 <td className="px-3 py-2 text-right">
                   {e.total != null ? toCurrency(e.total) : "-"}
                 </td>

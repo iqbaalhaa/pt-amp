@@ -253,17 +253,36 @@ export function LedgerSection({
     pdf.setFont("helvetica", "bold");
     pdf.setFontSize(9);
 
+    const shouldShowShift =
+      type === "production" &&
+      (subType === "Pengikisan" ||
+        subType === "Pemotongan" ||
+        subType === "Pengemasan");
+
+    const showParty = !(
+      type === "production" &&
+      (subType === "Pengikisan" ||
+        subType === "Pemotongan" ||
+        subType === "Pengemasan" ||
+        subType === "Pensortiran" ||
+        subType === "QC Potong & Sortir")
+    );
+
     const colTanggalX = margin;
     const colShiftX = colTanggalX + 32;
-    const colPetugasX = colShiftX + 16;
-    const colPihakX = colPetugasX + 32;
+    const colPetugasX = shouldShowShift ? colShiftX + 16 : colTanggalX + 32;
+    const colPihakX = colPetugasX + (shouldShowShift ? 32 : 48);
     const colTotalX = pageW - margin - 30;
     const colStatusX = pageW - margin;
 
     pdf.text("Tanggal", colTanggalX, y);
-    pdf.text("Shift", colShiftX, y);
+    if (shouldShowShift) {
+      pdf.text("Shift", colShiftX, y);
+    }
     pdf.text("Petugas", colPetugasX, y);
-    pdf.text("Pihak", colPihakX, y);
+    if (showParty) {
+      pdf.text("Pihak", colPihakX, y);
+    }
     pdf.text("Total", colTotalX, y, { align: "right" });
     pdf.text("Status", colStatusX, y, { align: "right" });
     y += 5;
@@ -286,9 +305,13 @@ export function LedgerSection({
       const status = e.status.toUpperCase();
 
       pdf.text(dateStr, colTanggalX, y);
-      pdf.text(shift, colShiftX, y);
+      if (shouldShowShift) {
+        pdf.text(shift, colShiftX, y);
+      }
       pdf.text(petugas, colPetugasX, y);
-      pdf.text(pihak, colPihakX, y);
+      if (showParty) {
+        pdf.text(pihak, colPihakX, y);
+      }
       pdf.text(toCurrency(totalVal), colTotalX, y, { align: "right" });
       pdf.text(status, colStatusX, y, { align: "right" });
       y += 5;
@@ -2959,6 +2982,22 @@ export function LedgerSection({
         sortColumn={sortColumn}
         sortDirection={sortDirection}
         onSort={handleSort}
+        showShift={
+          type === "production" &&
+          (subType === "Pengikisan" ||
+            subType === "Pemotongan" ||
+            subType === "Pengemasan")
+        }
+        showParty={
+          !(
+            type === "production" &&
+            (subType === "Pengikisan" ||
+              subType === "Pemotongan" ||
+              subType === "Pengemasan" ||
+              subType === "Pensortiran" ||
+              subType === "QC Potong & Sortir")
+          )
+        }
       />
 
       {entries.length > 0 && (

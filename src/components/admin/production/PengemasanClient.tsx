@@ -272,7 +272,7 @@ export default function PengemasanClient() {
       if (res?.success) {
         setLastSavedId(res.id);
         setOpenPreview(true);
-        resetForm();
+        // Form will be reset when closing the preview modal
       } else {
         alert("Gagal menyimpan data");
       }
@@ -359,8 +359,9 @@ export default function PengemasanClient() {
 
     const colNoX = margin;
     const colPekerjaX = colNoX + 10;
-    const colBungkusX = colPekerjaX + 80;
-    const colTotalX = colBungkusX + 50;
+    const colItemTypeX = colPekerjaX + 50;
+    const colBungkusX = colItemTypeX + 50;
+    const colTotalX = colBungkusX + 40;
 
     const rowHeight = 6;
     const tableTop = y;
@@ -369,7 +370,8 @@ export default function PengemasanClient() {
     pdf.setFontSize(9);
     pdf.text("No", colNoX, y);
     pdf.text("Pekerja", colPekerjaX, y);
-    pdf.text("Jumlah (Bungkus)", colBungkusX, y);
+    pdf.text("Jenis Barang", colItemTypeX, y);
+    pdf.text("Jumlah (Bks)", colBungkusX, y);
     pdf.text("Total (Rp)", colTotalX, y);
 
     y += 2;
@@ -389,9 +391,12 @@ export default function PengemasanClient() {
 
     rowsForPrint.forEach((row, idx) => {
       const total = getRowTotal(row);
+      const itemTypeName =
+        itemTypeOptions.find((it) => it.id === row.itemTypeId)?.name || "-";
 
       pdf.text(String(idx + 1), colNoX, y);
       pdf.text(row.nama || "-", colPekerjaX, y);
+      pdf.text(itemTypeName, colItemTypeX, y);
       pdf.text((row.bungkus || 0).toLocaleString("id-ID"), colBungkusX, y);
       pdf.text(total.toLocaleString("id-ID"), colTotalX, y, { align: "right" });
 
@@ -621,8 +626,13 @@ export default function PengemasanClient() {
                         <Autocomplete
                           value={
                             workerOptions.find((w) => w.name === row.nama) ||
-                            null
+                            (row.nama ? row.nama : null)
                           }
+                          onInputChange={(_event, newInputValue, reason) => {
+                            if (reason === "input" || reason === "clear") {
+                              handleChange(row.id, "nama", newInputValue);
+                            }
+                          }}
                           onChange={async (_event, newValue) => {
                             if (newValue && (newValue as any).inputValue) {
                               setCreatingWorkerId(row.id);
@@ -931,12 +941,18 @@ export default function PengemasanClient() {
       <SafeModal
         open={openPreview}
         title="Berhasil Disimpan"
-        onClose={() => setOpenPreview(false)}
+        onClose={() => {
+          setOpenPreview(false);
+          resetForm();
+        }}
         footer={
           <div className="flex gap-2">
             <GlassButton
               variant="secondary"
-              onClick={() => setOpenPreview(false)}
+              onClick={() => {
+                setOpenPreview(false);
+                resetForm();
+              }}
             >
               Tutup
             </GlassButton>

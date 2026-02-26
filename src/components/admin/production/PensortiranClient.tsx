@@ -103,6 +103,15 @@ export default function PensortiranClient() {
     getWorkers().then((data) =>
       setWorkerOptions(data.filter((w) => w.isActive))
     );
+    const defaultRates: PemotonganRate[] = [
+      { id: "stik25", name: "Stik 25", unit: "Kg", rate: 1500 },
+      { id: "aaa8", name: "Aaa (8 cm)", unit: "Kg", rate: 1500 },
+      { id: "aa8", name: "Aa (8 cm)", unit: "Kg", rate: 1500 },
+      { id: "reject8", name: "Reject (8)", unit: "Kg", rate: 1500 },
+      { id: "reject6", name: "Reject (6)", unit: "Kg", rate: 1500 },
+      { id: "campuran8", name: "Campuran (8 cm)", unit: "Kg", rate: 1500 },
+    ];
+
     try {
       if (typeof window !== "undefined") {
         const raw = window.localStorage.getItem("upahSettings");
@@ -112,9 +121,7 @@ export default function PensortiranClient() {
             setUpahPerKg(parsed.pemotonganPerKg);
           }
 
-          const rates: PemotonganRate[] = Array.isArray(
-            parsed.pemotonganRates,
-          )
+          const rates: PemotonganRate[] = Array.isArray(parsed.pemotonganRates)
             ? parsed.pemotonganRates.map((r: any, idx: number) => ({
                 id: r.id || `rate-${idx}`,
                 name: String(r.name ?? "").trim() || `Jenis ${idx + 1}`,
@@ -126,12 +133,14 @@ export default function PensortiranClient() {
               }))
             : [];
 
-          setPemotonganRateOptions(rates);
+          setPemotonganRateOptions(rates.length > 0 ? rates : defaultRates);
+        } else {
+          setPemotonganRateOptions(defaultRates);
         }
       }
     } catch {
       setUpahPerKg(1500);
-      setPemotonganRateOptions([]);
+      setPemotonganRateOptions(defaultRates);
     }
     setDate(new Date().toISOString().split("T")[0]);
   }, []);
@@ -205,7 +214,7 @@ export default function PensortiranClient() {
 
         if (Array.isArray(parsed.pemotonganRates) && row.itemTypeId) {
           const match = parsed.pemotonganRates.find(
-            (r: any) => r.id === row.itemTypeId,
+            (r: any) => r.id === row.itemTypeId
           );
           if (match && typeof match.rate === "number") {
             rate = match.rate;
@@ -256,10 +265,7 @@ export default function PensortiranClient() {
   };
 
   const activeRows = useMemo(
-    () =>
-      rows.filter(
-        (r) => r.nama || r.qty > 0
-      ),
+    () => rows.filter((r) => r.nama || r.qty > 0),
     [rows]
   );
 
@@ -284,9 +290,7 @@ export default function PensortiranClient() {
       return;
     }
 
-    const validRows = rows.filter(
-      (r) => r.nama && r.qty > 0 && r.itemTypeId
-    );
+    const validRows = rows.filter((r) => r.nama && r.qty > 0 && r.itemTypeId);
 
     if (validRows.length === 0) {
       alert("Mohon isi minimal satu baris data dengan lengkap (Pekerja, Qty)");
@@ -312,7 +316,6 @@ export default function PensortiranClient() {
       if (res?.success) {
         setLastSavedId(res.id);
         setOpenPreview(true);
-        resetForm();
       } else {
         alert("Gagal menyimpan data");
       }
@@ -398,7 +401,8 @@ export default function PensortiranClient() {
 
     const colNoX = margin;
     const colPekerjaX = colNoX + 10;
-    const colQtyX = colPekerjaX + 80;
+    const colItemTypeX = colPekerjaX + 60;
+    const colQtyX = colItemTypeX + 60;
     const colTotalX = colQtyX + 50;
 
     const rowHeight = 6;
@@ -408,8 +412,9 @@ export default function PensortiranClient() {
     pdf.setFontSize(9);
     pdf.text("No", colNoX, y);
     pdf.text("Pekerja", colPekerjaX, y);
+    pdf.text("Jenis Barang", colItemTypeX, y);
     pdf.text("Qty (Kg)", colQtyX, y);
-    pdf.text("Total (Rp)", colTotalX, y);
+    pdf.text("Total (Rp)", colTotalX, y, { align: "right" });
 
     y += 2;
 
@@ -428,9 +433,13 @@ export default function PensortiranClient() {
 
     rowsForPrint.forEach((row, idx) => {
       const total = getRowTotal(row);
+      const itemTypeName =
+        pemotonganRateOptions.find((opt) => opt.id === row.itemTypeId)?.name ||
+        "-";
 
       pdf.text(String(idx + 1), colNoX, y);
       pdf.text(row.nama || "-", colPekerjaX, y);
+      pdf.text(itemTypeName, colItemTypeX, y);
       pdf.text((row.qty || 0).toLocaleString("id-ID"), colQtyX, y);
       pdf.text(total.toLocaleString("id-ID"), colTotalX, y, { align: "right" });
 
@@ -608,9 +617,8 @@ export default function PensortiranClient() {
                       <td className="px-3 py-2">
                         <Autocomplete
                           value={
-                            workerOptions.find(
-                              (w) => w.name === row.nama
-                            ) || null
+                            workerOptions.find((w) => w.name === row.nama) ||
+                            null
                           }
                           onChange={async (_event, newValue) => {
                             if (newValue && (newValue as any).inputValue) {
@@ -624,11 +632,7 @@ export default function PensortiranClient() {
                                     ...prev,
                                     newWorker,
                                   ]);
-                                  handleChange(
-                                    row.id,
-                                    "nama",
-                                    newWorker.name
-                                  );
+                                  handleChange(row.id, "nama", newWorker.name);
                                 }
                               } catch (err) {
                                 console.error(err);
@@ -939,12 +943,18 @@ export default function PensortiranClient() {
       <SafeModal
         open={openPreview}
         title="Berhasil Disimpan"
-        onClose={() => setOpenPreview(false)}
+        onClose={() => {
+          setOpenPreview(false);
+          // resetForm(); // Don't auto-reset
+        }}
         footer={
           <div className="flex gap-2">
             <GlassButton
               variant="secondary"
-              onClick={() => setOpenPreview(false)}
+              onClick={() => {
+                setOpenPreview(false);
+                // resetForm(); // Don't auto-reset
+              }}
             >
               Tutup
             </GlassButton>
@@ -962,8 +972,8 @@ export default function PensortiranClient() {
             Data Pensortiran Tersimpan!
           </h3>
           <p className="text-black/60 text-sm mb-6 max-w-xs">
-            Data pensortiran berhasil disimpan ke database. Anda dapat
-            mengunduh PDF sebagai arsip.
+            Data pensortiran berhasil disimpan ke database. Anda dapat mengunduh
+            PDF sebagai arsip.
           </p>
           <div className="bg-blue-50 text-blue-800 text-xs px-4 py-3 rounded-lg w-full text-left">
             <p className="font-semibold mb-1">ID Transaksi:</p>
@@ -974,4 +984,3 @@ export default function PensortiranClient() {
     </div>
   );
 }
-
