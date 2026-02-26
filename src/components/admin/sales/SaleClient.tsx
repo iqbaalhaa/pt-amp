@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import type React from "react";
 import {
   Autocomplete,
+  createFilterOptions,
   Button,
   CircularProgress,
   Dialog,
@@ -25,6 +27,11 @@ import { useReactToPrint } from "react-to-print";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import { type ItemTypeDTO, getItemTypes } from "@/actions/item-type-actions";
+import {
+  type SupplierDTO,
+  getSuppliers,
+  quickCreateSupplier,
+} from "@/actions/supplier-actions";
 import SuccessModal from "@/components/admin/purchases/SuccessModal";
 import { authClient } from "@/lib/auth-client";
 
@@ -52,8 +59,8 @@ type ItemRow = {
   unitPrice: string;
 };
 
-const A5_W_MM = 148;
-const A5_H_MM = 210;
+  const A5_W_MM = 148; // A5 portrait width
+  const A5_H_MM = 210; // A5 portrait height
 const PRINT_MARGIN_MM = 10;
 
 function cx(...classes: Array<string | false | null | undefined>) {
@@ -76,6 +83,8 @@ export default function SaleClient() {
 
   // Data State
   const [itemTypes, setItemTypes] = useState<ItemTypeDTO[]>([]);
+  const [suppliers, setSuppliers] = useState<SupplierDTO[]>([]);
+  const [creatingSupplier, setCreatingSupplier] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
 
   // Form State
@@ -84,7 +93,7 @@ export default function SaleClient() {
     () => new Date().toISOString().split("T")[0]
   );
   const [status, setStatus] = useState<TransactionStatus>(
-    TransactionStatus.posted
+    TransactionStatus.draft
   );
   const [notes, setNotes] = useState<string>("");
   const [items, setItems] = useState<ItemRow[]>([
@@ -103,12 +112,16 @@ export default function SaleClient() {
   // Refs
   const invoicePrintRef = useRef<HTMLDivElement>(null);
 
+  // Jangan refresh otomatis saat modal muncul agar tombol Download tidak kehilangan data
+
   // Load Initial Data
   useEffect(() => {
     const loadData = async () => {
       try {
         const it = await getItemTypes();
         setItemTypes(it);
+        const sups = await getSuppliers();
+        setSuppliers(sups);
       } catch (err) {
         console.error("Failed to load data:", err);
       } finally {
@@ -154,25 +167,8 @@ export default function SaleClient() {
   };
 
   const updateItem = (id: string, field: keyof ItemRow, value: string) => {
-    let finalValue = value;
-
-    if (field === "qty") {
-      const currentRow = items.find((r) => r.id === id);
-      if (currentRow && currentRow.itemTypeId) {
-        const it = itemTypes.find((t) => t.id === currentRow.itemTypeId);
-        if (it) {
-          const stock = parseFloat(it.stock || "0");
-          const qty = parseFloat(value || "0");
-          if (qty > stock) {
-            alert(`Stok tidak cukup! Tersedia: ${stock} ${it.unit || ""}`);
-            finalValue = stock.toString();
-          }
-        }
-      }
-    }
-
     setItems((prev) =>
-      prev.map((row) => (row.id === id ? { ...row, [field]: finalValue } : row))
+      prev.map((row) => (row.id === id ? { ...row, [field]: value } : row))
     );
   };
 
@@ -223,7 +219,6 @@ export default function SaleClient() {
       const res = await createSale(payload);
       if (res && res.success) {
         setShowSuccessModal(true);
-        router.refresh();
       } else {
         alert("Gagal membuat penjualan");
       }
@@ -247,6 +242,7 @@ export default function SaleClient() {
       },
     ]);
     setShowSuccessModal(false);
+    router.refresh();
   };
 
   const invoiceItems = useMemo(() => {
@@ -295,49 +291,38 @@ export default function SaleClient() {
 
     const imgData = canvas.toDataURL("image/png");
 
+    // Use A5 portrait (vertical) single page
     const pdf = new jsPDF({
       orientation: "p",
       unit: "mm",
-      format: [A5_W_MM, A5_H_MM],
+      format: "a5",
     });
 
-    const pageW = A5_W_MM;
-    const pageH = A5_H_MM;
+    const pageW = pdf.internal.pageSize.getWidth(); // ~210
+    const pageH = pdf.internal.pageSize.getHeight(); // ~148 (portrait)
     const margin = PRINT_MARGIN_MM;
-
     const contentW = pageW - margin * 2;
     const contentH = pageH - margin * 2;
 
-    const imgHeightMm = (canvas.height * contentW) / canvas.width;
+    // Fit image into single page: scale to fit both width and height
+    const scaleW = contentW / canvas.width;
+    const scaleH = contentH / canvas.height;
+    const scale = Math.min(scaleW, scaleH);
+    const targetW = canvas.width * scale;
+    const targetH = canvas.height * scale;
+    const offsetX = margin + (contentW - targetW) / 2;
+    const offsetY = margin + (contentH - targetH) / 2;
 
-    let heightLeft = imgHeightMm;
-    let offsetY = 0;
-
-    pdf.addImage(imgData, "PNG", margin, margin, contentW, imgHeightMm);
-    heightLeft -= contentH;
-
-    while (heightLeft > 0) {
-      offsetY += contentH;
-      pdf.addPage([pageW, pageH], "p");
-      pdf.addImage(
-        imgData,
-        "PNG",
-        margin,
-        margin - offsetY,
-        contentW,
-        imgHeightMm
-      );
-      heightLeft -= contentH;
-    }
-
+    pdf.addImage(imgData, "PNG", offsetX, offsetY, targetW, targetH);
     pdf.save(`nota-penjualan-${date || "draft"}.pdf`);
+
   };
+
 
   const muiCompactInputSx = {
     "& .MuiOutlinedInput-root": {
       borderRadius: "10px",
       backgroundColor: "rgba(255,255,255,0.96)",
-      fontSize: "12px",
       minHeight: 38,
       "& fieldset": { borderColor: "var(--glass-border)" },
       "&:hover fieldset": { borderColor: "rgba(0,0,0,0.18)" },
@@ -389,6 +374,7 @@ export default function SaleClient() {
         <div ref={invoicePrintRef}>
           <div
             style={{
+              // A5 portrait canvas area
               width: `${A5_W_MM}mm`,
               minHeight: `${A5_H_MM}mm`,
               padding: "20px",
@@ -437,17 +423,90 @@ export default function SaleClient() {
                     />
                     Pembeli / Customer <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="text"
-                    required
-                    value={customer}
-                    onChange={(e) => setCustomer(e.target.value)}
-                    className={cx(
-                      "w-full h-[38px] px-3 rounded-lg",
-                      "border border-[var(--glass-border)] bg-white/95 text-[12px]",
-                      "outline-none focus:ring-2 focus:ring-[var(--brand)]/25 focus:border-[var(--brand)]"
+                  <Autocomplete
+                    value={
+                      suppliers.find(
+                        (s) => s.name.toUpperCase() === customer.toUpperCase()
+                      ) || null
+                    }
+                    onChange={async (_e, newValue) => {
+                      if (newValue && (newValue as SupplierDTO).id === "") {
+                        setCreatingSupplier(true);
+                        try {
+                          const created = await quickCreateSupplier(
+                            (newValue as SupplierDTO).name
+                          );
+                          setSuppliers((prev) => [...prev, created]);
+                          setCustomer(created.name);
+                        } catch (err) {
+                          alert("Gagal membuat data baru");
+                        } finally {
+                          setCreatingSupplier(false);
+                        }
+                      } else {
+                        setCustomer((newValue as SupplierDTO | null)?.name || "");
+                      }
+                    }}
+                    options={suppliers.filter((s) => s.isActive)}
+                    getOptionLabel={(option) =>
+                      typeof option === "string"
+                        ? option
+                        : (option as SupplierDTO).name
+                    }
+                    renderOption={(props, option) => {
+                      const { key, ...liProps } = props as React.HTMLAttributes<HTMLLIElement> & {
+                        key?: string;
+                      };
+                      return (
+                        <li {...liProps} key={key}>
+                          {(option as SupplierDTO).name}
+                        </li>
+                      );
+                    }}
+                    filterOptions={(options, params) => {
+                      const baseFilter = createFilterOptions<SupplierDTO>();
+                      const filtered = baseFilter(options, params);
+                      const { inputValue } = params;
+                      const isExisting = options.some(
+                        (o) =>
+                          o.name.toLowerCase() === inputValue.toLowerCase()
+                      );
+                      if (inputValue !== "" && !isExisting) {
+                        filtered.push({
+                          id: "", // marker for new
+                          name: inputValue.toUpperCase(),
+                          address: null,
+                          phone: null,
+                          bankAccount: null,
+                          isActive: true,
+                        } as SupplierDTO);
+                      }
+                      return filtered;
+                    }}
+                    loading={creatingSupplier || loadingData}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        placeholder="Pilih / ketik pembeli"
+                        size="small"
+                      />
                     )}
-                    placeholder="Contoh: Bpk. Budi / Toko Maju"
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        borderRadius: "10px",
+                        backgroundColor: "rgba(255,255,255,0.96)",
+                        fontSize: "12px",
+                        minHeight: 38,
+                        "& fieldset": { borderColor: "var(--glass-border)" },
+                        "&:hover fieldset": {
+                          borderColor: "rgba(0,0,0,0.18)",
+                        },
+                        "&.Mui-focused fieldset": {
+                          borderColor: "var(--brand)",
+                        },
+                      },
+                      "& .MuiInputBase-input": { padding: "9px 10px" },
+                    }}
                   />
                 </div>
 
@@ -567,15 +626,13 @@ export default function SaleClient() {
                               options={activeItemTypes}
                               getOptionLabel={(option) => option.name}
                               renderOption={(props, option) => {
-                                const { key, ...optionProps } = props as any;
+                                const { key, ...liProps } = props as React.HTMLAttributes<HTMLLIElement> & {
+                                  key?: string;
+                                };
                                 return (
-                                  <li key={key} {...optionProps}>
-                                    <div className="flex justify-between w-full">
+                                  <li {...liProps} key={key}>
+                                    <div className="w-full">
                                       <span>{option.name}</span>
-                                      <span className="text-gray-500 text-xs ml-2">
-                                        Stok: {option.stock || "0"}{" "}
-                                        {option.unit}
-                                      </span>
                                     </div>
                                   </li>
                                 );
@@ -737,6 +794,7 @@ export default function SaleClient() {
               <div
                 className="bg-white shadow-lg origin-top"
                 style={{
+                  // Preview in portrait
                   width: `${A5_W_MM}mm`,
                   minHeight: `${A5_H_MM}mm`,
                   padding: "20px",

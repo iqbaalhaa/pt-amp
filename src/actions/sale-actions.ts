@@ -176,3 +176,80 @@ export async function approveSale(id: string) {
   revalidatePath("/admin/inventory/stock");
   return { success: true };
 }
+
+export async function getSaleDetail(id: string) {
+  const sale = await prisma.sale.findUnique({
+    where: { id: BigInt(id) },
+    include: { saleItems: { include: { itemType: true } } },
+  });
+  if (!sale) return null;
+  return {
+    id: sale.id.toString(),
+    customer: sale.customer,
+    date: sale.date.toISOString(),
+    status: sale.status,
+    notes: sale.notes,
+    items: sale.saleItems.map((it) => ({
+      id: it.id.toString(),
+      itemTypeId: it.itemTypeId.toString(),
+      itemTypeName: it.itemType?.name ?? `Item ${it.itemTypeId.toString()}`,
+      qty: it.qty.toString(),
+      unitPrice: it.unitPrice.toString(),
+    })),
+  };
+}
+
+export async function finalizeSale(
+  id: string,
+  items: Array<{ id: string; qty: string; unitPrice: string }>
+) {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session) {
+    return { success: false };
+  }
+  const sale = await prisma.sale.findUnique({
+    where: { id: BigInt(id) },
+    include: { saleItems: true },
+  });
+  if (!sale) return { success: false };
+
+  const itemIds = sale.saleItems.map((i) => i.id);
+  if (itemIds.length > 0) {
+    await prisma.stockMovement.deleteMany({
+      where: { sourceType: "sale_item", sourceId: { in: itemIds } },
+    });
+  }
+
+  for (const it of items) {
+    await prisma.saleItem.update({
+      where: { id: BigInt(it.id) },
+      data: {
+        qty: it.qty,
+        unitPrice: it.unitPrice,
+      },
+    });
+  }
+
+  const updated = await prisma.sale.update({
+    where: { id: BigInt(id) },
+    data: { status: "posted" as TransactionStatus },
+    include: { saleItems: true },
+  });
+
+  if (updated.saleItems.length > 0) {
+    const movements = updated.saleItems.map((item) => ({
+      itemTypeId: item.itemTypeId,
+      qty: -Number(item.qty),
+      sourceType: "sale_item" as const,
+      sourceId: item.id,
+      displayUnit: null,
+      conversionRateUsed: null,
+    }));
+    await prisma.stockMovement.createMany({ data: movements });
+  }
+
+  revalidatePath("/admin/sales");
+  revalidatePath("/admin/ledger");
+  revalidatePath("/admin/inventory/stock");
+  return { success: true };
+}

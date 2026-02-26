@@ -34,6 +34,9 @@ export function LedgerTable({
   const allSelected =
     currentIds.length > 0 && currentIds.every((id) => selectedIds.includes(id));
 
+  const saleStatusLabel = (s: LedgerEntry["status"]) =>
+    s === "posted" ? "Selesai" : s === "cancelled" ? "Batal" : "Perkiraan";
+
   const renderSortIcon = (column: keyof LedgerEntry) => {
     if (sortColumn !== column) return null;
     return sortDirection === "asc" ? (
@@ -121,7 +124,7 @@ export function LedgerTable({
                         : "bg-yellow-100 text-yellow-700"
                     }`}
                   >
-                    {e.status.toUpperCase()}
+                    {e.type === "sale" ? saleStatusLabel(e.status) : e.status.toUpperCase()}
                   </span>
                 </td>
                 <td className="px-3 py-2 text-right">

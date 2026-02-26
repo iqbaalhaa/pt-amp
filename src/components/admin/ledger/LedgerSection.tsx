@@ -99,6 +99,11 @@ export function LedgerSection({
   const [reportMonth, setReportMonth] = useState("");
   const [reportYear, setReportYear] = useState("");
 
+  const saleStatusLabel = (s: LedgerEntry["status"]) =>
+    s === "posted" ? "Selesai" : s === "cancelled" ? "Batal" : "Perkiraan";
+  const labelForEntry = (e: LedgerEntry) =>
+    e.type === "sale" ? saleStatusLabel(e.status) : e.status.toUpperCase();
+
   type MassRow = {
     date: string;
     party: string; // supplier or petugas
@@ -302,7 +307,7 @@ export function LedgerSection({
       const petugas = e.createdByName || "-";
       const pihak = e.counterparty || "-";
       const totalVal = getProductionValue(e);
-      const status = e.status.toUpperCase();
+      const status = labelForEntry(e);
 
       pdf.text(dateStr, colTanggalX, y);
       if (shouldShowShift) {
@@ -476,7 +481,7 @@ export function LedgerSection({
       const petugas = e.createdByName || "-";
       const pihak = e.counterparty || "-";
       const totalVal = getProductionValue(e);
-      const status = e.status.toUpperCase();
+      const status = labelForEntry(e);
 
       pdf.text(dateStr, colTanggalX, y);
       pdf.text(shift, colShiftX, y);
@@ -2856,7 +2861,7 @@ export function LedgerSection({
                   const rows = sortedEntries.map((e) => ({
                     Tanggal: new Date(e.date).toLocaleString(),
                     Jenis: e.type,
-                    Status: e.status.toUpperCase(),
+                    Status: labelForEntry(e),
                     Pihak: e.counterparty ?? "-",
                     Total: e.total != null ? toCurrency(e.total) : "-",
                     Catatan: e.notes ?? "-",
