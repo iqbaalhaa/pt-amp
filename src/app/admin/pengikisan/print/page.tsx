@@ -2,6 +2,8 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { toCurrency } from "@/components/admin/ledger/formatters";
 
+export const dynamic = "force-dynamic";
+
 type SearchParams = {
   id?: string;
 };

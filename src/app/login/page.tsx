@@ -9,6 +9,8 @@ export const metadata = {
   description: "Masuk ke dashboard admin PT AMP.",
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function Page() {
 	const session = await auth.api.getSession({
 		headers: await headers(),

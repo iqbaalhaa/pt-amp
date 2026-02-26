@@ -6,6 +6,8 @@ import CashExportClient from "@/components/admin/cash/CashExportClient";
 import CashSummaryClient from "@/components/admin/cash/CashSummaryClient";
 import CashAdjustmentClient from "@/components/admin/cash/CashAdjustmentClient";
 
+export const dynamic = "force-dynamic";
+
 function toCurrency(n: number) {
 	const rounded = Math.round(n || 0);
 	return `Rp ${rounded.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")}`;

@@ -2,6 +2,8 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { Invoice, type InvoiceData } from "@/components/Invoice";
 
+export const dynamic = "force-dynamic";
+
 type SearchParams = {
   type?: "purchase" | "sale" | "expense";
   id?: string;

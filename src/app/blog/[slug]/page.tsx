@@ -1,6 +1,8 @@
 import BlogDetailPage from "@/components/pages/blog/BlogDetailPage";
 import { getPost } from "@/lib/blog";
 
+export const dynamic = "force-dynamic";
+
 type Props = Promise<{ slug: string }>;
 
 export async function generateMetadata(props: { params: Props }) {
