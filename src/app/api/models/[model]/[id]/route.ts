@@ -14,23 +14,23 @@ const modelConfigs: Record<
 	account: { idType: "string", bigIntFields: [] },
 	verification: { idType: "string", bigIntFields: [] },
 
-	product: { idType: "bigint", bigIntFields: ["id"] },
+	itemType: { idType: "bigint", bigIntFields: ["id"] },
 	worker: { idType: "bigint", bigIntFields: ["id"] },
 	productionType: { idType: "bigint", bigIntFields: ["id"] },
 
 	purchase: { idType: "bigint", bigIntFields: ["id"] },
-	purchaseItem: { idType: "bigint", bigIntFields: ["id", "purchaseId", "productId"] },
+	purchaseItem: { idType: "bigint", bigIntFields: ["id", "purchaseId", "itemTypeId"] },
 	sale: { idType: "bigint", bigIntFields: ["id"] },
-	saleItem: { idType: "bigint", bigIntFields: ["id", "saleId", "productId"] },
+	saleItem: { idType: "bigint", bigIntFields: ["id", "saleId", "itemTypeId"] },
 
 	production: { idType: "bigint", bigIntFields: ["id", "productionTypeId"] },
 	productionInput: {
 		idType: "bigint",
-		bigIntFields: ["id", "productionId", "productId"],
+		bigIntFields: ["id", "productionId", "itemTypeId"],
 	},
 	productionOutput: {
 		idType: "bigint",
-		bigIntFields: ["id", "productionId", "productId"],
+		bigIntFields: ["id", "productionId", "itemTypeId"],
 	},
 	productionWorker: {
 		idType: "bigint",
@@ -39,7 +39,7 @@ const modelConfigs: Record<
 
 	stockMovement: {
 		idType: "bigint",
-		bigIntFields: ["id", "productId", "sourceId"],
+		bigIntFields: ["id", "itemTypeId", "sourceId"],
 	},
 
 	inquiry: { idType: "string", bigIntFields: [] },

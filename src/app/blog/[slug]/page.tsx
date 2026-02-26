@@ -1,11 +1,13 @@
 import BlogDetailPage from "@/components/pages/blog/BlogDetailPage";
 import { getPost } from "@/lib/blog";
 
+export const dynamic = "force-dynamic";
+
 type Props = Promise<{ slug: string }>;
 
 export async function generateMetadata(props: { params: Props }) {
     const params = await props.params;
-	const post = getPost(params.slug);
+	const post = await getPost(params.slug);
 	if (!post) return { title: "Blog | PT AMP" };
 	return { 
 		title: `${post.title} | PT AMP`,

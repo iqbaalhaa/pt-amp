@@ -5,4 +5,6 @@ export const metadata = {
   description: "Daftar akun admin baru PT AMP.",
 };
 
+export const dynamic = "force-dynamic";
+
 export default RegisterPage;

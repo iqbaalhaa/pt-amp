@@ -22,6 +22,34 @@ interface HeroCarouselProps {
 }
 
 export function HeroCarousel({ slides }: HeroCarouselProps) {
+  if (slides.length === 0) {
+    return (
+      <div className="relative overflow-hidden min-h-[600px] flex items-center bg-gradient-to-b from-zinc-50 via-white to-zinc-50 border-b border-zinc-200">
+        <div className="pointer-events-none absolute inset-0">
+          <div className="absolute -top-24 -right-24 w-96 h-96 bg-red-500/10 rounded-full blur-3xl" />
+          <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl" />
+        </div>
+        <div className="container mx-auto px-4 md:px-6 lg:px-8 relative z-10">
+          <div className="grid md:grid-cols-2 gap-10 items-center">
+            <div className="order-2 md:order-1">
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6 text-zinc-900">
+                <span className="bg-gradient-to-r from-[var(--brand)] to-orange-500 bg-clip-text text-transparent">
+                  PT AMP Company Profile
+                </span>
+              </h1>
+              <p className="text-lg text-zinc-600 mb-8 leading-relaxed max-w-lg">
+                Perusahaan pengolahan kulit manis skala menengah dengan fokus pada kualitas dan kemitraan jangka panjang dengan petani.
+              </p>
+            </div>
+            <div className="order-1 md:order-2">
+              <div className="relative rounded-2xl h-64 md:h-96 w-full bg-zinc-100 shadow-inner overflow-hidden border border-zinc-100" />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const [current, setCurrent] = useState(0);
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -91,20 +119,69 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
               className="relative rounded-2xl h-64 md:h-96 w-full bg-zinc-100 shadow-inner overflow-hidden border border-zinc-100 animate-in fade-in zoom-in-95 duration-500"
             >
               {slides[current].type === "video" ? (
-                <video
-                  ref={videoRef}
-                  src={slides[current].src}
-                  className="w-full h-full object-cover"
-                  autoPlay
-                  muted
-                  loop
-                  playsInline
-                />
+                <div className="relative w-full h-full bg-zinc-200">
+                  <video
+                    ref={videoRef}
+                    src={slides[current].src}
+                    className="w-full h-full object-cover"
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    onError={(e) => {
+                      e.currentTarget.style.display = "none";
+                      e.currentTarget.parentElement?.querySelector(".video-fallback")?.classList.remove("hidden");
+                    }}
+                  />
+                  <div className="video-fallback hidden absolute inset-0 flex items-center justify-center text-zinc-400">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="48"
+                      height="48"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="opacity-50"
+                    >
+                      <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
+                      <circle cx="9" cy="9" r="2" />
+                      <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
+                    </svg>
+                  </div>
+                </div>
               ) : (
-                <div 
-                  className="w-full h-full bg-cover bg-center"
-                  style={{ backgroundImage: `url('${slides[current].src}')` }}
-                />
+                <div className="relative w-full h-full bg-zinc-200">
+                  <img
+                    src={slides[current].src}
+                    alt={slides[current].title}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.currentTarget.style.display = "none";
+                      e.currentTarget.parentElement?.querySelector(".image-fallback")?.classList.remove("hidden");
+                    }}
+                  />
+                  <div className="image-fallback hidden absolute inset-0 flex items-center justify-center text-zinc-400">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="48"
+                      height="48"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="opacity-50"
+                    >
+                      <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
+                      <circle cx="9" cy="9" r="2" />
+                      <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
+                    </svg>
+                  </div>
+                </div>
               )}
             </div>
           </div>

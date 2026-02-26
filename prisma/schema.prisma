@@ -5,9 +5,10 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider = "prisma-client-js"
-  previewFeatures = ["driverAdapters"]
-  output   = "../src/generated/prisma"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native"]
+  engineType    = "library"
+  output        = "../src/generated/client"
 }
 
 datasource db {
@@ -18,10 +19,7 @@ datasource db {
 // AUTH & USER MANAGEMENT (Keep existing)
 // =========================================================
 
-enum Role {
-  SUPERADMIN
-  STAFF
-}
+ 
 
 model User {
   id            String    @id
@@ -31,13 +29,67 @@ model User {
   image         String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
-  role          String    @default("STAFF")
+  role          String    @default("STAFF") // deprecated: will be removed after migration completes
+  userRoles     UserRole[]
   posts         Post[]
   sessions      Session[]
   accounts      Account[]
 
   @@unique([email])
   @@map("user")
+}
+
+model Role {
+  id            String       @id @default(cuid())
+  name          String       @unique
+  description   String?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  userRoles     UserRole[]
+  rolePermissions RolePermission[]
+
+  @@map("roles")
+}
+
+model Permission {
+  id            String          @id @default(cuid())
+  name          String          @unique
+  description   String?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  rolePermissions RolePermission[]
+
+  @@map("permissions")
+}
+
+model UserRole {
+  id        String  @id @default(cuid())
+  userId    String
+  roleId    String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, roleId], name: "user_role_unique")
+  @@index([userId], name: "idx_user_roles_user")
+  @@index([roleId], name: "idx_user_roles_role")
+  @@map("user_roles")
+}
+
+model RolePermission {
+  id           String     @id @default(cuid())
+  roleId       String
+  permissionId String
+  createdAt    DateTime   @default(now())
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionId], name: "role_permission_unique")
+  @@index([roleId], name: "idx_role_permissions_role")
+  @@index([permissionId], name: "idx_role_permissions_permission")
+  @@map("role_permissions")
 }
 
 model Session {
@@ -92,31 +144,9 @@ model Verification {
 // MASTER DATA (Updated)
 // =========================================================
 
-model Product {
-  id          BigInt      @id @default(autoincrement())
-  name        String
-  type        ProductType // raw, finished
-  description String?
-  image       String?
-  unit        String
-  isActive    Boolean     @default(true) @map("is_active")
-  createdAt   DateTime    @default(now()) @map("created_at")
-  updatedAt   DateTime    @updatedAt @map("updated_at")
-
-  // Relations
-  purchaseItems     PurchaseItem[]
-  saleItems         SaleItem[]
-  productionInputs  ProductionInput[]
-  productionOutputs ProductionOutput[]
-  stockMovements    StockMovement[]
-
-  @@map("products")
-}
-
 model Worker {
   id       BigInt  @id @default(autoincrement())
   name     String
-  role     String?
   isActive Boolean @default(true) @map("is_active")
 
   // Relations
@@ -137,6 +167,56 @@ model ProductionType {
   @@map("production_types")
 }
 
+model ItemType {
+  id          BigInt   @id @default(autoincrement())
+  name        String   @unique
+  description String?
+  type        ProductType? // raw, finished
+  image       String?
+  unit        String?      @default("kg")
+  isPublic    Boolean      @default(false) @map("is_public")
+  isActive    Boolean      @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  purchaseItems     PurchaseItem[]
+  saleItems         SaleItem[]
+  productionInputs  ProductionInput[]
+  productionOutputs ProductionOutput[]
+  stockMovements    StockMovement[]
+  pengemasanItems   PengemasanItem[]
+
+  @@map("item_types")
+}
+
+model Unit {
+  id          BigInt   @id @default(autoincrement())
+  name        String   @unique
+  description String?
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  purchaseItems     PurchaseItem[]
+
+  @@map("units")
+}
+
+model Supplier {
+  id          BigInt   @id @default(autoincrement())
+  name        String   @unique
+  address     String?
+  phone       String?
+  bankAccount String?  @map("bank_account")
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("suppliers")
+}
+
 // Reuse Customer model but update ID to BigInt to match relations
 // Customer model removed; supplier/buyer now use manual string IDs
 
@@ -151,6 +231,11 @@ model Purchase {
   date       DateTime          @db.Date
   status     TransactionStatus // draft, posted, cancelled
   notes      String?
+  createdById   String?        @map("created_by_id")
+  createdByName String?        @map("created_by_name")
+  revokedAt    DateTime?      @map("revoked_at")
+  revokedById  String?        @map("revoked_by_id")
+  revokeReason String?        @map("revoke_reason")
 
   // Relations
   purchaseItems PurchaseItem[]
@@ -161,13 +246,15 @@ model Purchase {
 model PurchaseItem {
   id         BigInt  @id @default(autoincrement())
   purchaseId BigInt  @map("purchase_id")
-  productId  BigInt  @map("product_id")
+  itemTypeId BigInt  @map("item_type_id")
+  unitId     BigInt? @map("unit_id")
   qty        Decimal @db.Decimal(14, 4)
   unitCost   Decimal @db.Decimal(14, 4) @map("unit_cost")
 
   // Relations
-  purchase Purchase @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
-  product  Product  @relation(fields: [productId], references: [id])
+  purchase   Purchase @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
+  itemType   ItemType @relation(fields: [itemTypeId], references: [id])
+  unit       Unit?    @relation(fields: [unitId], references: [id])
 
   @@map("purchase_items")
 }
@@ -179,6 +266,11 @@ model Sale {
   date       DateTime          @db.Date
   status     TransactionStatus // draft, posted, cancelled
   notes      String?
+  createdById   String?        @map("created_by_id")
+  createdByName String?        @map("created_by_name")
+  revokedAt    DateTime?      @map("revoked_at")
+  revokedById  String?        @map("revoked_by_id")
+  revokeReason String?        @map("revoke_reason")
 
   // Relations
   saleItems SaleItem[]
@@ -189,15 +281,20 @@ model Sale {
 model SaleItem {
   id        BigInt  @id @default(autoincrement())
   saleId    BigInt  @map("sale_id")
-  productId BigInt  @map("product_id")
+  itemTypeId BigInt @map("item_type_id")
   qty       Decimal @db.Decimal(14, 4)
   unitPrice Decimal @db.Decimal(14, 4) @map("unit_price")
 
   // Relations
-  sale    Sale    @relation(fields: [saleId], references: [id], onDelete: Cascade)
-  product Product @relation(fields: [productId], references: [id])
+  sale      Sale     @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  itemType  ItemType @relation(fields: [itemTypeId], references: [id])
 
   @@map("sale_items")
+}
+
+enum Shift {
+  siang
+  malam
 }
 
 // 4. PRODUKSI
@@ -207,6 +304,9 @@ model Production {
   date             DateTime         @db.Date
   status           ProductionStatus // draft, completed, cancelled
   notes            String?
+  revokedAt    DateTime?      @map("revoked_at")
+  revokedById  String?        @map("revoked_by_id")
+  revokeReason String?        @map("revoke_reason")
 
   // Relations
   productionType    ProductionType     @relation(fields: [productionTypeId], references: [id])
@@ -220,13 +320,13 @@ model Production {
 model ProductionInput {
   id           BigInt  @id @default(autoincrement())
   productionId BigInt  @map("production_id")
-  productId    BigInt  @map("product_id")
+  itemTypeId   BigInt  @map("item_type_id")
   qty          Decimal @db.Decimal(14, 4)
   unitCost     Decimal @db.Decimal(14, 4) @map("unit_cost")
 
   // Relations
   production Production @relation(fields: [productionId], references: [id], onDelete: Cascade)
-  product    Product    @relation(fields: [productId], references: [id])
+  itemType   ItemType   @relation(fields: [itemTypeId], references: [id])
 
   @@map("production_inputs")
 }
@@ -234,13 +334,13 @@ model ProductionInput {
 model ProductionOutput {
   id           BigInt  @id @default(autoincrement())
   productionId BigInt  @map("production_id")
-  productId    BigInt  @map("product_id")
+  itemTypeId   BigInt  @map("item_type_id")
   qty          Decimal @db.Decimal(14, 4)
   unitCost     Decimal @db.Decimal(14, 4) @map("unit_cost")
 
   // Relations
   production Production @relation(fields: [productionId], references: [id], onDelete: Cascade)
-  product    Product    @relation(fields: [productId], references: [id])
+  itemType   ItemType   @relation(fields: [itemTypeId], references: [id])
 
   @@map("production_outputs")
 }
@@ -262,18 +362,221 @@ model ProductionWorker {
 // 5. MUTASI STOK
 model StockMovement {
   id         BigInt   @id @default(autoincrement())
-  productId  BigInt   @map("product_id")
+  itemTypeId BigInt   @map("item_type_id")
   qty        Decimal  @db.Decimal(14, 4)
   sourceType String   @map("source_type") // purchase_item, sale_item, production_input, production_output
   sourceId   BigInt   @map("source_id")
+  displayUnit String? 
+  conversionRateUsed Decimal? @db.Decimal(14, 6) @map("conversion_rate_used")
   createdAt  DateTime @default(now()) @map("created_at")
 
   // Relations
-  product Product @relation(fields: [productId], references: [id])
+  itemType ItemType @relation(fields: [itemTypeId], references: [id])
 
-  @@index([productId], name: "idx_stock_movements_product")
+  @@index([itemTypeId], name: "idx_stock_movements_item_type")
   @@index([sourceType, sourceId], name: "idx_stock_movements_source")
   @@map("stock_movements")
+}
+
+// 6. PENGIKISAN
+model Pengikisan {
+  id        BigInt            @id @default(autoincrement())
+  date      DateTime          @db.Date
+  shift     Shift             @default(siang)
+  petugas   String?
+  notes     String?
+  totalUpah Decimal?          @db.Decimal(14, 2) @map("total_upah")
+
+  pengikisanItems PengikisanItem[]
+
+  @@map("pengikisan")
+}
+
+model PengikisanItem {
+  id           BigInt   @id @default(autoincrement())
+  pengikisanId BigInt   @map("pengikisan_id")
+  nama         String
+  kaKg         Decimal  @db.Decimal(14, 4) @map("ka_kg")
+  stikKg       Decimal  @db.Decimal(14, 4) @map("stik_kg")
+  upahKa       Decimal  @db.Decimal(14, 2) @map("upah_ka")
+  upahStik     Decimal  @db.Decimal(14, 2) @map("upah_stik")
+  total        Decimal  @db.Decimal(14, 2)
+
+  pengikisan Pengikisan @relation(fields: [pengikisanId], references: [id], onDelete: Cascade)
+
+  @@map("pengikisan_items")
+}
+
+// 7. PENJEMURAN
+model Penjemuran {
+  id        BigInt             @id @default(autoincrement())
+  date      DateTime           @db.Date
+  notes     String?
+  totalUpah Decimal?           @db.Decimal(14, 2) @map("total_upah")
+  upahPerHari      Decimal?    @db.Decimal(14, 2) @map("upah_per_hari")
+  upahLemburPerJam Decimal?    @db.Decimal(14, 2) @map("upah_lembur_per_jam")
+
+  penjemuranItems PenjemuranItem[]
+
+  @@map("penjemuran")
+}
+
+model PenjemuranItem {
+  id            BigInt    @id @default(autoincrement())
+  penjemuranId  BigInt    @map("penjemuran_id")
+  nama          String
+  hari          Decimal   @db.Decimal(10, 2)
+  lemburJam     Decimal   @db.Decimal(10, 2) @map("lembur_jam")
+  upahPerHari   Decimal   @db.Decimal(14, 2) @map("upah_per_hari")
+  upahLemburPerJam Decimal @db.Decimal(14, 2) @map("upah_lembur_per_jam")
+  total         Decimal   @db.Decimal(14, 2)
+
+  penjemuran Penjemuran @relation(fields: [penjemuranId], references: [id], onDelete: Cascade)
+
+  @@map("penjemuran_items")
+}
+
+// 8. PENGEMASAN
+model Pengemasan {
+  id        BigInt   @id @default(autoincrement())
+  date      DateTime @db.Date
+  shift     Shift    @default(siang)
+  petugas   String?
+  notes     String?
+  totalUpah Decimal? @db.Decimal(14, 2) @map("total_upah")
+  upahPerBungkus Decimal? @db.Decimal(14, 2) @map("upah_per_bungkus")
+
+  pengemasanItems PengemasanItem[]
+
+  @@map("pengemasan")
+}
+
+model PengemasanItem {
+  id            BigInt   @id @default(autoincrement())
+  pengemasanId  BigInt   @map("pengemasan_id")
+  nama          String
+  bungkus       Decimal  @db.Decimal(10, 2)
+  upahPerBungkus Decimal @db.Decimal(14, 2) @map("upah_per_bungkus")
+  total         Decimal  @db.Decimal(14, 2)
+
+  pengemasan Pengemasan @relation(fields: [pengemasanId], references: [id], onDelete: Cascade)
+  itemTypeId BigInt?    @map("item_type_id")
+  itemType   ItemType?  @relation(fields: [itemTypeId], references: [id])
+
+  @@map("pengemasan_items")
+}
+
+// 9. PEMOTONGAN
+model Pemotongan {
+  id        BigInt            @id @default(autoincrement())
+  date      DateTime          @db.Date
+  shift     Shift             @default(siang)
+  petugas   String?
+  notes     String?
+  totalUpah Decimal?          @db.Decimal(14, 2) @map("total_upah")
+  upahPerKg Decimal?          @db.Decimal(14, 2) @map("upah_per_kg")
+
+  pemotonganItems PemotonganItem[]
+
+  @@map("pemotongan")
+}
+
+model PemotonganItem {
+  id           BigInt     @id @default(autoincrement())
+  pemotonganId BigInt     @map("pemotongan_id")
+  nama         String
+  qty          Decimal    @db.Decimal(14, 4) // dalam Kg
+  upahPerKg    Decimal    @db.Decimal(14, 2) @map("upah_per_kg")
+  total        Decimal    @db.Decimal(14, 2)
+
+  pemotongan Pemotongan @relation(fields: [pemotonganId], references: [id], onDelete: Cascade)
+
+  @@map("pemotongan_items")
+}
+
+// 10. PRODUKSI LAINNYA
+model ProduksiLainnya {
+  id         BigInt   @id @default(autoincrement())
+  date       DateTime @db.Date
+  petugas    String?
+  notes      String?
+  totalBiaya Decimal? @db.Decimal(14, 2) @map("total_biaya")
+
+  produksiLainnyaItems ProduksiLainnyaItem[]
+
+  @@map("produksi_lainnya")
+}
+
+model ProduksiLainnyaItem {
+  id                BigInt          @id @default(autoincrement())
+  produksiLainnyaId BigInt          @map("produksi_lainnya_id")
+  namaPekerja       String          @map("nama_pekerja")
+  namaPekerjaan     String          @map("nama_pekerjaan")
+  upah              Decimal         @db.Decimal(14, 2)
+  qty               Decimal         @db.Decimal(14, 4)
+  satuan            String
+  total             Decimal         @db.Decimal(14, 2)
+
+  produksiLainnya ProduksiLainnya @relation(fields: [produksiLainnyaId], references: [id], onDelete: Cascade)
+
+  @@map("produksi_lainnya_items")
+}
+
+// 11. PENSORTIRAN
+model Pensortiran {
+  id        BigInt   @id @default(autoincrement())
+  date      DateTime @db.Date
+  petugas   String?
+  notes     String?
+  totalUpah Decimal? @db.Decimal(14, 2) @map("total_upah")
+  upahPerKg Decimal? @db.Decimal(14, 2) @map("upah_per_kg")
+
+  pensortiranItems PensortiranItem[]
+
+  @@map("pensortiran")
+}
+
+model PensortiranItem {
+  id             BigInt   @id @default(autoincrement())
+  pensortiranId  BigInt   @map("pensortiran_id")
+  nama           String
+  qty            Decimal  @db.Decimal(14, 4)
+  upahPerKg      Decimal  @db.Decimal(14, 2) @map("upah_per_kg")
+  total          Decimal  @db.Decimal(14, 2)
+  shift          Shift    @default(siang)
+
+  pensortiran Pensortiran @relation(fields: [pensortiranId], references: [id], onDelete: Cascade)
+
+  @@map("pensortiran_items")
+}
+
+// 12. QC POTONG SORTIR
+model QcPotongSortir {
+  id        BigInt   @id @default(autoincrement())
+  date      DateTime @db.Date
+  notes     String?
+  totalUpah Decimal? @db.Decimal(14, 2) @map("total_upah")
+  upahPerHari      Decimal? @db.Decimal(14, 2) @map("upah_per_hari")
+  upahLemburPerJam Decimal? @db.Decimal(14, 2) @map("upah_lembur_per_jam")
+
+  qcPotongSortirItems QcPotongSortirItem[]
+
+  @@map("qc_potong_sortir")
+}
+
+model QcPotongSortirItem {
+  id               BigInt  @id @default(autoincrement())
+  qcPotongSortirId BigInt  @map("qc_potong_sortir_id")
+  nama             String
+  hari             Decimal @db.Decimal(10, 2)
+  lemburJam        Decimal @db.Decimal(10, 2) @map("lembur_jam")
+  upahPerHari      Decimal @db.Decimal(14, 2) @map("upah_per_hari")
+  upahLemburPerJam Decimal @db.Decimal(14, 2) @map("upah_lembur_per_jam")
+  total            Decimal @db.Decimal(14, 2)
+
+  qcPotongSortir QcPotongSortir @relation(fields: [qcPotongSortirId], references: [id], onDelete: Cascade)
+
+  @@map("qc_potong_sortir_items")
 }
 
 // =========================================================
@@ -413,6 +716,65 @@ model FeatureCard {
   updatedAt   DateTime @updatedAt
 
   @@map("feature_cards")
+}
+
+model GalleryAlbum {
+  id          String         @id @default(cuid())
+  title       String
+  description String
+  coverImage  String
+  order       Int            @default(0)
+  items       GalleryMedia[]
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@map("gallery_albums")
+}
+
+model GalleryMedia {
+  id        String       @id @default(cuid())
+  type      String
+  src       String
+  thumbnail String?
+  caption   String?
+  order     Int          @default(0)
+  albumId   String
+  album     GalleryAlbum @relation(fields: [albumId], references: [id], onDelete: Cascade)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  @@map("gallery_media")
+}
+
+// =========================================================
+// EXPENSES
+// =========================================================
+
+model Expense {
+  id            BigInt   @id @default(autoincrement())
+  date          DateTime @db.Date
+  status        TransactionStatus @default(draft)
+  notes         String?
+  createdById   String?  @map("created_by_id")
+  createdByName String?  @map("created_by_name")
+  revokedAt     DateTime? @map("revoked_at")
+  revokedById   String?   @map("revoked_by_id")
+  revokeReason  String?   @map("revoke_reason")
+
+  items ExpenseItem[]
+
+  @@map("expenses")
+}
+
+model ExpenseItem {
+  id        BigInt   @id @default(autoincrement())
+  expenseId BigInt   @map("expense_id")
+  purpose   String
+  amount    Decimal  @db.Decimal(14, 4)
+
+  expense Expense @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+
+  @@map("expense_items")
 }
 
 // =========================================================

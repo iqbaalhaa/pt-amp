@@ -5,4 +5,6 @@ export const metadata = {
   description: "Profil PT AMP - Pengolahan dan Supplier Kulit Manis Berkualitas.",
 };
 
+export const dynamic = "force-dynamic";
+
 export default AboutPage;

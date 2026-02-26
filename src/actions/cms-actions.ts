@@ -2,6 +2,9 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { promises as fs } from "fs";
+import path from "path";
+import { uploadToS3, MAX_FILE_SIZE, MAX_FILE_SIZE_MB } from "@/lib/s3";
 
 export async function getHomePageData() {
   return await prisma.homePage.findFirst();
@@ -16,6 +19,137 @@ export async function getHeroSlides() {
       order: "asc",
     },
   });
+}
+
+export async function createHeroSlide(formData: FormData) {
+  let type = (formData.get("type") as string) || "image";
+  let src = (formData.get("src") as string) || "";
+  const title = (formData.get("title") as string) || "";
+  const description = (formData.get("description") as string) || "";
+  const orderRaw = (formData.get("order") as string) || "0";
+  const order = Number(orderRaw) || 0;
+
+  const file = formData.get("file") as File | null;
+  if (file && file.size > 0) {
+    if (file.type.startsWith("video/")) {
+      type = "video";
+    } else if (file.type.startsWith("image/")) {
+      type = "image";
+    }
+    const uploaded = await saveUploadToPublic(file);
+    if (uploaded) src = uploaded;
+  }
+
+  await prisma.heroSlide.create({
+    data: { type, src, title, description, order },
+  });
+
+  revalidatePath("/");
+  revalidatePath("/admin/cms/pages/home");
+}
+
+export async function updateHeroSlide(id: string, formData: FormData) {
+  let type = (formData.get("type") as string) || "image";
+  let src = (formData.get("src") as string) || "";
+  const title = (formData.get("title") as string) || "";
+  const description = (formData.get("description") as string) || "";
+  const orderRaw = (formData.get("order") as string) || "0";
+  const order = Number(orderRaw) || 0;
+
+  const file = formData.get("file") as File | null;
+  if (file && file.size > 0) {
+    if (file.type.startsWith("video/")) {
+      type = "video";
+    } else if (file.type.startsWith("image/")) {
+      type = "image";
+    }
+    const uploaded = await saveUploadToPublic(file);
+    if (uploaded) src = uploaded;
+  }
+
+  await prisma.heroSlide.update({
+    where: { id },
+    data: { type, src, title, description, order },
+  });
+
+  revalidatePath("/");
+  revalidatePath("/admin/cms/pages/home");
+}
+
+export async function deleteHeroSlide(id: string) {
+  await prisma.heroSlide.delete({ where: { id } });
+  revalidatePath("/");
+  revalidatePath("/admin/cms/pages/home");
+}
+
+export async function createHeroButton(slideId: string, formData: FormData) {
+  const text = (formData.get("text") as string) || "";
+  const href = (formData.get("href") as string) || "";
+  const isPrimary = (formData.get("isPrimary") as string) === "true";
+
+  await prisma.heroButton.create({
+    data: { text, href, isPrimary, slideId },
+  });
+
+  revalidatePath("/");
+  revalidatePath("/admin/cms/pages/home");
+}
+
+export async function updateHeroButton(id: string, formData: FormData) {
+  const text = (formData.get("text") as string) || "";
+  const href = (formData.get("href") as string) || "";
+  const isPrimary = (formData.get("isPrimary") as string) === "true";
+
+  await prisma.heroButton.update({
+    where: { id },
+    data: { text, href, isPrimary },
+  });
+
+  revalidatePath("/");
+  revalidatePath("/admin/cms/pages/home");
+}
+
+export async function deleteHeroButton(id: string) {
+  await prisma.heroButton.delete({ where: { id } });
+  revalidatePath("/");
+  revalidatePath("/admin/cms/pages/home");
+}
+
+async function saveUploadToPublic(file: File): Promise<string | null> {
+  try {
+    if (file.size > MAX_FILE_SIZE) {
+      console.error(
+        `File size ${file.size} exceeds limit of ${MAX_FILE_SIZE_MB}MB`
+      );
+      // Optional: return null or throw error depending on UX needs.
+      // Here we return null to skip upload.
+      return null;
+    }
+
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
+    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+    const timestamp = Date.now();
+    const ext = path.extname(safeName) || ".png";
+    const base = path.basename(safeName, ext);
+    const filename = `${base}-${timestamp}${ext}`;
+
+    // Determine content type
+    let contentType = file.type;
+    if (!contentType) {
+      if (ext === ".jpg" || ext === ".jpeg") contentType = "image/jpeg";
+      else if (ext === ".png") contentType = "image/png";
+      else if (ext === ".webp") contentType = "image/webp";
+      else if (ext === ".mp4") contentType = "video/mp4";
+      else contentType = "application/octet-stream";
+    }
+
+    const url = await uploadToS3(buffer, filename, contentType);
+    return url;
+  } catch (e) {
+    console.error("Upload error:", e);
+    return null;
+  }
 }
 
 export async function getFeatureCards(section: string) {
@@ -67,16 +201,34 @@ export async function updateAboutPage(formData: FormData) {
   const heroDescription = (formData.get("heroDescription") as string) || "";
   const mainTitle = (formData.get("mainTitle") as string) || "";
   const mainDescription = (formData.get("mainDescription") as string) || "";
-  const mainImage = (formData.get("mainImage") as string) || "";
+  let mainImage = (formData.get("mainImage") as string) || "";
+
+  const file = formData.get("mainImageFile") as File | null;
+  if (file && file.size > 0) {
+    const uploaded = await saveUploadToPublic(file);
+    if (uploaded) mainImage = uploaded;
+  }
 
   if (id) {
     await prisma.aboutPage.update({
       where: { id },
-      data: { heroTitle, heroDescription, mainTitle, mainDescription, mainImage },
+      data: {
+        heroTitle,
+        heroDescription,
+        mainTitle,
+        mainDescription,
+        mainImage,
+      },
     });
   } else {
     await prisma.aboutPage.create({
-      data: { heroTitle, heroDescription, mainTitle, mainDescription, mainImage },
+      data: {
+        heroTitle,
+        heroDescription,
+        mainTitle,
+        mainDescription,
+        mainImage,
+      },
     });
   }
 
@@ -99,6 +251,8 @@ export async function createFeatureCard(formData: FormData) {
   revalidatePath("/");
   revalidatePath("/admin/cms/pages/home");
   revalidatePath("/admin/compro/about");
+  revalidatePath("/gallery");
+  revalidatePath("/admin/compro/gallery");
 }
 
 export async function deleteFeatureCard(id: string) {
@@ -106,6 +260,27 @@ export async function deleteFeatureCard(id: string) {
   revalidatePath("/");
   revalidatePath("/admin/cms/pages/home");
   revalidatePath("/admin/compro/about");
+  revalidatePath("/gallery");
+  revalidatePath("/admin/compro/gallery");
+}
+
+export async function updateFeatureCard(id: string, formData: FormData) {
+  const title = (formData.get("title") as string) || "";
+  const description = (formData.get("description") as string) || "";
+  const icon = (formData.get("icon") as string) || null;
+  const orderRaw = (formData.get("order") as string) || "0";
+  const order = Number(orderRaw) || 0;
+
+  await prisma.featureCard.update({
+    where: { id },
+    data: { title, description, icon, order },
+  });
+
+  revalidatePath("/");
+  revalidatePath("/admin/cms/pages/home");
+  revalidatePath("/admin/compro/about");
+  revalidatePath("/gallery");
+  revalidatePath("/admin/compro/gallery");
 }
 
 export async function createAboutPoint(formData: FormData) {
@@ -128,4 +303,269 @@ export async function deleteAboutPoint(id: string) {
   await prisma.aboutPoint.delete({ where: { id } });
   revalidatePath("/about");
   revalidatePath("/admin/compro/about");
+}
+
+export async function updateAboutPoint(id: string, formData: FormData) {
+  const text = (formData.get("text") as string) || "";
+  const orderRaw = (formData.get("order") as string) || "0";
+  const order = Number(orderRaw) || 0;
+
+  await prisma.aboutPoint.update({
+    where: { id },
+    data: { text, order },
+  });
+
+  revalidatePath("/about");
+  revalidatePath("/admin/compro/about");
+}
+
+export async function getGalleryAlbums() {
+  const client: any = prisma;
+  if (!client.galleryAlbum) {
+    return [];
+  }
+
+  return await client.galleryAlbum.findMany({
+    include: {
+      items: {
+        orderBy: {
+          order: "asc",
+        },
+      },
+    },
+    orderBy: {
+      order: "asc",
+    },
+  });
+}
+
+export async function getLatestGalleryMedia(limit: number = 6) {
+  const client: any = prisma;
+  if (!client.galleryMedia) {
+    return [];
+  }
+
+  const media = await client.galleryMedia.findMany({
+    take: limit,
+    orderBy: {
+      createdAt: "desc",
+    },
+    include: {
+      album: {
+        select: {
+          title: true,
+        },
+      },
+    },
+  });
+
+  return media.map((item: any) => ({
+    src: item.src,
+    alt: item.caption || item.album?.title || "Gallery Image",
+    category: item.album?.title || "General",
+    type: item.type,
+  }));
+}
+
+export async function createGalleryAlbum(formData: FormData) {
+  const title = (formData.get("title") as string) || "";
+  const description = (formData.get("description") as string) || "";
+  let coverImage = (formData.get("coverImage") as string) || "";
+  const orderRaw = (formData.get("order") as string) || "0";
+  const order = Number(orderRaw) || 0;
+
+  const file = formData.get("coverFile") as File | null;
+  if (file && file.size > 0) {
+    const uploaded = await saveUploadToPublic(file);
+    if (uploaded) coverImage = uploaded;
+  }
+
+  if (!coverImage) {
+    return;
+  }
+
+  const client: any = prisma;
+  if (!client.galleryAlbum) {
+    return;
+  }
+
+  await client.galleryAlbum.create({
+    data: {
+      title,
+      description,
+      coverImage,
+      order,
+    },
+  });
+
+  revalidatePath("/gallery");
+  revalidatePath("/admin/compro/gallery");
+}
+
+export async function updateGalleryAlbum(id: string, formData: FormData) {
+  const title = (formData.get("title") as string) || "";
+  const description = (formData.get("description") as string) || "";
+  let coverImage = (formData.get("coverImage") as string) || "";
+  const orderRaw = (formData.get("order") as string) || "0";
+  const order = Number(orderRaw) || 0;
+
+  const file = formData.get("coverFile") as File | null;
+  if (file && file.size > 0) {
+    const uploaded = await saveUploadToPublic(file);
+    if (uploaded) coverImage = uploaded;
+  }
+
+  const client: any = prisma;
+  if (!client.galleryAlbum) {
+    return;
+  }
+
+  const data: any = {
+    title,
+    description,
+    order,
+  };
+
+  if (coverImage) {
+    data.coverImage = coverImage;
+  }
+
+  await client.galleryAlbum.update({
+    where: { id },
+    data,
+  });
+
+  revalidatePath("/gallery");
+  revalidatePath("/admin/compro/gallery");
+}
+
+export async function deleteGalleryAlbum(id: string) {
+  const client: any = prisma;
+  if (!client.galleryAlbum) {
+    return;
+  }
+
+  await client.galleryAlbum.delete({
+    where: { id },
+  });
+
+  revalidatePath("/gallery");
+  revalidatePath("/admin/compro/gallery");
+}
+
+export async function createGalleryMedia(formData: FormData) {
+  const albumId = (formData.get("albumId") as string) || "";
+  let type = (formData.get("type") as string) || "image";
+  const caption = (formData.get("caption") as string) || "";
+  const thumbnail = (formData.get("thumbnail") as string) || "";
+  const orderRaw = (formData.get("order") as string) || "0";
+  const order = Number(orderRaw) || 0;
+
+  const files = formData.getAll("file") as File[];
+  const validFiles = files.filter((f) => f.size > 0);
+
+  const client: any = prisma;
+  if (!client.galleryMedia) {
+    return;
+  }
+
+  if (validFiles.length > 0) {
+    // Process multiple files
+    for (const file of validFiles) {
+      let currentType = type;
+      let currentSrc = "";
+
+      if (file.type.startsWith("video/")) {
+        currentType = "video";
+      } else if (file.type.startsWith("image/")) {
+        currentType = "image";
+      }
+
+      const uploaded = await saveUploadToPublic(file);
+      if (uploaded) {
+        currentSrc = uploaded;
+        await client.galleryMedia.create({
+          data: {
+            albumId,
+            type: currentType,
+            src: currentSrc,
+            caption, // All will share the same caption initially if provided
+            thumbnail: thumbnail || null,
+            order,
+          },
+        });
+      }
+    }
+  } else {
+    // Fallback for URL-only (if supported) or no file but src provided
+    let src = (formData.get("src") as string) || "";
+    if (src) {
+      await client.galleryMedia.create({
+        data: {
+          albumId,
+          type,
+          src,
+          caption,
+          thumbnail: thumbnail || null,
+          order,
+        },
+      });
+    }
+  }
+
+  revalidatePath("/gallery");
+  revalidatePath("/admin/compro/gallery");
+}
+
+export async function updateGalleryMedia(id: string, formData: FormData) {
+  let type = (formData.get("type") as string) || "image";
+  let src = (formData.get("src") as string) || "";
+  const caption = (formData.get("caption") as string) || "";
+  const thumbnail = (formData.get("thumbnail") as string) || "";
+  const orderRaw = (formData.get("order") as string) || "0";
+  const order = Number(orderRaw) || 0;
+
+  const file = formData.get("file") as File | null;
+  if (file && file.size > 0) {
+    if (file.type.startsWith("video/")) {
+      type = "video";
+    } else if (file.type.startsWith("image/")) {
+      type = "image";
+    }
+    const uploaded = await saveUploadToPublic(file);
+    if (uploaded) src = uploaded;
+  }
+
+  const client: any = prisma;
+  if (!client.galleryMedia) {
+    return;
+  }
+
+  await client.galleryMedia.update({
+    where: { id },
+    data: {
+      type,
+      src,
+      caption,
+      thumbnail: thumbnail || null,
+      order,
+    },
+  });
+
+  revalidatePath("/gallery");
+  revalidatePath("/admin/compro/gallery");
+}
+
+export async function deleteGalleryMedia(id: string) {
+  const client: any = prisma;
+  if (!client.galleryMedia) {
+    return;
+  }
+
+  await client.galleryMedia.delete({
+    where: { id },
+  });
+
+  revalidatePath("/gallery");
+  revalidatePath("/admin/compro/gallery");
 }

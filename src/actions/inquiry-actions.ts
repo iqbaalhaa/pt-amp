@@ -47,3 +47,4 @@ export async function deleteInquiry(id: string) {
 
   revalidatePath("/admin/inquiries");
 }
+
