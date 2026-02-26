@@ -79,7 +79,9 @@ export default async function CashPage({
 
 		const sumDebit = 
 			prevSales.reduce((sum, s) => sum + s.saleItems.reduce((acc, it) => acc + (parseFloat(it.qty.toString()) * parseFloat(it.unitPrice.toString())), 0), 0) +
-			prevAdjustments.filter(a => a.type === "IN").reduce((sum, a) => sum + parseFloat(a.amount.toString()), 0);
+			prevAdjustments
+				.filter((a: { type: string }) => a.type === "IN")
+				.reduce((sum: number, a: { amount: number | string }) => sum + parseFloat(a.amount.toString()), 0);
 
 		const sumCredit = 
 			prevPurchases.reduce((sum, p) => sum + p.purchaseItems.reduce((acc, it) => acc + (parseFloat(it.qty.toString()) * parseFloat(it.unitCost.toString())), 0), 0) +
@@ -92,7 +94,9 @@ export default async function CashPage({
 			prevProduksiLainnya.reduce((sum, p) => sum + parseFloat(p.totalBiaya?.toString() || "0"), 0) +
 			prevExpenses.reduce((sum, e) => sum + e.items.reduce((acc, it) => acc + parseFloat(it.amount.toString()), 0), 0) +
 			prevProductions.reduce((sum, pr) => sum + pr.productionInputs.reduce((acc, it) => acc + (parseFloat(it.qty.toString()) * parseFloat(it.unitCost.toString())), 0), 0) +
-			prevAdjustments.filter(a => a.type === "OUT").reduce((sum, a) => sum + parseFloat(a.amount.toString()), 0);
+			prevAdjustments
+				.filter((a: { type: string }) => a.type === "OUT")
+				.reduce((sum: number, a: { amount: number | string }) => sum + parseFloat(a.amount.toString()), 0);
 		
 		saldoAwal = sumDebit - sumCredit;
 	}
@@ -346,7 +350,9 @@ export default async function CashPage({
 			}, 0);
 			return sum + t;
 		}, 0) + 
-		cashAdjustments.filter(a => a.type === "IN").reduce((sum, a) => sum + parseFloat(a.amount.toString()), 0) || 0;
+		cashAdjustments
+			.filter((a: { type: string }) => a.type === "IN")
+			.reduce((sum: number, a: { amount: number | string }) => sum + parseFloat(a.amount.toString()), 0) || 0;
 
 	const pembelian =
 		purchases.reduce((sum, p) => {
@@ -422,7 +428,9 @@ export default async function CashPage({
 		pembelian +
 		biayaProduksiTotal +
 		totalExpense +
-		cashAdjustments.filter(a => a.type === "OUT").reduce((sum, a) => sum + parseFloat(a.amount.toString()), 0);
+		cashAdjustments
+			.filter((a: { type: string }) => a.type === "OUT")
+			.reduce((sum: number, a: { amount: number | string }) => sum + parseFloat(a.amount.toString()), 0);
 
 	const saldo = pendapatan - pengeluaran;
 
@@ -499,14 +507,14 @@ export default async function CashPage({
 			debit: 0,
 			credit: parseFloat(p.totalBiaya!.toString()),
 		})),
-		...postedExpenses.map(e => ({
+		...postedExpenses.map((e: { id: string | number; date: Date; notes?: string | null; items: Array<{ amount: number | string; purpose?: string | null }> }) => ({
 			date: e.date,
 			description: `Expense: ${e.notes || e.items[0]?.purpose || 'Tanpa keterangan'}`,
 			debit: 0,
-			credit: e.items.reduce((sum, it) => sum + parseFloat(it.amount.toString()), 0),
+			credit: e.items.reduce((sum: number, it: { amount: number | string }) => sum + parseFloat(it.amount.toString()), 0),
 			ref: `/admin/ledger?type=invoice&id=${e.id}`
 		})),
-		...cashAdjustments.map(a => ({
+		...cashAdjustments.map((a: { date: Date; notes?: string | null; type: string; amount: number | string }) => ({
 			date: a.date,
 			description: `Penyesuaian: ${a.notes || (a.type === 'IN' ? 'Penambahan Saldo' : 'Pengurangan Saldo')}`,
 			debit: a.type === "IN" ? parseFloat(a.amount.toString()) : 0,
@@ -534,13 +542,13 @@ export default async function CashPage({
 		})),
 	}));
 
-	const normalizedExpenses = postedExpenses.map(e => ({
+	const normalizedExpenses = postedExpenses.map((e: { id: string | number; date: Date; notes?: string | null; items: Array<{ id: string | number; purpose: string | null; amount: number | string }> }) => ({
 		id: e.id.toString(),
 		date: e.date,
-		description: e.notes,
-		items: e.items.map(it => ({
+		description: e.notes || "",
+		items: e.items.map((it: { id: string | number; purpose: string | null; amount: number | string }) => ({
 			id: it.id.toString(),
-			description: it.purpose,
+			description: it.purpose || "",
 			amount: parseFloat(it.amount.toString()),
 		})),
 	}));
@@ -884,12 +892,12 @@ export default async function CashPage({
 									</p>
 								</div>
 								<CashAdjustmentClient 
-									adjustments={cashAdjustments.map(a => ({
+									adjustments={cashAdjustments.map((a: { id: string | number; date: Date; amount: number | string; type: string; notes?: string | null }) => ({
 										id: a.id.toString(),
 										date: a.date,
 										amount: parseFloat(a.amount.toString()),
 										type: a.type,
-										notes: a.notes
+										notes: a.notes || ""
 									}))} 
 								/>
 							</div>
