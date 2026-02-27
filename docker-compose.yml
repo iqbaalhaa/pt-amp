@@ -4,8 +4,6 @@ services:
       context: .
       args:
         NODE_VERSION: 22
-        NODE_ENV: ${NODE_ENV:-production}
-        DATABASE_URL: "postgresql://vpsdepati:Vpsdepati.123!@db-host:5432/ptamp?schema=public"
     image: ptamp-app
     container_name: ptamp-app
     restart: unless-stopped
@@ -14,9 +12,9 @@ services:
     env_file:
       - .env
     environment:
-      NODE_ENV: ${NODE_ENV:-production}
+      NODE_ENV: production
       DATABASE_URL: "postgresql://vpsdepati:Vpsdepati.123!@db-host:5432/ptamp?schema=public"
-    command: sh -c "npx prisma db push && npm run start"
     ports:
       - "3000:3000"
-
+    # Using standalone output, so we don't need to mount volumes for code or build artifacts in production
+    # command: node server.js # This is the default CMD in the Dockerfile
