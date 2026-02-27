@@ -15,6 +15,4 @@ services:
       NODE_ENV: production
       DATABASE_URL: "postgresql://vpsdepati:Vpsdepati.123!@db-host:5432/ptamp?schema=public"
     ports:
-      - "3000:3000"
-    # Using standalone output, so we don't need to mount volumes for code or build artifacts in production
-    # command: node server.js # This is the default CMD in the Dockerfile
+      - "9001:3000"
