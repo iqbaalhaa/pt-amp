@@ -33,7 +33,7 @@ export async function createExpense(input: ExpenseInput) {
   if (anyPrisma?.expense?.create) {
     const expense = await prisma.expense.create({
       data: {
-        date: new Date(input.date),
+        date: new Date(`${input.date}T00:00:00Z`),
         status: "draft",
         notes: input.notes ?? null,
         createdById: currentUserId,
@@ -55,7 +55,7 @@ export async function createExpense(input: ExpenseInput) {
     const created = await prisma.$transaction(async (tx) => {
       const headerRows = await tx.$queryRaw<Array<{ id: bigint }>>`
         INSERT INTO "public"."expenses" ("date","status","notes","created_by_id","created_by_name")
-        VALUES (${new Date(input.date)}, 'draft', ${input.notes ?? null}, ${currentUserId}, ${currentUserName})
+        VALUES (${new Date(`${input.date}T00:00:00Z`)}, 'draft', ${input.notes ?? null}, ${currentUserId}, ${currentUserName})
         RETURNING "id"
       `;
       const newId = headerRows[0].id;

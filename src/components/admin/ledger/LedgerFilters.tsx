@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Autocomplete, TextField } from "@mui/material";
 
@@ -30,26 +30,31 @@ export function LedgerFilters({
 
   const [party, setParty] = useState(params.party ?? "");
   const [itemType, setItemType] = useState(params.itemType ?? "");
-  const [month, setMonth] = useState<string>(() => {
+  
+  // Initialize month/year only if they exactly match a full month range
+  const initialMonthYear = useMemo(() => {
     if (params.start && params.end) {
-      const s = new Date(params.start);
-      const e = new Date(params.end);
-      if (
-        s.getFullYear() === e.getFullYear() &&
-        s.getMonth() === e.getMonth()
-      ) {
-        return String(s.getMonth() + 1).padStart(2, "0");
+      const s = new Date(`${params.start}T00:00:00Z`);
+      const e = new Date(`${params.end}T00:00:00Z`);
+      
+      const isFirstDay = s.getUTCDate() === 1;
+      const lastDayOfS = new Date(s.getUTCFullYear(), s.getUTCMonth() + 1, 0).getDate();
+      const isLastDay = e.getUTCDate() === lastDayOfS;
+      const sameMonth = s.getUTCMonth() === e.getUTCMonth();
+      const sameYear = s.getUTCFullYear() === e.getUTCFullYear();
+
+      if (isFirstDay && isLastDay && sameMonth && sameYear) {
+        return {
+          month: String(s.getUTCMonth() + 1).padStart(2, "0"),
+          year: String(s.getUTCFullYear())
+        };
       }
     }
-    return "";
-  });
-  const [year, setYear] = useState<string>(() => {
-    if (params.start) {
-      const s = new Date(params.start);
-      return String(s.getFullYear());
-    }
-    return "";
-  });
+    return { month: "", year: "" };
+  }, [params.start, params.end]);
+
+  const [month, setMonth] = useState(initialMonthYear.month);
+  const [year, setYear] = useState(initialMonthYear.year);
 
   const updateSearchParam = useCallback(
     (key: string, value: string | null) => {
@@ -67,31 +72,70 @@ export function LedgerFilters({
     [router, pathname, searchParams]
   );
 
-  useEffect(() => {
-    const handle = setTimeout(() => {
-      updateSearchParam("party", party.trim() || null);
-    }, 400);
-    return () => clearTimeout(handle);
-  }, [party, updateSearchParam]);
+  // Manual month change
+  const handleMonthChange = (newMonth: string) => {
+    setMonth(newMonth);
+    if (newMonth && year) {
+      const m = parseInt(newMonth, 10);
+      const y = parseInt(year, 10);
+      const startStr = `${y}-${String(m).padStart(2, "0")}-01`;
+      const lastDay = new Date(y, m, 0).getDate();
+      const endStr = `${y}-${String(m).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`;
+      
+      const current = new URLSearchParams(searchParams?.toString() ?? "");
+      current.set("start", startStr);
+      current.set("end", endStr);
+      current.set("page", "1");
+      router.replace(`${pathname}?${current.toString()}`);
+    } else if (!newMonth) {
+      // If "Semua" is selected, don't necessarily clear start/end unless year is also cleared
+      if (!year) {
+        updateSearchParam("start", null);
+        updateSearchParam("end", null);
+      }
+    }
+  };
 
-  useEffect(() => {
-    const handle = setTimeout(() => {
-      updateSearchParam("itemType", itemType.trim() || null);
-    }, 400);
-    return () => clearTimeout(handle);
-  }, [itemType, updateSearchParam]);
+  // Manual year change
+   const handleYearChange = (newYear: string) => {
+     setYear(newYear);
+     if (month && newYear) {
+       const m = parseInt(month, 10);
+       const y = parseInt(newYear, 10);
+       const startStr = `${y}-${String(m).padStart(2, "0")}-01`;
+       const lastDay = new Date(y, m, 0).getDate();
+       const endStr = `${y}-${String(m).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`;
+       
+       const current = new URLSearchParams(searchParams?.toString() ?? "");
+       current.set("start", startStr);
+       current.set("end", endStr);
+       current.set("page", "1");
+       router.replace(`${pathname}?${current.toString()}`);
+     } else if (!newYear) {
+       updateSearchParam("start", null);
+       updateSearchParam("end", null);
+     }
+   };
 
-  useEffect(() => {
-    if (!month || !year) return;
-    const m = parseInt(month, 10);
-    const y = parseInt(year, 10);
-    if (!isFinite(m) || !isFinite(y)) return;
-    const start = new Date(y, m - 1, 1);
-    const end = new Date(y, m, 0);
-    const toISO = (d: Date) => d.toISOString().slice(0, 10);
-    updateSearchParam("start", toISO(start));
-    updateSearchParam("end", toISO(end));
-  }, [month, year, updateSearchParam]);
+   useEffect(() => {
+     const handle = setTimeout(() => {
+       updateSearchParam("party", party.trim() || null);
+     }, 400);
+     return () => clearTimeout(handle);
+   }, [party, updateSearchParam]);
+
+   useEffect(() => {
+     const handle = setTimeout(() => {
+       updateSearchParam("itemType", itemType.trim() || null);
+     }, 400);
+     return () => clearTimeout(handle);
+   }, [itemType, updateSearchParam]);
+
+   // Sync month/year display if params.start/end change from outside (like manual date input)
+   useEffect(() => {
+     setMonth(initialMonthYear.month);
+     setYear(initialMonthYear.year);
+   }, [initialMonthYear]);
 
   return (
     <div className="flex flex-col gap-3">
@@ -102,7 +146,7 @@ export function LedgerFilters({
           </label>
           <select
             value={month}
-            onChange={(e) => setMonth(e.target.value)}
+            onChange={(e) => handleMonthChange(e.target.value)}
             className="w-full rounded-md border border-slate-200 bg-white px-2 py-1.5 text-xs text-slate-900 shadow-sm focus:border-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-400"
           >
             <option value="">Semua</option>
@@ -121,7 +165,7 @@ export function LedgerFilters({
           </label>
           <select
             value={year}
-            onChange={(e) => setYear(e.target.value)}
+            onChange={(e) => handleYearChange(e.target.value)}
             className="w-full rounded-md border border-slate-200 bg-white px-2 py-1.5 text-xs text-slate-900 shadow-sm focus:border-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-400"
           >
             <option value="">Semua</option>
@@ -144,7 +188,7 @@ export function LedgerFilters({
           </label>
           <input
             type="date"
-            defaultValue={params.start ?? ""}
+            value={params.start ?? ""}
             onChange={(e) => updateSearchParam("start", e.target.value || null)}
             className="w-full rounded-md border border-slate-200 px-2 py-1.5 text-xs text-slate-900 shadow-sm focus:border-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-400"
           />
@@ -155,7 +199,7 @@ export function LedgerFilters({
           </label>
           <input
             type="date"
-            defaultValue={params.end ?? ""}
+            value={params.end ?? ""}
             onChange={(e) => updateSearchParam("end", e.target.value || null)}
             className="w-full rounded-md border border-slate-200 px-2 py-1.5 text-xs text-slate-900 shadow-sm focus:border-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-400"
           />

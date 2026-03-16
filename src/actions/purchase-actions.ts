@@ -40,7 +40,7 @@ export async function createPurchase(input: PurchaseInput) {
   const purchase = await prisma.purchase.create({
     data: {
       supplier: supplierNormalized,
-      date: new Date(input.date),
+      date: new Date(`${input.date}T00:00:00Z`),
       status: input.status,
       notes: input.notes ?? null,
       createdById: currentUserId,

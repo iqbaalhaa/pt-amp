@@ -42,8 +42,14 @@ function toLocalDateTimeString(d: Date) {
 }
 
 function parseDateRange(params: SearchParams) {
-  const s = params.start ? new Date(params.start) : undefined;
-  const e = params.end ? new Date(params.end) : undefined;
+  // Parsing date as UTC to avoid timezone issues and satisfy Prisma's DateTime validation
+  // "YYYY-MM-DD" -> "YYYY-MM-DDT00:00:00Z"
+  const sStr = params.start && /^\d{4}-\d{2}-\d{2}$/.test(params.start) ? `${params.start}T00:00:00Z` : undefined;
+  const eStr = params.end && /^\d{4}-\d{2}-\d{2}$/.test(params.end) ? `${params.end}T23:59:59.999Z` : undefined;
+  
+  const s = sStr ? new Date(sStr) : undefined;
+  const e = eStr ? new Date(eStr) : undefined;
+
   return {
     start: s && !Number.isNaN(s.getTime()) ? s : undefined,
     end: e && !Number.isNaN(e.getTime()) ? e : undefined,
@@ -909,6 +915,22 @@ export default async function AdminLedgerPage({
   filteredProductions = filteredProductions.filter((p) =>
     knownProductionTypes.includes(p.subType || "")
   );
+
+  // Secondary JS filter to ensure strictly within requested range (YYYY-MM-DD)
+  const filterByDate = (list: LedgerEntry[]) => {
+    if (!params.start && !params.end) return list;
+    return list.filter((e) => {
+      const datePart = e.date.split("T")[0]; // YYYY-MM-DD
+      if (params.start && datePart < params.start) return false;
+      if (params.end && datePart > params.end) return false;
+      return true;
+    });
+  };
+
+  filteredPurchases = filterByDate(filteredPurchases);
+  filteredSales = filterByDate(filteredSales);
+  filteredProductions = filterByDate(filteredProductions);
+  filteredExpenses = filterByDate(filteredExpenses);
 
   if (params.affectStockOnly === "true") {
     filteredPurchases = filteredPurchases.filter((e) => e.itemCount > 0);

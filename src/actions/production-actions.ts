@@ -62,7 +62,7 @@ export async function createProduction(input: ProductionData) {
     const production = await prisma.production.create({
       data: {
         productionTypeId: BigInt(input.productionTypeId),
-        date: new Date(input.date),
+        date: new Date(`${input.date}T00:00:00Z`),
         status: input.status,
         notes: input.notes ?? null,
         ...(inputsData.length > 0
@@ -153,6 +153,12 @@ export async function revokeProduction(id: string, reason?: string) {
   const session = await auth.api.getSession({ headers: await headers() });
   const userId = session?.user.id ?? null;
 
+  // Ensure ID is a valid number for BigInt conversion
+  if (!/^\d+$/.test(id)) {
+    console.error(`Invalid production ID for BigInt: ${id}`);
+    return { success: false, error: "ID produksi tidak valid" };
+  }
+
   // 1. Get production to find items
   const production = await prisma.production.findUnique({
     where: { id: BigInt(id) },
@@ -162,7 +168,7 @@ export async function revokeProduction(id: string, reason?: string) {
     },
   });
 
-  if (!production) return;
+  if (!production) return { success: false, error: "Produksi tidak ditemukan" };
 
   // 2. Delete associated stock movements
   if (production.status === "completed") {
@@ -201,4 +207,6 @@ export async function revokeProduction(id: string, reason?: string) {
   revalidatePath("/admin/production");
   revalidatePath("/admin/ledger");
   revalidatePath("/admin/inventory/stock");
+
+  return { success: true };
 }

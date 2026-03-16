@@ -50,7 +50,7 @@ export async function createPensortiran(input: PensortiranInput) {
 
   const pensortiran = await prisma.pensortiran.create({
     data: {
-      date: new Date(input.date),
+      date: new Date(`${input.date}T00:00:00Z`),
       petugas: currentUserName || input.petugas,
       notes: input.notes ?? null,
       totalUpah: totalUpah.toString(),

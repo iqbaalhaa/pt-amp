@@ -21,7 +21,7 @@ export async function createCashAdjustment(input: CashAdjustmentInput) {
 
   await prisma.cashAdjustment.create({
     data: {
-      date: new Date(input.date),
+      date: new Date(`${input.date}T00:00:00Z`),
       amount: input.amount,
       type: input.type,
       notes: input.notes ?? null,

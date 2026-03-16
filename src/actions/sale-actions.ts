@@ -38,7 +38,7 @@ export async function createSale(input: SaleInput) {
   const sale = await prisma.sale.create({
     data: {
       customer: customerNormalized,
-      date: new Date(input.date),
+      date: new Date(`${input.date}T00:00:00Z`),
       status: input.status,
       notes: input.notes ?? null,
       createdById: currentUserId,

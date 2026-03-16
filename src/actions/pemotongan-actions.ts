@@ -46,7 +46,7 @@ export async function createPemotongan(input: PemotonganInput) {
 
   const pemotongan = await prisma.pemotongan.create({
     data: {
-      date: new Date(input.date),
+      date: new Date(`${input.date}T00:00:00Z`),
       shift: input.shift,
       petugas: currentUserName || input.petugas,
       notes: input.notes ?? null,

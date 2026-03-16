@@ -50,7 +50,7 @@ export async function createProduksiLainnya(input: ProduksiLainnyaInput) {
 
   const produksiLainnya = await prisma.produksiLainnya.create({
     data: {
-      date: new Date(input.date),
+      date: new Date(`${input.date}T00:00:00Z`),
       petugas: currentUserName || input.petugas,
       notes: input.notes ?? null,
       totalBiaya: totalBiaya,

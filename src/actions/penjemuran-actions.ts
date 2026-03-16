@@ -56,7 +56,7 @@ export async function createPenjemuran(input: PenjemuranInput) {
 
   const penjemuran = await prisma.penjemuran.create({
     data: {
-      date: new Date(input.date),
+      date: new Date(`${input.date}T00:00:00Z`),
       notes: input.notes ?? null,
       totalUpah: totalUpah.toString(),
       upahPerHari: upahPerHari || null,

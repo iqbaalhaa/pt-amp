@@ -98,6 +98,21 @@ export function LedgerActions({ id, type, status, entry, onView }: Props) {
             "@/actions/pengemasan-actions"
           );
           await deletePengemasan(id.replace("pengemasan-", ""));
+        } else if (id.startsWith("pensortiran-")) {
+          const { deletePensortiran } = await import(
+            "@/actions/pensortiran-actions"
+          );
+          await deletePensortiran(id.replace("pensortiran-", ""));
+        } else if (id.startsWith("qc-potong-sortir-")) {
+          const { deleteQcPotongSortir } = await import(
+            "@/actions/qc-potong-sortir-actions"
+          );
+          await deleteQcPotongSortir(id.replace("qc-potong-sortir-", ""));
+        } else if (id.startsWith("produksi-lainnya-")) {
+          const { deleteProduksiLainnya } = await import(
+            "@/actions/produksi-lainnya-actions"
+          );
+          await deleteProduksiLainnya(id.replace("produksi-lainnya-", ""));
         } else {
           await revokeProduction(id, reason);
         }
