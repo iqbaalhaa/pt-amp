@@ -1,5 +1,6 @@
 import BlogDetailPage from "@/components/pages/blog/BlogDetailPage";
 import { getPost } from "@/lib/blog";
+import { pageMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
@@ -9,10 +10,7 @@ export async function generateMetadata(props: { params: Props }) {
     const params = await props.params;
 	const post = await getPost(params.slug);
 	if (!post) return { title: "Blog | PT AMP" };
-	return { 
-		title: `${post.title} | PT AMP`,
-		description: post.summary,
-	};
+	return pageMetadata(post.title, post.summary, `/blog/${params.slug}`);
 }
 
 export default async function Page(props: { params: Props }) {

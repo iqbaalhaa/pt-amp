@@ -1,15 +1,22 @@
 import { Navbar } from "@/components/Navbar";
+import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { getPublicItemTypes } from "@/actions/item-type-actions";
 import Link from "next/link";
 import { ArrowRight, Check, Package } from "lucide-react";
 import { ProductCatalogImage } from "./ProductCatalogImage";
+import { JsonLd } from "@/components/JsonLd";
+import { productsJsonLd } from "@/lib/seo";
+import { ProductSpecTable } from "@/components/products/ProductSpecTable";
+import { buildProductSpecRows } from "@/lib/product-specs";
 
 export default async function ProductsPage() {
   const products = await getPublicItemTypes();
 
   return (
     <div className="flex flex-col flex-1">
+      {products.length > 0 && <JsonLd data={productsJsonLd(products)} />}
       <Navbar />
+      <WhatsAppButton />
       {/* Hero Header */}
       <section className="bg-zinc-900 text-white py-20 md:py-28 relative overflow-hidden">
         {/* Pattern Overlay */}
@@ -96,6 +103,9 @@ export default async function ProductsPage() {
                 </div>
               ))}
             </div>
+          )}
+          {products.length > 0 && (
+            <ProductSpecTable rows={buildProductSpecRows(products)} />
           )}
         </div>
       </section>

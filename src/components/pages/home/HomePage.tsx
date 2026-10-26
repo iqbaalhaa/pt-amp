@@ -1,4 +1,5 @@
 import { Navbar } from "@/components/Navbar";
+import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { HeroCarousel, HeroSlide } from "@/components/HeroCarousel";
 import { GalleryAlbums } from "@/components/GalleryAlbums";
 import { ContactForm } from "@/components/ContactForm";
@@ -17,6 +18,8 @@ import { ProductCardImage } from "./ProductCardImage";
 import { HomeBlogImage } from "./HomeBlogImage";
 import { ProcessSection } from "./ProcessSection";
 import { PROCESS_SECTION, resolveProcessSteps } from "@/lib/process-default";
+import { ProductSpecTable } from "@/components/products/ProductSpecTable";
+import { buildProductSpecRows } from "@/lib/product-specs";
 
 export default async function HomePage() {
   const [allProducts, homePage, slides, featureCards, posts, allAlbums, processCards] =
@@ -41,6 +44,7 @@ export default async function HomePage() {
   return (
     <div className="min-h-screen font-sans bg-zinc-50">
       <Navbar />
+      <WhatsAppButton />
 
       <HeroCarousel slides={finalSlides} />
 
@@ -271,6 +275,10 @@ export default async function HomePage() {
                 </div>
               </>
             )}
+          </div>
+
+          <div className="mb-12">
+            <ProductSpecTable rows={buildProductSpecRows(allProducts)} />
           </div>
 
           <div className="text-center md:hidden">

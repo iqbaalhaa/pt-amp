@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useRef } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { DEFAULT_HERO } from "@/lib/hero-default";
+import { HeroButtons } from "./HeroButtons";
 
 export interface HeroSlide {
   id: number | string;
@@ -34,12 +36,13 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
             <div className="order-2 md:order-1">
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6 text-zinc-900">
                 <span className="bg-gradient-to-r from-[var(--brand)] to-orange-500 bg-clip-text text-transparent">
-                  PT AMP Company Profile
+                  {DEFAULT_HERO.title}
                 </span>
               </h1>
               <p className="text-lg text-zinc-600 mb-8 leading-relaxed max-w-lg">
-                Perusahaan pengolahan kulit manis skala menengah dengan fokus pada kualitas dan kemitraan jangka panjang dengan petani.
+                {DEFAULT_HERO.description}
               </p>
+              <HeroButtons buttons={DEFAULT_HERO.buttons} />
             </div>
             <div className="order-1 md:order-2">
               <div className="relative rounded-2xl h-64 md:h-96 w-full bg-zinc-100 shadow-inner overflow-hidden border border-zinc-100" />
@@ -95,22 +98,7 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
             <p className="text-lg text-zinc-600 mb-8 leading-relaxed max-w-lg">
               {slides[current].description}
             </p>
-            <div className="flex flex-col sm:flex-row gap-4">
-              {slides[current].buttons?.map((btn, idx) => (
-                <a
-                  key={idx}
-                  href={btn.href}
-                  className={`inline-flex justify-center items-center rounded-lg px-6 py-3 font-medium transition-all ${
-                    (btn.primary || btn.isPrimary)
-                      ? "text-white shadow-lg shadow-red-200 hover:-translate-y-0.5"
-                      : "border border-zinc-300 text-zinc-700 hover:bg-zinc-50"
-                  }`}
-                  style={(btn.primary || btn.isPrimary) ? { backgroundColor: "var(--brand)" } : {}}
-                >
-                  {btn.text}
-                </a>
-              ))}
-            </div>
+            <HeroButtons buttons={slides[current].buttons} />
           </div>
 
           <div className="order-1 md:order-2">
