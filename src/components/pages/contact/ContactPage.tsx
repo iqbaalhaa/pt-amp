@@ -1,5 +1,6 @@
 import { ContactForm } from "@/components/ContactForm";
 import { Navbar } from "@/components/Navbar";
+import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { MapPin, Phone, Mail, Clock, Facebook, Instagram, Twitter, Youtube, Linkedin, Info, Link as LinkIcon } from "lucide-react";
 import { getContactInfo } from "@/actions/contact-info-actions";
 import { getSocialMedias } from "@/actions/social-media-actions";
@@ -33,6 +34,7 @@ export default async function ContactPage() {
   return (
     <div className="flex flex-col flex-1">
       <Navbar />
+      <WhatsAppButton />
       {/* Hero Header */}
       <section className="bg-zinc-900 text-white py-20 md:py-28 relative overflow-hidden">
         {/* Pattern Overlay */}

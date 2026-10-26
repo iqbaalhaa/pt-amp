@@ -1,4 +1,5 @@
 import { Navbar } from "@/components/Navbar";
+import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { HeroCarousel, HeroSlide } from "@/components/HeroCarousel";
 import { GalleryAlbums } from "@/components/GalleryAlbums";
 import { ContactForm } from "@/components/ContactForm";
@@ -38,6 +39,7 @@ export default async function HomePage() {
   return (
     <div className="min-h-screen font-sans bg-zinc-50">
       <Navbar />
+      <WhatsAppButton />
 
       <HeroCarousel slides={finalSlides} />
 

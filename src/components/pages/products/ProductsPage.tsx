@@ -1,4 +1,5 @@
 import { Navbar } from "@/components/Navbar";
+import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { getPublicItemTypes } from "@/actions/item-type-actions";
 import Link from "next/link";
 import { ArrowRight, Check, Package } from "lucide-react";
@@ -10,6 +11,7 @@ export default async function ProductsPage() {
   return (
     <div className="flex flex-col flex-1">
       <Navbar />
+      <WhatsAppButton />
       {/* Hero Header */}
       <section className="bg-zinc-900 text-white py-20 md:py-28 relative overflow-hidden">
         {/* Pattern Overlay */}
