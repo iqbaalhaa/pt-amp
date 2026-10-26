@@ -6,6 +6,11 @@ export const DEFAULT_CONTACT = {
   whatsapp: "6281234567890",
 };
 
+// Nomor WA untuk tombol melayang: CMS, kosong → default. Tidak bergantung seed (DB lama tanpa WA tetap dapat tombol).
+export function contactWhatsApp(info: { whatsapp?: string | null } | null | undefined): string {
+  return info?.whatsapp?.trim() || DEFAULT_CONTACT.whatsapp;
+}
+
 type ContactInfoStore = {
   contactInfo: {
     findFirst(): Promise<{ id: string; whatsapp: string | null } | null>;

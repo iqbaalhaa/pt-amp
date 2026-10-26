@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { DEFAULT_CONTACT, seedContactInfo } from "./contact-default";
+import { DEFAULT_CONTACT, contactWhatsApp, seedContactInfo } from "./contact-default";
 import { buildWhatsAppUrl } from "./whatsapp";
 
 function fakeStore(row: { id: string; whatsapp: string | null } | null) {
@@ -37,4 +37,12 @@ test("seed tidak menimpa WA dari admin", async () => {
   const store = fakeStore({ id: "c1", whatsapp: "628111" });
   assert.equal(await seedContactInfo(store), null);
   assert.equal(store.calls.length, 0);
+});
+
+test("tombol WA tetap punya nomor walau ContactInfo.whatsapp kosong (tanpa seed)", () => {
+  for (const info of [null, undefined, {}, { whatsapp: null }, { whatsapp: "  " }]) {
+    assert.equal(contactWhatsApp(info), DEFAULT_CONTACT.whatsapp);
+  }
+  assert.equal(contactWhatsApp({ whatsapp: "0812 9999 0000" }), "0812 9999 0000");
+  assert.ok(buildWhatsAppUrl(contactWhatsApp({ whatsapp: "" }))?.startsWith("https://wa.me/6281234567890"));
 });
