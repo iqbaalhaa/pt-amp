@@ -3,6 +3,8 @@ import { getPublicItemTypes } from "@/actions/item-type-actions";
 import Link from "next/link";
 import { ArrowRight, Check, Package } from "lucide-react";
 import { ProductCatalogImage } from "./ProductCatalogImage";
+import { ProductSpecTable } from "@/components/products/ProductSpecTable";
+import { buildProductSpecRows } from "@/lib/product-specs";
 
 export default async function ProductsPage() {
   const products = await getPublicItemTypes();
@@ -96,6 +98,9 @@ export default async function ProductsPage() {
                 </div>
               ))}
             </div>
+          )}
+          {products.length > 0 && (
+            <ProductSpecTable rows={buildProductSpecRows(products)} />
           )}
         </div>
       </section>
