@@ -12,6 +12,10 @@ test("starter posts have unique slugs and local images", () => {
   }
 });
 
+test("starter posts are plain text (detail page renders text, not HTML)", () => {
+  for (const p of STARTER_POSTS) assert.doesNotMatch(p.content, /<[a-z\/]/i, p.slug);
+});
+
 test("starter albums have items and local images", () => {
   for (const a of STARTER_ALBUMS) {
     assert.ok(a.items.length > 0, a.title);

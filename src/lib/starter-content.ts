@@ -8,33 +8,34 @@ export const STARTER_AUTHOR = {
   email: "redaksi@amp.local",
 } as const;
 
+// Plain text: BlogDetailPage renders content as text (whitespace-pre-line), not HTML.
 export const STARTER_POSTS = [
   {
     slug: "mengenal-grade-kulit-manis-a-b-broken",
     title: "Mengenal Grade Kulit Manis: A, B, dan Broken",
     image: DEFAULT_IMAGES.gradeA,
     content:
-      "<p>Kulit manis (<em>Cinnamomum burmannii</em>) kami pilah menjadi tiga grade berdasarkan ketebalan, warna, dan keutuhan batang.</p>" +
-      "<ul><li><strong>Grade A</strong>: batang utuh, warna merata, dikikis bersih.</li>" +
-      "<li><strong>Grade B</strong>: batang utuh dengan variasi warna atau ketebalan.</li>" +
-      "<li><strong>Broken</strong>: potongan dan patahan, cocok untuk industri bubuk dan ekstrak.</li></ul>" +
-      "<p>Semua grade dijemur hingga kadar air di bawah 14% sebelum dikemas.</p>",
+      "Kulit manis (Cinnamomum burmannii) kami pilah menjadi tiga grade berdasarkan ketebalan, warna, dan keutuhan batang.\n\n" +
+      "- Grade A: batang utuh, warna merata, dikikis bersih.\n" +
+      "- Grade B: batang utuh dengan variasi warna atau ketebalan.\n" +
+      "- Broken: potongan dan patahan, cocok untuk industri bubuk dan ekstrak.\n\n" +
+      "Semua grade dijemur hingga kadar air di bawah 14% sebelum dikemas.",
   },
   {
     slug: "proses-pengolahan-kulit-manis-dari-petani",
     title: "Proses Pengolahan Kulit Manis dari Petani hingga Siap Kirim",
     image: DEFAULT_IMAGES.hero,
     content:
-      "<p>Bahan baku kami beli langsung dari petani di Sumatera Barat dengan penimbangan yang transparan.</p>" +
-      "<p>Setelah itu kulit manis dibersihkan, dikikis kulit luarnya, lalu dijemur hingga kering merata. Tahap akhir adalah sortasi grade dan pengemasan.</p>",
+      "Bahan baku kami beli langsung dari petani di Sumatera Barat dengan penimbangan yang transparan.\n\n" +
+      "Setelah itu kulit manis dibersihkan, dikikis kulit luarnya, lalu dijemur hingga kering merata. Tahap akhir adalah sortasi grade dan pengemasan.",
   },
   {
     slug: "kemasan-ball-press-40-60-kg-untuk-ekspor",
     title: "Kemasan Ball Press 40–60 kg untuk Pengiriman Ekspor",
     image: DEFAULT_IMAGES.export,
     content:
-      "<p>Produk siap jual kami kemas dalam ball press 40–60 kg. Kemasan padat ini menghemat ruang kontainer dan menjaga kulit manis tetap kering selama pengiriman.</p>" +
-      "<p>Hubungi kami untuk informasi kapasitas suplai dan jadwal pengiriman.</p>",
+      "Produk siap jual kami kemas dalam ball press 40–60 kg. Kemasan padat ini menghemat ruang kontainer dan menjaga kulit manis tetap kering selama pengiriman.\n\n" +
+      "Hubungi kami untuk informasi kapasitas suplai dan jadwal pengiriman.",
   },
 ];
 
