@@ -3,9 +3,15 @@ import { getPublicItemTypes } from "@/actions/item-type-actions";
 import Link from "next/link";
 import { ArrowRight, Check, Package } from "lucide-react";
 import { ProductCatalogImage } from "./ProductCatalogImage";
+import { getDictionary, localePath, type Locale } from "@/lib/i18n";
 
-export default async function ProductsPage() {
+export default async function ProductsPage({
+  locale = "id",
+}: {
+  locale?: Locale;
+}) {
   const products = await getPublicItemTypes();
+  const t = getDictionary(locale).products;
 
   return (
     <div className="flex flex-col flex-1">
@@ -20,15 +26,13 @@ export default async function ProductsPage() {
         <div className="container mx-auto px-4 md:px-6 lg:px-8 relative z-10">
           <div className="max-w-3xl">
             <span className="text-[var(--brand)] font-semibold tracking-wider text-sm uppercase mb-3 block">
-              Katalog Produk
+              {t.eyebrow}
             </span>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 tracking-tight">
-              Premium Cassia Vera
+              {t.title}
             </h1>
             <p className="text-zinc-400 text-lg md:text-xl leading-relaxed">
-              Pilihan lengkap produk kulit manis dengan berbagai grade dan
-              spesifikasi pemotongan. Diproses higienis untuk memenuhi standar
-              ekspor.
+              {t.description}
             </p>
           </div>
         </div>
@@ -40,10 +44,10 @@ export default async function ProductsPage() {
             <div className="text-center py-20 bg-white rounded-3xl border border-zinc-200 shadow-sm">
               <Package className="w-16 h-16 text-zinc-300 mx-auto mb-4" />
               <h3 className="text-xl font-bold text-zinc-900 mb-2">
-                Katalog Kosong
+                {t.emptyTitle}
               </h3>
               <p className="text-zinc-500">
-                Belum ada produk yang ditambahkan ke katalog.
+                {t.emptyDescription}
               </p>
             </div>
           ) : (
@@ -69,13 +73,13 @@ export default async function ProductsPage() {
                     <div className="mt-auto space-y-4">
                       <div className="grid grid-cols-2 gap-2 text-sm">
                         <div className="flex justify-between py-2 border-b border-dashed border-zinc-200">
-                          <span className="text-zinc-500">Unit</span>
+                          <span className="text-zinc-500">{t.unit}</span>
                           <span className="font-medium text-zinc-900">
                             {product.unit}
                           </span>
                         </div>
                         <div className="flex justify-between py-2 border-b border-dashed border-zinc-200">
-                          <span className="text-zinc-500">Stok</span>
+                          <span className="text-zinc-500">{t.stock}</span>
                           <span className="font-medium text-zinc-900">
                             {product.stock}
                           </span>
@@ -83,12 +87,13 @@ export default async function ProductsPage() {
                       </div>
 
                       <Link
-                        href={`/contact?product=${encodeURIComponent(
-                          product.name
-                        )}`}
+                        href={localePath(
+                          locale,
+                          `/contact?product=${encodeURIComponent(product.name)}`
+                        )}
                         className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 bg-zinc-900 text-white text-sm font-medium rounded-xl hover:bg-[var(--brand)] transition-colors"
                       >
-                        Minta Penawaran
+                        {t.requestQuote}
                         <ArrowRight className="w-4 h-4" />
                       </Link>
                     </div>
@@ -105,32 +110,32 @@ export default async function ProductsPage() {
         <div className="container mx-auto px-4 md:px-6 lg:px-8">
           <div className="bg-[var(--brand)]/5 rounded-3xl p-8 md:p-12 text-center max-w-4xl mx-auto border border-[var(--brand)]/10">
             <h2 className="text-2xl md:text-3xl font-bold text-zinc-900 mb-6">
-              Jaminan Kualitas
+              {t.qualityTitle}
             </h2>
             <div className="flex flex-wrap justify-center gap-4 md:gap-8">
               <div className="flex items-center gap-2 text-zinc-700 font-medium">
                 <div className="w-8 h-8 rounded-full bg-[var(--brand)] flex items-center justify-center text-white shrink-0">
                   <Check className="w-5 h-5" />
                 </div>
-                Bebas Jamur
+                {t.qualityItems[0]}
               </div>
               <div className="flex items-center gap-2 text-zinc-700 font-medium">
                 <div className="w-8 h-8 rounded-full bg-[var(--brand)] flex items-center justify-center text-white shrink-0">
                   <Check className="w-5 h-5" />
                 </div>
-                Kadar Air &lt; 14%
+                {t.qualityItems[1]}
               </div>
               <div className="flex items-center gap-2 text-zinc-700 font-medium">
                 <div className="w-8 h-8 rounded-full bg-[var(--brand)] flex items-center justify-center text-white shrink-0">
                   <Check className="w-5 h-5" />
                 </div>
-                Packing Aman
+                {t.qualityItems[2]}
               </div>
               <div className="flex items-center gap-2 text-zinc-700 font-medium">
                 <div className="w-8 h-8 rounded-full bg-[var(--brand)] flex items-center justify-center text-white shrink-0">
                   <Check className="w-5 h-5" />
                 </div>
-                Warna Alami
+                {t.qualityItems[3]}
               </div>
             </div>
           </div>

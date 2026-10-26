@@ -14,7 +14,11 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.BETTER_AUTH_URL;
+
 export const metadata: Metadata = {
+  // Absolute hreflang/OG URLs need the public site URL.
+  metadataBase: siteUrl ? new URL(siteUrl) : undefined,
   title: "PT AMP",
   description: "Website for PT AMP",
 };

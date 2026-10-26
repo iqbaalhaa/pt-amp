@@ -3,6 +3,7 @@ import { Navbar } from "@/components/Navbar";
 import { MapPin, Phone, Mail, Clock, Facebook, Instagram, Twitter, Youtube, Linkedin, Info, Link as LinkIcon } from "lucide-react";
 import { getContactInfo } from "@/actions/contact-info-actions";
 import { getSocialMedias } from "@/actions/social-media-actions";
+import { getDictionary, type Locale } from "@/lib/i18n";
 
 function getSocialIcon(platform: string) {
   const p = platform.toLowerCase();
@@ -26,9 +27,14 @@ function getSocialColorClass(platform: string) {
   return "hover:bg-zinc-600";
 }
 
-export default async function ContactPage() {
+export default async function ContactPage({
+  locale = "id",
+}: {
+  locale?: Locale;
+}) {
   const contactInfo = await getContactInfo();
   const socialMedias = await getSocialMedias();
+  const t = getDictionary(locale).contact;
 
   return (
     <div className="flex flex-col flex-1">
@@ -42,13 +48,13 @@ export default async function ContactPage() {
         
         <div className="container mx-auto px-4 md:px-6 lg:px-8 relative z-10 text-center">
           <span className="text-[var(--brand)] font-semibold tracking-wider text-sm uppercase mb-3 block">
-            Get in Touch
+            {t.eyebrow}
           </span>
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 tracking-tight">
-            Hubungi Kami
+            {t.title}
           </h1>
           <p className="text-zinc-400 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
-            Siap menjadi partner terpercaya Anda. Diskusikan kebutuhan bahan baku, jadwal pengiriman, atau spesifikasi grade dengan tim kami.
+            {t.description}
           </p>
         </div>
       </section>
@@ -60,14 +66,14 @@ export default async function ContactPage() {
             
             {/* Contact Info Side */}
             <div>
-              <h2 className="text-3xl font-bold mb-8 text-zinc-900">Informasi Kontak</h2>
+              <h2 className="text-3xl font-bold mb-8 text-zinc-900">{t.infoTitle}</h2>
               <div className="space-y-8">
                 <div className="flex items-start gap-5 group">
                   <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center shrink-0 text-[var(--brand)] group-hover:bg-[var(--brand)] group-hover:text-white transition-colors duration-300">
                     <MapPin className="w-6 h-6" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-bold text-zinc-900 mb-2">Alamat Kantor & Gudang</h3>
+                    <h3 className="text-lg font-bold text-zinc-900 mb-2">{t.addressTitle}</h3>
                     <p className="text-zinc-600 leading-relaxed">
                       {contactInfo?.address || "Jl. Raya Padang - Solok, KM 20, Indarung, Padang, Sumatera Barat, Indonesia"}
                     </p>
@@ -79,12 +85,12 @@ export default async function ContactPage() {
                     <Phone className="w-6 h-6" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-bold text-zinc-900 mb-2">Telepon & WhatsApp</h3>
+                    <h3 className="text-lg font-bold text-zinc-900 mb-2">{t.phoneTitle}</h3>
                     <p className="text-zinc-600 mb-1">
-                      Office: {contactInfo?.phone || "+62 751 123456"}
+                      {t.office} {contactInfo?.phone || "+62 751 123456"}
                     </p>
                     <p className="text-zinc-600">
-                      WhatsApp: {contactInfo?.whatsapp ? `+${contactInfo.whatsapp}` : "+62 812 3456 7890"}
+                      {t.whatsapp} {contactInfo?.whatsapp ? `+${contactInfo.whatsapp}` : "+62 812 3456 7890"}
                     </p>
                   </div>
                 </div>
@@ -94,12 +100,12 @@ export default async function ContactPage() {
                     <Mail className="w-6 h-6" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-bold text-zinc-900 mb-2">Email</h3>
+                    <h3 className="text-lg font-bold text-zinc-900 mb-2">{t.emailTitle}</h3>
                     <p className="text-zinc-600">
                       {contactInfo?.email || "info@pt-amp.com"}
                     </p>
                     <p className="text-zinc-500 text-sm mt-1">
-                      Untuk penawaran harga resmi dan kerjasama ekspor.
+                      {t.emailNote}
                     </p>
                   </div>
                 </div>
@@ -107,7 +113,7 @@ export default async function ContactPage() {
 
               {/* Social Media Section */}
               <div className="mt-12">
-                <h3 className="text-xl font-bold text-zinc-900 mb-6">Ikuti Kami</h3>
+                <h3 className="text-xl font-bold text-zinc-900 mb-6">{t.follow}</h3>
                 <div className="flex gap-4 flex-wrap">
                   {socialMedias.map((social) => (
                     <a 
@@ -121,7 +127,7 @@ export default async function ContactPage() {
                     </a>
                   ))}
                   {socialMedias.length === 0 && (
-                     <p className="text-zinc-500 text-sm italic">Belum ada media sosial yang ditambahkan.</p>
+                     <p className="text-zinc-500 text-sm italic">{t.noSocial}</p>
                   )}
                 </div>
               </div>
@@ -130,17 +136,17 @@ export default async function ContactPage() {
               <div className="mt-12 p-6 bg-zinc-50 rounded-2xl border border-zinc-100">
                 <div className="flex gap-3 mb-2">
                    <Info className="w-5 h-5 text-zinc-400" />
-                   <h4 className="font-semibold text-zinc-900">Ingin berkunjung langsung?</h4>
+                   <h4 className="font-semibold text-zinc-900">{t.visitTitle}</h4>
                 </div>
                 <p className="text-zinc-600 text-sm pl-8">
-                  Silakan buat janji temu minimal 1 hari sebelumnya untuk memastikan ketersediaan tim kami di lokasi gudang.
+                  {t.visitDescription}
                 </p>
               </div>
             </div>
 
             {/* Form Side */}
             <div className="lg:sticky lg:top-24">
-               <ContactForm />
+               <ContactForm locale={locale} />
             </div>
 
           </div>
