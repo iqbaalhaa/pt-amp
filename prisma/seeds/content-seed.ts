@@ -2,6 +2,8 @@ import { PrismaClient } from "@prisma/client";
 import { PROCESS_SECTION, DEFAULT_PROCESS_STEPS } from "../../src/lib/process-default";
 import { DEFAULT_HERO, LEGACY_HERO_TITLE } from "../../src/lib/hero-default";
 import { DEFAULT_IMAGES, DEAD_SEED_IMAGES } from "../../src/lib/default-images";
+import { STARTER_ALBUMS, STARTER_AUTHOR, STARTER_POSTS } from "../../src/lib/starter-content";
+import { seedContactInfo } from "../../src/lib/contact-default";
 
 export async function seedContent(prisma: PrismaClient) {
   console.log("🌱 Seeding CMS Content...");
@@ -215,5 +217,37 @@ export async function seedContent(prisma: PrismaClient) {
       ],
     });
     console.log("   - About Value Cards seeded");
+  }
+
+  // 6. Contact Info (nomor WA untuk tombol melayang)
+  const contactSeed = await seedContactInfo(prisma);
+  if (contactSeed) console.log(`   - Contact Info seeded (${contactSeed})`);
+
+  // 7. Starter blog posts (published) so Blog & Latest News are not empty.
+  if ((await prisma.post.count()) === 0) {
+    // Author: existing user, else a no-login editorial user (no Account row).
+    const author =
+      (await prisma.user.findFirst({ select: { id: true } })) ??
+      (await prisma.user.create({ data: STARTER_AUTHOR, select: { id: true } }));
+    for (const post of STARTER_POSTS) {
+      await prisma.post.create({ data: { ...post, published: true, authorId: author.id } });
+    }
+    console.log("   - Starter blog posts seeded");
+  }
+
+  // 8. Starter gallery albums so Gallery is not empty.
+  if ((await prisma.galleryAlbum.count()) === 0) {
+    for (const [i, { items, ...album }] of STARTER_ALBUMS.entries()) {
+      await prisma.galleryAlbum.create({
+        data: {
+          ...album,
+          order: i + 1,
+          items: {
+            create: items.map((item, j) => ({ ...item, type: "image", order: j + 1 })),
+          },
+        },
+      });
+    }
+    console.log("   - Starter gallery albums seeded");
   }
 }
