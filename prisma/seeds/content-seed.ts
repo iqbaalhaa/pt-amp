@@ -2,6 +2,7 @@ import { PrismaClient } from "@prisma/client";
 import { PROCESS_SECTION, DEFAULT_PROCESS_STEPS } from "../../src/lib/process-default";
 import { DEFAULT_HERO, LEGACY_HERO_TITLE } from "../../src/lib/hero-default";
 import { DEFAULT_IMAGES, DEAD_SEED_IMAGES } from "../../src/lib/default-images";
+import { seedContactInfo } from "../../src/lib/contact-default";
 
 export async function seedContent(prisma: PrismaClient) {
   console.log("🌱 Seeding CMS Content...");
@@ -216,4 +217,8 @@ export async function seedContent(prisma: PrismaClient) {
     });
     console.log("   - About Value Cards seeded");
   }
+
+  // 6. Contact Info (nomor WA untuk tombol melayang)
+  const contactSeed = await seedContactInfo(prisma);
+  if (contactSeed) console.log(`   - Contact Info seeded (${contactSeed})`);
 }
