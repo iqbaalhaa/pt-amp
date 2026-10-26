@@ -1,6 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import { PROCESS_SECTION, DEFAULT_PROCESS_STEPS } from "../../src/lib/process-default";
 import { DEFAULT_HERO, LEGACY_HERO_TITLE } from "../../src/lib/hero-default";
+import { DEFAULT_IMAGES, DEAD_SEED_IMAGES } from "../../src/lib/default-images";
 
 export async function seedContent(prisma: PrismaClient) {
   console.log("🌱 Seeding CMS Content...");
@@ -25,7 +26,7 @@ export async function seedContent(prisma: PrismaClient) {
       data: {
         id: "slide-1",
         type: "image",
-        src: "https://images.unsplash.com/photo-1596483582103-605b7668636b?q=80&w=2070&auto=format&fit=crop",
+        src: DEFAULT_IMAGES.hero,
         title: DEFAULT_HERO.title,
         description: DEFAULT_HERO.description,
         order: 1,
@@ -36,8 +37,8 @@ export async function seedContent(prisma: PrismaClient) {
     await prisma.heroSlide.create({
       data: {
         id: "slide-2",
-        type: "video",
-        src: "https://videos.pexels.com/video-files/4440816/4440816-hd_1920_1080_30fps.mp4",
+        type: "image",
+        src: DEFAULT_IMAGES.gradeA,
         title: "Proses Berkualitas",
         description:
           "Menggunakan metode pengolahan tradisional yang dipadukan dengan standar kebersihan modern untuk menghasilkan kulit manis terbaik.",
@@ -52,7 +53,7 @@ export async function seedContent(prisma: PrismaClient) {
       data: {
         id: "slide-3",
         type: "image",
-        src: "https://images.unsplash.com/photo-1615485925763-867862f80933?q=80&w=2074&auto=format&fit=crop",
+        src: DEFAULT_IMAGES.export,
         title: "Pasar Global",
         description:
           "Siap memenuhi kebutuhan pasar lokal maupun ekspor dengan kapasitas produksi yang stabil dan kualitas terjaga.",
@@ -78,6 +79,14 @@ export async function seedContent(prisma: PrismaClient) {
         },
       });
       console.log("   - Hero slide-1 updated to export CTA");
+    }
+    // Replace dead seeded stock URLs (404) with local images.
+    for (const [deadSrc, localSrc] of Object.entries(DEAD_SEED_IMAGES)) {
+      const { count } = await prisma.heroSlide.updateMany({
+        where: { src: deadSrc },
+        data: { src: localSrc, type: "image" },
+      });
+      if (count > 0) console.log(`   - ${count} hero slide(s) moved to ${localSrc}`);
     }
   }
 
@@ -153,8 +162,7 @@ export async function seedContent(prisma: PrismaClient) {
         mainTitle: "Siapa Kami?",
         mainDescription:
           "Kami adalah perusahaan pengolahan kulit manis (Cinnamomum burmannii) skala menengah yang berlokasi di Sumatera Barat. Fokus utama kami adalah pembelian bahan mentah langsung dari petani, melakukan pembersihan, pengikisan, penjemuran, dan pengemasan profesional.\n\nDengan dukungan tim ±10 tenaga kerja terampil, kami memproses bahan baku menjadi produk setengah jadi (Grade A, B, Broken) yang siap diekspor atau didistribusikan ke industri makanan dan farmasi lokal.",
-        mainImage:
-          "https://images.unsplash.com/photo-1596483582103-605b7668636b?q=80&w=2070&auto=format&fit=crop",
+        mainImage: DEFAULT_IMAGES.hero,
         points: {
           create: [
             { text: "Sumber langsung dari petani lokal", order: 1 },
@@ -165,6 +173,12 @@ export async function seedContent(prisma: PrismaClient) {
       },
     });
     console.log("   - About Page content seeded");
+  } else if (aboutPage.mainImage && DEAD_SEED_IMAGES[aboutPage.mainImage]) {
+    await prisma.aboutPage.update({
+      where: { id: aboutPage.id },
+      data: { mainImage: DEAD_SEED_IMAGES[aboutPage.mainImage] },
+    });
+    console.log("   - About Page image moved to local default");
   }
 
   // 5. About Value Cards
