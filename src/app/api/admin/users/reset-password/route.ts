@@ -1,9 +1,7 @@
-"use server";
-
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
-import { hash } from "bcryptjs";
+import { MIN_PASSWORD_LENGTH, setCredentialPassword } from "@/lib/reset-password";
 
 export async function POST(req: NextRequest) {
   try {
@@ -16,24 +14,29 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const userId = body.userId as string | undefined;
-    const newPassword = body.newPassword as string | undefined;
+    const userId = body?.userId;
+    const newPassword = body?.newPassword;
 
-    if (!userId || !newPassword || newPassword.length < 8) {
+    if (
+      typeof userId !== "string" ||
+      typeof newPassword !== "string" ||
+      newPassword.length < MIN_PASSWORD_LENGTH
+    ) {
       return NextResponse.json(
         { success: false, error: "Data tidak valid" },
         { status: 400 }
       );
     }
 
-    const passwordHash = await hash(newPassword, 10);
-
-    await prisma.user.update({
-      where: { id: userId },
-      data: {
-        passwordHash,
-      } as any,
-    });
+    // Hash memakai hasher better-auth (scrypt) agar login email/password menerimanya.
+    const ctx = await auth.$context;
+    const result = await setCredentialPassword(prisma, ctx.password.hash, userId, newPassword);
+    if (result === "not-found") {
+      return NextResponse.json(
+        { success: false, error: "User tidak ditemukan" },
+        { status: 404 }
+      );
+    }
 
     return NextResponse.json({ success: true });
   } catch (e) {
