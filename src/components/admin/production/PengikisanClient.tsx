@@ -206,10 +206,7 @@ export default function PengikisanClient() {
     return k * upahKa + s * upahStik;
   };
 
-  const totalSemua = useMemo(
-    () => rows.reduce((sum, row) => sum + getRowTotal(row), 0),
-    [rows]
-  );
+  const totalSemua = rows.reduce((sum, row) => sum + getRowTotal(row), 0);
 
   const activeRows = useMemo(
     () => rows.filter((r) => r.nama || r.kaKg > 0 || r.stikKg > 0),
