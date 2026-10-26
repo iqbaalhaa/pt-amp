@@ -27,7 +27,6 @@
     "@mui/material-nextjs": "^7.3.6",
     "@prisma/adapter-pg": "^7.4.1",
     "@prisma/client": "^7.4.1",
-    "@prisma/client-runtime-utils": "^7.10.1",
     "@tiptap/extension-color": "^3.15.3",
     "@tiptap/extension-image": "^3.15.3",
     "@tiptap/extension-link": "^3.15.3",

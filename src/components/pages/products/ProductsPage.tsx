@@ -99,7 +99,9 @@ export default async function ProductsPage() {
               ))}
             </div>
           )}
-          <ProductSpecTable rows={buildProductSpecRows(products)} />
+          {products.length > 0 && (
+            <ProductSpecTable rows={buildProductSpecRows(products)} />
+          )}
         </div>
       </section>
 
