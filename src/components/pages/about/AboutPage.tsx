@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { replaceDeadImage } from "@/lib/default-images";
 import { Navbar } from "@/components/Navbar";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { CheckCircle2, Users, Factory, Globe2 } from "lucide-react";
@@ -85,7 +86,7 @@ export default async function AboutPage({
                 )}
               </div>
             </div>
-            <AboutMainImage image={aboutPage?.mainImage} />
+            <AboutMainImage image={replaceDeadImage(aboutPage?.mainImage)} />
           </div>
 
           {/* Core Values / Process Grid */}
