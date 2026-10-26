@@ -3,12 +3,15 @@ import { getPublicItemTypes } from "@/actions/item-type-actions";
 import Link from "next/link";
 import { ArrowRight, Check, Package } from "lucide-react";
 import { ProductCatalogImage } from "./ProductCatalogImage";
+import { JsonLd } from "@/components/JsonLd";
+import { productsJsonLd } from "@/lib/seo";
 
 export default async function ProductsPage() {
   const products = await getPublicItemTypes();
 
   return (
     <div className="flex flex-col flex-1">
+      {products.length > 0 && <JsonLd data={productsJsonLd(products)} />}
       <Navbar />
       {/* Hero Header */}
       <section className="bg-zinc-900 text-white py-20 md:py-28 relative overflow-hidden">
