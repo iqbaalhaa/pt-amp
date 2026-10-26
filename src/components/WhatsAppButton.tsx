@@ -1,13 +1,14 @@
 import WhatsAppIcon from "@mui/icons-material/WhatsApp";
 import { getContactInfo } from "@/actions/contact-info-actions";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
+import { contactWhatsApp } from "@/lib/contact-default";
 import { getDictionary, type Locale } from "@/lib/i18n";
 
-// Tombol WhatsApp melayang untuk halaman publik. Nomor dari CMS Kontak; kosong → tidak tampil.
+// Tombol WhatsApp melayang untuk halaman publik. Nomor dari CMS Kontak; kosong → nomor default.
 export async function WhatsAppButton({ locale = "id" }: { locale?: Locale }) {
 	const t = getDictionary(locale).whatsapp;
 	const contactInfo = await getContactInfo();
-	const href = buildWhatsAppUrl(contactInfo?.whatsapp, t.message);
+	const href = buildWhatsAppUrl(contactWhatsApp(contactInfo), t.message);
 	if (!href) return null;
 
 	return (
