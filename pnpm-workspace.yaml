@@ -1,0 +1,4 @@
+# pnpm tidak menghoist dependensi transitif; client Prisma hasil generate (src/generated/client)
+# mengimpor @prisma/client-runtime-utils dari src/, jadi paket itu harus ada di node_modules/@prisma.
+publicHoistPattern:
+  - "@prisma/client-runtime-utils"
