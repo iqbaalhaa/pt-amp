@@ -15,6 +15,7 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
     "auth:schema": "npx @better-auth/cli@latest generate",
+    "seed:cms": "tsx prisma/seed-cms.ts",
     "seed:superadmin": "tsx prisma/seed-superadmin.ts",
     "seed:pengikisan-feb": "tsx prisma/seed-pengikisan-february.ts"
   },
