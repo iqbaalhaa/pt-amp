@@ -84,7 +84,8 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
         <div className="absolute -top-24 -right-24 w-96 h-96 bg-red-500/10 rounded-full blur-3xl" />
         <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl" />
       </div>
-      <div className="container mx-auto px-4 md:px-6 lg:px-8 relative z-10">
+      {/* Mobile: ruang bawah untuk indikator & panah agar tidak menimpa tombol. */}
+      <div className="container mx-auto px-4 md:px-6 lg:px-8 relative z-10 pt-10 pb-24 md:pt-0 md:pb-0">
         <div className="grid md:grid-cols-2 gap-10 items-center">
           <div
             key={slides[current]?.id ?? current}
@@ -188,16 +189,19 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
           />
         ))}
       </div>
-      
-      <button 
+
+      {/* Panah hanya di mobile, sejajar indikator supaya tidak menutup judul. */}
+      <button
         onClick={prev}
-        className="absolute left-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/80 shadow-md hover:bg-white text-zinc-700 transition-colors z-20 md:hidden"
+        aria-label="Previous slide"
+        className="absolute left-4 bottom-[18px] p-2 rounded-full bg-white/80 shadow-md hover:bg-white text-zinc-700 transition-colors z-20 md:hidden"
       >
         <ChevronLeft size={24} />
       </button>
-      <button 
+      <button
         onClick={next}
-        className="absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/80 shadow-md hover:bg-white text-zinc-700 transition-colors z-20 md:hidden"
+        aria-label="Next slide"
+        className="absolute right-4 bottom-[18px] p-2 rounded-full bg-white/80 shadow-md hover:bg-white text-zinc-700 transition-colors z-20 md:hidden"
       >
         <ChevronRight size={24} />
       </button>
