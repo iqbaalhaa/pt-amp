@@ -41,5 +41,16 @@ test("pageMetadata: title + og + canonical", () => {
   const m = pageMetadata("Produk", "desc", "/products");
   assert.equal(m.title, "Produk | PT AMP");
   assert.equal((m.openGraph as { url: string }).url, "/products");
-  assert.deepEqual(m.alternates, { canonical: "/products" });
+  assert.deepEqual(m.alternates, {
+    canonical: "/products",
+    languages: { id: "/products", en: "/en/products", "x-default": "/products" },
+  });
+});
+
+test("pageMetadata en: canonical/og ke /en, og locale en_US", () => {
+  const m = pageMetadata("Products", "desc", "/products", "en");
+  const og = m.openGraph as { url: string; locale: string };
+  assert.equal(og.url, "/en/products");
+  assert.equal(og.locale, "en_US");
+  assert.equal((m.alternates as { canonical: string }).canonical, "/en/products");
 });

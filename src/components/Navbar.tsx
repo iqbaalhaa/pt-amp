@@ -2,10 +2,17 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
+import { getDictionary, getLocaleFromPath, localePath } from "@/lib/i18n";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
 export function Navbar() {
 	const [isOpen, setIsOpen] = useState(false);
+	const pathname = usePathname() ?? "/";
+	const locale = getLocaleFromPath(pathname);
+	const t = getDictionary(locale).nav;
+	const href = (path: string) => localePath(locale, path);
 
 	return (
 		<header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-zinc-200 shadow-sm">
@@ -13,7 +20,7 @@ export function Navbar() {
 				<div className="flex h-16 items-center justify-between">
 					{/* Logo */}
 					<Link
-						href="/"
+						href={href("/")}
 						className="text-2xl font-bold tracking-tight text-brand hover:opacity-90 transition-opacity"
 						style={{ color: "var(--brand)" }}
 					>
@@ -23,47 +30,48 @@ export function Navbar() {
 					{/* Desktop Nav */}
 					<nav className="hidden md:flex items-center gap-8 text-sm font-medium">
 						<Link
-							href="/"
+							href={href("/")}
 							className="text-zinc-600 hover:text-brand transition-colors"
 						>
-							Home
+							{t.home}
 						</Link>
 						<Link
-							href="/about"
+							href={href("/about")}
 							className="text-zinc-600 hover:text-brand transition-colors"
 						>
-							About Us
+							{t.about}
 						</Link>
 						<Link
-							href="/products"
+							href={href("/products")}
 							className="text-zinc-600 hover:text-brand transition-colors"
 						>
-							Product
+							{t.product}
 						</Link>
 						<Link
-							href="/gallery"
+							href={href("/gallery")}
 							className="text-zinc-600 hover:text-brand transition-colors"
 						>
-							Gallery
+							{t.gallery}
 						</Link>
 						<Link
-							href="/blog"
+							href={href("/blog")}
 							className="text-zinc-600 hover:text-brand transition-colors"
 						>
-							Blog
+							{t.blog}
 						</Link>
 						<Link
-							href="/contact"
+							href={href("/contact")}
 							className="text-zinc-600 hover:text-brand transition-colors"
 						>
-							Contact
+							{t.contact}
 						</Link>
+						<LanguageSwitcher pathname={pathname} locale={locale} label={t.switchLabel} />
 						<Link
-							href="/login"
+							href={href("/login")}
 							className="px-4 py-2 rounded-lg text-white font-medium transition-transform hover:scale-105 active:scale-95"
 							style={{ backgroundColor: "var(--brand)" }}
 						>
-							Login
+							{t.login}
 						</Link>
 					</nav>
 
@@ -71,7 +79,7 @@ export function Navbar() {
 					<button
 						className="md:hidden p-2 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 rounded-md transition-colors"
 						onClick={() => setIsOpen(!isOpen)}
-						aria-label="Toggle menu"
+						aria-label={t.toggleMenu}
 					>
 						{isOpen ? <X size={24} /> : <Menu size={24} />}
 					</button>
@@ -83,48 +91,55 @@ export function Navbar() {
 				<div className="md:hidden border-t border-zinc-100 bg-white absolute w-full left-0 shadow-lg animate-in slide-in-from-top-2">
 					<div className="flex flex-col p-4 space-y-4">
 						<Link
-							href="/about"
+							href={href("/about")}
 							className="text-zinc-600 hover:text-brand hover:bg-zinc-50 px-4 py-2 rounded-md transition-colors font-medium"
 							onClick={() => setIsOpen(false)}
 						>
-							About Us
+							{t.about}
 						</Link>
 						<Link
-							href="/products"
+							href={href("/products")}
 							className="text-zinc-600 hover:text-brand hover:bg-zinc-50 px-4 py-2 rounded-md transition-colors font-medium"
 							onClick={() => setIsOpen(false)}
 						>
-							Product
+							{t.product}
 						</Link>
 						<Link
-							href="/gallery"
+							href={href("/gallery")}
 							className="text-zinc-600 hover:text-brand hover:bg-zinc-50 px-4 py-2 rounded-md transition-colors font-medium"
 							onClick={() => setIsOpen(false)}
 						>
-							Gallery
+							{t.gallery}
 						</Link>
 						<Link
-							href="/blog"
+							href={href("/blog")}
 							className="text-zinc-600 hover:text-brand hover:bg-zinc-50 px-4 py-2 rounded-md transition-colors font-medium"
 							onClick={() => setIsOpen(false)}
 						>
-							Blog
+							{t.blog}
 						</Link>
 						<Link
-							href="/contact"
+							href={href("/contact")}
 							className="text-zinc-600 hover:text-brand hover:bg-zinc-50 px-4 py-2 rounded-md transition-colors font-medium"
 							onClick={() => setIsOpen(false)}
 						>
-							Contact
+							{t.contact}
 						</Link>
+						<LanguageSwitcher
+							pathname={pathname}
+							locale={locale}
+							label={t.switchLabel}
+							className="px-4"
+							onNavigate={() => setIsOpen(false)}
+						/>
 						<div className="pt-2 border-t border-zinc-100">
 							<Link
-								href="/login"
+								href={href("/login")}
 								className="block w-full text-center px-4 py-2 rounded-lg text-white font-medium transition-transform active:scale-95"
 								style={{ backgroundColor: "var(--brand)" }}
 								onClick={() => setIsOpen(false)}
 							>
-								Login
+								{t.login}
 							</Link>
 						</div>
 					</div>

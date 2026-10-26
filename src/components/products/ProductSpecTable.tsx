@@ -4,19 +4,21 @@ import {
   PRODUCT_SPEC_COLUMNS,
   type ProductSpecRow,
 } from "@/lib/product-specs";
+import { getDictionary, localePath, type Locale } from "@/lib/i18n";
 
 type Props = {
   rows: ProductSpecRow[];
   title?: string;
+  locale?: Locale;
 };
 
-export function ProductSpecTable({ rows, title = "Spesifikasi per Grade" }: Props) {
+export function ProductSpecTable({ rows, title, locale = "id" }: Props) {
+  const t = getDictionary(locale).specTable;
   return (
     <div id="spesifikasi" className="mt-12">
-      <h3 className="text-2xl font-bold text-zinc-900 mb-2">{title}</h3>
+      <h3 className="text-2xl font-bold text-zinc-900 mb-2">{title ?? t.title}</h3>
       <p className="text-zinc-600 mb-6">
-        Kolom bertanda &ldquo;{CONTACT_US}&rdquo; dapat dikonfirmasi sesuai
-        kebutuhan pesanan Anda.
+        {t.noteBefore} &ldquo;{t.contactUs}&rdquo; {t.noteAfter}
       </p>
       {/* Scroll horizontal hanya di dalam tabel (mobile). */}
       <div className="w-full overflow-x-auto rounded-2xl border border-zinc-200 bg-white">
@@ -25,7 +27,7 @@ export function ProductSpecTable({ rows, title = "Spesifikasi per Grade" }: Prop
             <tr>
               {PRODUCT_SPEC_COLUMNS.map((c) => (
                 <th key={c.key} scope="col" className="px-4 py-3 font-semibold whitespace-nowrap">
-                  {c.label}
+                  {t.columns[c.key]}
                 </th>
               ))}
             </tr>
@@ -41,15 +43,15 @@ export function ProductSpecTable({ rows, title = "Spesifikasi per Grade" }: Prop
                   ) : r[c.key] === CONTACT_US ? (
                     <td key={c.key} className="px-4 py-3 whitespace-nowrap">
                       <Link
-                        href={`/contact?product=${encodeURIComponent(r.grade)}`}
+                        href={localePath(locale, `/contact?product=${encodeURIComponent(r.grade)}`)}
                         className="text-[var(--brand)] hover:underline"
                       >
-                        {CONTACT_US}
+                        {t.contactUs}
                       </Link>
                     </td>
                   ) : (
                     <td key={c.key} className="px-4 py-3 text-zinc-700 whitespace-nowrap">
-                      {r[c.key]}
+                      {t.values[r[c.key]] ?? r[c.key]}
                     </td>
                   )
                 )}

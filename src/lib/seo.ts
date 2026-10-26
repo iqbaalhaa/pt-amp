@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { languageAlternates, localePath, type Locale } from "@/lib/i18n";
 
 export const SITE_NAME = "PT AMP";
 export const SITE_DESCRIPTION =
@@ -33,15 +34,27 @@ export const rootMetadata: Metadata = {
   twitter: { ...TWITTER_BASE, title: DEFAULT_TITLE, description: SITE_DESCRIPTION },
 };
 
-// Metadata per halaman: title (tanpa "| PT AMP", ditambah di sini), description, canonical, Open Graph & Twitter.
+// Metadata per halaman: title (tanpa "| PT AMP", ditambah di sini), description, canonical + hreflang, Open Graph & Twitter.
 // Bukan title.template di layout: halaman admin sudah punya title lengkap sendiri.
-export function pageMetadata(pageTitle: string, description: string, path: string): Metadata {
+// path = path halaman Indonesia; locale "en" → canonical/og ke /en/...
+export function pageMetadata(
+  pageTitle: string,
+  description: string,
+  path: string,
+  locale: Locale = "id"
+): Metadata {
   const title = `${pageTitle} | ${SITE_NAME}`;
   return {
     title,
     description,
-    alternates: { canonical: path },
-    openGraph: { ...OG_BASE, title, description, url: path },
+    alternates: languageAlternates(path, locale),
+    openGraph: {
+      ...OG_BASE,
+      ...(locale === "en" ? { locale: "en_US" } : {}),
+      title,
+      description,
+      url: localePath(locale, path),
+    },
     twitter: { ...TWITTER_BASE, title, description },
   };
 }
