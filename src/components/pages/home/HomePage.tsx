@@ -15,17 +15,29 @@ import { DynamicIcon } from "@/components/DynamicIcon";
 import { ProductCardImage } from "./ProductCardImage";
 
 import { HomeBlogImage } from "./HomeBlogImage";
+import { TrustSection } from "./TrustSection";
+import { HOME_ABOUT, HOME_CERTIFICATIONS, HOME_STATS } from "@/lib/cms-sections";
 
 export default async function HomePage() {
-  const [allProducts, homePage, slides, featureCards, posts, allAlbums] =
-    await Promise.all([
-      getPublicItemTypes(),
-      getHomePageData(),
-      getHeroSlides(),
-      getFeatureCards("HOME_ABOUT"),
-      latestPosts(3),
-      getGalleryAlbums(),
-    ]);
+  const [
+    allProducts,
+    homePage,
+    slides,
+    featureCards,
+    posts,
+    allAlbums,
+    stats,
+    certifications,
+  ] = await Promise.all([
+    getPublicItemTypes(),
+    getHomePageData(),
+    getHeroSlides(),
+    getFeatureCards(HOME_ABOUT),
+    latestPosts(3),
+    getGalleryAlbums(),
+    getFeatureCards(HOME_STATS),
+    getFeatureCards(HOME_CERTIFICATIONS),
+  ]);
 
   const products = allProducts.slice(0, 3);
   const albums = allAlbums.slice(0, 3);
@@ -127,6 +139,8 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+
+      <TrustSection stats={stats} certifications={certifications} />
 
       <section id="products" className="py-20 bg-zinc-50">
         <div className="container mx-auto px-4 md:px-6 lg:px-8">
