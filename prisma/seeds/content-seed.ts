@@ -115,7 +115,23 @@ export async function seedContent(prisma: PrismaClient) {
     console.log("   - Home Feature Cards seeded");
   }
 
-  // 3b. Home "Dari Kebun ke Ekspor" steps (no photos yet: owner uploads real ones via CMS)
+  // 3b. Home trust numbers — only facts already in the About copy.
+  // Certifications (HOME_CERTIFICATIONS) are not seeded: owner must fill real ones.
+  const statsCount = await prisma.featureCard.count({
+    where: { section: "HOME_STATS" },
+  });
+  if (statsCount === 0) {
+    await prisma.featureCard.createMany({
+      data: [
+        { section: "HOME_STATS", title: "±10", description: "Tenaga kerja terampil", order: 1 },
+        { section: "HOME_STATS", title: "40–60 kg", description: "Kemasan ball press per bal", order: 2 },
+        { section: "HOME_STATS", title: "3 Grade", description: "Grade A, B & Broken", order: 3 },
+      ],
+    });
+    console.log("   - Home trust numbers seeded");
+  }
+
+  // 3c. Home "Dari Kebun ke Ekspor" steps (no photos yet: owner uploads real ones via CMS)
   const processCount = await prisma.featureCard.count({
     where: { section: PROCESS_SECTION },
   });

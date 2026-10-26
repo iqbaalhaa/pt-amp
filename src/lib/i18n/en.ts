@@ -151,6 +151,9 @@ export const en: Dictionary = {
     description:
       "Every bale of cinnamon goes through the same steps, from the farmers' gardens until it is ready to ship to the buyer.",
   },
+  trust: {
+    certificationsTitle: "Certifications & Legal",
+  },
   whatsapp: {
     message: "Hello PT AMP, I would like to request a quotation for cinnamon",
     ariaLabel: "Chat with PT AMP on WhatsApp",

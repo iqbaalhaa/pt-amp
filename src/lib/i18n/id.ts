@@ -149,6 +149,9 @@ export const id = {
     description:
       "Setiap ball kulit manis melewati alur yang sama, dari kebun petani sampai siap dikirim ke pembeli.",
   },
+  trust: {
+    certificationsTitle: "Sertifikasi & Legalitas",
+  },
   whatsapp: {
     message: "Halo PT AMP, saya ingin menanyakan penawaran kayu manis",
     ariaLabel: "Chat WhatsApp PT AMP",
