@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowLink } from "@/components/ArrowLink";
 import { getDictionary, type Locale } from "@/lib/i18n";
 import { HomeBlogImage } from "./HomeBlogImage";
+import { formatPostDate } from "@/lib/format-date";
 
 type HomePost = {
   slug: string;
@@ -48,7 +49,7 @@ export function HomeBlogSection({
                 >
                   <HomeBlogImage image={post.image} title={post.title} />
                   <div className="p-6 flex flex-col flex-grow">
-                    <div className="text-sm text-zinc-500 mb-2">{post.date}</div>
+                    <div className="text-sm text-zinc-500 mb-2">{formatPostDate(post.date, locale)}</div>
                     <h3
                       className="text-xl font-bold text-zinc-900 mb-3 group-hover:text-brand transition-colors"
                       style={{ color: "var(--brand)" }}

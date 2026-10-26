@@ -35,7 +35,7 @@ export function HomeGallerySection({
             albums={albums}
             locale={locale}
             showTitle={false}
-            className="py-0 min-h-0 bg-white"
+            className="bg-white"
           />
 
           <div className="container mx-auto px-4 md:px-6 lg:px-8">

@@ -103,7 +103,7 @@ export function GalleryAlbums({
 
   return (
     <section
-      className={`min-h-screen ${className ? className : "py-24 bg-zinc-50"}`}
+      className={className ?? "min-h-screen py-24 bg-zinc-50"}
     >
       <div className="container mx-auto px-4 md:px-6 lg:px-8">
         {showTitle && (
