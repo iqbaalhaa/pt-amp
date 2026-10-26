@@ -17,6 +17,8 @@ import { ProductCardImage } from "./ProductCardImage";
 import { HomeBlogImage } from "./HomeBlogImage";
 import { TrustSection } from "./TrustSection";
 import { HOME_ABOUT, HOME_CERTIFICATIONS, HOME_STATS } from "@/lib/cms-sections";
+import { ProductSpecTable } from "@/components/products/ProductSpecTable";
+import { buildProductSpecRows } from "@/lib/product-specs";
 
 export default async function HomePage() {
   const [
@@ -280,6 +282,10 @@ export default async function HomePage() {
                 </div>
               </>
             )}
+          </div>
+
+          <div className="mb-12">
+            <ProductSpecTable rows={buildProductSpecRows(allProducts)} />
           </div>
 
           <div className="text-center md:hidden">
