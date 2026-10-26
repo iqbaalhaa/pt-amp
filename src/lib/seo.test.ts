@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { organizationJsonLd, pageMetadata, productsJsonLd, serializeJsonLd } from "./seo";
+import { organizationJsonLd, pageMetadata, productsJsonLd, serializeJsonLd, siteUrl } from "./seo";
 
 const BASE = "https://example.test";
 
@@ -53,4 +53,12 @@ test("pageMetadata en: canonical/og ke /en, og locale en_US", () => {
   assert.equal(og.url, "/en/products");
   assert.equal(og.locale, "en_US");
   assert.equal((m.alternates as { canonical: string }).canonical, "/en/products");
+});
+
+test("siteUrl: NEXT_PUBLIC_SITE_URL > BETTER_AUTH_URL > localhost:PORT", () => {
+  const env = (e: Record<string, string>) => e as unknown as NodeJS.ProcessEnv;
+  assert.equal(siteUrl(env({ NEXT_PUBLIC_SITE_URL: " https://amp.co.id/ ", BETTER_AUTH_URL: "http://x" })), "https://amp.co.id");
+  assert.equal(siteUrl(env({ BETTER_AUTH_URL: "http://auth.test" })), "http://auth.test");
+  assert.equal(siteUrl(env({ PORT: "3415" })), "http://localhost:3415");
+  assert.equal(siteUrl(env({})), "http://localhost:3000");
 });

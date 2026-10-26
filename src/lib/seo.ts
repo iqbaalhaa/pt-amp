@@ -16,13 +16,17 @@ const OG_BASE = {
 };
 const TWITTER_BASE = { card: "summary" as const, images: [LOGO_PATH] };
 
-// Base URL situs: dipakai metadataBase & URL absolut di JSON-LD. Tanpa env: localhost.
-export function siteUrl(): string {
-  const raw =
-    process.env.NEXT_PUBLIC_SITE_URL ||
-    process.env.BETTER_AUTH_URL ||
-    "http://localhost:3000";
-  return raw.replace(/\/+$/, "");
+// Base URL situs: dipakai metadataBase, canonical & URL absolut di JSON-LD.
+// Produksi wajib set NEXT_PUBLIC_SITE_URL (lihat .env.example); tanpa env: localhost:$PORT + peringatan.
+let warnedNoSiteUrl = false;
+export function siteUrl(env: NodeJS.ProcessEnv = process.env): string {
+  const raw = env.NEXT_PUBLIC_SITE_URL || env.BETTER_AUTH_URL;
+  if (raw) return raw.trim().replace(/\/+$/, "");
+  if (env.NODE_ENV === "production" && !warnedNoSiteUrl) {
+    warnedNoSiteUrl = true;
+    console.warn("NEXT_PUBLIC_SITE_URL belum diset: canonical/og/JSON-LD memakai localhost.");
+  }
+  return `http://localhost:${env.PORT || 3000}`;
 }
 
 export const rootMetadata: Metadata = {
