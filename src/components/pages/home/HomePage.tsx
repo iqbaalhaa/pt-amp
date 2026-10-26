@@ -1,4 +1,5 @@
 import { Navbar } from "@/components/Navbar";
+import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { HeroCarousel, HeroSlide } from "@/components/HeroCarousel";
 import { GalleryAlbums } from "@/components/GalleryAlbums";
 import { SiteFooter } from "@/components/SiteFooter";
@@ -19,6 +20,8 @@ import { StaticProductCards } from "./StaticProductCards";
 import { HomeBlogImage } from "./HomeBlogImage";
 import { HomeContactSection } from "./HomeContactSection";
 import { getDictionary, localePath, type Locale } from "@/lib/i18n";
+import { ProductSpecTable } from "@/components/products/ProductSpecTable";
+import { buildProductSpecRows } from "@/lib/product-specs";
 
 export default async function HomePage({
   locale = "id",
@@ -47,6 +50,7 @@ export default async function HomePage({
   return (
     <div className="min-h-screen font-sans bg-zinc-50">
       <Navbar />
+      <WhatsAppButton locale={locale} />
 
       <HeroCarousel slides={finalSlides} />
 
@@ -171,6 +175,10 @@ export default async function HomePage({
             ) : (
               <StaticProductCards />
             )}
+          </div>
+
+          <div className="mb-12">
+            <ProductSpecTable rows={buildProductSpecRows(allProducts)} locale={locale} />
           </div>
 
           <div className="text-center md:hidden">

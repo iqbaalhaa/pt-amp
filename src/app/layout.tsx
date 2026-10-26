@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, Geist_Mono } from "next/font/google";
 import { AppRouterCacheProvider } from "@mui/material-nextjs/v16-appRouter";
 import "./globals.css";
+import { rootMetadata } from "@/lib/seo";
 
 const plusJakarta = Plus_Jakarta_Sans({
   variable: "--font-geist-sans",
@@ -14,14 +15,7 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.BETTER_AUTH_URL;
-
-export const metadata: Metadata = {
-  // Absolute hreflang/OG URLs need the public site URL.
-  metadataBase: siteUrl ? new URL(siteUrl) : undefined,
-  title: "PT AMP",
-  description: "Website for PT AMP",
-};
+export const metadata: Metadata = rootMetadata;
 
 export default function RootLayout({
   children,

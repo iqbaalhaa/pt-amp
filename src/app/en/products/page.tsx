@@ -1,11 +1,12 @@
 import ProductsPage from "@/components/pages/products/ProductsPage";
-import { languageAlternates } from "@/lib/i18n";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata = {
-  title: "Products | PT AMP",
-  description: "Export-grade cinnamon (Cassia Vera) product catalog from PT AMP.",
-  alternates: languageAlternates("/products"),
-};
+export const metadata = pageMetadata(
+  "Export-Grade Cinnamon (Cassia Vera) Products",
+  "PT AMP cinnamon catalog: Cassia Vera grade A, grade B and broken, hygienically processed for export markets.",
+  "/products",
+  "en"
+);
 
 export const dynamic = "force-dynamic";
 

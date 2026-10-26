@@ -42,7 +42,7 @@ export async function updateContactInfo(formData: FormData) {
 			});
 		}
 
-		revalidatePath("/contact");
+		revalidatePath("/", "layout");
 		revalidatePath("/admin/compro/contact");
 		return { success: true };
 	} catch (error) {

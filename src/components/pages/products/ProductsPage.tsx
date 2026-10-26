@@ -1,9 +1,14 @@
 import { Navbar } from "@/components/Navbar";
+import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { getPublicItemTypes } from "@/actions/item-type-actions";
 import Link from "next/link";
 import { ArrowRight, Check, Package } from "lucide-react";
 import { ProductCatalogImage } from "./ProductCatalogImage";
 import { getDictionary, localePath, type Locale } from "@/lib/i18n";
+import { JsonLd } from "@/components/JsonLd";
+import { productsJsonLd } from "@/lib/seo";
+import { ProductSpecTable } from "@/components/products/ProductSpecTable";
+import { buildProductSpecRows } from "@/lib/product-specs";
 
 export default async function ProductsPage({
   locale = "id",
@@ -15,7 +20,9 @@ export default async function ProductsPage({
 
   return (
     <div className="flex flex-col flex-1">
+      {products.length > 0 && <JsonLd data={productsJsonLd(products)} />}
       <Navbar />
+      <WhatsAppButton locale={locale} />
       {/* Hero Header */}
       <section className="bg-zinc-900 text-white py-20 md:py-28 relative overflow-hidden">
         {/* Pattern Overlay */}
@@ -101,6 +108,9 @@ export default async function ProductsPage({
                 </div>
               ))}
             </div>
+          )}
+          {products.length > 0 && (
+            <ProductSpecTable rows={buildProductSpecRows(products)} locale={locale} />
           )}
         </div>
       </section>

@@ -1,11 +1,12 @@
 import GalleryPage from "@/components/pages/gallery/GalleryPage";
-import { languageAlternates } from "@/lib/i18n";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata = {
-  title: "Gallery | PT AMP",
-  description: "Photos of PT AMP production, warehouse and shipping activities.",
-  alternates: languageAlternates("/gallery"),
-};
+export const metadata = pageMetadata(
+  "Cinnamon Production & Shipping Gallery",
+  "Photos of PT AMP cinnamon production, warehouse and shipping.",
+  "/gallery",
+  "en"
+);
 
 export const dynamic = "force-dynamic";
 

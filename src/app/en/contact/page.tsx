@@ -1,14 +1,21 @@
 import ContactPage from "@/components/pages/contact/ContactPage";
-import { languageAlternates } from "@/lib/i18n";
+import { pageMetadata } from "@/lib/seo";
+import { OrganizationJsonLd } from "@/components/OrganizationJsonLd";
 
-export const metadata = {
-  title: "Contact Us | PT AMP",
-  description: "Contact PT AMP for partnerships, orders and cinnamon inquiries.",
-  alternates: languageAlternates("/contact"),
-};
+export const metadata = pageMetadata(
+  "Contact — Request a Cinnamon Export Quote",
+  "Contact PT AMP for quotations, samples and orders of export-grade Indonesian cinnamon (Cassia Vera).",
+  "/contact",
+  "en"
+);
 
 export const dynamic = "force-dynamic";
 
 export default function Page() {
-  return <ContactPage locale="en" />;
+  return (
+    <>
+      <OrganizationJsonLd />
+      <ContactPage locale="en" />
+    </>
+  );
 }

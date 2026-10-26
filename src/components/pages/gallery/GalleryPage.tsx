@@ -1,4 +1,5 @@
 import { Navbar } from "@/components/Navbar";
+import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { getGalleryAlbums } from "@/actions/cms-actions";
 import { GalleryAlbums } from "@/components/GalleryAlbums";
 import { SiteFooter } from "@/components/SiteFooter";
@@ -15,6 +16,7 @@ export default async function GalleryPage({
     <div className="flex flex-col flex-1">
       <Navbar />
       <GalleryAlbums albums={albums} locale={locale} />
+      <WhatsAppButton locale={locale} />
 
       <SiteFooter locale={locale} />
     </div>

@@ -146,4 +146,29 @@ export const en: Dictionary = {
     imageError: "Failed to load image",
     mediaCount: "photos & videos",
   },
+  whatsapp: {
+    message: "Hello PT AMP, I would like to request a quotation for cinnamon",
+    ariaLabel: "Chat with PT AMP on WhatsApp",
+    title: "Chat via WhatsApp",
+  },
+  specTable: {
+    title: "Specifications by Grade",
+    noteBefore: "Columns marked",
+    noteAfter: "can be confirmed to suit your order requirements.",
+    contactUs: "Contact us",
+    columns: {
+      grade: "Grade / Product",
+      form: "Form",
+      moisture: "Moisture",
+      size: "Size",
+      packaging: "Packing",
+      moq: "MOQ",
+    },
+    values: {
+      "Bahan mentah": "Raw material",
+      "Produk jadi": "Finished product",
+      "Ball 40–60 kg": "40–60 kg bales",
+      "Sack 25 kg": "25 kg sacks",
+    },
+  },
 };

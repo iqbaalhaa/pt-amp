@@ -1,4 +1,4 @@
-// Run: ./node_modules/.bin/tsx --test src/lib/i18n/i18n.test.ts
+// Run: pnpm exec tsx --test src/lib/i18n/i18n.test.ts
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
@@ -38,16 +38,20 @@ test("switchLocalePath maps to the counterpart page", () => {
   assert.equal(switchLocalePath("/blog/some-post", "en"), "/en");
 });
 
-test("languageAlternates gives hreflang id/en/x-default", () => {
-  assert.deepEqual(languageAlternates("/about"), {
-    languages: { id: "/about", en: "/en/about", "x-default": "/about" },
-  });
+test("languageAlternates gives canonical + hreflang id/en/x-default", () => {
+  const languages = { id: "/about", en: "/en/about", "x-default": "/about" };
+  assert.deepEqual(languageAlternates("/about"), { canonical: "/about", languages });
+  assert.deepEqual(languageAlternates("/about", "en"), { canonical: "/en/about", languages });
   assert.equal(languageAlternates("/").languages.en, "/en");
+  assert.equal(languageAlternates("/", "en").canonical, "/en");
 });
 
 test("dictionaries have the same keys and no empty strings", () => {
+  // specTable.values: translation map, EN-only keys by design.
   const keys = (o: unknown, prefix = ""): string[] =>
-    typeof o === "object" && o !== null
+    prefix === "specTable.values."
+      ? []
+      : typeof o === "object" && o !== null
       ? Object.entries(o).flatMap(([k, v]) => keys(v, `${prefix}${k}.`))
       : [prefix + (o === "" ? "EMPTY" : "")];
   const idKeys = keys(getDictionary("id"));

@@ -33,10 +33,11 @@ export function switchLocalePath(pathname: string, target: Locale) {
   return EN_PATHS.includes(idPath) ? localePath("en", idPath) : "/en";
 }
 
-// hreflang alternates for Next metadata (idPath = Indonesian path, e.g. "/about").
-export function languageAlternates(idPath: string) {
+// canonical + hreflang alternates for Next metadata (idPath = Indonesian path, e.g. "/about").
+export function languageAlternates(idPath: string, locale: Locale = "id") {
   const enPath = localePath("en", idPath);
   return {
+    canonical: locale === "en" ? enPath : idPath,
     languages: { id: idPath, en: enPath, "x-default": idPath },
   };
 }

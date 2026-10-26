@@ -1,11 +1,11 @@
 import ProductsPage from "@/components/pages/products/ProductsPage";
-import { languageAlternates } from "@/lib/i18n";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata = {
-  title: "Products | PT AMP",
-  description: "Katalog produk kulit manis (Cassia Vera) grade ekspor dari PT AMP.",
-  alternates: languageAlternates("/products"),
-};
+export const metadata = pageMetadata(
+  "Produk Kayu Manis (Cinnamon / Cassia Vera) Grade Ekspor",
+  "Katalog kayu manis PT AMP: cinnamon / Cassia Vera grade A, grade B dan broken, diproses higienis untuk pasar ekspor.",
+  "/products"
+);
 
 export const dynamic = "force-dynamic";
 

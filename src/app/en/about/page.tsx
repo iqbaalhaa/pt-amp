@@ -1,11 +1,12 @@
 import AboutPage from "@/components/pages/about/AboutPage";
-import { languageAlternates } from "@/lib/i18n";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata = {
-  title: "About Us | PT AMP",
-  description: "Profile of PT AMP - quality cinnamon processor and supplier from West Sumatra, Indonesia.",
-  alternates: languageAlternates("/about"),
-};
+export const metadata = pageMetadata(
+  "About Us — Cinnamon Processor in West Sumatra",
+  "Profile of PT AMP: processor and supplier of export-quality Indonesian cinnamon (Cassia Vera) from West Sumatra.",
+  "/about",
+  "en"
+);
 
 export const dynamic = "force-dynamic";
 

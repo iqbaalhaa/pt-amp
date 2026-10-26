@@ -144,6 +144,27 @@ export const id = {
     imageError: "Gagal memuat gambar",
     mediaCount: "foto & video",
   },
+  whatsapp: {
+    message: "Halo PT AMP, saya ingin menanyakan penawaran kayu manis",
+    ariaLabel: "Chat WhatsApp PT AMP",
+    title: "Chat via WhatsApp",
+  },
+  specTable: {
+    title: "Spesifikasi per Grade",
+    noteBefore: "Kolom bertanda",
+    noteAfter: "dapat dikonfirmasi sesuai kebutuhan pesanan Anda.",
+    contactUs: "Hubungi kami",
+    columns: {
+      grade: "Grade / Produk",
+      form: "Bentuk",
+      moisture: "Kadar Air",
+      size: "Ukuran",
+      packaging: "Kemasan",
+      moq: "MOQ",
+    },
+    // Terjemahan nilai dari lib/product-specs (ID: tidak ada, nilai tampil apa adanya).
+    values: {} as Record<string, string>,
+  },
 };
 
 export type Dictionary = typeof id;

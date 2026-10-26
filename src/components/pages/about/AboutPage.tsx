@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Navbar } from "@/components/Navbar";
+import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { CheckCircle2, Users, Factory, Globe2 } from "lucide-react";
 import { getAboutPageData, getFeatureCards } from "@/actions/cms-actions";
 import { DynamicIcon } from "@/components/DynamicIcon";
@@ -20,6 +21,7 @@ export default async function AboutPage({
   return (
     <div className="flex flex-col flex-1">
       <Navbar />
+      <WhatsAppButton locale={locale} />
       {/* Hero Header */}
       <section className="bg-zinc-50 border-b border-zinc-200 py-20 md:py-28">
         <div className="container mx-auto px-4 md:px-6 lg:px-8">

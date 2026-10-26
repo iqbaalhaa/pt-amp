@@ -1,11 +1,11 @@
 import AboutPage from "@/components/pages/about/AboutPage";
-import { languageAlternates } from "@/lib/i18n";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata = {
-  title: "About Us | PT AMP",
-  description: "Profil PT AMP - Pengolahan dan Supplier Kulit Manis Berkualitas.",
-  alternates: languageAlternates("/about"),
-};
+export const metadata = pageMetadata(
+  "Tentang Kami — Pengolah Kayu Manis Sumatera Barat",
+  "Profil PT AMP: pengolahan dan pemasok kayu manis (cinnamon / Cassia Vera) berkualitas ekspor dari Sumatera Barat.",
+  "/about"
+);
 
 export const dynamic = "force-dynamic";
 
