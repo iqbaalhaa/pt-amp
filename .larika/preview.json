@@ -1,0 +1,4 @@
+{
+  "command": "pnpm install --config.public-hoist-pattern=@prisma/client-runtime-utils --config.strict-dep-builds=false --config.confirmModulesPurge=false </dev/null && ./node_modules/.bin/prisma generate && ./node_modules/.bin/prisma migrate deploy && ./node_modules/.bin/tsx prisma/seed-cms.ts && exec ./node_modules/.bin/next dev -H 0.0.0.0 --port ${PORT:-3412}",
+  "port": 3412
+}
