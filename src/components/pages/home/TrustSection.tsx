@@ -1,4 +1,5 @@
 import { DynamicIcon } from "@/components/DynamicIcon";
+import { getDictionary, type Locale } from "@/lib/i18n";
 
 type TrustItem = {
   id: string;
@@ -11,10 +12,13 @@ type TrustItem = {
 export function TrustSection({
   stats,
   certifications,
+  locale = "id",
 }: {
   stats: TrustItem[];
   certifications: TrustItem[];
+  locale?: Locale;
 }) {
+  const t = getDictionary(locale).trust;
   if (stats.length === 0 && certifications.length === 0) return null;
 
   return (
@@ -38,7 +42,7 @@ export function TrustSection({
         {certifications.length > 0 && (
           <div>
             <h2 className="text-2xl md:text-3xl font-bold mb-6 text-center">
-              Sertifikasi &amp; Legalitas
+              {t.certificationsTitle}
             </h2>
             <div className="flex flex-wrap justify-center gap-4">
               {certifications.map((cert) => (

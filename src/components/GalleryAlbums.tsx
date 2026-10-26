@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { getDictionary, type Locale } from "@/lib/i18n";
 import {
   X,
   Play,
@@ -34,13 +35,16 @@ interface GalleryAlbumsProps {
   albums: Album[];
   showTitle?: boolean;
   className?: string;
+  locale?: Locale;
 }
 
 export function GalleryAlbums({
   albums,
   showTitle = true,
   className,
+  locale = "id",
 }: GalleryAlbumsProps) {
+  const t = getDictionary(locale).gallery;
   const [selectedAlbum, setSelectedAlbum] = useState<Album | null>(null);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -105,13 +109,13 @@ export function GalleryAlbums({
         {showTitle && (
           <div className="text-center max-w-2xl mx-auto mb-20 animate-in fade-in slide-in-from-bottom-4 duration-700">
             <span className="text-[var(--brand)] font-semibold tracking-wider text-sm uppercase mb-3 block">
-              Dokumentasi
+              {t.eyebrow}
             </span>
             <h1 className="text-4xl md:text-5xl font-bold mb-6 text-zinc-900 tracking-tight">
-              Galeri Aktivitas
+              {t.title}
             </h1>
             <p className="text-lg text-zinc-600 leading-relaxed">
-              Menelusuri jejak kualitas dari petani hingga pengiriman.
+              {t.description}
             </p>
           </div>
         )}
@@ -199,7 +203,7 @@ export function GalleryAlbums({
                   {selectedAlbum.title}
                 </h2>
                 <p className="text-zinc-500 text-sm">
-                  {selectedAlbum.items.length} foto & video
+                  {selectedAlbum.items.length} {t.mediaCount}
                 </p>
               </div>
               <button
@@ -334,7 +338,7 @@ export function GalleryAlbums({
                 />
                 <div className="lightbox-fallback hidden flex flex-col items-center justify-center text-white/50">
                   <ImageIcon size={64} className="mb-4 opacity-50" />
-                  <p>Gagal memuat gambar</p>
+                  <p>{t.imageError}</p>
                 </div>
               </>
             )}

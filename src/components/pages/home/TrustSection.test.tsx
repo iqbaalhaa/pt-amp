@@ -24,3 +24,11 @@ test("renders certifications when present", () => {
   assert.match(html, /NIB/);
   assert.match(html, /No\. 123/);
 });
+
+test("uses English heading for locale en", () => {
+  const html = renderToStaticMarkup(
+    <TrustSection stats={[]} certifications={[cert]} locale="en" />
+  );
+  assert.match(html, /Certifications &amp; Legal/);
+  assert.doesNotMatch(html, /Sertifikasi/);
+});

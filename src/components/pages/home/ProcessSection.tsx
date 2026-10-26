@@ -1,4 +1,5 @@
 import { DynamicIcon } from "@/components/DynamicIcon";
+import { getDictionary, type Locale } from "@/lib/i18n";
 
 export interface ProcessStep {
   id?: string;
@@ -8,17 +9,23 @@ export interface ProcessStep {
   image: string | null;
 }
 
-export function ProcessSection({ steps }: { steps: ProcessStep[] }) {
+export function ProcessSection({
+  steps,
+  locale = "id",
+}: {
+  steps: ProcessStep[];
+  locale?: Locale;
+}) {
+  const t = getDictionary(locale).process;
   return (
     <section id="process" className="py-20 bg-white border-t border-zinc-100">
       <div className="container mx-auto px-4 md:px-6 lg:px-8">
         <div className="max-w-3xl mb-12">
           <h2 className="text-3xl md:text-4xl font-bold mb-4 text-zinc-900">
-            Dari Kebun ke Ekspor
+            {t.title}
           </h2>
           <p className="text-lg text-zinc-600 leading-relaxed">
-            Setiap ball kulit manis melewati alur yang sama, dari kebun petani
-            sampai siap dikirim ke pembeli.
+            {t.description}
           </p>
         </div>
 

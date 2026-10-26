@@ -9,4 +9,7 @@ export const metadata = pageMetadata(
 
 export const dynamic = "force-dynamic";
 
-export default AboutPage;
+// Wrapper: page components take a locale prop, Next page props must stay standard.
+export default function Page() {
+  return <AboutPage />;
+}
