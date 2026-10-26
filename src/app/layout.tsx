@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, Geist_Mono } from "next/font/google";
 import { AppRouterCacheProvider } from "@mui/material-nextjs/v16-appRouter";
 import "./globals.css";
+import { rootMetadata } from "@/lib/seo";
 
 const plusJakarta = Plus_Jakarta_Sans({
   variable: "--font-geist-sans",
@@ -14,10 +15,7 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: "PT AMP",
-  description: "Website for PT AMP",
-};
+export const metadata: Metadata = rootMetadata;
 
 export default function RootLayout({
   children,

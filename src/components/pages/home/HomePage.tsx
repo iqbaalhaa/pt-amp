@@ -16,6 +16,8 @@ import { DynamicIcon } from "@/components/DynamicIcon";
 import { ProductCardImage } from "./ProductCardImage";
 
 import { HomeBlogImage } from "./HomeBlogImage";
+import { ProductSpecTable } from "@/components/products/ProductSpecTable";
+import { buildProductSpecRows } from "@/lib/product-specs";
 
 export default async function HomePage() {
   const [allProducts, homePage, slides, featureCards, posts, allAlbums] =
@@ -268,6 +270,10 @@ export default async function HomePage() {
                 </div>
               </>
             )}
+          </div>
+
+          <div className="mb-12">
+            <ProductSpecTable rows={buildProductSpecRows(allProducts)} />
           </div>
 
           <div className="text-center md:hidden">
