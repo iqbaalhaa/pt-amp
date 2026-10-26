@@ -44,3 +44,6 @@ next-env.d.ts
 
 
 *.mp4
+
+# salinan .env lokal — jangan di-commit (berisi rahasia)
+bukanenv*
