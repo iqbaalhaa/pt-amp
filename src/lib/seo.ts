@@ -8,12 +8,12 @@ export const DEFAULT_TITLE = `${SITE_NAME} — Eksportir Kayu Manis (Cinnamon / 
 
 // openGraph/twitter di halaman menimpa milik layout seluruhnya (bukan merge) — field bersama di sini.
 const OG_BASE = {
-  type: "website",
+  type: "website" as const,
   siteName: SITE_NAME,
   locale: "id_ID",
   images: [{ url: LOGO_PATH, alt: SITE_NAME }],
-} as const;
-const TWITTER_BASE = { card: "summary", images: [LOGO_PATH] } as const;
+};
+const TWITTER_BASE = { card: "summary" as const, images: [LOGO_PATH] };
 
 // Base URL situs: dipakai metadataBase & URL absolut di JSON-LD. Tanpa env: localhost.
 export function siteUrl(): string {
