@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { formatPostDate } from "@/lib/format-date";
 import Link from "next/link";
 import { getPost, getRelatedPosts } from "@/lib/blog";
 import {
@@ -90,11 +91,7 @@ export default async function BlogDetailPage({ slug }: Props) {
               <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-zinc-400">
                 <div className="flex items-center bg-white/5 rounded-full px-4 py-2 backdrop-blur-sm border border-white/10">
                   <Calendar className="w-4 h-4 mr-2 text-[var(--brand)]" />
-                  {new Date(post.date).toLocaleDateString("id-ID", {
-                    day: "numeric",
-                    month: "long",
-                    year: "numeric",
-                  })}
+                  {formatPostDate(post.date)}
                 </div>
                 <div className="flex items-center bg-white/5 rounded-full px-4 py-2 backdrop-blur-sm border border-white/10">
                   <User className="w-4 h-4 mr-2 text-[var(--brand)]" />

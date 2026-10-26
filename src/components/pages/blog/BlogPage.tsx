@@ -2,14 +2,7 @@ import { listPosts } from "@/lib/blog";
 import Link from "next/link";
 import { Calendar, User, ArrowRight, FileText } from "lucide-react";
 import { BlogListImage } from "./BlogListImage";
-
-function formatDate(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString("id-ID", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
-}
+import { formatPostDate } from "@/lib/format-date";
 
 export default async function BlogPage() {
   const { posts } = await listPosts(1);
@@ -67,7 +60,7 @@ export default async function BlogPage() {
                     <div className="flex items-center gap-4 text-xs text-zinc-500 mb-4">
                       <div className="flex items-center gap-1.5">
                         <Calendar className="w-3.5 h-3.5" />
-                        {formatDate(post.date)}
+                        {formatPostDate(post.date)}
                       </div>
                       <div className="flex items-center gap-1.5">
                         <User className="w-3.5 h-3.5" />
