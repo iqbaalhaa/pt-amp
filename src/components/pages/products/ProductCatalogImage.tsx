@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Package } from "lucide-react";
+import { DEFAULT_IMAGES } from "@/lib/default-images";
 
 interface ProductCatalogImageProps {
   image?: string | null;
@@ -11,9 +12,7 @@ interface ProductCatalogImageProps {
 export function ProductCatalogImage({ image, name }: ProductCatalogImageProps) {
   const [hasError, setHasError] = useState(false);
 
-  const fallbackImage =
-    "https://images.unsplash.com/photo-1599940824399-b87987ceb72a?q=80&w=2027&auto=format&fit=crop";
-  const displayImage = image || fallbackImage;
+  const displayImage = image || DEFAULT_IMAGES.gradeA;
 
   return (
     <div className="aspect-[4/3] bg-zinc-100 relative overflow-hidden">

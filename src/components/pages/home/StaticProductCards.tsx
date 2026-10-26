@@ -1,3 +1,5 @@
+import { DEFAULT_IMAGES } from "@/lib/default-images";
+
 // Placeholder product cards shown when the catalog is empty.
 export function StaticProductCards() {
   return (
@@ -5,7 +7,7 @@ export function StaticProductCards() {
         <div className="group bg-white rounded-2xl border border-zinc-200 overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
           <div className="h-56 bg-gradient-to-br from-zinc-100 to-zinc-200 group-hover:scale-105 transition-transform duration-500 flex items-center justify-center text-zinc-400 relative">
             <img
-              src="https://images.unsplash.com/photo-1599940778173-e276d4acb2e7?q=80&w=2070&auto=format&fit=crop"
+              src={DEFAULT_IMAGES.gradeA}
               alt="Cinnamon Grade A"
               className="w-full h-full object-cover"
             />
@@ -28,7 +30,7 @@ export function StaticProductCards() {
         <div className="group bg-white rounded-2xl border border-zinc-200 overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
           <div className="h-56 bg-gradient-to-br from-zinc-100 to-zinc-200 group-hover:scale-105 transition-transform duration-500 flex items-center justify-center text-zinc-400 relative">
             <img
-              src="https://images.unsplash.com/photo-1615485400323-952445c71b47?q=80&w=2074&auto=format&fit=crop"
+              src={DEFAULT_IMAGES.gradeB}
               alt="Cinnamon Grade B"
               className="w-full h-full object-cover"
             />
@@ -51,7 +53,7 @@ export function StaticProductCards() {
         <div className="group bg-white rounded-2xl border border-zinc-200 overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
           <div className="h-56 bg-gradient-to-br from-zinc-100 to-zinc-200 group-hover:scale-105 transition-transform duration-500 flex items-center justify-center text-zinc-400 relative">
             <img
-              src="https://images.unsplash.com/photo-1596483582103-605b7668636b?q=80&w=2070&auto=format&fit=crop"
+              src={DEFAULT_IMAGES.broken}
               alt="Cinnamon Broken"
               className="w-full h-full object-cover"
             />
