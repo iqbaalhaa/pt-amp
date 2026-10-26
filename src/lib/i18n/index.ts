@@ -4,6 +4,9 @@ import { en } from "./en";
 export type Locale = "id" | "en";
 export type { Dictionary } from "./id";
 
+// Request header set by src/proxy.ts and read by the root layout for <html lang>.
+export const LOCALE_HEADER = "x-locale";
+
 const dictionaries = { id, en };
 
 // Public pages that have an English version under /en.

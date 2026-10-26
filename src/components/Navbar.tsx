@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
@@ -13,6 +13,11 @@ export function Navbar() {
 	const locale = getLocaleFromPath(pathname);
 	const t = getDictionary(locale).nav;
 	const href = (path: string) => localePath(locale, path);
+
+	// Client-side navigation keeps the root layout, so sync <html lang> here.
+	useEffect(() => {
+		document.documentElement.lang = locale;
+	}, [locale]);
 
 	return (
 		<header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-zinc-200 shadow-sm">
@@ -90,6 +95,13 @@ export function Navbar() {
 			{isOpen && (
 				<div className="md:hidden border-t border-zinc-100 bg-white absolute w-full left-0 shadow-lg animate-in slide-in-from-top-2">
 					<div className="flex flex-col p-4 space-y-4">
+						<Link
+							href={href("/")}
+							className="text-zinc-600 hover:text-brand hover:bg-zinc-50 px-4 py-2 rounded-md transition-colors font-medium"
+							onClick={() => setIsOpen(false)}
+						>
+							{t.home}
+						</Link>
 						<Link
 							href={href("/about")}
 							className="text-zinc-600 hover:text-brand hover:bg-zinc-50 px-4 py-2 rounded-md transition-colors font-medium"
