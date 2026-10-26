@@ -15,9 +15,11 @@ import { DynamicIcon } from "@/components/DynamicIcon";
 import { ProductCardImage } from "./ProductCardImage";
 
 import { HomeBlogImage } from "./HomeBlogImage";
+import { ProcessSection } from "./ProcessSection";
+import { PROCESS_SECTION, resolveProcessSteps } from "@/lib/process-default";
 
 export default async function HomePage() {
-  const [allProducts, homePage, slides, featureCards, posts, allAlbums] =
+  const [allProducts, homePage, slides, featureCards, posts, allAlbums, processCards] =
     await Promise.all([
       getPublicItemTypes(),
       getHomePageData(),
@@ -25,6 +27,7 @@ export default async function HomePage() {
       getFeatureCards("HOME_ABOUT"),
       latestPosts(3),
       getGalleryAlbums(),
+      getFeatureCards(PROCESS_SECTION),
     ]);
 
   const products = allProducts.slice(0, 3);
@@ -127,6 +130,8 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+
+      <ProcessSection steps={resolveProcessSteps(processCards)} />
 
       <section id="products" className="py-20 bg-zinc-50">
         <div className="container mx-auto px-4 md:px-6 lg:px-8">
