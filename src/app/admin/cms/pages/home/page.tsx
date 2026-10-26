@@ -9,14 +9,17 @@ import {
 } from "@/actions/cms-actions";
 import HeroSlideCard from "@/components/admin/home/HeroSlideCard";
 import CreateHeroSlideButton from "@/components/admin/home/CreateHeroSlideButton";
+import ProcessStepsEditor from "@/components/admin/home/ProcessStepsEditor";
+import { PROCESS_SECTION } from "@/lib/process-default";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminCmsHomePage() {
-  const [home, homeCards, heroSlides] = await Promise.all([
+  const [home, homeCards, heroSlides, processSteps] = await Promise.all([
     getHomePageData(),
     getFeatureCards("HOME_ABOUT"),
     getHeroSlides(),
+    getFeatureCards(PROCESS_SECTION),
   ]);
 
   return (
@@ -143,6 +146,8 @@ export default async function AdminCmsHomePage() {
               </form>
             </div>
           </div>
+
+          <ProcessStepsEditor steps={processSteps} />
         </div>
       </div>
     </div>

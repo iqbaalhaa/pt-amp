@@ -20,6 +20,8 @@ import { StaticProductCards } from "./StaticProductCards";
 import { HomeBlogImage } from "./HomeBlogImage";
 import { HomeContactSection } from "./HomeContactSection";
 import { getDictionary, localePath, type Locale } from "@/lib/i18n";
+import { ProcessSection } from "./ProcessSection";
+import { PROCESS_SECTION, resolveProcessSteps } from "@/lib/process-default";
 import { ProductSpecTable } from "@/components/products/ProductSpecTable";
 import { buildProductSpecRows } from "@/lib/product-specs";
 
@@ -29,7 +31,7 @@ export default async function HomePage({
   locale?: Locale;
 }) {
   const t = getDictionary(locale).home;
-  const [allProducts, homePage, slides, featureCards, posts, allAlbums] =
+  const [allProducts, homePage, slides, featureCards, posts, allAlbums, processCards] =
     await Promise.all([
       getPublicItemTypes(),
       getHomePageData(),
@@ -37,6 +39,7 @@ export default async function HomePage({
       getFeatureCards("HOME_ABOUT"),
       latestPosts(3),
       getGalleryAlbums(),
+      getFeatureCards(PROCESS_SECTION),
     ]);
 
   const products = allProducts.slice(0, 3);
@@ -64,8 +67,8 @@ export default async function HomePage({
               {homePage?.aboutDescription || t.aboutDescription}
             </p>
             <ArrowLink href={localePath(locale, "/about")} className="inline-flex items-center text-brand font-medium hover:underline">
-{t.aboutMore}
-</ArrowLink>
+              {t.aboutMore}
+            </ArrowLink>
           </div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -123,6 +126,8 @@ export default async function HomePage({
         </div>
       </section>
 
+      <ProcessSection steps={resolveProcessSteps(processCards)} locale={locale} />
+
       <section id="products" className="py-20 bg-zinc-50">
         <div className="container mx-auto px-4 md:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-4">
@@ -135,8 +140,8 @@ export default async function HomePage({
               </p>
             </div>
             <ArrowLink href={localePath(locale, "/products")} className="hidden md:inline-flex items-center text-brand font-medium hover:underline shrink-0">
-{t.allProducts}
-</ArrowLink>
+              {t.allProducts}
+            </ArrowLink>
           </div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8 mb-8">
@@ -183,8 +188,8 @@ export default async function HomePage({
 
           <div className="text-center md:hidden">
             <ArrowLink href={localePath(locale, "/products")} className="inline-flex items-center text-brand font-medium hover:underline">
-{t.allProducts}
-</ArrowLink>
+              {t.allProducts}
+            </ArrowLink>
           </div>
         </div>
       </section>
@@ -201,8 +206,8 @@ export default async function HomePage({
               </p>
             </div>
             <ArrowLink href={localePath(locale, "/gallery")} className="hidden md:inline-flex items-center text-brand font-medium hover:underline shrink-0">
-{t.allGallery}
-</ArrowLink>
+              {t.allGallery}
+            </ArrowLink>
           </div>
         </div>
 
@@ -216,8 +221,8 @@ export default async function HomePage({
         <div className="container mx-auto px-4 md:px-6 lg:px-8">
           <div className="text-center md:hidden mt-8">
             <ArrowLink href={localePath(locale, "/gallery")} className="inline-flex items-center text-brand font-medium hover:underline">
-{t.allGallery}
-</ArrowLink>
+              {t.allGallery}
+            </ArrowLink>
           </div>
         </div>
       </section>
@@ -234,8 +239,8 @@ export default async function HomePage({
               </p>
             </div>
             <ArrowLink href="/blog" className="hidden md:inline-flex items-center text-brand font-medium hover:underline shrink-0">
-{t.allNews}
-</ArrowLink>
+              {t.allNews}
+            </ArrowLink>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8 mb-8">
@@ -283,8 +288,8 @@ export default async function HomePage({
 
           <div className="text-center md:hidden">
             <ArrowLink href="/blog" className="inline-flex items-center text-brand font-medium hover:underline">
-{t.allNews}
-</ArrowLink>
+              {t.allNews}
+            </ArrowLink>
           </div>
         </div>
       </section>

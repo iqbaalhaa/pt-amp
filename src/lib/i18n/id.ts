@@ -144,6 +144,11 @@ export const id = {
     imageError: "Gagal memuat gambar",
     mediaCount: "foto & video",
   },
+  process: {
+    title: "Dari Kebun ke Ekspor",
+    description:
+      "Setiap ball kulit manis melewati alur yang sama, dari kebun petani sampai siap dikirim ke pembeli.",
+  },
   whatsapp: {
     message: "Halo PT AMP, saya ingin menanyakan penawaran kayu manis",
     ariaLabel: "Chat WhatsApp PT AMP",

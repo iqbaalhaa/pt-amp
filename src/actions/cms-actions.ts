@@ -236,6 +236,18 @@ export async function updateAboutPage(formData: FormData) {
   revalidatePath("/admin/compro/about");
 }
 
+// Photo for a feature card: uploaded file wins, else the "image" URL field.
+// Returns undefined when the form has neither field, so other card forms leave image untouched.
+async function readFeatureCardImage(formData: FormData) {
+  const file = formData.get("imageFile") as File | null;
+  if (file && file.size > 0) {
+    const uploaded = await saveUploadToPublic(file);
+    if (uploaded) return uploaded;
+  }
+  if (!formData.has("image")) return undefined;
+  return ((formData.get("image") as string) || "").trim() || null;
+}
+
 export async function createFeatureCard(formData: FormData) {
   const section = (formData.get("section") as string) || "";
   const title = (formData.get("title") as string) || "";
@@ -244,8 +256,10 @@ export async function createFeatureCard(formData: FormData) {
   const orderRaw = (formData.get("order") as string) || "0";
   const order = Number(orderRaw) || 0;
 
+  const image = await readFeatureCardImage(formData);
+
   await prisma.featureCard.create({
-    data: { section, title, description, icon, order },
+    data: { section, title, description, icon, image, order },
   });
 
   revalidatePath("/");
@@ -273,7 +287,7 @@ export async function updateFeatureCard(id: string, formData: FormData) {
 
   await prisma.featureCard.update({
     where: { id },
-    data: { title, description, icon, order },
+    data: { title, description, icon, image: await readFeatureCardImage(formData), order },
   });
 
   revalidatePath("/");

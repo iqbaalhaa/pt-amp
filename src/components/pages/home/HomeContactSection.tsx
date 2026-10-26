@@ -21,8 +21,8 @@ export function HomeContactSection({ locale = "id" }: { locale?: Locale }) {
               {t.description}
             </p>
             <ArrowLink href={localePath(locale, "/contact")} className="inline-flex items-center text-brand font-medium hover:underline mb-8">
-{t.fullInfo}
-</ArrowLink>
+              {t.fullInfo}
+            </ArrowLink>
 
             <div className="space-y-6">
               <div className="flex items-start gap-4">
