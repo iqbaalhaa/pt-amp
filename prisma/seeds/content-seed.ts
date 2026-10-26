@@ -1,4 +1,6 @@
 import { PrismaClient } from "@prisma/client";
+import { PROCESS_SECTION, DEFAULT_PROCESS_STEPS } from "../../src/lib/process-default";
+import { DEFAULT_HERO, LEGACY_HERO_TITLE } from "../../src/lib/hero-default";
 
 export async function seedContent(prisma: PrismaClient) {
   console.log("🌱 Seeding CMS Content...");
@@ -24,16 +26,10 @@ export async function seedContent(prisma: PrismaClient) {
         id: "slide-1",
         type: "image",
         src: "https://images.unsplash.com/photo-1596483582103-605b7668636b?q=80&w=2070&auto=format&fit=crop",
-        title: "Company Profile",
-        description:
-          "Perusahaan kulit manis skala UMKM–menengah. Fokus pada pembelian bahan mentah, proses pembersihan dan preparasi, hingga penjualan produk berkualitas.",
+        title: DEFAULT_HERO.title,
+        description: DEFAULT_HERO.description,
         order: 1,
-        buttons: {
-          create: [
-            { text: "Lihat Produk", href: "#products", isPrimary: true },
-            { text: "Lihat Blog", href: "/blog", isPrimary: false },
-          ],
-        },
+        buttons: { create: DEFAULT_HERO.buttons },
       },
     });
 
@@ -67,6 +63,22 @@ export async function seedContent(prisma: PrismaClient) {
       },
     });
     console.log("   - Hero Slides seeded");
+  } else {
+    // Upgrade the old generic seeded slide; slides edited via CMS are left alone.
+    const legacy = await prisma.heroSlide.findFirst({
+      where: { id: "slide-1", title: LEGACY_HERO_TITLE },
+    });
+    if (legacy) {
+      await prisma.heroSlide.update({
+        where: { id: legacy.id },
+        data: {
+          title: DEFAULT_HERO.title,
+          description: DEFAULT_HERO.description,
+          buttons: { deleteMany: {}, create: DEFAULT_HERO.buttons },
+        },
+      });
+      console.log("   - Hero slide-1 updated to export CTA");
+    }
   }
 
   // 3. Home Feature Cards
@@ -101,6 +113,17 @@ export async function seedContent(prisma: PrismaClient) {
       ],
     });
     console.log("   - Home Feature Cards seeded");
+  }
+
+  // 3b. Home "Dari Kebun ke Ekspor" steps (no photos yet: owner uploads real ones via CMS)
+  const processCount = await prisma.featureCard.count({
+    where: { section: PROCESS_SECTION },
+  });
+  if (processCount === 0) {
+    await prisma.featureCard.createMany({
+      data: DEFAULT_PROCESS_STEPS.map((step) => ({ ...step, section: PROCESS_SECTION })),
+    });
+    console.log("   - Home Process Steps seeded");
   }
 
   // 4. About Page Content

@@ -1,9 +1,11 @@
 import GalleryPage from "@/components/pages/gallery/GalleryPage";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata = {
-  title: "Gallery | PT AMP",
-  description: "Dokumentasi kegiatan produksi, gudang, dan pengiriman PT AMP.",
-};
+export const metadata = pageMetadata(
+  "Galeri Produksi & Pengiriman Kayu Manis",
+  "Dokumentasi produksi, gudang, dan pengiriman kayu manis (cinnamon) PT AMP.",
+  "/gallery"
+);
 
 export const dynamic = "force-dynamic";
 

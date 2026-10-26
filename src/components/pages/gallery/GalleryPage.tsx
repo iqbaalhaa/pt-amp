@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Navbar } from "@/components/Navbar";
+import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { getGalleryAlbums } from "@/actions/cms-actions";
 import { GalleryAlbums } from "@/components/GalleryAlbums";
 
@@ -9,6 +10,7 @@ export default async function GalleryPage() {
   return (
     <div className="flex flex-col flex-1">
       <Navbar />
+      <WhatsAppButton />
       <GalleryAlbums albums={albums} />
 
       <footer className="bg-white border-t border-zinc-200 py-12 md:py-16">
