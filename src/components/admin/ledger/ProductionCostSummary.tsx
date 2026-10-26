@@ -1,5 +1,3 @@
-import { toCurrency } from "./formatters";
-
 type Props = {
   totalCost: number;
 };

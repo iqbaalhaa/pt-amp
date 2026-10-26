@@ -52,7 +52,7 @@ async function main() {
   try {
     const stats = await fs.stat(envPath);
     console.log("Env file size:", stats.size);
-  } catch (e) {
+  } catch {
     console.log("Env file not found via fs.stat");
   }
 

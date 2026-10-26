@@ -24,7 +24,6 @@ import {
 	ProductionWorkerInput,
 } from "@/actions/production-actions";
 import type { ItemTypeDTO } from "@/actions/item-type-actions";
-import TagBadge from "@/components/TagBadge";
 import { formatRupiah } from "@/lib/currency";
 import { ProductionStatus } from "@prisma/client";
 import GlassTable, { Column } from "@/components/ui/GlassTable";
@@ -48,12 +47,15 @@ export default function ProductionForm({
 
 	const [date, setDate] = useState<string>("");
 
+	// Tanggal lokal hari ini diisi setelah mount (hindari hydration mismatch bila di-SSR).
 	useEffect(() => {
-		const today = new Date();
-		const yyyy = today.getFullYear();
-		const mm = String(today.getMonth() + 1).padStart(2, "0");
-		const dd = String(today.getDate()).padStart(2, "0");
-		setDate(`${yyyy}-${mm}-${dd}`);
+		queueMicrotask(() => {
+			const today = new Date();
+			const yyyy = today.getFullYear();
+			const mm = String(today.getMonth() + 1).padStart(2, "0");
+			const dd = String(today.getDate()).padStart(2, "0");
+			setDate(`${yyyy}-${mm}-${dd}`);
+		});
 	}, []);
 
 	const [productionTypeId, setProductionTypeId] = useState<string>("");

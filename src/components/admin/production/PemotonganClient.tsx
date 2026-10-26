@@ -9,9 +9,7 @@ import {
   TextField,
   createFilterOptions,
   CircularProgress,
-  InputAdornment,
   Tooltip,
-  MenuItem,
 } from "@mui/material";
 
 import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
@@ -25,7 +23,6 @@ import BadgeRoundedIcon from "@mui/icons-material/BadgeRounded";
 import NumbersRoundedIcon from "@mui/icons-material/NumbersRounded";
 import SummarizeRoundedIcon from "@mui/icons-material/SummarizeRounded";
 import ContentCutRoundedIcon from "@mui/icons-material/ContentCutRounded";
-import AttachMoneyRoundedIcon from "@mui/icons-material/AttachMoneyRounded";
 import AccessTimeRoundedIcon from "@mui/icons-material/AccessTimeRounded";
 
 import GlassButton from "@/components/ui/GlassButton";
@@ -38,6 +35,7 @@ import {
   createWorkerByName,
 } from "@/actions/worker-actions";
 import { formatRupiah } from "@/lib/currency";
+import { readUpahSettings } from "@/lib/upah-settings";
 
 type Row = {
   id: number;
@@ -53,7 +51,8 @@ type PemotonganRate = {
   rate: number;
 };
 
-const filter = createFilterOptions<WorkerDTO>();
+type WorkerOption = WorkerDTO & { inputValue?: string };
+const filter = createFilterOptions<WorkerOption>();
 
 const F4_W_MM = 210;
 const F4_H_MM = 330;
@@ -74,6 +73,84 @@ function loadLogoImage() {
   return logoImagePromise;
 }
 
+function loadPemotonganSettings(): {
+  upahPerKg: number;
+  rates: PemotonganRate[];
+} {
+  const defaultRates: PemotonganRate[] = [
+    { id: "stik25", name: "Stik 25", unit: "Kg", rate: 1500 },
+    { id: "aaa8", name: "Aaa (8 cm)", unit: "Kg", rate: 1500 },
+    { id: "aa8", name: "Aa (8 cm)", unit: "Kg", rate: 1500 },
+    { id: "reject8", name: "Reject (8)", unit: "Kg", rate: 1500 },
+    { id: "reject6", name: "Reject (6)", unit: "Kg", rate: 1500 },
+    { id: "campuran8", name: "Campuran (8 cm)", unit: "Kg", rate: 1500 },
+  ];
+
+  let upahPerKg = 1500;
+  try {
+    const parsed = readUpahSettings();
+    if (!parsed) return { upahPerKg, rates: defaultRates };
+
+    if (typeof parsed.pemotonganPerKg === "number") {
+      upahPerKg = parsed.pemotonganPerKg;
+    }
+
+    if (Array.isArray(parsed.pemotonganRates)) {
+      const rates: PemotonganRate[] = parsed.pemotonganRates.map(
+        (r, idx) => ({
+          id: r.id || `rate-${idx}`,
+          name: String(r.name ?? "").trim() || `Jenis ${idx + 1}`,
+          unit: String(r.unit ?? "Kg"),
+          rate:
+            typeof r.rate === "number" && !Number.isNaN(r.rate)
+              ? r.rate
+              : 0,
+        })
+      );
+      return { upahPerKg, rates };
+    }
+
+    // Legacy fallback
+    const rates = defaultRates.map((d) => {
+      let rate = d.rate;
+      if (d.id === "stik25")
+        rate =
+          typeof parsed.pemotonganStik25 === "number"
+            ? parsed.pemotonganStik25
+            : rate;
+      else if (d.id === "aaa8")
+        rate =
+          typeof parsed.pemotonganAaa8 === "number"
+            ? parsed.pemotonganAaa8
+            : rate;
+      else if (d.id === "aa8")
+        rate =
+          typeof parsed.pemotonganAa8 === "number"
+            ? parsed.pemotonganAa8
+            : rate;
+      else if (d.id === "reject8")
+        rate =
+          typeof parsed.pemotonganReject8 === "number"
+            ? parsed.pemotonganReject8
+            : rate;
+      else if (d.id === "reject6")
+        rate =
+          typeof parsed.pemotonganReject6 === "number"
+            ? parsed.pemotonganReject6
+            : rate;
+      else if (d.id === "campuran8")
+        rate =
+          typeof parsed.pemotonganCampuran8 === "number"
+            ? parsed.pemotonganCampuran8
+            : rate;
+      return { ...d, rate };
+    });
+    return { upahPerKg, rates };
+  } catch {
+    return { upahPerKg: 1500, rates: defaultRates };
+  }
+}
+
 function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(" ");
 }
@@ -83,10 +160,13 @@ export default function PemotonganClient() {
     { id: 1, nama: "", itemTypeId: "", qty: 0 },
   ]);
 
-  const [date, setDate] = useState("");
+  const [initialSettings] = useState(loadPemotonganSettings);
+  const [date, setDate] = useState(
+    () => new Date().toISOString().split("T")[0]
+  );
   const [shift, setShift] = useState<"siang" | "malam">("siang");
   const [notes, setNotes] = useState("");
-  const [upahPerKg, setUpahPerKg] = useState(1500);
+  const [upahPerKg, setUpahPerKg] = useState(initialSettings.upahPerKg);
   const [saving, setSaving] = useState(false);
 
   const [openPreview, setOpenPreview] = useState(false);
@@ -96,93 +176,14 @@ export default function PemotonganClient() {
   const [creatingWorkerId, setCreatingWorkerId] = useState<number | null>(null);
   const [bulkWorkerModalOpen, setBulkWorkerModalOpen] = useState(false);
   const [selectedWorkerIds, setSelectedWorkerIds] = useState<string[]>([]);
-  const [pemotonganRateOptions, setPemotonganRateOptions] = useState<
-    PemotonganRate[]
-  >([]);
+  const [pemotonganRateOptions] = useState<PemotonganRate[]>(
+    initialSettings.rates
+  );
 
   useEffect(() => {
     getWorkers().then((data) =>
       setWorkerOptions(data.filter((w) => w.isActive))
     );
-
-    const defaultRates: PemotonganRate[] = [
-      { id: "stik25", name: "Stik 25", unit: "Kg", rate: 1500 },
-      { id: "aaa8", name: "Aaa (8 cm)", unit: "Kg", rate: 1500 },
-      { id: "aa8", name: "Aa (8 cm)", unit: "Kg", rate: 1500 },
-      { id: "reject8", name: "Reject (8)", unit: "Kg", rate: 1500 },
-      { id: "reject6", name: "Reject (6)", unit: "Kg", rate: 1500 },
-      { id: "campuran8", name: "Campuran (8 cm)", unit: "Kg", rate: 1500 },
-    ];
-
-    try {
-      if (typeof window !== "undefined") {
-        const raw = window.localStorage.getItem("upahSettings");
-        if (raw) {
-          const parsed = JSON.parse(raw) as any;
-          if (typeof parsed.pemotonganPerKg === "number") {
-            setUpahPerKg(parsed.pemotonganPerKg);
-          }
-
-          if (Array.isArray(parsed.pemotonganRates)) {
-            const rates: PemotonganRate[] = parsed.pemotonganRates.map(
-              (r: any, idx: number) => ({
-                id: r.id || `rate-${idx}`,
-                name: String(r.name ?? "").trim() || `Jenis ${idx + 1}`,
-                unit: String(r.unit ?? "Kg"),
-                rate:
-                  typeof r.rate === "number" && !Number.isNaN(r.rate)
-                    ? r.rate
-                    : 0,
-              })
-            );
-            setPemotonganRateOptions(rates);
-          } else {
-            // Legacy fallback
-            const rates = defaultRates.map((d) => {
-              let rate = d.rate;
-              if (d.id === "stik25")
-                rate =
-                  typeof parsed.pemotonganStik25 === "number"
-                    ? parsed.pemotonganStik25
-                    : rate;
-              else if (d.id === "aaa8")
-                rate =
-                  typeof parsed.pemotonganAaa8 === "number"
-                    ? parsed.pemotonganAaa8
-                    : rate;
-              else if (d.id === "aa8")
-                rate =
-                  typeof parsed.pemotonganAa8 === "number"
-                    ? parsed.pemotonganAa8
-                    : rate;
-              else if (d.id === "reject8")
-                rate =
-                  typeof parsed.pemotonganReject8 === "number"
-                    ? parsed.pemotonganReject8
-                    : rate;
-              else if (d.id === "reject6")
-                rate =
-                  typeof parsed.pemotonganReject6 === "number"
-                    ? parsed.pemotonganReject6
-                    : rate;
-              else if (d.id === "campuran8")
-                rate =
-                  typeof parsed.pemotonganCampuran8 === "number"
-                    ? parsed.pemotonganCampuran8
-                    : rate;
-              return { ...d, rate };
-            });
-            setPemotonganRateOptions(rates);
-          }
-        } else {
-          setPemotonganRateOptions(defaultRates);
-        }
-      }
-    } catch {
-      setUpahPerKg(1500);
-      setPemotonganRateOptions(defaultRates);
-    }
-    setDate(new Date().toISOString().split("T")[0]);
   }, []);
 
   const addRow = () => {
@@ -236,14 +237,10 @@ export default function PemotonganClient() {
   const getRowTotal = (row: Row) => {
     const q = Number.isFinite(row.qty) ? row.qty : 0;
 
-    const stored =
-      typeof window !== "undefined"
-        ? window.localStorage.getItem("upahSettings")
-        : null;
+    const parsed = readUpahSettings();
     let rate = upahPerKg;
-    if (stored) {
+    if (parsed) {
       try {
-        const parsed = JSON.parse(stored) as any;
         const perKg =
           typeof parsed.pemotonganPerKg === "number"
             ? parsed.pemotonganPerKg
@@ -252,7 +249,7 @@ export default function PemotonganClient() {
 
         if (Array.isArray(parsed.pemotonganRates) && row.itemTypeId) {
           const match = parsed.pemotonganRates.find(
-            (r: any) => r.id === row.itemTypeId
+            (r) => r.id === row.itemTypeId
           );
           if (match && typeof match.rate === "number") {
             rate = match.rate;
@@ -705,17 +702,21 @@ export default function PemotonganClient() {
                       </td>
 
                       <td className="px-3 py-2">
-                        <Autocomplete
+                        <Autocomplete<WorkerOption, false, false, true>
                           value={
                             workerOptions.find((w) => w.name === row.nama) ||
                             null
                           }
                           onChange={async (_event, newValue) => {
-                            if (newValue && (newValue as any).inputValue) {
+                            if (
+                              newValue &&
+                              typeof newValue !== "string" &&
+                              newValue.inputValue
+                            ) {
                               setCreatingWorkerId(row.id);
                               try {
                                 const newWorker = await createWorkerByName(
-                                  (newValue as any).inputValue
+                                  newValue.inputValue
                                 );
                                 if (newWorker) {
                                   setWorkerOptions((prev) => [
@@ -749,12 +750,9 @@ export default function PemotonganClient() {
                               filtered.push({
                                 inputValue,
                                 name: `Tambah "${inputValue}"`,
-                                id: 0,
+                                id: "",
                                 isActive: true,
-                                role: "WORKER",
-                                createdAt: new Date(),
-                                updatedAt: new Date(),
-                              } as any);
+                              });
                             }
                             return filtered;
                           }}
@@ -764,8 +762,8 @@ export default function PemotonganClient() {
                           options={workerOptions}
                           getOptionLabel={(option) => {
                             if (typeof option === "string") return option;
-                            if ((option as any).inputValue)
-                              return (option as any).inputValue;
+                            if (option.inputValue)
+                              return option.inputValue;
                             return option.name;
                           }}
                           renderOption={(props, option) => {
@@ -773,8 +771,8 @@ export default function PemotonganClient() {
                             let optionKey: string;
                             if (typeof option === "string") {
                               optionKey = `str-${option}`;
-                            } else if ((option as any).inputValue) {
-                              optionKey = `new-${(option as any).inputValue}`;
+                            } else if (option.inputValue) {
+                              optionKey = `new-${option.inputValue}`;
                             } else {
                               optionKey = `worker-${option.id}`;
                             }

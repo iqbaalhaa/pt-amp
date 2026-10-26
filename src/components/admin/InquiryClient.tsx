@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Box, Paper, Typography } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -24,9 +24,12 @@ export default function InquiryClient({
 	const [inquiries, setInquiries] = useState<Inquiry[]>(initialInquiries);
 	const [selectedInquiry, setSelectedInquiry] = useState<Inquiry | null>(null);
 
-	useEffect(() => {
+	// Sinkron state lokal saat data dari server berubah (pola React: adjust state saat render).
+	const [prevInitialInquiries, setPrevInitialInquiries] = useState(initialInquiries);
+	if (initialInquiries !== prevInitialInquiries) {
+		setPrevInitialInquiries(initialInquiries);
 		setInquiries(initialInquiries);
-	}, [initialInquiries]);
+	}
 
 	const handleView = async (inquiry: Inquiry) => {
 		setSelectedInquiry(inquiry);

@@ -1,13 +1,12 @@
 "use client";
 
-import { Box, Typography, Stack, IconButton, Button } from "@mui/material";
+import { Box, Typography, Stack, IconButton } from "@mui/material";
 import GlassTable, { Column } from "@/components/ui/GlassTable";
 import { InventoryHistoryDTO } from "@/actions/inventory-actions";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
 import { formatRupiah } from "@/lib/currency";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
 import { useRouter } from "next/navigation";
 
 export default function InventoryHistoryClient({ 
@@ -103,7 +102,7 @@ export default function InventoryHistoryClient({
         data={data} 
         columns={columns}
         className="shadow-2xl border border-white/40 overflow-hidden cursor-pointer"
-        onRowClick={(row) => {
+        onRowClick={() => {
           // Opsional: Navigasi ke detail transaksi jika ada halamannya
           // router.push(`/admin/purchases/${row.purchaseId}`);
         }}

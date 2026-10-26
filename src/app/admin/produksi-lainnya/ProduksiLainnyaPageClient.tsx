@@ -1,14 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useIsClient } from "@/lib/use-is-client";
 import OtherProductionClient from "@/components/admin/production/OtherProductionClient";
 
 export default function ProduksiLainnyaPageClient() {
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const mounted = useIsClient();
 
   if (!mounted) {
     return null;

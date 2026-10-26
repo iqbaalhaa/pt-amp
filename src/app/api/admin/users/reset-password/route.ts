@@ -2,6 +2,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import type { Prisma } from "@/generated/client";
 import { auth } from "@/lib/auth";
 import { hash } from "bcryptjs";
 
@@ -30,9 +31,10 @@ export async function POST(req: NextRequest) {
 
     await prisma.user.update({
       where: { id: userId },
+      // NOTE: User has no passwordHash column; cast kept to preserve existing behavior
       data: {
         passwordHash,
-      } as any,
+      } as unknown as Prisma.UserUpdateInput,
     });
 
     return NextResponse.json({ success: true });

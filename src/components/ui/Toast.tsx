@@ -13,8 +13,12 @@ type Props = {
 
 export default function Toast({ message, type = "info", open, onClose, duration = 3000 }: Props) {
   const [visible, setVisible] = useState(open);
-  useEffect(() => {
+  const [prevOpen, setPrevOpen] = useState(open);
+  if (open !== prevOpen) {
+    setPrevOpen(open);
     setVisible(open);
+  }
+  useEffect(() => {
     if (open && duration > 0) {
       const t = setTimeout(() => {
         setVisible(false);

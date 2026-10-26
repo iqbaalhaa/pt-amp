@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { motion } from "framer-motion";
-import { Calendar, User, Eye, EyeOff, FileText, Image as ImageIcon, Trash2, Globe } from "lucide-react";
+import { Calendar, User, FileText, Trash2 } from "lucide-react";
 import BlogModal from "./BlogModal";
 import { deletePost, togglePublish } from "@/actions/blog-actions";
 import { useRouter } from "next/navigation";
@@ -193,7 +193,7 @@ export default function BlogCard({ post, currentUserId }: BlogCardProps) {
       >
         <div className="flex flex-col gap-4">
           <p className="text-zinc-600">
-            Apakah Anda yakin ingin menghapus artikel <strong>"{post.title}"</strong>? Tindakan ini tidak dapat dibatalkan.
+            Apakah Anda yakin ingin menghapus artikel <strong>&ldquo;{post.title}&rdquo;</strong>? Tindakan ini tidak dapat dibatalkan.
           </p>
           <div className="flex justify-end gap-2 mt-2">
             <GlassButton 

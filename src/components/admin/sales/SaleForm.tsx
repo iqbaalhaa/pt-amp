@@ -38,6 +38,9 @@ type Props = {
   itemTypes: ItemTypeDTO[];
 };
 
+// Opsi "Tambah ..." di Autocomplete
+type ItemTypeOption = ItemTypeDTO | { inputValue: string; name: string };
+
 type ItemRow = {
   id: string;
   itemTypeId: string;
@@ -56,9 +59,9 @@ export default function SaleForm({ itemTypes }: Props) {
 
   const [customer, setCustomer] = useState<string>("");
   const [date, setDate] = useState<string>(defaultDate);
-  const [status, setStatus] = useState<TransactionStatus>("draft");
+  const [status] = useState<TransactionStatus>("draft");
   const [notes, setNotes] = useState<string>("");
-  const [items, setItems] = useState<ItemRow[]>([
+  const [items, setItems] = useState<ItemRow[]>(() => [
     { id: Math.random().toString(), itemTypeId: "", qty: "", unitPrice: "" },
   ]);
   const [saving, setSaving] = useState(false);
@@ -75,7 +78,7 @@ export default function SaleForm({ itemTypes }: Props) {
   const [localItemTypes, setLocalItemTypes] =
     useState<ItemTypeDTO[]>(itemTypes);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const filter = createFilterOptions<ItemTypeDTO>();
+  const filter = createFilterOptions<ItemTypeOption>();
   const { data: session } = authClient.useSession();
   const A5_W_MM = 148;
   const A5_H_MM = 210;
@@ -97,8 +100,6 @@ export default function SaleForm({ itemTypes }: Props) {
       prev.map((row, i) => (i === idx ? { ...row, [field]: value } : row))
     );
   };
-
-  const findItemType = (id: string) => itemTypes.find((t) => t.id === id);
 
   const lineTotal = (row: ItemRow) => {
     const q = parseFloat(row.qty || "0");
@@ -128,7 +129,11 @@ export default function SaleForm({ itemTypes }: Props) {
         date,
         status,
         notes: notes || null,
-        items: validItems.map(({ id, ...rest }) => rest),
+        items: validItems.map(({ itemTypeId, qty, unitPrice }) => ({
+          itemTypeId,
+          qty,
+          unitPrice,
+        })),
       };
 
       const res = await createSale(payload);
@@ -158,14 +163,14 @@ export default function SaleForm({ itemTypes }: Props) {
     {
       header: "Nama Barang",
       cell: (row, idx) => (
-        <Autocomplete
+        <Autocomplete<ItemTypeOption>
           value={localItemTypes.find((it) => it.id === row.itemTypeId) || null}
           onChange={async (_event, newValue) => {
-            if (newValue && (newValue as any).inputValue) {
+            if (newValue && "inputValue" in newValue) {
               setCreatingItemType(true);
               try {
                 const newIt = await quickCreateItemType(
-                  (newValue as any).inputValue
+                  newValue.inputValue
                 );
                 setLocalItemTypes((prev) => [...prev, newIt]);
                 updateItem(idx, "itemTypeId", newIt.id);
@@ -184,7 +189,7 @@ export default function SaleForm({ itemTypes }: Props) {
                 setCreatingItemType(false);
               }
             } else {
-              updateItem(idx, "itemTypeId", (newValue as any)?.id || "");
+              updateItem(idx, "itemTypeId", newValue?.id || "");
             }
           }}
           filterOptions={(options, params) => {
@@ -197,7 +202,7 @@ export default function SaleForm({ itemTypes }: Props) {
               filtered.push({
                 inputValue,
                 name: `Tambah "${inputValue}"`,
-              } as any);
+              });
             }
             return filtered;
           }}
@@ -207,11 +212,11 @@ export default function SaleForm({ itemTypes }: Props) {
           options={localItemTypes.filter((t) => t.isActive)}
           getOptionLabel={(option) => {
             if (typeof option === "string") return option;
-            if ((option as any).inputValue) return (option as any).inputValue;
+            if ("inputValue" in option) return option.inputValue;
             return (option as ItemTypeDTO).name;
           }}
           renderOption={(props, option) => {
-            const { key, ...optionProps } = props as any;
+            const { key, ...optionProps } = props;
             return (
               <li key={key} {...optionProps}>
                 {(option as ItemTypeDTO).name}
@@ -528,7 +533,7 @@ export default function SaleForm({ itemTypes }: Props) {
                     overflow: "auto",
                   }}
                 >
-                  <div ref={invoicePrintRef as any}>
+                  <div ref={invoicePrintRef}>
                     <div
                       style={{
                         transformOrigin: "top left",

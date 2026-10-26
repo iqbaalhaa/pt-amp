@@ -42,10 +42,11 @@ export async function createUser(data: { name: string; email: string; password: 
         
         return { success: false, error: "Gagal membuat user" };
 
-    } catch (error: any) {
+    } catch (error) {
         console.error("Error creating user:", error);
         // Handle better-auth errors (usually APIError)
-        const message = error?.body?.message || error?.message || "Gagal membuat user";
+        const err = error as { body?: { message?: string }; message?: string } | null;
+        const message = err?.body?.message || err?.message || "Gagal membuat user";
         return { success: false, error: message };
     }
 }
@@ -83,9 +84,9 @@ export async function updateUser(userId: string, data: { name?: string; email?: 
         
         revalidatePath("/admin/users");
         return { success: true };
-    } catch (error: any) {
+    } catch (error) {
         console.error("Error updating user:", error);
-        return { success: false, error: error.message || "Failed to update user" };
+        return { success: false, error: (error as { message?: string } | null)?.message || "Failed to update user" };
     }
 }
 

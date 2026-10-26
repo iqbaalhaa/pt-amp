@@ -3,13 +3,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Autocomplete,
-  Button,
   CircularProgress,
   createFilterOptions,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
   TextField,
 } from "@mui/material";
 import { useRouter } from "next/navigation";
@@ -22,7 +17,6 @@ import {
   Invoice as InvoiceComponent,
   type InvoiceData,
 } from "@/components/Invoice";
-import { useReactToPrint } from "react-to-print";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import {
@@ -41,10 +35,8 @@ import { authClient } from "@/lib/auth-client";
 // Icons
 import ShoppingCartRoundedIcon from "@mui/icons-material/ShoppingCartRounded";
 import PictureAsPdfRoundedIcon from "@mui/icons-material/PictureAsPdfRounded";
-import VisibilityRoundedIcon from "@mui/icons-material/VisibilityRounded";
 import EventRoundedIcon from "@mui/icons-material/EventRounded";
 import StickyNote2RoundedIcon from "@mui/icons-material/StickyNote2Rounded";
-import BadgeRoundedIcon from "@mui/icons-material/BadgeRounded";
 import NumbersRoundedIcon from "@mui/icons-material/NumbersRounded";
 import CategoryRoundedIcon from "@mui/icons-material/CategoryRounded";
 import PaymentsRoundedIcon from "@mui/icons-material/PaymentsRounded";
@@ -53,10 +45,14 @@ import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import InventoryRoundedIcon from "@mui/icons-material/InventoryRounded";
 import StoreRoundedIcon from "@mui/icons-material/StoreRounded";
-import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 
-const filter = createFilterOptions<ItemTypeDTO>();
-const supplierFilter = createFilterOptions<SupplierDTO>();
+// Opsi "Tambah ..." dari freeSolo-like Autocomplete
+type NewOption = { inputValue: string; name: string };
+type ItemTypeOption = ItemTypeDTO | NewOption;
+type SupplierOption = SupplierDTO | NewOption;
+
+const filter = createFilterOptions<ItemTypeOption>();
+const supplierFilter = createFilterOptions<SupplierOption>();
 
 type ItemRow = {
   id: string; // internal client-side id for keys
@@ -91,18 +87,17 @@ export default function PurchaseClient() {
   // Data State
   const [itemTypes, setItemTypes] = useState<ItemTypeDTO[]>([]);
   const [suppliers, setSuppliers] = useState<SupplierDTO[]>([]);
-  const [loadingData, setLoadingData] = useState(true);
 
   // Form State
   const [supplierId, setSupplierId] = useState<string>("");
   const [date, setDate] = useState<string>(
     () => new Date().toISOString().split("T")[0]
   );
-  const [status, setStatus] = useState<TransactionStatus>(
+  const [status] = useState<TransactionStatus>(
     TransactionStatus.posted
   );
   const [notes, setNotes] = useState<string>("");
-  const [items, setItems] = useState<ItemRow[]>([
+  const [items, setItems] = useState<ItemRow[]>(() => [
     {
       id: Math.random().toString(),
       itemTypeId: "",
@@ -112,7 +107,6 @@ export default function PurchaseClient() {
   ]);
 
   // UI State
-  const [creatingItemType, setCreatingItemType] = useState(false);
   const [creatingSupplier, setCreatingSupplier] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -129,8 +123,6 @@ export default function PurchaseClient() {
         setSuppliers(s);
       } catch (err) {
         console.error("Failed to load data:", err);
-      } finally {
-        setLoadingData(false);
       }
     };
 
@@ -222,7 +214,11 @@ export default function PurchaseClient() {
         date,
         status,
         notes: notes || null,
-        items: validItems.map(({ id, ...rest }) => rest),
+        items: validItems.map(({ itemTypeId, qty, unitCost }) => ({
+          itemTypeId,
+          qty,
+          unitCost,
+        })),
       };
 
       const res = await createPurchase(payload);
@@ -285,9 +281,6 @@ export default function PurchaseClient() {
     totalAmount: grandTotal.toString(),
     inputBy: session?.user?.name || "Admin",
   };
-
-  // We need the Invoice component to be available in the scope for hidden rendering
-  const InvoiceComponent = require("@/components/Invoice").Invoice;
 
   const handleDownloadPdf = async () => {
     if (!invoicePrintRef.current) return;
@@ -446,20 +439,20 @@ export default function PurchaseClient() {
                     />
                     Supplier <span className="text-red-500">*</span>
                   </label>
-                  <Autocomplete
+                  <Autocomplete<SupplierOption>
                     value={
                       activeSuppliers.find((s) => s.id === supplierId) || null
                     }
                     onChange={async (event, newValue) => {
-                      if (newValue && (newValue as any).inputValue) {
+                      if (newValue && "inputValue" in newValue) {
                         setCreatingSupplier(true);
                         try {
                           const newSup = await quickCreateSupplier(
-                            (newValue as any).inputValue
+                            newValue.inputValue
                           );
                           setSuppliers((prev) => [...prev, newSup]);
                           setSupplierId(newSup.id);
-                        } catch (err) {
+                        } catch {
                           alert("Gagal menambahkan supplier");
                         } finally {
                           setCreatingSupplier(false);
@@ -479,7 +472,7 @@ export default function PurchaseClient() {
                         filtered.push({
                           inputValue,
                           name: `Tambah "${inputValue}"`,
-                        } as any);
+                        });
                       }
                       return filtered;
                     }}
@@ -489,12 +482,11 @@ export default function PurchaseClient() {
                     options={activeSuppliers}
                     getOptionLabel={(option) => {
                       if (typeof option === "string") return option;
-                      if ((option as any).inputValue)
-                        return (option as any).inputValue;
+                      if ("inputValue" in option) return option.inputValue;
                       return option.name;
                     }}
                     renderOption={(props, option) => {
-                      const { key, ...optionProps } = props as any;
+                      const { key, ...optionProps } = props;
                       return (
                         <li key={key} {...optionProps}>
                           {option.name}
@@ -625,25 +617,22 @@ export default function PurchaseClient() {
                           </td>
 
                           <td className="px-2 py-2">
-                            <Autocomplete
+                            <Autocomplete<ItemTypeOption>
                               value={
                                 activeItemTypes.find(
                                   (it) => it.id === row.itemTypeId
                                 ) || null
                               }
                               onChange={async (event, newValue) => {
-                                if (newValue && (newValue as any).inputValue) {
-                                  setCreatingItemType(true);
+                                if (newValue && "inputValue" in newValue) {
                                   try {
                                     const newIt = await quickCreateItemType(
-                                      (newValue as any).inputValue
+                                      newValue.inputValue
                                     );
                                     setItemTypes((prev) => [...prev, newIt]);
                                     updateItem(row.id, "itemTypeId", newIt.id);
-                                  } catch (err) {
+                                  } catch {
                                     alert("Gagal menambahkan barang");
-                                  } finally {
-                                    setCreatingItemType(false);
                                   }
                                 } else {
                                   updateItem(
@@ -665,7 +654,7 @@ export default function PurchaseClient() {
                                   filtered.push({
                                     inputValue,
                                     name: `Tambah "${inputValue}"`,
-                                  } as any);
+                                  });
                                 }
                                 return filtered;
                               }}
@@ -675,12 +664,12 @@ export default function PurchaseClient() {
                               options={activeItemTypes}
                               getOptionLabel={(option) => {
                                 if (typeof option === "string") return option;
-                                if ((option as any).inputValue)
-                                  return (option as any).inputValue;
+                                if ("inputValue" in option)
+                                  return option.inputValue;
                                 return option.name;
                               }}
                               renderOption={(props, option) => {
-                                const { key, ...optionProps } = props as any;
+                                const { key, ...optionProps } = props;
                                 return (
                                   <li key={key} {...optionProps}>
                                     {option.name}

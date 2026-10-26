@@ -3,18 +3,15 @@
 import { useMemo, useState, useEffect } from "react";
 import type { FormEvent } from "react";
 import jsPDF from "jspdf";
-import Link from "next/link";
 import {
   Autocomplete,
   TextField,
   createFilterOptions,
   CircularProgress,
-  InputAdornment,
   Tooltip,
   MenuItem,
 } from "@mui/material";
 
-import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
 import PictureAsPdfRoundedIcon from "@mui/icons-material/PictureAsPdfRounded";
 import SaveRoundedIcon from "@mui/icons-material/SaveRounded";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
@@ -25,7 +22,6 @@ import BadgeRoundedIcon from "@mui/icons-material/BadgeRounded";
 import NumbersRoundedIcon from "@mui/icons-material/NumbersRounded";
 import SummarizeRoundedIcon from "@mui/icons-material/SummarizeRounded";
 import ContentCutRoundedIcon from "@mui/icons-material/ContentCutRounded";
-import AttachMoneyRoundedIcon from "@mui/icons-material/AttachMoneyRounded";
 
 import GlassButton from "@/components/ui/GlassButton";
 import PageHeader from "@/components/ui/PageHeader";
@@ -37,6 +33,7 @@ import {
   createWorkerByName,
 } from "@/actions/worker-actions";
 import { formatRupiah } from "@/lib/currency";
+import { readUpahSettings } from "@/lib/upah-settings";
 
 type Row = {
   id: number;
@@ -53,7 +50,8 @@ type PemotonganRate = {
   rate: number;
 };
 
-const filter = createFilterOptions<WorkerDTO>();
+type WorkerOption = WorkerDTO & { inputValue?: string };
+const filter = createFilterOptions<WorkerOption>();
 
 const F4_W_MM = 210;
 const F4_H_MM = 330;
@@ -74,6 +72,46 @@ function loadLogoImage() {
   return logoImagePromise;
 }
 
+function loadPensortiranSettings(): {
+  upahPerKg: number;
+  rates: PemotonganRate[];
+} {
+  const defaultRates: PemotonganRate[] = [
+    { id: "stik25", name: "Stik 25", unit: "Kg", rate: 1500 },
+    { id: "aaa8", name: "Aaa (8 cm)", unit: "Kg", rate: 1500 },
+    { id: "aa8", name: "Aa (8 cm)", unit: "Kg", rate: 1500 },
+    { id: "reject8", name: "Reject (8)", unit: "Kg", rate: 1500 },
+    { id: "reject6", name: "Reject (6)", unit: "Kg", rate: 1500 },
+    { id: "campuran8", name: "Campuran (8 cm)", unit: "Kg", rate: 1500 },
+  ];
+
+  try {
+    const parsed = readUpahSettings();
+    if (!parsed) return { upahPerKg: 1500, rates: defaultRates };
+
+    const upahPerKg =
+      typeof parsed.pemotonganPerKg === "number"
+        ? parsed.pemotonganPerKg
+        : 1500;
+
+    const rates: PemotonganRate[] = Array.isArray(parsed.pemotonganRates)
+      ? parsed.pemotonganRates.map((r, idx) => ({
+          id: r.id || `rate-${idx}`,
+          name: String(r.name ?? "").trim() || `Jenis ${idx + 1}`,
+          unit: String(r.unit ?? "Kg"),
+          rate:
+            typeof r.rate === "number" && !Number.isNaN(r.rate)
+              ? r.rate
+              : 0,
+        }))
+      : [];
+
+    return { upahPerKg, rates: rates.length > 0 ? rates : defaultRates };
+  } catch {
+    return { upahPerKg: 1500, rates: defaultRates };
+  }
+}
+
 function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(" ");
 }
@@ -83,9 +121,12 @@ export default function PensortiranClient() {
     { id: 1, nama: "", shift: "", itemTypeId: "", qty: 0 },
   ]);
 
-  const [date, setDate] = useState("");
+  const [initialSettings] = useState(loadPensortiranSettings);
+  const [date, setDate] = useState(
+    () => new Date().toISOString().split("T")[0]
+  );
   const [notes, setNotes] = useState("");
-  const [upahPerKg, setUpahPerKg] = useState(1500);
+  const [upahPerKg] = useState(initialSettings.upahPerKg);
   const [saving, setSaving] = useState(false);
 
   const [openPreview, setOpenPreview] = useState(false);
@@ -95,54 +136,14 @@ export default function PensortiranClient() {
   const [creatingWorkerId, setCreatingWorkerId] = useState<number | null>(null);
   const [bulkWorkerModalOpen, setBulkWorkerModalOpen] = useState(false);
   const [selectedWorkerIds, setSelectedWorkerIds] = useState<string[]>([]);
-  const [pemotonganRateOptions, setPemotonganRateOptions] = useState<
-    PemotonganRate[]
-  >([]);
+  const [pemotonganRateOptions] = useState<PemotonganRate[]>(
+    initialSettings.rates
+  );
 
   useEffect(() => {
     getWorkers().then((data) =>
       setWorkerOptions(data.filter((w) => w.isActive))
     );
-    const defaultRates: PemotonganRate[] = [
-      { id: "stik25", name: "Stik 25", unit: "Kg", rate: 1500 },
-      { id: "aaa8", name: "Aaa (8 cm)", unit: "Kg", rate: 1500 },
-      { id: "aa8", name: "Aa (8 cm)", unit: "Kg", rate: 1500 },
-      { id: "reject8", name: "Reject (8)", unit: "Kg", rate: 1500 },
-      { id: "reject6", name: "Reject (6)", unit: "Kg", rate: 1500 },
-      { id: "campuran8", name: "Campuran (8 cm)", unit: "Kg", rate: 1500 },
-    ];
-
-    try {
-      if (typeof window !== "undefined") {
-        const raw = window.localStorage.getItem("upahSettings");
-        if (raw) {
-          const parsed = JSON.parse(raw) as any;
-          if (typeof parsed.pemotonganPerKg === "number") {
-            setUpahPerKg(parsed.pemotonganPerKg);
-          }
-
-          const rates: PemotonganRate[] = Array.isArray(parsed.pemotonganRates)
-            ? parsed.pemotonganRates.map((r: any, idx: number) => ({
-                id: r.id || `rate-${idx}`,
-                name: String(r.name ?? "").trim() || `Jenis ${idx + 1}`,
-                unit: String(r.unit ?? "Kg"),
-                rate:
-                  typeof r.rate === "number" && !Number.isNaN(r.rate)
-                    ? r.rate
-                    : 0,
-              }))
-            : [];
-
-          setPemotonganRateOptions(rates.length > 0 ? rates : defaultRates);
-        } else {
-          setPemotonganRateOptions(defaultRates);
-        }
-      }
-    } catch {
-      setUpahPerKg(1500);
-      setPemotonganRateOptions(defaultRates);
-    }
-    setDate(new Date().toISOString().split("T")[0]);
   }, []);
 
   const addRow = () => {
@@ -198,14 +199,10 @@ export default function PensortiranClient() {
   const getRowTotal = (row: Row) => {
     const q = Number.isFinite(row.qty) ? row.qty : 0;
 
-    const stored =
-      typeof window !== "undefined"
-        ? window.localStorage.getItem("upahSettings")
-        : null;
+    const parsed = readUpahSettings();
     let rate = upahPerKg;
-    if (stored) {
+    if (parsed) {
       try {
-        const parsed = JSON.parse(stored) as any;
         const perKg =
           typeof parsed.pemotonganPerKg === "number"
             ? parsed.pemotonganPerKg
@@ -214,7 +211,7 @@ export default function PensortiranClient() {
 
         if (Array.isArray(parsed.pemotonganRates) && row.itemTypeId) {
           const match = parsed.pemotonganRates.find(
-            (r: any) => r.id === row.itemTypeId
+            (r) => r.id === row.itemTypeId
           );
           if (match && typeof match.rate === "number") {
             rate = match.rate;
@@ -615,17 +612,21 @@ export default function PensortiranClient() {
                       </td>
 
                       <td className="px-3 py-2">
-                        <Autocomplete
+                        <Autocomplete<WorkerOption, false, false, true>
                           value={
                             workerOptions.find((w) => w.name === row.nama) ||
                             null
                           }
                           onChange={async (_event, newValue) => {
-                            if (newValue && (newValue as any).inputValue) {
+                            if (
+                              newValue &&
+                              typeof newValue !== "string" &&
+                              newValue.inputValue
+                            ) {
                               setCreatingWorkerId(row.id);
                               try {
                                 const newWorker = await createWorkerByName(
-                                  (newValue as any).inputValue
+                                  newValue.inputValue
                                 );
                                 if (newWorker) {
                                   setWorkerOptions((prev) => [
@@ -659,12 +660,9 @@ export default function PensortiranClient() {
                               filtered.push({
                                 inputValue,
                                 name: `Tambah "${inputValue}"`,
-                                id: 0,
+                                id: "",
                                 isActive: true,
-                                role: "WORKER",
-                                createdAt: new Date(),
-                                updatedAt: new Date(),
-                              } as any);
+                              });
                             }
                             return filtered;
                           }}
@@ -674,8 +672,8 @@ export default function PensortiranClient() {
                           options={workerOptions}
                           getOptionLabel={(option) => {
                             if (typeof option === "string") return option;
-                            if ((option as any).inputValue)
-                              return (option as any).inputValue;
+                            if (option.inputValue)
+                              return option.inputValue;
                             return option.name;
                           }}
                           renderOption={(props, option) => {

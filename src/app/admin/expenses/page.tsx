@@ -5,9 +5,9 @@ import { headers } from "next/headers";
 export default async function ExpensesPage() {
   const session = await auth.api.getSession({ headers: await headers() });
   const inputBy =
-    (session?.user as any)?.name ||
-    (session?.user as any)?.email ||
-    (session?.user as any)?.id ||
+    session?.user?.name ||
+    session?.user?.email ||
+    session?.user?.id ||
     null;
   return (
     <main className="w-full px-4 py-6">

@@ -22,7 +22,7 @@ try {
       if (!process.env[key]) process.env[key] = value;
     }
   }
-} catch (e) {
+} catch {
   console.log("Manual env load skipped");
 }
 

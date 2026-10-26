@@ -7,8 +7,16 @@ import { Plus, Trash2, AlertCircle } from "lucide-react";
 import { createCashAdjustment, deleteCashAdjustment } from "@/actions/cash-adjustment-actions";
 import { AdjustmentType } from "@/generated/client";
 
+interface CashAdjustmentRow {
+  id: string;
+  date: Date | string;
+  amount: number;
+  type: string;
+  notes?: string | null;
+}
+
 interface CashAdjustmentClientProps {
-  adjustments: any[];
+  adjustments: CashAdjustmentRow[];
 }
 
 export default function CashAdjustmentClient({ adjustments }: CashAdjustmentClientProps) {
@@ -45,8 +53,8 @@ export default function CashAdjustmentClient({ adjustments }: CashAdjustmentClie
           notes: "",
         });
       }
-    } catch (err: any) {
-      setError(err.message || "Gagal menyimpan penyesuaian");
+    } catch (err) {
+      setError((err instanceof Error ? err.message : "") || "Gagal menyimpan penyesuaian");
     } finally {
       setLoading(false);
     }
@@ -57,8 +65,8 @@ export default function CashAdjustmentClient({ adjustments }: CashAdjustmentClie
     setLoading(true);
     try {
       await deleteCashAdjustment(id);
-    } catch (err: any) {
-      alert(err.message || "Gagal menghapus penyesuaian");
+    } catch (err) {
+      alert((err instanceof Error ? err.message : "") || "Gagal menghapus penyesuaian");
     } finally {
       setLoading(false);
     }

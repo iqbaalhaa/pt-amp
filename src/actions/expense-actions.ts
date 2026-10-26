@@ -28,49 +28,26 @@ export async function createExpense(input: ExpenseInput) {
       amount: i.amount,
     }));
 
-  const anyPrisma = prisma as any;
-  let expenseId: string;
-  if (anyPrisma?.expense?.create) {
-    const expense = await prisma.expense.create({
-      data: {
-        date: new Date(`${input.date}T00:00:00Z`),
-        status: "draft",
-        notes: input.notes ?? null,
-        createdById: currentUserId,
-        createdByName: currentUserName,
-        ...(itemsData.length > 0
-          ? {
-              items: {
-                create: itemsData,
-              },
-            }
-          : {}),
-      },
-      include: {
-        items: true,
-      },
-    });
-    expenseId = expense.id.toString();
-  } else {
-    const created = await prisma.$transaction(async (tx) => {
-      const headerRows = await tx.$queryRaw<Array<{ id: bigint }>>`
-        INSERT INTO "public"."expenses" ("date","status","notes","created_by_id","created_by_name")
-        VALUES (${new Date(`${input.date}T00:00:00Z`)}, 'draft', ${input.notes ?? null}, ${currentUserId}, ${currentUserName})
-        RETURNING "id"
-      `;
-      const newId = headerRows[0].id;
-      if (itemsData.length > 0) {
-        for (const it of itemsData) {
-          await tx.$executeRaw`
-            INSERT INTO "public"."expense_items" ("expense_id","purpose","amount")
-            VALUES (${newId}, ${it.purpose}, ${it.amount}::numeric)
-          `;
-        }
-      }
-      return newId;
-    });
-    expenseId = created.toString();
-  }
+  const expense = await prisma.expense.create({
+    data: {
+      date: new Date(`${input.date}T00:00:00Z`),
+      status: "draft",
+      notes: input.notes ?? null,
+      createdById: currentUserId,
+      createdByName: currentUserName,
+      ...(itemsData.length > 0
+        ? {
+            items: {
+              create: itemsData,
+            },
+          }
+        : {}),
+    },
+    include: {
+      items: true,
+    },
+  });
+  const expenseId = expense.id.toString();
 
   revalidatePath("/admin/expenses");
   return { success: true, id: expenseId };

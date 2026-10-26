@@ -32,28 +32,14 @@ export async function getInventorySummary(): Promise<InventoryItemDTO[]> {
     },
   });
 
-  // 3. Ambil Purchase Info (untuk Avg Price & Last Purchase Date)
-  const purchaseSummary = await prisma.purchaseItem.groupBy({
-    by: ["itemTypeId"],
-    _sum: {
-      qty: true,
-      unitCost: true,
-    },
-    where: {
-      purchase: {
-        status: "posted",
-      },
-    },
-  });
-
   const pengemasanItems = await prisma.pengemasanItem.findMany();
 
   const packagingMap = new Map<string, number>();
 
-  (pengemasanItems as any[]).forEach((item) => {
-    const itemTypeIdValue = (item as any).itemTypeId;
+  pengemasanItems.forEach((item) => {
+    const itemTypeIdValue = item.itemTypeId;
     if (!itemTypeIdValue) return;
-    const bungkus = Number((item as any).bungkus || 0);
+    const bungkus = Number(item.bungkus || 0);
     if (bungkus <= 0) return;
     const key = itemTypeIdValue.toString();
     packagingMap.set(key, (packagingMap.get(key) || 0) + bungkus);
@@ -175,11 +161,11 @@ export async function getInventoryItemSummary(
 
   const pengemasanItems = await prisma.pengemasanItem.findMany();
 
-  const packagingBungkus = (pengemasanItems as any[]).reduce((acc, item) => {
-    const itemTypeIdValue = (item as any).itemTypeId;
+  const packagingBungkus = pengemasanItems.reduce((acc, item) => {
+    const itemTypeIdValue = item.itemTypeId;
     if (!itemTypeIdValue) return acc;
     if (itemTypeIdValue.toString() !== itemTypeId) return acc;
-    return acc + Number((item as any).bungkus || 0);
+    return acc + Number(item.bungkus || 0);
   }, 0);
 
   return {

@@ -111,8 +111,6 @@ export default async function LaporanGajiPrintPage({
 	const activeTabKey: TabKey =
 		(TABS.find((t) => t.key === params.jenis)?.key as TabKey) || "pengikisan";
 
-	const anyPrisma = prisma as any;
-
 	const [
 		pengikisanList,
 		pemotonganList,
@@ -159,8 +157,7 @@ export default async function LaporanGajiPrintPage({
 		}),
 		(async () => {
 			try {
-				if (!anyPrisma.pensortiran) return [];
-				return await anyPrisma.pensortiran.findMany({
+				return await prisma.pensortiran.findMany({
 					where: {
 						date: { gte: weekStart, lt: weekEndExclusive },
 					},
@@ -173,8 +170,7 @@ export default async function LaporanGajiPrintPage({
 		})(),
 		(async () => {
 			try {
-				if (!anyPrisma.qcPotongSortir) return [];
-				return await anyPrisma.qcPotongSortir.findMany({
+				return await prisma.qcPotongSortir.findMany({
 					where: {
 						date: { gte: weekStart, lt: weekEndExclusive },
 					},
@@ -196,7 +192,7 @@ export default async function LaporanGajiPrintPage({
 
 		for (const p of pengikisanList) {
 			const d = new Date(p.date);
-			const shiftKey: ShiftKey = (p as any).shift === "malam" ? "malam" : "siang";
+			const shiftKey: ShiftKey = p.shift === "malam" ? "malam" : "siang";
 			const dateOnly = new Date(d.getFullYear(), d.getMonth(), d.getDate());
 			let rowWeekStart = getWeekStart(dateOnly);
 			if (dateOnly.getDay() === 0 && shiftKey === "siang") {
@@ -243,7 +239,7 @@ export default async function LaporanGajiPrintPage({
     const map = new Map<string, WeeklyRow>();
     for (const p of pemotonganList) {
       const d = new Date(p.date);
-      const shiftKey: ShiftKey = (p as any).shift === "malam" ? "malam" : "siang";
+      const shiftKey: ShiftKey = p.shift === "malam" ? "malam" : "siang";
       for (const it of p.pemotonganItems) {
         const nama = it.nama || "-";
         const total = Number(it.total ?? 0);
@@ -282,7 +278,7 @@ export default async function LaporanGajiPrintPage({
         if (!map.has(nama)) {
           map.set(nama, { nama, ket: "Kg", values: createEmptyValues(), jumlah: 0, upahPerUnit: 0 });
         }
-        const shiftRaw = ((it as any).shift as string | null) || "";
+        const shiftRaw = it.shift || "";
         const shiftKey: ShiftKey = shiftRaw.toUpperCase() === "MALAM" ? "malam" : "siang";
         addValue(map.get(nama)!, d, total, shiftKey);
       }
@@ -294,7 +290,7 @@ export default async function LaporanGajiPrintPage({
     const map = new Map<string, WeeklyRow>();
     for (const p of pengemasanList) {
       const d = new Date(p.date);
-      const shiftKey: ShiftKey = (p as any).shift === "malam" ? "malam" : "siang";
+      const shiftKey: ShiftKey = p.shift === "malam" ? "malam" : "siang";
       for (const it of p.pengemasanItems) {
         const nama = it.nama || "-";
         const total = Number(it.total ?? 0);

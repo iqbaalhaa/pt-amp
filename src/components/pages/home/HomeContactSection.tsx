@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { ArrowLink } from "@/components/ArrowLink";
 import { ContactForm } from "@/components/ContactForm";
 import { getDictionary, localePath, type Locale } from "@/lib/i18n";

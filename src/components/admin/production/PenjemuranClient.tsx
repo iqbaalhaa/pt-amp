@@ -9,7 +9,6 @@ import {
   TextField,
   createFilterOptions,
   CircularProgress,
-  InputAdornment,
   Tooltip,
   Checkbox,
 } from "@mui/material";
@@ -23,10 +22,8 @@ import EventRoundedIcon from "@mui/icons-material/EventRounded";
 import StickyNote2RoundedIcon from "@mui/icons-material/StickyNote2Rounded";
 import BadgeRoundedIcon from "@mui/icons-material/BadgeRounded";
 import NumbersRoundedIcon from "@mui/icons-material/NumbersRounded";
-import PaymentsRoundedIcon from "@mui/icons-material/PaymentsRounded";
 import SummarizeRoundedIcon from "@mui/icons-material/SummarizeRounded";
 import AccessTimeRoundedIcon from "@mui/icons-material/AccessTimeRounded";
-import AttachMoneyRoundedIcon from "@mui/icons-material/AttachMoneyRounded";
 
 import GlassButton from "@/components/ui/GlassButton";
 import PageHeader from "@/components/ui/PageHeader";
@@ -38,6 +35,7 @@ import {
   createWorkerByName,
 } from "@/actions/worker-actions";
 import { formatRupiah } from "@/lib/currency";
+import { readUpahSettings } from "@/lib/upah-settings";
 
 type Row = {
   id: number;
@@ -46,7 +44,8 @@ type Row = {
   lemburJam: number;
 };
 
-const filter = createFilterOptions<WorkerDTO>();
+type WorkerOption = WorkerDTO & { inputValue?: string };
+const filter = createFilterOptions<WorkerOption>();
 
 const F4_W_MM = 210;
 const F4_H_MM = 330;
@@ -67,6 +66,23 @@ function loadLogoImage() {
   return logoImagePromise;
 }
 
+function loadUpahPenjemuran(): {
+  upahPerHari: number;
+  upahLemburPerJam: number;
+} {
+  const parsed = readUpahSettings();
+  return {
+    upahPerHari:
+      typeof parsed?.penjemuranPerHari === "number"
+        ? parsed.penjemuranPerHari
+        : 100000,
+    upahLemburPerJam:
+      typeof parsed?.penjemuranLemburPerJam === "number"
+        ? parsed.penjemuranLemburPerJam
+        : 15000,
+  };
+}
+
 function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(" ");
 }
@@ -80,8 +96,7 @@ export default function PenjemuranClient() {
     () => new Date().toISOString().split("T")[0]
   );
   const [notes, setNotes] = useState("");
-  const [upahPerHari, setUpahPerHari] = useState(100000);
-  const [upahLemburPerJam, setUpahLemburPerJam] = useState(15000);
+  const [{ upahPerHari, upahLemburPerJam }] = useState(loadUpahPenjemuran);
   const [saving, setSaving] = useState(false);
 
   const [openPreview, setOpenPreview] = useState(false);
@@ -96,26 +111,6 @@ export default function PenjemuranClient() {
     getWorkers().then((data) =>
       setWorkerOptions(data.filter((w) => w.isActive))
     );
-    try {
-      if (typeof window !== "undefined") {
-        const raw = window.localStorage.getItem("upahSettings");
-        if (raw) {
-          const parsed = JSON.parse(raw) as {
-            penjemuranPerHari?: number;
-            penjemuranLemburPerJam?: number;
-          };
-          if (typeof parsed.penjemuranPerHari === "number") {
-            setUpahPerHari(parsed.penjemuranPerHari);
-          }
-          if (typeof parsed.penjemuranLemburPerJam === "number") {
-            setUpahLemburPerJam(parsed.penjemuranLemburPerJam);
-          }
-        }
-      }
-    } catch {
-      setUpahPerHari(100000);
-      setUpahLemburPerJam(15000);
-    }
   }, []);
 
   const addRow = () => {
@@ -594,7 +589,7 @@ export default function PenjemuranClient() {
                       </td>
 
                       <td className="px-3 py-2">
-                        <Autocomplete
+                        <Autocomplete<WorkerOption, false, false, true>
                           value={
                             workerOptions.find((w) => w.name === row.nama) ||
                             (row.nama ? row.nama : null)
@@ -605,11 +600,15 @@ export default function PenjemuranClient() {
                             }
                           }}
                           onChange={async (_event, newValue) => {
-                            if (newValue && (newValue as any).inputValue) {
+                            if (
+                              newValue &&
+                              typeof newValue !== "string" &&
+                              newValue.inputValue
+                            ) {
                               setCreatingWorkerId(row.id);
                               try {
                                 const newWorker = await createWorkerByName(
-                                  (newValue as any).inputValue
+                                  newValue.inputValue
                                 );
                                 if (newWorker) {
                                   setWorkerOptions((prev) => [
@@ -643,12 +642,9 @@ export default function PenjemuranClient() {
                               filtered.push({
                                 inputValue,
                                 name: `Tambah "${inputValue}"`,
-                                id: 0,
+                                id: "",
                                 isActive: true,
-                                role: "WORKER",
-                                createdAt: new Date(),
-                                updatedAt: new Date(),
-                              } as any);
+                              });
                             }
                             return filtered;
                           }}
@@ -658,8 +654,8 @@ export default function PenjemuranClient() {
                           options={workerOptions}
                           getOptionLabel={(option) => {
                             if (typeof option === "string") return option;
-                            if ((option as any).inputValue)
-                              return (option as any).inputValue;
+                            if (option.inputValue)
+                              return option.inputValue;
                             return option.name;
                           }}
                           renderOption={(props, option) => {

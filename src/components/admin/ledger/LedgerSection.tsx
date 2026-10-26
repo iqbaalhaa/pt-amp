@@ -128,7 +128,7 @@ export function LedgerSection({
 
   const sortedEntries = useMemo(() => {
     const getComparable = (e: LedgerEntry, col: keyof LedgerEntry) => {
-      const v = e[col] as any;
+      const v: unknown = e[col];
       if (col === "date") {
         const t = new Date(String(v)).getTime();
         return isFinite(t) ? t : Number.NEGATIVE_INFINITY;
@@ -918,231 +918,6 @@ export function LedgerSection({
     setOpenReport(false);
   };
 
-  const handleDownloadPengikisanExcelReport = () => {
-    if (entries.length === 0) return;
-    let startDate: Date | null = null;
-    let endDate: Date | null = null;
-    let periodeLabel = "";
-    if (reportMode === "range") {
-      if (!reportStart || !reportEnd) return;
-      const s = new Date(reportStart);
-      const e = new Date(reportEnd);
-      if (isNaN(s.getTime()) || isNaN(e.getTime()) || s > e) return;
-      startDate = new Date(s.getFullYear(), s.getMonth(), s.getDate());
-      endDate = new Date(
-        e.getFullYear(),
-        e.getMonth(),
-        e.getDate(),
-        23,
-        59,
-        59,
-        999
-      );
-      periodeLabel = `${s.toLocaleDateString("id-ID")} - ${e.toLocaleDateString(
-        "id-ID"
-      )}`;
-    } else {
-      if (!reportMonth || !reportYear) return;
-      const yearNum = Number(reportYear);
-      const monthNum = Number(reportMonth);
-      if (!yearNum || !monthNum) return;
-      startDate = new Date(yearNum, monthNum - 1, 1);
-      endDate = new Date(yearNum, monthNum, 0, 23, 59, 59, 999);
-      const base = new Date(yearNum, monthNum - 1, 1);
-      const monthName = base.toLocaleString("id-ID", { month: "long" });
-      periodeLabel = `${monthName} ${yearNum}`;
-    }
-    if (!startDate || !endDate) return;
-
-    const filtered = entries.filter((e) => {
-      if (e.type !== "production" || e.subType !== "Pengikisan") return false;
-      if (!e.pengikisanItems || e.pengikisanItems.length === 0) return false;
-      const d = new Date(e.date);
-      return d >= startDate! && d <= endDate!;
-    });
-    if (filtered.length === 0) return;
-
-    type RowInfo = {
-      name: string;
-      ket: "KA" | "STIK";
-      values: Record<string, number>;
-      harga: number;
-      shift?: string;
-    };
-
-    const dateKeySet = new Set<string>();
-    const rowsMap = new Map<string, RowInfo>();
-
-    const ensureRow = (
-      name: string,
-      ket: "KA" | "STIK",
-      harga: number,
-      shift?: string
-    ) => {
-      const key = `${name}|${ket}|${shift || ""}`;
-      let row = rowsMap.get(key);
-      if (!row) {
-        row = { name, ket, values: {}, harga, shift };
-        rowsMap.set(key, row);
-      }
-      if (!row.harga && harga > 0) row.harga = harga;
-      return row;
-    };
-
-    filtered.forEach((entry) => {
-      const d = new Date(entry.date);
-      const dateKey = d.toISOString().slice(0, 10);
-      dateKeySet.add(dateKey);
-      entry.pengikisanItems?.forEach((it) => {
-        const baseName = it.nama || "-";
-        const ka = typeof it.kaKg === "number" ? it.kaKg : Number(it.kaKg ?? 0);
-        const stik =
-          typeof it.stikKg === "number" ? it.stikKg : Number(it.stikKg ?? 0);
-        const upahKa =
-          typeof it.upahKa === "number" ? it.upahKa : Number(it.upahKa ?? 0);
-        const upahStik =
-          typeof it.upahStik === "number"
-            ? it.upahStik
-            : Number(it.upahStik ?? 0);
-
-        if (ka > 0) {
-          const rowKa = ensureRow(
-            baseName,
-            "KA",
-            upahKa,
-            entry.shift ?? undefined
-          );
-          rowKa.values[dateKey] = (rowKa.values[dateKey] ?? 0) + ka;
-        }
-        if (stik > 0) {
-          const rowStik = ensureRow(
-            baseName,
-            "STIK",
-            upahStik,
-            entry.shift ?? undefined
-          );
-          rowStik.values[dateKey] = (rowStik.values[dateKey] ?? 0) + stik;
-        }
-      });
-    });
-
-    if (rowsMap.size === 0) return;
-
-    const dateKeys = Array.from(dateKeySet).sort();
-    const dateHeaders = dateKeys.map((key) => {
-      const d = new Date(key);
-      const day = d.getDate().toString().padStart(2, "0");
-      const month = (d.getMonth() + 1).toString().padStart(2, "0");
-      const weekday = d
-        .toLocaleDateString("id-ID", { weekday: "short" })
-        .toUpperCase();
-      return `${day}/${month} ${weekday}`;
-    });
-
-    const data: (string | number)[][] = [];
-    data.push(["PERIODE", periodeLabel]);
-    data.push([]);
-    const header: (string | number)[] = [
-      "NO",
-      "NAMA",
-      "SHIFT",
-      "KET",
-      ...dateHeaders,
-      "JUMLAH",
-      "HARGA",
-      "TOTAL",
-      "JUMLAH UPAH",
-    ];
-    data.push(header);
-
-    const names = Array.from(
-      new Set(Array.from(rowsMap.values()).map((r) => r.name))
-    ).sort((a, b) => a.localeCompare(b));
-
-    const totalUpahByName = new Map<string, number>();
-    names.forEach((name) => {
-      // For total upah, we sum all rows for this name regardless of shift
-      // Or should we separate by shift? The current logic sums by name.
-      // But wait, the rowsMap now has keys like "name|KA|shift".
-      // We need to find all rows for this name.
-      const rowsForName = Array.from(rowsMap.values()).filter(
-        (r) => r.name === name
-      );
-      let totalUpah = 0;
-      rowsForName.forEach((row) => {
-        const jumlahRow = Object.values(row.values).reduce(
-          (sum, v) => sum + v,
-          0
-        );
-        const hargaRow = row.harga || 0;
-        totalUpah += jumlahRow * hargaRow;
-      });
-      totalUpahByName.set(name, totalUpah);
-    });
-
-    let counter = 1;
-    names.forEach((name) => {
-      // Group rows by shift as well?
-      // The original code was:
-      // const rowKa = rowsMap.get(`${name}|KA`);
-      // const rowStik = rowsMap.get(`${name}|STIK`);
-      // Now we have multiple rows per name (for different shifts).
-
-      const rowsForName = Array.from(rowsMap.values()).filter(
-        (r) => r.name === name
-      );
-      // Sort rows: first by shift, then by KET (KA then STIK)
-      rowsForName.sort((a, b) => {
-        const shiftA = a.shift || "";
-        const shiftB = b.shift || "";
-        if (shiftA !== shiftB) return shiftA.localeCompare(shiftB);
-        if (a.ket === "KA" && b.ket === "STIK") return -1;
-        if (a.ket === "STIK" && b.ket === "KA") return 1;
-        return 0;
-      });
-
-      rowsForName.forEach((row, idx) => {
-        const jumlah = dateKeys.reduce(
-          (sum, key) => sum + (row.values[key] ?? 0),
-          0
-        );
-        const harga = row.harga || 0;
-        const total = jumlah * harga;
-        // Show total upah only on the last row for this name?
-        // Or per shift? The original code showed it on STIK row if available, or just summed it up.
-        // Let's show it on the last row for the name.
-        const isLast = idx === rowsForName.length - 1;
-        const jumlahUpah = isLast ? totalUpahByName.get(name) : 0;
-
-        const perDate = dateKeys.map((key) => row.values[key] ?? 0);
-        data.push([
-          idx === 0 ? counter : "",
-          row.name,
-          row.shift ? row.shift.toUpperCase() : "-",
-          row.ket,
-          ...perDate,
-          jumlah,
-          harga,
-          total,
-          jumlahUpah || "",
-        ]);
-      });
-      counter += 1;
-    });
-
-    const wb = XLSX.utils.book_new();
-    const ws = XLSX.utils.aoa_to_sheet(data);
-    XLSX.utils.book_append_sheet(wb, ws, "Laporan");
-    const wbout = XLSX.write(wb, { bookType: "xlsx", type: "array" });
-    const blob = new Blob([wbout], {
-      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    });
-    const suffix =
-      reportMode === "range" ? "range" : `bulan-${reportMonth}-${reportYear}`;
-    downloadBlob(blob, `laporan-pengikisan-${suffix}.xlsx`);
-    setOpenReport(false);
-  };
-
   const handleDownloadPengikisanPdfReport = async () => {
     if (entries.length === 0) return;
     let startDate: Date | null = null;
@@ -1282,7 +1057,7 @@ export function LedgerSection({
     ).sort((a, b) => a.localeCompare(b));
 
     const totalUpahByNamePdf = new Map<string, number>();
-    names.forEach((name, idx) => {
+    names.forEach((name) => {
       const rowsForName = Array.from(rowsMap.values()).filter(
         (r) => r.name === name
       );
@@ -2154,16 +1929,6 @@ export function LedgerSection({
     [selectedIds, currentEntries]
   );
 
-  const totalSum = useMemo(
-    () =>
-      currentEntries.reduce(
-        (acc, curr) =>
-          acc + (curr.status === "cancelled" ? 0 : curr.total ?? 0),
-        0
-      ),
-    [currentEntries]
-  );
-
   const handlePrev = () => setPage((p) => Math.max(1, p - 1));
   const handleNext = () => setPage((p) => Math.min(totalPages, p + 1));
   const toggleId = (id: string) =>
@@ -2265,11 +2030,11 @@ export function LedgerSection({
       const buf = await file.arrayBuffer();
       const wb = XLSX.read(buf, { type: "array", cellDates: true });
       const sheet = wb.Sheets[wb.SheetNames[0]];
-      const rows = XLSX.utils.sheet_to_json<any[]>(sheet, {
+      const rows = XLSX.utils.sheet_to_json<unknown[]>(sheet, {
         header: 1,
         raw: false,
         dateNF: "yyyy-mm-dd",
-      }) as any[][];
+      });
       const data = rows.slice(1); // skip header
 
       const valid: MassRow[] = [];
@@ -2553,7 +2318,7 @@ export function LedgerSection({
         failed: errors.length,
         errors,
       });
-    } catch (_err) {
+    } catch {
       setMassReport({
         success: 0,
         failed: 1,
@@ -2653,7 +2418,7 @@ export function LedgerSection({
         const byKey = new Map<string, MassRow[]>();
 
         massRows.forEach((r) => {
-          let keyObj: any = { p: r.party, d: r.date };
+          const keyObj: Record<string, unknown> = { p: r.party, d: r.date };
           if (
             subType === "Pemotongan" ||
             subType === "Pengikisan" ||
@@ -2877,7 +2642,7 @@ export function LedgerSection({
                   const tableHead = `<tr>${headers
                     .map((h) => `<th>${h}</th>`)
                     .join("")}</tr>`;
-                  const esc = (s: any) =>
+                  const esc = (s: unknown) =>
                     String(s ?? "")
                       .replace(/&/g, "&amp;")
                       .replace(/</g, "&lt;")
@@ -2888,7 +2653,7 @@ export function LedgerSection({
                     .map(
                       (r) =>
                         `<tr>${headers
-                          .map((h) => `<td>${esc((r as any)[h])}</td>`)
+                          .map((h) => `<td>${esc(r[h as keyof typeof r])}</td>`)
                           .join("")}</tr>`
                     )
                     .join("");

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   Box,
   Button,
@@ -27,7 +27,6 @@ import {
 import type { ItemTypeDTO } from "@/actions/item-type-actions";
 import GlassTable, { Column } from "@/components/ui/GlassTable";
 import GlassButton from "@/components/ui/GlassButton";
-import StatusBadge from "@/components/ui/StatusBadge";
 import { useRouter } from "next/navigation";
 
 import CategoryIcon from "@mui/icons-material/Category";
@@ -54,9 +53,12 @@ export default function ItemTypeClient({
     onConfirm: () => Promise<void>;
   } | null>(null);
 
-  useEffect(() => {
+  // Sinkron state lokal saat data dari server berubah (pola React: adjust state saat render).
+  const [prevInitialItemTypes, setPrevInitialItemTypes] = useState(initialItemTypes);
+  if (initialItemTypes !== prevInitialItemTypes) {
+    setPrevInitialItemTypes(initialItemTypes);
     setItemTypes(initialItemTypes);
-  }, [initialItemTypes]);
+  }
 
   const handleSelectAll = () => {
     if (selectedIds.length === itemTypes.length) {

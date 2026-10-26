@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
 	Box,
 	TextField,
@@ -44,9 +44,12 @@ export default function WorkerClient({ initialWorkers }: WorkerClientProps) {
 		severity: "success",
 	});
 
-	useEffect(() => {
+	// Sinkron state lokal saat data dari server berubah (pola React: adjust state saat render).
+	const [prevInitialWorkers, setPrevInitialWorkers] = useState(initialWorkers);
+	if (initialWorkers !== prevInitialWorkers) {
+		setPrevInitialWorkers(initialWorkers);
 		setWorkers(initialWorkers);
-	}, [initialWorkers]);
+	}
 
 	const [formData, setFormData] = useState({
 		name: "",

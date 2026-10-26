@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { createHeroSlide } from "@/actions/cms-actions";
-import { Plus, X, Image as ImageIcon, Video } from "lucide-react";
+import { Plus, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function CreateHeroSlideButton({

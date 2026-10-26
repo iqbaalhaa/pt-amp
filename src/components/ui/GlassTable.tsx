@@ -20,10 +20,10 @@ type Props<T> = {
 	onRowClick?: (row: T) => void;
 };
 
-export default function GlassTable<T extends Record<string, any>>({
+export default function GlassTable<T extends object>({
 	columns,
 	data,
-	keyField = "id",
+	keyField = "id" as keyof T,
 	actions,
 	showNumber = true,
 	startIndex = 0,

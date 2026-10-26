@@ -2,7 +2,6 @@ import React from "react";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { toCurrency } from "@/components/admin/ledger/formatters";
-import LaporanGajiHeaderWithDownload from "@/components/admin/laporan-gaji/HeaderWithDownload";
 import SalaryReportPrintClient from "@/components/admin/laporan-gaji/PrintButton";
 
 export const metadata = {
@@ -117,8 +116,6 @@ export default async function LaporanGajiPage({
 	const activeTabKey: TabKey =
 		(TABS.find((t) => t.key === params.jenis)?.key as TabKey) || "pengikisan";
 
-	const anyPrisma = prisma as any;
-
 	const [
 		pengikisanList,
 		pemotonganList,
@@ -165,8 +162,7 @@ export default async function LaporanGajiPage({
 		}),
 		(async () => {
 			try {
-				if (!anyPrisma.pensortiran) return [];
-				return await anyPrisma.pensortiran.findMany({
+				return await prisma.pensortiran.findMany({
 					where: {
 						date: { gte: weekStart, lt: weekEndExclusive },
 					},
@@ -184,8 +180,7 @@ export default async function LaporanGajiPage({
 		})(),
 		(async () => {
 			try {
-				if (!anyPrisma.qcPotongSortir) return [];
-				return await anyPrisma.qcPotongSortir.findMany({
+				return await prisma.qcPotongSortir.findMany({
 					where: {
 						date: { gte: weekStart, lt: weekEndExclusive },
 					},
@@ -214,7 +209,7 @@ export default async function LaporanGajiPage({
 		for (const p of pengikisanList) {
 			const d = new Date(p.date);
 			const shiftKey: ShiftKey =
-				(p as any).shift === "malam" ? "malam" : "siang";
+				p.shift === "malam" ? "malam" : "siang";
 
 			const dateOnly = new Date(
 				d.getFullYear(),
@@ -286,7 +281,7 @@ export default async function LaporanGajiPage({
     for (const p of pemotonganList) {
       const d = new Date(p.date);
       const shiftKey: ShiftKey =
-        (p as any).shift === "malam" ? "malam" : "siang";
+        p.shift === "malam" ? "malam" : "siang";
       for (const it of p.pemotonganItems) {
         const nama = it.nama || "-";
         const total = Number(it.total ?? 0);
@@ -347,7 +342,7 @@ export default async function LaporanGajiPage({
             upahPerUnit: 0,
           });
         }
-        const shiftRaw = ((it as any).shift as string | null) || "";
+        const shiftRaw = it.shift || "";
         const shiftKey: ShiftKey =
           shiftRaw.toUpperCase() === "MALAM" ? "malam" : "siang";
         addValue(map.get(nama)!, d, total, shiftKey);
@@ -363,7 +358,7 @@ export default async function LaporanGajiPage({
     for (const p of pengemasanList) {
       const d = new Date(p.date);
       const shiftKey: ShiftKey =
-        (p as any).shift === "malam" ? "malam" : "siang";
+        p.shift === "malam" ? "malam" : "siang";
       for (const it of p.pengemasanItems) {
         const nama = it.nama || "-";
         const total = Number(it.total ?? 0);

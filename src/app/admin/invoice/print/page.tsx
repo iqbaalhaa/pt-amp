@@ -89,15 +89,14 @@ export default async function InvoicePrintPage({
       totalAmount,
     };
   } else if (params.type === "expense") {
-    const anyPrisma = prisma as any;
     let e:
-      | { id: bigint; date: Date; notes: string | null; createdByName: string | null; items: Array<{ purpose: string; amount: any }> }
+      | { id: bigint; date: Date; notes: string | null; createdByName: string | null; items: Array<{ purpose: string; amount: { toString(): string } }> }
       | null = null;
-    if (anyPrisma?.expense?.findUnique) {
-      e = (await prisma.expense.findUnique({
+    if (typeof prisma.expense?.findUnique === "function") {
+      e = await prisma.expense.findUnique({
         where: { id: BigInt(params.id) },
         include: { items: true },
-      })) as any;
+      });
     } else {
       const header =
         await prisma.$queryRaw<Array<{ id: bigint; date: Date; notes: string | null; created_by_name: string | null }>>`
@@ -107,7 +106,7 @@ export default async function InvoicePrintPage({
         `;
       if (header?.[0]) {
         const itemsRows =
-          await prisma.$queryRaw<Array<{ purpose: string; amount: any }>>`
+          await prisma.$queryRaw<Array<{ purpose: string; amount: { toString(): string } }>>`
             SELECT "purpose", "amount" FROM "public"."expense_items"
             WHERE "expense_id" = ${BigInt(params.id)}
           `;

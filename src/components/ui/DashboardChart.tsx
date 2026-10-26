@@ -12,7 +12,6 @@ import {
 	Tooltip,
 	Legend,
 	Filler,
-	ScriptableContext,
 } from "chart.js";
 import { Line, Bar } from "react-chartjs-2";
 
@@ -60,7 +59,7 @@ export default function DashboardChart({
 
 	const rgbColor = hexToRgb(color);
 
-	const options: any = {
+	const options = {
 		responsive: true,
 		maintainAspectRatio: false,
 		plugins: {
@@ -79,7 +78,7 @@ export default function DashboardChart({
 				padding: 10,
 				displayColors: false,
 				callbacks: {
-					label: function (context: any) {
+					label: function (context: { parsed: { y: number | null } }) {
 						return `${context.parsed.y} kg`;
 					},
 				},
@@ -152,7 +151,7 @@ export default function DashboardChart({
 				backgroundColor:
 					type === "bar"
 						? color
-						: (context: any) => {
+						: (context: { chart: { ctx: CanvasRenderingContext2D } }) => {
 								const ctx = context.chart.ctx;
 								const gradient = ctx.createLinearGradient(0, 0, 0, height);
 								gradient.addColorStop(0, `rgba(${rgbColor}, 0.25)`);

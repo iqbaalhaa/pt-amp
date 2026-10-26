@@ -1,7 +1,8 @@
 import { prisma } from "@/lib/prisma";
+import type { Prisma } from "@/generated/client";
 import { format } from "date-fns";
 import { id } from "date-fns/locale/id";
-import { ArrowDownRight, ArrowUpRight, Filter, Wallet } from "lucide-react";
+import { ArrowUpRight, Wallet } from "lucide-react";
 import CashExportClient from "@/components/admin/cash/CashExportClient";
 import CashSummaryClient from "@/components/admin/cash/CashSummaryClient";
 import CashAdjustmentClient from "@/components/admin/cash/CashAdjustmentClient";
@@ -26,7 +27,6 @@ export default async function CashPage({
 	searchParams: Promise<CashSearchParams>;
 }) {
 	const params = (await searchParams) ?? {};
-	const anyPrisma = prisma as any;
 
 	let start: Date | undefined;
 	let end: Date | undefined;
@@ -74,14 +74,14 @@ export default async function CashPage({
 			prisma.produksiLainnya.findMany({ where: { date: { lt: start } } }),
 			prisma.expense.findMany({ where: { status: "posted", date: { lt: start } }, include: { items: true } }),
 			prisma.production.findMany({ where: { date: { lt: start } }, include: { productionInputs: true } }),
-			anyPrisma.cashAdjustment?.findMany({ where: { date: { lt: start } } }) ?? Promise.resolve([]),
+			prisma.cashAdjustment.findMany({ where: { date: { lt: start } } }),
 		]);
 
 		const sumDebit = 
 			prevSales.reduce((sum, s) => sum + s.saleItems.reduce((acc, it) => acc + (parseFloat(it.qty.toString()) * parseFloat(it.unitPrice.toString())), 0), 0) +
 			prevAdjustments
-				.filter((a: { type: string }) => a.type === "IN")
-				.reduce((sum: number, a: { amount: number | string }) => sum + parseFloat(a.amount.toString()), 0);
+				.filter((a) => a.type === "IN")
+				.reduce((sum, a) => sum + parseFloat(a.amount.toString()), 0);
 
 		const sumCredit = 
 			prevPurchases.reduce((sum, p) => sum + p.purchaseItems.reduce((acc, it) => acc + (parseFloat(it.qty.toString()) * parseFloat(it.unitCost.toString())), 0), 0) +
@@ -95,8 +95,8 @@ export default async function CashPage({
 			prevExpenses.reduce((sum, e) => sum + e.items.reduce((acc, it) => acc + parseFloat(it.amount.toString()), 0), 0) +
 			prevProductions.reduce((sum, pr) => sum + pr.productionInputs.reduce((acc, it) => acc + (parseFloat(it.qty.toString()) * parseFloat(it.unitCost.toString())), 0), 0) +
 			prevAdjustments
-				.filter((a: { type: string }) => a.type === "OUT")
-				.reduce((sum: number, a: { amount: number | string }) => sum + parseFloat(a.amount.toString()), 0);
+				.filter((a) => a.type === "OUT")
+				.reduce((sum, a) => sum + parseFloat(a.amount.toString()), 0);
 		
 		saldoAwal = sumDebit - sumCredit;
 	}
@@ -263,18 +263,18 @@ export default async function CashPage({
 				return [];
 			}
 		})(),
-		anyPrisma.cashAdjustment?.findMany({
+		prisma.cashAdjustment.findMany({
 			where: {
 				...(startStr ? { date: { gte: start } } : {}),
 				...(endStr ? { date: { lte: end } } : {}),
 			},
-		}) ?? Promise.resolve([]),
+		}),
 	]);
 	let totalExpense = 0;
 	let totalExpenseDraft = 0;
-	let postedExpenses: any[] = [];
+	let postedExpenses: Prisma.ExpenseGetPayload<{ include: { items: true } }>[] = [];
 
-	if (anyPrisma?.expense?.findMany) {
+	if (typeof prisma.expense?.findMany === "function") {
 		const [posted, draft] = await Promise.all([
 			prisma.expense.findMany({
 				where: {
@@ -305,15 +305,15 @@ export default async function CashPage({
 		totalExpense = sumItems(posted);
 		totalExpenseDraft = sumItems(draft);
 	} else {
-		const toNum = (v: any) => {
+		const toNum = (v: unknown) => {
 			if (v == null) return 0;
 			if (typeof v === "number") return v;
-			const s = typeof v === "string" ? v : (v.toString?.() ?? "0");
+			const s = typeof v === "string" ? v : String(v);
 			const n = parseFloat(s);
 			return isFinite(n) ? n : 0;
 		};
 		const sumByStatus = async (status: "posted" | "draft") => {
-			const paramsArr: any[] = [status];
+			const paramsArr: unknown[] = [status];
 			let whereSql = `WHERE e."status" = $1`;
 			if (start) {
 				paramsArr.push(start);
@@ -323,7 +323,7 @@ export default async function CashPage({
 				paramsArr.push(end);
 				whereSql += ` AND e."date" <= $${paramsArr.length}`;
 			}
-			const rows = await prisma.$queryRawUnsafe<Array<{ total: any }>>(
+			const rows = await prisma.$queryRawUnsafe<Array<{ total: unknown }>>(
 				`
         SELECT COALESCE(SUM(i.amount), 0) AS total
         FROM "public"."expenses" e
@@ -351,8 +351,8 @@ export default async function CashPage({
 			return sum + t;
 		}, 0) + 
 		cashAdjustments
-			.filter((a: { type: string }) => a.type === "IN")
-			.reduce((sum: number, a: { amount: number | string }) => sum + parseFloat(a.amount.toString()), 0) || 0;
+			.filter((a) => a.type === "IN")
+			.reduce((sum, a) => sum + parseFloat(a.amount.toString()), 0) || 0;
 
 	const pembelian =
 		purchases.reduce((sum, p) => {
@@ -429,8 +429,8 @@ export default async function CashPage({
 		biayaProduksiTotal +
 		totalExpense +
 		cashAdjustments
-			.filter((a: { type: string }) => a.type === "OUT")
-			.reduce((sum: number, a: { amount: number | string }) => sum + parseFloat(a.amount.toString()), 0);
+			.filter((a) => a.type === "OUT")
+			.reduce((sum, a) => sum + parseFloat(a.amount.toString()), 0);
 
 	const saldo = pendapatan - pengeluaran;
 
@@ -507,14 +507,14 @@ export default async function CashPage({
 			debit: 0,
 			credit: parseFloat(p.totalBiaya!.toString()),
 		})),
-		...postedExpenses.map((e: { id: string | number; date: Date; notes?: string | null; items: Array<{ amount: number | string; purpose?: string | null }> }) => ({
+		...postedExpenses.map((e) => ({
 			date: e.date,
 			description: `Expense: ${e.notes || e.items[0]?.purpose || 'Tanpa keterangan'}`,
 			debit: 0,
-			credit: e.items.reduce((sum: number, it: { amount: number | string }) => sum + parseFloat(it.amount.toString()), 0),
+			credit: e.items.reduce((sum, it) => sum + parseFloat(it.amount.toString()), 0),
 			ref: `/admin/ledger?type=invoice&id=${e.id}`
 		})),
-		...cashAdjustments.map((a: { date: Date; notes?: string | null; type: string; amount: number | string }) => ({
+		...cashAdjustments.map((a) => ({
 			date: a.date,
 			description: `Penyesuaian: ${a.notes || (a.type === 'IN' ? 'Penambahan Saldo' : 'Pengurangan Saldo')}`,
 			debit: a.type === "IN" ? parseFloat(a.amount.toString()) : 0,
@@ -542,11 +542,11 @@ export default async function CashPage({
 		})),
 	}));
 
-	const normalizedExpenses = postedExpenses.map((e: { id: string | number; date: Date; notes?: string | null; items: Array<{ id: string | number; purpose: string | null; amount: number | string }> }) => ({
+	const normalizedExpenses = postedExpenses.map((e) => ({
 		id: e.id.toString(),
 		date: e.date,
 		description: e.notes || "",
-		items: e.items.map((it: { id: string | number; purpose: string | null; amount: number | string }) => ({
+		items: e.items.map((it) => ({
 			id: it.id.toString(),
 			description: it.purpose || "",
 			amount: parseFloat(it.amount.toString()),
@@ -892,7 +892,7 @@ export default async function CashPage({
 									</p>
 								</div>
 								<CashAdjustmentClient 
-									adjustments={cashAdjustments.map((a: { id: string | number; date: Date; amount: number | string; type: string; notes?: string | null }) => ({
+									adjustments={cashAdjustments.map((a) => ({
 										id: a.id.toString(),
 										date: a.date,
 										amount: parseFloat(a.amount.toString()),

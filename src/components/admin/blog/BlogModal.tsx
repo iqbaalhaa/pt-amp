@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X,
@@ -44,15 +44,17 @@ export default function BlogModal({
 }: BlogModalProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
-  const [published, setPublished] = useState(false);
+  const [title, setTitle] = useState(post?.title ?? "");
+  const [content, setContent] = useState(post?.content ?? "");
+  const [published, setPublished] = useState(post?.published ?? false);
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const [previewImage, setPreviewImage] = useState<string>("");
+  const [previewImage, setPreviewImage] = useState<string>(post?.image || "");
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
-  // Reset form when post changes or modal opens
-  useEffect(() => {
+  // Reset form when post changes or modal opens (pola React: adjust state saat render)
+  const [prevSync, setPrevSync] = useState({ post, isOpen });
+  if (post !== prevSync.post || isOpen !== prevSync.isOpen) {
+    setPrevSync({ post, isOpen });
     if (post) {
       setTitle(post.title);
       setContent(post.content);
@@ -66,7 +68,7 @@ export default function BlogModal({
       setPreviewImage("");
       setImageFile(null);
     }
-  }, [post, isOpen]);
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -458,7 +460,7 @@ export default function BlogModal({
             <div className="flex flex-col gap-4">
               <p className="text-zinc-600">
                 Apakah Anda yakin ingin menghapus artikel{" "}
-                <strong>"{post?.title}"</strong>? Tindakan ini tidak dapat
+                <strong>&ldquo;{post?.title}&rdquo;</strong>? Tindakan ini tidak dapat
                 dibatalkan.
               </p>
               <div className="flex justify-end gap-2 mt-2">

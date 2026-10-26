@@ -2,7 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import { promises as fs } from "fs";
+import type { Prisma } from "@/generated/client";
 import path from "path";
 import { uploadToS3, MAX_FILE_SIZE, MAX_FILE_SIZE_MB } from "@/lib/s3";
 
@@ -334,12 +334,7 @@ export async function updateAboutPoint(id: string, formData: FormData) {
 }
 
 export async function getGalleryAlbums() {
-  const client: any = prisma;
-  if (!client.galleryAlbum) {
-    return [];
-  }
-
-  return await client.galleryAlbum.findMany({
+  return await prisma.galleryAlbum.findMany({
     include: {
       items: {
         orderBy: {
@@ -354,12 +349,7 @@ export async function getGalleryAlbums() {
 }
 
 export async function getLatestGalleryMedia(limit: number = 6) {
-  const client: any = prisma;
-  if (!client.galleryMedia) {
-    return [];
-  }
-
-  const media = await client.galleryMedia.findMany({
+  const media = await prisma.galleryMedia.findMany({
     take: limit,
     orderBy: {
       createdAt: "desc",
@@ -373,7 +363,7 @@ export async function getLatestGalleryMedia(limit: number = 6) {
     },
   });
 
-  return media.map((item: any) => ({
+  return media.map((item) => ({
     src: item.src,
     alt: item.caption || item.album?.title || "Gallery Image",
     category: item.album?.title || "General",
@@ -398,12 +388,7 @@ export async function createGalleryAlbum(formData: FormData) {
     return;
   }
 
-  const client: any = prisma;
-  if (!client.galleryAlbum) {
-    return;
-  }
-
-  await client.galleryAlbum.create({
+  await prisma.galleryAlbum.create({
     data: {
       title,
       description,
@@ -429,12 +414,7 @@ export async function updateGalleryAlbum(id: string, formData: FormData) {
     if (uploaded) coverImage = uploaded;
   }
 
-  const client: any = prisma;
-  if (!client.galleryAlbum) {
-    return;
-  }
-
-  const data: any = {
+  const data: Prisma.GalleryAlbumUpdateInput = {
     title,
     description,
     order,
@@ -444,7 +424,7 @@ export async function updateGalleryAlbum(id: string, formData: FormData) {
     data.coverImage = coverImage;
   }
 
-  await client.galleryAlbum.update({
+  await prisma.galleryAlbum.update({
     where: { id },
     data,
   });
@@ -454,12 +434,7 @@ export async function updateGalleryAlbum(id: string, formData: FormData) {
 }
 
 export async function deleteGalleryAlbum(id: string) {
-  const client: any = prisma;
-  if (!client.galleryAlbum) {
-    return;
-  }
-
-  await client.galleryAlbum.delete({
+  await prisma.galleryAlbum.delete({
     where: { id },
   });
 
@@ -469,7 +444,7 @@ export async function deleteGalleryAlbum(id: string) {
 
 export async function createGalleryMedia(formData: FormData) {
   const albumId = (formData.get("albumId") as string) || "";
-  let type = (formData.get("type") as string) || "image";
+  const type = (formData.get("type") as string) || "image";
   const caption = (formData.get("caption") as string) || "";
   const thumbnail = (formData.get("thumbnail") as string) || "";
   const orderRaw = (formData.get("order") as string) || "0";
@@ -477,11 +452,6 @@ export async function createGalleryMedia(formData: FormData) {
 
   const files = formData.getAll("file") as File[];
   const validFiles = files.filter((f) => f.size > 0);
-
-  const client: any = prisma;
-  if (!client.galleryMedia) {
-    return;
-  }
 
   if (validFiles.length > 0) {
     // Process multiple files
@@ -498,7 +468,7 @@ export async function createGalleryMedia(formData: FormData) {
       const uploaded = await saveUploadToPublic(file);
       if (uploaded) {
         currentSrc = uploaded;
-        await client.galleryMedia.create({
+        await prisma.galleryMedia.create({
           data: {
             albumId,
             type: currentType,
@@ -512,9 +482,9 @@ export async function createGalleryMedia(formData: FormData) {
     }
   } else {
     // Fallback for URL-only (if supported) or no file but src provided
-    let src = (formData.get("src") as string) || "";
+    const src = (formData.get("src") as string) || "";
     if (src) {
-      await client.galleryMedia.create({
+      await prisma.galleryMedia.create({
         data: {
           albumId,
           type,
@@ -550,12 +520,7 @@ export async function updateGalleryMedia(id: string, formData: FormData) {
     if (uploaded) src = uploaded;
   }
 
-  const client: any = prisma;
-  if (!client.galleryMedia) {
-    return;
-  }
-
-  await client.galleryMedia.update({
+  await prisma.galleryMedia.update({
     where: { id },
     data: {
       type,
@@ -571,12 +536,7 @@ export async function updateGalleryMedia(id: string, formData: FormData) {
 }
 
 export async function deleteGalleryMedia(id: string) {
-  const client: any = prisma;
-  if (!client.galleryMedia) {
-    return;
-  }
-
-  await client.galleryMedia.delete({
+  await prisma.galleryMedia.delete({
     where: { id },
   });
 

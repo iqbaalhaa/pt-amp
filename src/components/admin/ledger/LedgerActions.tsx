@@ -8,7 +8,7 @@ import { revokePurchase } from "@/actions/purchase-actions";
 import { revokeSale } from "@/actions/sale-actions";
 import { revokeProduction } from "@/actions/production-actions";
 import { approvePurchase } from "@/actions/purchase-actions";
-import { approveSale, getSaleDetail, finalizeSale } from "@/actions/sale-actions";
+import { getSaleDetail, finalizeSale } from "@/actions/sale-actions";
 import GlassDialog from "@/components/ui/GlassDialog";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import PrintIcon from "@mui/icons-material/Print";
@@ -55,7 +55,6 @@ export function LedgerActions({ id, type, status, entry, onView }: Props) {
         entry?.subType === "Penjemuran" ||
         entry?.subType === "Pengemasan" ||
         entry?.subType === "Produksi Lainnya"));
-  const isCancelled = status === "cancelled";
   const canApprove =
     status === "draft" &&
     (type === "purchase" || type === "sale" || type === "invoice");

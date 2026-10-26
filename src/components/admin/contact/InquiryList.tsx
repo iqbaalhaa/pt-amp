@@ -3,7 +3,7 @@
 import { useState } from "react";
 import type { Inquiry, InquiryStatus } from "@prisma/client";
 import { updateInquiryStatus, deleteInquiry } from "@/actions/inquiry-actions";
-import { Box, Tooltip, Typography, Chip } from "@mui/material";
+import { Box, Tooltip, Typography } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import MarkEmailReadIcon from "@mui/icons-material/MarkEmailRead";

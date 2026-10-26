@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createUser, updateUser } from "@/actions/user-actions";
 import Modal from "@/components/ui/Modal";
@@ -19,12 +19,16 @@ export default function UserModal({ isOpen, onClose, user }: UserModalProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
+  const initialUser = isOpen ? user : null;
+  const [name, setName] = useState(initialUser?.name ?? "");
+  const [email, setEmail] = useState(initialUser?.email ?? "");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState("STAFF");
+  const [role, setRole] = useState(initialUser?.role ?? "STAFF");
 
-  useEffect(() => {
+  // Isi ulang form saat modal dibuka / user berganti (pola React: adjust state saat render).
+  const [prevSync, setPrevSync] = useState({ isOpen, user });
+  if (isOpen !== prevSync.isOpen || user !== prevSync.user) {
+    setPrevSync({ isOpen, user });
     if (isOpen) {
       if (user) {
         setName(user.name);
@@ -40,7 +44,7 @@ export default function UserModal({ isOpen, onClose, user }: UserModalProps) {
       }
       setError(null);
     }
-  }, [isOpen, user]);
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
