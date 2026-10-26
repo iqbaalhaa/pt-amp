@@ -137,24 +137,20 @@ export default function PembelianPage({ itemTypes }: Props) {
 		}
 	};
 
-	const invoiceItems = useMemo(
-		() =>
-			items
-				.map((row) => {
-					const itemType = findItemType(row.itemTypeId);
-					const total = lineTotal(row);
+	const invoiceItems = items
+		.map((row) => {
+			const itemType = findItemType(row.itemTypeId);
+			const total = lineTotal(row);
 
-					return {
-						productName: itemType ? itemType.name : "",
-						qty: row.qty || "0",
-						unit: "-",
-						price: row.unitCost || "0",
-						total: total.toString(),
-					};
-				})
-				.filter((it) => parseFloat(it.qty) > 0 || parseFloat(it.price) > 0),
-		[items, itemTypes],
-	);
+			return {
+				productName: itemType ? itemType.name : "",
+				qty: row.qty || "0",
+				unit: "-",
+				price: row.unitCost || "0",
+				total: total.toString(),
+			};
+		})
+		.filter((it) => parseFloat(it.qty) > 0 || parseFloat(it.price) > 0);
 
 	const invoiceData: InvoiceData = {
 		id: "DRAFT",

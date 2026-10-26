@@ -213,10 +213,7 @@ export default function OtherProductionClient() {
     return q * u;
   };
 
-  const totalSemua = useMemo(
-    () => rows.reduce((sum, row) => sum + getRowTotal(row), 0),
-    [rows]
-  );
+  const totalSemua = rows.reduce((sum, row) => sum + getRowTotal(row), 0);
 
   const toggleWorkerSelection = (id: string) => {
     setSelectedWorkerIds((prev) =>

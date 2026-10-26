@@ -228,10 +228,7 @@ export default function PensortiranClient() {
     return q * rate;
   };
 
-  const totalSemua = useMemo(
-    () => rows.reduce((sum, row) => sum + getRowTotal(row), 0),
-    [rows, upahPerKg]
-  );
+  const totalSemua = rows.reduce((sum, row) => sum + getRowTotal(row), 0);
 
   const toggleWorkerSelection = (id: string) => {
     setSelectedWorkerIds((prev) =>

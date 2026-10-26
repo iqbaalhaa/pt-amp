@@ -5,6 +5,11 @@ import nextTs from "eslint-config-next/typescript";
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
+  {
+    // Gambar berasal dari CMS/upload (host bebas, blob: preview admin, SVG lokal);
+    // next/image butuh remotePatterns per host dan error untuk host lain → pakai <img>.
+    rules: { "@next/next/no-img-element": "off" },
+  },
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:
