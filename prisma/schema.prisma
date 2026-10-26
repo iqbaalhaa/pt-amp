@@ -707,7 +707,7 @@ model AboutPoint {
 
 model FeatureCard {
   id          String   @id @default(cuid())
-  section     String   // "HOME_ABOUT" | "ABOUT_VALUES" | "HOME_PROCESS"
+  section     String   // "HOME_ABOUT" | "ABOUT_VALUES" | "HOME_PROCESS" | "HOME_STATS" | "HOME_CERTIFICATIONS"
   title       String
   description String
   icon        String?

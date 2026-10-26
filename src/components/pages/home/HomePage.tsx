@@ -18,6 +18,8 @@ import { ProductCardImage } from "./ProductCardImage";
 import { StaticProductCards } from "./StaticProductCards";
 
 import { HomeBlogImage } from "./HomeBlogImage";
+import { TrustSection } from "./TrustSection";
+import { HOME_ABOUT, HOME_CERTIFICATIONS, HOME_STATS } from "@/lib/cms-sections";
 import { HomeContactSection } from "./HomeContactSection";
 import { getDictionary, localePath, type Locale } from "@/lib/i18n";
 import { ProcessSection } from "./ProcessSection";
@@ -31,16 +33,27 @@ export default async function HomePage({
   locale?: Locale;
 }) {
   const t = getDictionary(locale).home;
-  const [allProducts, homePage, slides, featureCards, posts, allAlbums, processCards] =
-    await Promise.all([
-      getPublicItemTypes(),
-      getHomePageData(),
-      getHeroSlides(),
-      getFeatureCards("HOME_ABOUT"),
-      latestPosts(3),
-      getGalleryAlbums(),
-      getFeatureCards(PROCESS_SECTION),
-    ]);
+  const [
+    allProducts,
+    homePage,
+    slides,
+    featureCards,
+    posts,
+    allAlbums,
+    stats,
+    certifications,
+    processCards,
+  ] = await Promise.all([
+    getPublicItemTypes(),
+    getHomePageData(),
+    getHeroSlides(),
+    getFeatureCards(HOME_ABOUT),
+    latestPosts(3),
+    getGalleryAlbums(),
+    getFeatureCards(HOME_STATS),
+    getFeatureCards(HOME_CERTIFICATIONS),
+    getFeatureCards(PROCESS_SECTION),
+  ]);
 
   const products = allProducts.slice(0, 3);
   const albums = allAlbums.slice(0, 3);
@@ -125,6 +138,8 @@ export default async function HomePage({
           </div>
         </div>
       </section>
+
+      <TrustSection stats={stats} certifications={certifications} locale={locale} />
 
       <ProcessSection steps={resolveProcessSteps(processCards)} locale={locale} />
 
