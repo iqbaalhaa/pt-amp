@@ -19,6 +19,7 @@ import GlassCard from "@/components/ui/GlassCard";
 import GlassButton from "@/components/ui/GlassButton";
 import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
 import { ItemTypeDTO, getItemTypes, quickCreateItemType } from "@/actions/item-type-actions";
+import { readUpahSettings, UPAH_SETTINGS_KEY } from "@/lib/upah-settings";
 
 type PemotonganRate = {
   id: string;
@@ -38,7 +39,9 @@ type WageSettings = {
   pengemasanPerBungkus: number;
 };
 
-const STORAGE_KEY = "upahSettings";
+const STORAGE_KEY = UPAH_SETTINGS_KEY;
+
+type ItemTypeOption = ItemTypeDTO & { inputValue?: string };
 
 type WageTabKey =
   | "pengikisan"
@@ -74,6 +77,115 @@ const defaultSettings: WageSettings = {
   pengemasanPerBungkus: 500,
 };
 
+function loadWageSettings(): WageSettings {
+  try {
+    const parsed = readUpahSettings();
+    if (!parsed) return defaultSettings;
+    const pemotonganRates: PemotonganRate[] = Array.isArray(
+      parsed.pemotonganRates,
+    )
+      ? parsed.pemotonganRates.map((r, idx) => ({
+          id: r.id || `rate-${idx}`,
+          name: String(r.name ?? "").trim() || `Jenis ${idx + 1}`,
+          unit: String(r.unit ?? "Kg"),
+          rate:
+            typeof r.rate === "number" && !Number.isNaN(r.rate)
+              ? r.rate
+              : 0,
+          itemTypeId:
+            typeof r.itemTypeId === "string" && r.itemTypeId.length > 0
+              ? r.itemTypeId
+              : undefined,
+        }))
+      : [
+          {
+            id: "stik25",
+            name: "Stik 25",
+            unit: "Kg",
+            rate:
+              typeof parsed.pemotonganStik25 === "number"
+                ? parsed.pemotonganStik25
+                : 1500,
+          },
+          {
+            id: "aaa8",
+            name: "Aaa (8 cm)",
+            unit: "Kg",
+            rate:
+              typeof parsed.pemotonganAaa8 === "number"
+                ? parsed.pemotonganAaa8
+                : 1500,
+          },
+          {
+            id: "aa8",
+            name: "Aa (8 cm)",
+            unit: "Kg",
+            rate:
+              typeof parsed.pemotonganAa8 === "number"
+                ? parsed.pemotonganAa8
+                : 1500,
+          },
+          {
+            id: "reject8",
+            name: "Reject (8)",
+            unit: "Kg",
+            rate:
+              typeof parsed.pemotonganReject8 === "number"
+                ? parsed.pemotonganReject8
+                : 1500,
+          },
+          {
+            id: "reject6",
+            name: "Reject (6)",
+            unit: "Kg",
+            rate:
+              typeof parsed.pemotonganReject6 === "number"
+                ? parsed.pemotonganReject6
+                : 1500,
+          },
+          {
+            id: "campuran8",
+            name: "Campuran (8 cm)",
+            unit: "Kg",
+            rate:
+              typeof parsed.pemotonganCampuran8 === "number"
+                ? parsed.pemotonganCampuran8
+                : 1500,
+          },
+        ];
+
+    return {
+      pengikisanKa:
+        typeof parsed.pengikisanKa === "number"
+          ? parsed.pengikisanKa
+          : defaultSettings.pengikisanKa,
+      pengikisanStik:
+        typeof parsed.pengikisanStik === "number"
+          ? parsed.pengikisanStik
+          : defaultSettings.pengikisanStik,
+      pemotonganPerKg:
+        typeof parsed.pemotonganPerKg === "number"
+          ? parsed.pemotonganPerKg
+          : defaultSettings.pemotonganPerKg,
+      pemotonganRates,
+      penjemuranPerHari:
+        typeof parsed.penjemuranPerHari === "number"
+          ? parsed.penjemuranPerHari
+          : defaultSettings.penjemuranPerHari,
+      penjemuranLemburPerJam:
+        typeof parsed.penjemuranLemburPerJam === "number"
+          ? parsed.penjemuranLemburPerJam
+          : defaultSettings.penjemuranLemburPerJam,
+      pengemasanPerBungkus:
+        typeof parsed.pengemasanPerBungkus === "number"
+          ? parsed.pengemasanPerBungkus
+          : defaultSettings.pengemasanPerBungkus,
+    };
+  } catch {
+    return defaultSettings;
+  }
+}
+
 export default function WageSettingsPage() {
   const [settings, setSettings] = useState<WageSettings>(defaultSettings);
   const [loaded, setLoaded] = useState(false);
@@ -89,124 +201,16 @@ export default function WageSettingsPage() {
     severity: "success",
   });
 
-  const itemTypeFilter = createFilterOptions<ItemTypeDTO & { inputValue?: string }>();
+  const itemTypeFilter = createFilterOptions<ItemTypeOption>();
   const [itemTypeOptions, setItemTypeOptions] = useState<ItemTypeDTO[]>([]);
   const [creatingItemTypeFor, setCreatingItemTypeFor] = useState<string | null>(null);
 
   useEffect(() => {
-    try {
-      if (typeof window === "undefined") return;
-      const raw = window.localStorage.getItem(STORAGE_KEY);
-      if (!raw) {
-        setLoaded(true);
-        return;
-      }
-      const parsed = JSON.parse(raw) as any;
-      const pemotonganRates: PemotonganRate[] = Array.isArray(
-        parsed.pemotonganRates,
-      )
-        ? parsed.pemotonganRates.map((r: any, idx: number) => ({
-            id: r.id || `rate-${idx}`,
-            name: String(r.name ?? "").trim() || `Jenis ${idx + 1}`,
-            unit: String(r.unit ?? "Kg"),
-            rate:
-              typeof r.rate === "number" && !Number.isNaN(r.rate)
-                ? r.rate
-                : 0,
-            itemTypeId:
-              typeof r.itemTypeId === "string" && r.itemTypeId.length > 0
-                ? r.itemTypeId
-                : undefined,
-          }))
-        : [
-            {
-              id: "stik25",
-              name: "Stik 25",
-              unit: "Kg",
-              rate:
-                typeof parsed.pemotonganStik25 === "number"
-                  ? parsed.pemotonganStik25
-                  : 1500,
-            },
-            {
-              id: "aaa8",
-              name: "Aaa (8 cm)",
-              unit: "Kg",
-              rate:
-                typeof parsed.pemotonganAaa8 === "number"
-                  ? parsed.pemotonganAaa8
-                  : 1500,
-            },
-            {
-              id: "aa8",
-              name: "Aa (8 cm)",
-              unit: "Kg",
-              rate:
-                typeof parsed.pemotonganAa8 === "number"
-                  ? parsed.pemotonganAa8
-                  : 1500,
-            },
-            {
-              id: "reject8",
-              name: "Reject (8)",
-              unit: "Kg",
-              rate:
-                typeof parsed.pemotonganReject8 === "number"
-                  ? parsed.pemotonganReject8
-                  : 1500,
-            },
-            {
-              id: "reject6",
-              name: "Reject (6)",
-              unit: "Kg",
-              rate:
-                typeof parsed.pemotonganReject6 === "number"
-                  ? parsed.pemotonganReject6
-                  : 1500,
-            },
-            {
-              id: "campuran8",
-              name: "Campuran (8 cm)",
-              unit: "Kg",
-              rate:
-                typeof parsed.pemotonganCampuran8 === "number"
-                  ? parsed.pemotonganCampuran8
-                  : 1500,
-            },
-          ];
-
-      setSettings({
-        pengikisanKa:
-          typeof parsed.pengikisanKa === "number"
-            ? parsed.pengikisanKa
-            : defaultSettings.pengikisanKa,
-        pengikisanStik:
-          typeof parsed.pengikisanStik === "number"
-            ? parsed.pengikisanStik
-            : defaultSettings.pengikisanStik,
-        pemotonganPerKg:
-          typeof parsed.pemotonganPerKg === "number"
-            ? parsed.pemotonganPerKg
-            : defaultSettings.pemotonganPerKg,
-        pemotonganRates,
-        penjemuranPerHari:
-          typeof parsed.penjemuranPerHari === "number"
-            ? parsed.penjemuranPerHari
-            : defaultSettings.penjemuranPerHari,
-        penjemuranLemburPerJam:
-          typeof parsed.penjemuranLemburPerJam === "number"
-            ? parsed.penjemuranLemburPerJam
-            : defaultSettings.penjemuranLemburPerJam,
-        pengemasanPerBungkus:
-          typeof parsed.pengemasanPerBungkus === "number"
-            ? parsed.pengemasanPerBungkus
-            : defaultSettings.pengemasanPerBungkus,
-      });
-    } catch {
-      setSettings(defaultSettings);
-    } finally {
+    // Halaman ini di-SSR: baca localStorage setelah mount (hindari hydration mismatch).
+    queueMicrotask(() => {
+      setSettings(loadWageSettings());
       setLoaded(true);
-    }
+    });
   }, []);
 
   useEffect(() => {
@@ -344,7 +348,7 @@ export default function WageSettingsPage() {
                   type="number"
                   value={loaded ? settings.pengikisanKa : ""}
                   onChange={handleChange("pengikisanKa")}
-                  InputProps={{ startAdornment: "Rp " as any }}
+                  InputProps={{ startAdornment: "Rp " }}
                   size="small"
                 />
                 <TextField
@@ -352,7 +356,7 @@ export default function WageSettingsPage() {
                   type="number"
                   value={loaded ? settings.pengikisanStik : ""}
                   onChange={handleChange("pengikisanStik")}
-                  InputProps={{ startAdornment: "Rp " as any }}
+                  InputProps={{ startAdornment: "Rp " }}
                   size="small"
                 />
               </div>
@@ -380,7 +384,7 @@ export default function WageSettingsPage() {
                   type="number"
                   value={loaded ? settings.pemotonganPerKg ?? "" : ""}
                   onChange={handleChange("pemotonganPerKg")}
-                  InputProps={{ startAdornment: "Rp " as any }}
+                  InputProps={{ startAdornment: "Rp " }}
                   size="small"
                 />
               </Box>
@@ -407,13 +411,13 @@ export default function WageSettingsPage() {
                         >
                           <td className="px-3 py-2 text-center">{idx + 1}</td>
                           <td className="px-3 py-2">
-                            <Autocomplete
+                            <Autocomplete<ItemTypeOption, false, false, false>
                               size="small"
                               fullWidth
                               value={currentItemType || null}
                               onChange={async (_event, newValue) => {
-                                if (newValue && (newValue as any).inputValue) {
-                                  const inputValue = (newValue as any)
+                                if (newValue && newValue.inputValue) {
+                                  const inputValue = newValue
                                     .inputValue as string;
                                   setCreatingItemTypeFor(r.id);
                                   try {
@@ -501,7 +505,7 @@ export default function WageSettingsPage() {
                                     unit: "Kg",
                                     isPublic: true,
                                     isActive: true,
-                                  } as any);
+                                  });
                                 }
                                 return filtered;
                               }}
@@ -511,8 +515,8 @@ export default function WageSettingsPage() {
                               options={itemTypeOptions}
                               getOptionLabel={(option) => {
                                 if (typeof option === "string") return option;
-                                if ((option as any).inputValue)
-                                  return (option as any).inputValue;
+                                if (option.inputValue)
+                                  return option.inputValue;
                                 return option.name;
                               }}
                               renderOption={(props, option) => {
@@ -568,7 +572,7 @@ export default function WageSettingsPage() {
                                 r.id,
                                 "rate",
                               )}
-                              InputProps={{ startAdornment: "Rp " as any }}
+                              InputProps={{ startAdornment: "Rp " }}
                             />
                           </td>
                           <td className="px-3 py-2 text-center">
@@ -621,7 +625,7 @@ export default function WageSettingsPage() {
                   type="number"
                   value={loaded ? settings.penjemuranPerHari : ""}
                   onChange={handleChange("penjemuranPerHari")}
-                  InputProps={{ startAdornment: "Rp " as any }}
+                  InputProps={{ startAdornment: "Rp " }}
                   size="small"
                 />
                 <TextField
@@ -629,7 +633,7 @@ export default function WageSettingsPage() {
                   type="number"
                   value={loaded ? settings.penjemuranLemburPerJam : ""}
                   onChange={handleChange("penjemuranLemburPerJam")}
-                  InputProps={{ startAdornment: "Rp " as any }}
+                  InputProps={{ startAdornment: "Rp " }}
                   size="small"
                 />
               </div>
@@ -656,7 +660,7 @@ export default function WageSettingsPage() {
                 type="number"
                 value={loaded ? settings.pengemasanPerBungkus : ""}
                 onChange={handleChange("pengemasanPerBungkus")}
-                InputProps={{ startAdornment: "Rp " as any }}
+                InputProps={{ startAdornment: "Rp " }}
                 size="small"
               />
             </GlassCard>
@@ -684,7 +688,7 @@ export default function WageSettingsPage() {
                   type="number"
                   value={loaded ? settings.pemotonganPerKg ?? "" : ""}
                   onChange={handleChange("pemotonganPerKg")}
-                  InputProps={{ startAdornment: "Rp " as any }}
+                  InputProps={{ startAdornment: "Rp " }}
                   size="small"
                 />
               </Box>
@@ -711,13 +715,13 @@ export default function WageSettingsPage() {
                         >
                           <td className="px-3 py-2 text-center">{idx + 1}</td>
                           <td className="px-3 py-2">
-                            <Autocomplete
+                            <Autocomplete<ItemTypeOption, false, false, false>
                               size="small"
                               fullWidth
                               value={currentItemType || null}
                               onChange={async (_event, newValue) => {
-                                if (newValue && (newValue as any).inputValue) {
-                                  const inputValue = (newValue as any)
+                                if (newValue && newValue.inputValue) {
+                                  const inputValue = newValue
                                     .inputValue as string;
                                   setCreatingItemTypeFor(r.id);
                                   try {
@@ -805,7 +809,7 @@ export default function WageSettingsPage() {
                                     unit: "Kg",
                                     isPublic: true,
                                     isActive: true,
-                                  } as any);
+                                  });
                                 }
                                 return filtered;
                               }}
@@ -815,8 +819,8 @@ export default function WageSettingsPage() {
                               options={itemTypeOptions}
                               getOptionLabel={(option) => {
                                 if (typeof option === "string") return option;
-                                if ((option as any).inputValue)
-                                  return (option as any).inputValue;
+                                if (option.inputValue)
+                                  return option.inputValue;
                                 return option.name;
                               }}
                               renderOption={(props, option) => {
@@ -872,7 +876,7 @@ export default function WageSettingsPage() {
                                 r.id,
                                 "rate",
                               )}
-                              InputProps={{ startAdornment: "Rp " as any }}
+                              InputProps={{ startAdornment: "Rp " }}
                             />
                           </td>
                           <td className="px-3 py-2 text-center">
@@ -926,7 +930,7 @@ export default function WageSettingsPage() {
                   type="number"
                   value={loaded ? settings.penjemuranPerHari : ""}
                   onChange={handleChange("penjemuranPerHari")}
-                  InputProps={{ startAdornment: "Rp " as any }}
+                  InputProps={{ startAdornment: "Rp " }}
                   size="small"
                 />
                 <TextField
@@ -934,7 +938,7 @@ export default function WageSettingsPage() {
                   type="number"
                   value={loaded ? settings.penjemuranLemburPerJam : ""}
                   onChange={handleChange("penjemuranLemburPerJam")}
-                  InputProps={{ startAdornment: "Rp " as any }}
+                  InputProps={{ startAdornment: "Rp " }}
                   size="small"
                 />
               </div>

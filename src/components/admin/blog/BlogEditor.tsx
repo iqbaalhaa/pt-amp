@@ -15,9 +15,9 @@ import { TableHeader } from '@tiptap/extension-table-header'
 import { TableRow } from '@tiptap/extension-table-row'
 import { 
   Bold, Italic, List, ListOrdered, 
-  Heading1, Heading2, Quote, Undo, Redo, 
+  Heading1, Heading2, Undo, Redo, 
   Link as LinkIcon, Image as ImageIcon,
-  Type, Underline as UnderlineIcon,
+  Underline as UnderlineIcon,
   AlignLeft, AlignCenter, AlignRight, AlignJustify,
   Palette, Table as TableIcon, Columns, Rows, Trash2
 } from 'lucide-react'
@@ -67,13 +67,6 @@ export default function BlogEditor({ content, onChange }: BlogEditorProps) {
     },
   });
 
-  const addImage = useCallback(() => {
-    const url = window.prompt('URL Gambar:')
-    if (url) {
-      editor?.chain().focus().setImage({ src: url }).run()
-    }
-  }, [editor])
-  
   const uploadAndAddImage = useCallback(() => {
       const input = document.createElement('input');
       input.type = 'file';

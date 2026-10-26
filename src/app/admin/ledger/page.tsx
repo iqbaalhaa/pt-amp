@@ -2,7 +2,8 @@ import { prisma } from "@/lib/prisma";
 import { LedgerSection } from "@/components/admin/ledger/LedgerSection";
 import { LedgerTabs } from "@/components/admin/ledger/LedgerTabs";
 import { ProductionCostSummary } from "@/components/admin/ledger/ProductionCostSummary";
-import { LedgerEntry } from "@/components/admin/ledger/types";
+import { LedgerEntry, LedgerStatus } from "@/components/admin/ledger/types";
+import type { ProductionStatus } from "@/generated/client";
 import {
   formatDateTime,
   toCurrency,
@@ -10,6 +11,9 @@ import {
 import LedgerFiltersClient from "@/components/admin/ledger/LedgerFiltersClient";
 
 export const dynamic = "force-dynamic";
+
+// Production rows use "completed", which LedgerStatus does not list.
+const COMPLETED_STATUS = "completed" as string as LedgerStatus;
 
 type SearchParams = {
   start?: string;
@@ -196,7 +200,7 @@ export default async function AdminLedgerPage({
       where: {
         ...(start ? { date: { gte: start } } : {}),
         ...(end ? { date: { lte: end } } : {}),
-        ...(params.status ? { status: params.status as any } : {}),
+        ...(params.status ? { status: params.status as ProductionStatus } : {}),
         ...(params.party
           ? {
               productionWorkers: {
@@ -385,19 +389,18 @@ export default async function AdminLedgerPage({
       }
     })(),
   ]);
-  const anyPrisma = prisma as any;
   let expenses: Array<{
     id: bigint;
     date: Date;
-    status: any;
+    status: string;
     createdByName: string | null;
     notes: string | null;
-    items: Array<{ purpose: string; amount: any }>;
+    items: Array<{ purpose: string; amount: { toString(): string } }>;
     total?: string;
     itemCountFallback?: number;
   }> = [];
-  if (anyPrisma?.expense?.findMany) {
-    expenses = (await prisma.expense.findMany({
+  if (typeof prisma.expense?.findMany === "function") {
+    expenses = await prisma.expense.findMany({
       where: {
         ...(idBigint ? { id: idBigint } : {}),
         ...(start ? { date: { gte: start } } : {}),
@@ -421,11 +424,11 @@ export default async function AdminLedgerPage({
       },
       orderBy: { date: "desc" },
       include: { items: true },
-    })) as any;
+    });
   } else {
     // Fallback to raw SQL aggregation (without per-line details)
     const whereClauses: string[] = [];
-    const paramsArr: any[] = [];
+    const paramsArr: unknown[] = [];
     if (params.id) {
       whereClauses.push(`e."id" = $${paramsArr.length + 1}::bigint`);
       paramsArr.push(params.id);
@@ -488,7 +491,7 @@ export default async function AdminLedgerPage({
       total: h.total,
       itemCountFallback: Number(h.item_count || 0),
       items: [],
-    })) as any;
+    }));
   }
 
   // Build filter option lists
@@ -629,7 +632,7 @@ export default async function AdminLedgerPage({
       id: pr.id.toString(),
       type: "production",
       date: toLocalDateTimeString(pr.date),
-      status: pr.status as any,
+      status: pr.status as LedgerStatus,
       reference: pr.id.toString(),
       counterparty: workerNames || "-",
       total: costValue,
@@ -648,18 +651,18 @@ export default async function AdminLedgerPage({
             const a = parseFloat(it.amount.toString());
             return sum + (isFinite(a) ? a : 0);
           }, 0)
-        : parseFloat((e as any).total || "0");
+        : parseFloat(e.total || "0");
     const total = isFinite(derivedTotal) ? derivedTotal : 0;
     const totalValue = total > 0 ? total : null;
     const itemCount =
       e.items && e.items.length > 0
         ? e.items.length
-        : (e as any).itemCountFallback ?? 0;
+        : e.itemCountFallback ?? 0;
     return {
       id: e.id.toString(),
       type: "invoice",
       date: toLocalDateTimeString(e.date),
-      status: e.status as any,
+      status: e.status as LedgerStatus,
       reference: e.id.toString(),
       counterparty: e.createdByName || "Expense",
       createdByName: e.createdByName || null,
@@ -690,7 +693,7 @@ export default async function AdminLedgerPage({
       id: `pengikisan-${p.id}`,
       type: "production",
       date: toLocalDateTimeString(p.date),
-      status: "completed" as any,
+      status: COMPLETED_STATUS,
       reference: `PK-${p.id}`,
       createdByName: p.petugas || null,
       counterparty: names || "-",
@@ -721,9 +724,9 @@ export default async function AdminLedgerPage({
       id: `pemotongan-${p.id}`,
       type: "production",
       date: toLocalDateTimeString(p.date),
-      status: "completed" as any,
+      status: COMPLETED_STATUS,
       reference: `PM-${p.id}`,
-      createdByName: (p as any).petugas || null,
+      createdByName: p.petugas || null,
       counterparty: names || "-",
       total: total > 0 ? total : null,
       stockImpact: "NEUTRAL",
@@ -749,9 +752,9 @@ export default async function AdminLedgerPage({
       id: `penjemuran-${p.id}`,
       type: "production",
       date: toLocalDateTimeString(p.date),
-      status: "completed" as any,
+      status: COMPLETED_STATUS,
       reference: `PJ-${p.id}`,
-      createdByName: (p as any).petugas || null,
+      createdByName: null, // model has no petugas field
       counterparty: names || "-",
       total: total > 0 ? total : null,
       stockImpact: "NEUTRAL",
@@ -779,9 +782,9 @@ export default async function AdminLedgerPage({
       id: `pengemasan-${p.id}`,
       type: "production",
       date: toLocalDateTimeString(p.date),
-      status: "completed" as any,
+      status: COMPLETED_STATUS,
       reference: `PG-${p.id}`,
-      createdByName: (p as any).petugas || null,
+      createdByName: p.petugas || null,
       counterparty: names || "-",
       total: total > 0 ? total : null,
       stockImpact: "NEUTRAL",
@@ -808,7 +811,7 @@ export default async function AdminLedgerPage({
       id: `produksi-lainnya-${p.id}`,
       type: "production",
       date: toLocalDateTimeString(p.date),
-      status: "completed" as any,
+      status: COMPLETED_STATUS,
       reference: `PL-${p.id}`,
       createdByName: p.petugas || null,
       counterparty: names || "-",
@@ -838,9 +841,9 @@ export default async function AdminLedgerPage({
       id: `pensortiran-${p.id}`,
       type: "production",
       date: toLocalDateTimeString(p.date),
-      status: "completed" as any,
+      status: COMPLETED_STATUS,
       reference: `PS-${p.id}`,
-      createdByName: (p as any).petugas || null,
+      createdByName: p.petugas || null,
       counterparty: names || "-",
       total: total > 0 ? total : null,
       stockImpact: "NEUTRAL",
@@ -865,9 +868,9 @@ export default async function AdminLedgerPage({
       id: `qc-potong-sortir-${p.id}`,
       type: "production",
       date: toLocalDateTimeString(p.date),
-      status: "completed" as any,
+      status: COMPLETED_STATUS,
       reference: `QC-${p.id}`,
-      createdByName: (p as any).petugas || null,
+      createdByName: null, // model has no petugas field
       counterparty: names || "-",
       total: total > 0 ? total : null,
       stockImpact: "NEUTRAL",
@@ -982,7 +985,6 @@ export default async function AdminLedgerPage({
 
   const purchaseCount = sortedPurchases.length;
   const saleCount = sortedSales.length;
-  const productionCount = sortedProductions.length;
   const expenseCount = sortedExpenses.length;
 
   const purchaseNominal = sortedPurchases
@@ -991,9 +993,6 @@ export default async function AdminLedgerPage({
   const saleNominal = sortedSales
     .filter((e) => e.status !== "cancelled")
     .reduce((sum, e) => sum + (e.total ?? 0), 0);
-  const productionCostTotal = sortedProductions
-    .filter((e) => e.status !== "cancelled")
-    .reduce((sum, e) => sum + (e.productionCost ?? 0), 0);
   const expenseNominal = sortedExpenses
     .filter((e) => e.status !== "cancelled")
     .reduce((sum, e) => sum + (e.total ?? 0), 0);
@@ -1005,26 +1004,6 @@ export default async function AdminLedgerPage({
     if (!productionGroups[type]) productionGroups[type] = [];
     productionGroups[type].push(p);
   });
-
-  const allProductionTypes = Array.from(
-    new Set([...knownProductionTypes, ...Object.keys(productionGroups)])
-  ).sort((a, b) => {
-    const idxA = knownProductionTypes.indexOf(a);
-    const idxB = knownProductionTypes.indexOf(b);
-    if (idxA !== -1 && idxB !== -1) return idxA - idxB;
-    if (idxA !== -1) return -1;
-    if (idxB !== -1) return 1;
-    return a.localeCompare(b);
-  });
-
-  const totalCount = purchaseCount + saleCount + productionCount + expenseCount;
-  const summaryTotalTransaksi = totalCount;
-  const summaryTotalNominal = purchaseNominal + saleNominal;
-  const breakdown = {
-    purchase: purchaseCount,
-    sale: saleCount,
-    production: productionCount,
-  };
 
   const selectedId = params.selected;
   const allEntries: LedgerEntry[] = [

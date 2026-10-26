@@ -132,10 +132,12 @@ export function LedgerFilters({
    }, [itemType, updateSearchParam]);
 
    // Sync month/year display if params.start/end change from outside (like manual date input)
-   useEffect(() => {
+   const [prevMonthYear, setPrevMonthYear] = useState(initialMonthYear);
+   if (initialMonthYear !== prevMonthYear) {
+     setPrevMonthYear(initialMonthYear);
      setMonth(initialMonthYear.month);
      setYear(initialMonthYear.year);
-   }, [initialMonthYear]);
+   }
 
   return (
     <div className="flex flex-col gap-3">

@@ -16,7 +16,6 @@ import {
   Upload,
   Save,
   X,
-  MoreHorizontal,
   Edit2,
   ChevronDown,
   ChevronUp,
@@ -32,11 +31,6 @@ export default function GalleryAlbumCard({ album }: { album: Album }) {
   const [hasCoverFile, setHasCoverFile] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const mediaFormRef = useRef<HTMLFormElement>(null);
-
-  // Fallback gradient if no cover image
-  const bgImage = album.coverImage
-    ? `url('${album.coverImage}')`
-    : "linear-gradient(to bottom right, #f4f4f5, #e4e4e7)";
 
   return (
     <>
@@ -506,7 +500,7 @@ export default function GalleryAlbumCard({ album }: { album: Album }) {
   );
 }
 
-function MediaItemCard({ item }: { item: any }) {
+function MediaItemCard({ item }: { item: Album["items"][number] }) {
   const [isEditing, setIsEditing] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 

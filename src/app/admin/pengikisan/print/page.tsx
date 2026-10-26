@@ -29,8 +29,8 @@ export default async function PengikisanPrintPage({
 
   const totalUpah = parseFloat(pengikisan.totalUpah?.toString() || "0");
   const shiftText =
-    ((pengikisan as any).shift &&
-      String((pengikisan as any).shift).toLowerCase()) ||
+    (pengikisan.shift &&
+      String(pengikisan.shift).toLowerCase()) ||
     null;
   const shiftDisplay = shiftText
     ? shiftText.charAt(0).toUpperCase() + shiftText.slice(1)

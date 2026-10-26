@@ -6,7 +6,6 @@ import {
 	Stack,
 	Typography,
 	TextField,
-	MenuItem,
 	Snackbar,
 	Alert,
 	Divider,
@@ -36,9 +35,15 @@ import { type SupplierDTO, quickCreateSupplier } from "@/actions/supplier-action
 import SuccessModal from "./SuccessModal";
 import { authClient } from "@/lib/auth-client";
 
-const filter = createFilterOptions<ItemTypeDTO>();
-const unitFilter = createFilterOptions<UnitDTO>();
-const supplierFilter = createFilterOptions<SupplierDTO>();
+// Opsi "Tambah ..." di Autocomplete
+type NewOption = { inputValue: string; name: string };
+type ItemTypeOption = ItemTypeDTO | NewOption;
+type UnitOption = UnitDTO | NewOption;
+type SupplierOption = SupplierDTO | NewOption;
+
+const filter = createFilterOptions<ItemTypeOption>();
+const unitFilter = createFilterOptions<UnitOption>();
+const supplierFilter = createFilterOptions<SupplierOption>();
 
 type Props = {
 	itemTypes: ItemTypeDTO[];
@@ -61,17 +66,24 @@ export default function PurchaseForm({ itemTypes, units: initialUnits, suppliers
 	const [localUnits, setLocalUnits] = useState<UnitDTO[]>(initialUnits);
 	const [localSuppliers, setLocalSuppliers] = useState<SupplierDTO[]>(initialSuppliers);
 
-	useEffect(() => {
+	// Sinkron state lokal saat prop berubah (pola "adjust state while rendering")
+	const [prevItemTypes, setPrevItemTypes] = useState(itemTypes);
+	if (itemTypes !== prevItemTypes) {
+		setPrevItemTypes(itemTypes);
 		setLocalItemTypes(itemTypes);
-	}, [itemTypes]);
+	}
 
-	useEffect(() => {
+	const [prevUnits, setPrevUnits] = useState(initialUnits);
+	if (initialUnits !== prevUnits) {
+		setPrevUnits(initialUnits);
 		setLocalUnits(initialUnits);
-	}, [initialUnits]);
+	}
 
-	useEffect(() => {
+	const [prevSuppliers, setPrevSuppliers] = useState(initialSuppliers);
+	if (initialSuppliers !== prevSuppliers) {
+		setPrevSuppliers(initialSuppliers);
 		setLocalSuppliers(initialSuppliers);
-	}, [initialSuppliers]);
+	}
 
 	const activeItemTypes = useMemo(() => {
 		return localItemTypes.filter((t) => t.isActive);
@@ -87,7 +99,7 @@ export default function PurchaseForm({ itemTypes, units: initialUnits, suppliers
 
 	const [supplierId, setSupplierId] = useState<string>("");
 	const [date, setDate] = useState<string>("");
-	const [status, setStatus] = useState<TransactionStatus>("draft");
+	const [status] = useState<TransactionStatus>("draft");
 	const [notes, setNotes] = useState<string>("");
 	const [creatingItemType, setCreatingItemType] = useState(false);
 	const [creatingUnit, setCreatingUnit] = useState(false);
@@ -100,15 +112,19 @@ export default function PurchaseForm({ itemTypes, units: initialUnits, suppliers
 	const A5_H_MM = 210;
 	const PRINT_MARGIN_MM = 10;
 
+	// Tanggal hari ini (zona waktu browser) diisi setelah mount, bukan saat render,
+	// agar HTML server & hydrate tetap sama. setState lewat callback microtask.
 	useEffect(() => {
-		const today = new Date();
-		const yyyy = today.getFullYear();
-		const mm = String(today.getMonth() + 1).padStart(2, "0");
-		const dd = String(today.getDate()).padStart(2, "0");
-		setDate(`${yyyy}-${mm}-${dd}`);
+		queueMicrotask(() => {
+			const today = new Date();
+			const yyyy = today.getFullYear();
+			const mm = String(today.getMonth() + 1).padStart(2, "0");
+			const dd = String(today.getDate()).padStart(2, "0");
+			setDate(`${yyyy}-${mm}-${dd}`);
+		});
 	}, []);
 
-	const [items, setItems] = useState<ItemRow[]>([
+	const [items, setItems] = useState<ItemRow[]>(() => [
 		{ id: Math.random().toString(), itemTypeId: "", qty: "", unitCost: "", unitId: "" }
 	]);
 
@@ -180,7 +196,7 @@ export default function PurchaseForm({ itemTypes, units: initialUnits, suppliers
 				date,
 				status,
 				notes: notes || null,
-				items: validItems.map(({ id, ...rest }) => rest),
+				items: validItems.map(({ itemTypeId, qty, unitCost, unitId }) => ({ itemTypeId, qty, unitCost, unitId })),
 			};
 
 			const res = await createPurchase(payload);
@@ -206,20 +222,20 @@ export default function PurchaseForm({ itemTypes, units: initialUnits, suppliers
 		{
 			header: "Nama Barang",
 			cell: (row) => (
-				<Autocomplete
+				<Autocomplete<ItemTypeOption>
 					value={activeItemTypes.find(it => it.id === row.itemTypeId) || null}
 					onChange={async (event, newValue) => {
 						if (typeof newValue === 'string') {
 							// Should not happen with current config
-						} else if (newValue && (newValue as any).inputValue) {
+						} else if (newValue && "inputValue" in newValue) {
 							// Create new item type
 							setCreatingItemType(true);
 							try {
-								const newIt = await quickCreateItemType((newValue as any).inputValue);
+								const newIt = await quickCreateItemType(newValue.inputValue);
 								setLocalItemTypes(prev => [...prev, newIt]);
 								updateItem(row.id, "itemTypeId", newIt.id);
 								setSnack({ open: true, message: `Barang "${newIt.name}" berhasil ditambahkan`, severity: "success" });
-							} catch (err) {
+							} catch {
 								setSnack({ open: true, message: "Gagal menambahkan barang baru", severity: "error" });
 							} finally {
 								setCreatingItemType(false);
@@ -236,7 +252,7 @@ export default function PurchaseForm({ itemTypes, units: initialUnits, suppliers
 							filtered.push({
 								inputValue,
 								name: `Tambah "${inputValue}"`,
-							} as any);
+							});
 						}
 						return filtered;
 					}}
@@ -246,11 +262,11 @@ export default function PurchaseForm({ itemTypes, units: initialUnits, suppliers
 					options={activeItemTypes}
 					getOptionLabel={(option) => {
 						if (typeof option === 'string') return option;
-						if ((option as any).inputValue) return (option as any).inputValue;
+						if ("inputValue" in option) return option.inputValue;
 						return option.name;
 					}}
 					renderOption={(props, option) => {
-						const { key, ...optionProps } = props as any;
+						const { key, ...optionProps } = props;
 						return (
 							<li key={key} {...optionProps}>
 								{option.name}
@@ -297,17 +313,17 @@ export default function PurchaseForm({ itemTypes, units: initialUnits, suppliers
 		{
 			header: "Satuan",
 			cell: (row) => (
-				<Autocomplete
+				<Autocomplete<UnitOption>
 					value={activeUnits.find(u => u.id === row.unitId) || null}
 					onChange={async (event, newValue) => {
-						if (newValue && (newValue as any).inputValue) {
+						if (newValue && "inputValue" in newValue) {
 							setCreatingUnit(true);
 							try {
-								const newUnit = await quickCreateUnit((newValue as any).inputValue);
+								const newUnit = await quickCreateUnit(newValue.inputValue);
 								setLocalUnits(prev => [...prev, newUnit]);
 								updateItem(row.id, "unitId", newUnit.id);
 								setSnack({ open: true, message: `Satuan "${newUnit.name}" berhasil ditambahkan`, severity: "success" });
-							} catch (err) {
+							} catch {
 								setSnack({ open: true, message: "Gagal menambahkan satuan baru", severity: "error" });
 							} finally {
 								setCreatingUnit(false);
@@ -324,7 +340,7 @@ export default function PurchaseForm({ itemTypes, units: initialUnits, suppliers
 							filtered.push({
 								inputValue,
 								name: `Tambah "${inputValue}"`,
-							} as any);
+							});
 						}
 						return filtered;
 					}}
@@ -334,11 +350,11 @@ export default function PurchaseForm({ itemTypes, units: initialUnits, suppliers
 					options={activeUnits}
 					getOptionLabel={(option) => {
 						if (typeof option === 'string') return option;
-						if ((option as any).inputValue) return (option as any).inputValue;
+						if ("inputValue" in option) return option.inputValue;
 						return option.name;
 					}}
 					renderOption={(props, option) => {
-						const { key, ...optionProps } = props as any;
+						const { key, ...optionProps } = props;
 						return (
 							<li key={key} {...optionProps}>
 								{option.name}
@@ -521,17 +537,17 @@ export default function PurchaseForm({ itemTypes, units: initialUnits, suppliers
 				<Box sx={{ flex: 1, minWidth: 0 }}>
 					<Stack spacing={3}>
 						<Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-							<Autocomplete
+							<Autocomplete<SupplierOption>
 								value={activeSuppliers.find(s => s.id === supplierId) || null}
 								onChange={async (event, newValue) => {
-									if (newValue && (newValue as any).inputValue) {
+									if (newValue && "inputValue" in newValue) {
 										setCreatingSupplier(true);
 										try {
-											const newSup = await quickCreateSupplier((newValue as any).inputValue);
+											const newSup = await quickCreateSupplier(newValue.inputValue);
 											setLocalSuppliers(prev => [...prev, newSup]);
 											setSupplierId(newSup.id);
 											setSnack({ open: true, message: `Supplier "${newSup.name}" berhasil ditambahkan`, severity: "success" });
-										} catch (err) {
+										} catch {
 											setSnack({ open: true, message: "Gagal menambahkan supplier baru", severity: "error" });
 										} finally {
 											setCreatingSupplier(false);
@@ -548,7 +564,7 @@ export default function PurchaseForm({ itemTypes, units: initialUnits, suppliers
 										filtered.push({
 											inputValue,
 											name: `Tambah "${inputValue}"`,
-										} as any);
+										});
 									}
 									return filtered;
 								}}
@@ -558,11 +574,11 @@ export default function PurchaseForm({ itemTypes, units: initialUnits, suppliers
 								options={activeSuppliers}
 								getOptionLabel={(option) => {
 									if (typeof option === 'string') return option;
-									if ((option as any).inputValue) return (option as any).inputValue;
+									if ("inputValue" in option) return option.inputValue;
 									return option.name;
 								}}
 								renderOption={(props, option) => {
-									const { key, ...optionProps } = props as any;
+									const { key, ...optionProps } = props;
 									return (
 										<li key={key} {...optionProps}>
 											{option.name}

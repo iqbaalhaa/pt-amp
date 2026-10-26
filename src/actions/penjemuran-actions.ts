@@ -2,8 +2,6 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
 
 export type PenjemuranItemInput = {
   nama: string;
@@ -21,8 +19,6 @@ export type PenjemuranInput = {
 };
 
 export async function createPenjemuran(input: PenjemuranInput) {
-  const session = await auth.api.getSession({ headers: await headers() });
-  const currentUserName = session?.user.name ?? null;
 
   const upahPerHari = parseFloat(input.upahPerHari || "0");
   const upahLemburPerJam = parseFloat(input.upahLemburPerJam || "0");

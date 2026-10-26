@@ -18,6 +18,17 @@ type Props = HTMLMotionProps<"button"> & {
 	href?: string;
 };
 
+// Satu komponen motion per `as` (mis. Link), dibuat sekali — bukan tiap render.
+const motionComponents = new Map<React.ElementType, React.ElementType>();
+function getMotionComponent(as: React.ElementType): React.ElementType {
+	let component = motionComponents.get(as);
+	if (!component) {
+		component = motion.create(as);
+		motionComponents.set(as, component);
+	}
+	return component;
+}
+
 export default function GlassButton({
 	variant = "primary",
 	size = "md",
@@ -51,10 +62,10 @@ export default function GlassButton({
 			"text-white bg-amber-500 hover:bg-amber-600 active:scale-95 shadow-[0_4px_12px_rgba(245,158,11,0.3)]",
 	};
 
-	const MotionComponent =
-		as != null ? motion(as as React.ElementType) : motion.button;
+	const MotionComponent = as != null ? getMotionComponent(as) : motion.button;
 
 	return (
+		// eslint-disable-next-line react-hooks/static-components -- komponen di-cache per `as` di getMotionComponent, stabil antar render
 		<MotionComponent
 			whileHover={{ scale: size === "icon" ? 1.1 : 1.02 }}
 			whileTap={{ scale: 0.95 }}

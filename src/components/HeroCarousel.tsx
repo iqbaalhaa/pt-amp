@@ -53,6 +53,11 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
     );
   }
 
+  return <HeroSlides slides={slides} />;
+}
+
+// Hook hanya di komponen ini, supaya tidak dipanggil setelah early return di atas.
+function HeroSlides({ slides }: HeroCarouselProps) {
   const [current, setCurrent] = useState(0);
   const videoRef = useRef<HTMLVideoElement>(null);
 

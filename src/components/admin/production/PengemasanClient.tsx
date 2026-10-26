@@ -9,7 +9,6 @@ import {
   TextField,
   createFilterOptions,
   CircularProgress,
-  InputAdornment,
   Tooltip,
 } from "@mui/material";
 
@@ -24,7 +23,6 @@ import BadgeRoundedIcon from "@mui/icons-material/BadgeRounded";
 import NumbersRoundedIcon from "@mui/icons-material/NumbersRounded";
 import SummarizeRoundedIcon from "@mui/icons-material/SummarizeRounded";
 import Inventory2RoundedIcon from "@mui/icons-material/Inventory2Rounded";
-import AttachMoneyRoundedIcon from "@mui/icons-material/AttachMoneyRounded";
 import AccessTimeRoundedIcon from "@mui/icons-material/AccessTimeRounded";
 
 import GlassButton from "@/components/ui/GlassButton";
@@ -39,6 +37,7 @@ import {
   createWorkerByName,
 } from "@/actions/worker-actions";
 import { formatRupiah } from "@/lib/currency";
+import { readUpahSettings } from "@/lib/upah-settings";
 
 type Row = {
   id: number;
@@ -47,7 +46,8 @@ type Row = {
   bungkus: number;
 };
 
-const workerFilter = createFilterOptions<WorkerDTO>();
+type WorkerOption = WorkerDTO & { inputValue?: string };
+const workerFilter = createFilterOptions<WorkerOption>();
 const itemTypeFilter = createFilterOptions<ItemTypeDTO>();
 
 const F4_W_MM = 210;
@@ -69,6 +69,13 @@ function loadLogoImage() {
   return logoImagePromise;
 }
 
+function loadUpahPerBungkus(): number {
+  const parsed = readUpahSettings();
+  return typeof parsed?.pengemasanPerBungkus === "number"
+    ? parsed.pengemasanPerBungkus
+    : 500;
+}
+
 function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(" ");
 }
@@ -83,7 +90,7 @@ export default function PengemasanClient() {
   );
   const [shift, setShift] = useState<"siang" | "malam">("siang");
   const [notes, setNotes] = useState("");
-  const [upahPerBungkus, setUpahPerBungkus] = useState(500);
+  const [upahPerBungkus, setUpahPerBungkus] = useState(loadUpahPerBungkus);
   const [saving, setSaving] = useState(false);
 
   const [openPreview, setOpenPreview] = useState(false);
@@ -113,19 +120,6 @@ export default function PengemasanClient() {
       }));
       setItemTypeOptions(options);
     });
-    try {
-      if (typeof window !== "undefined") {
-        const raw = window.localStorage.getItem("upahSettings");
-        if (raw) {
-          const parsed = JSON.parse(raw) as { pengemasanPerBungkus?: number };
-          if (typeof parsed.pengemasanPerBungkus === "number") {
-            setUpahPerBungkus(parsed.pengemasanPerBungkus);
-          }
-        }
-      }
-    } catch {
-      setUpahPerBungkus(500);
-    }
   }, []);
 
   const addRow = () => {
@@ -623,7 +617,7 @@ export default function PengemasanClient() {
                       </td>
 
                       <td className="px-3 py-2">
-                        <Autocomplete
+                        <Autocomplete<WorkerOption, false, false, true>
                           value={
                             workerOptions.find((w) => w.name === row.nama) ||
                             (row.nama ? row.nama : null)
@@ -634,11 +628,15 @@ export default function PengemasanClient() {
                             }
                           }}
                           onChange={async (_event, newValue) => {
-                            if (newValue && (newValue as any).inputValue) {
+                            if (
+                              newValue &&
+                              typeof newValue !== "string" &&
+                              newValue.inputValue
+                            ) {
                               setCreatingWorkerId(row.id);
                               try {
                                 const newWorker = await createWorkerByName(
-                                  (newValue as any).inputValue
+                                  newValue.inputValue
                                 );
                                 if (newWorker) {
                                   setWorkerOptions((prev) => [
@@ -672,12 +670,9 @@ export default function PengemasanClient() {
                               filtered.push({
                                 inputValue,
                                 name: `Tambah "${inputValue}"`,
-                                id: 0,
+                                id: "",
                                 isActive: true,
-                                role: "WORKER",
-                                createdAt: new Date(),
-                                updatedAt: new Date(),
-                              } as any);
+                              });
                             }
                             return filtered;
                           }}
@@ -687,8 +682,8 @@ export default function PengemasanClient() {
                           options={workerOptions}
                           getOptionLabel={(option) => {
                             if (typeof option === "string") return option;
-                            if ((option as any).inputValue)
-                              return (option as any).inputValue;
+                            if (option.inputValue)
+                              return option.inputValue;
                             return option.name;
                           }}
                           renderOption={(props, option) => {

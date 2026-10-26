@@ -1,14 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useIsClient } from "@/lib/use-is-client";
 import PenjemuranClient from "@/components/admin/production/PenjemuranClient";
 
 export default function PenjemuranPageClient() {
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const mounted = useIsClient();
 
   if (!mounted) {
     return null;

@@ -23,8 +23,8 @@ export async function updateCurrentUserProfile(data: {
 		});
 
 		return { success: true };
-	} catch (error: any) {
-		if (error?.code === "P2002") {
+	} catch (error) {
+		if ((error as { code?: string } | null)?.code === "P2002") {
 			return { success: false, error: "Email sudah digunakan" };
 		}
 		console.error("Error updating current user profile:", error);

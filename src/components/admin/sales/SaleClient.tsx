@@ -5,12 +5,7 @@ import type React from "react";
 import {
   Autocomplete,
   createFilterOptions,
-  Button,
   CircularProgress,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
   TextField,
 } from "@mui/material";
 import { useRouter } from "next/navigation";
@@ -23,7 +18,6 @@ import {
   Invoice as InvoiceComponent,
   type InvoiceData,
 } from "@/components/Invoice";
-import { useReactToPrint } from "react-to-print";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import { type ItemTypeDTO, getItemTypes } from "@/actions/item-type-actions";
@@ -38,10 +32,8 @@ import { authClient } from "@/lib/auth-client";
 // Icons
 import SellRoundedIcon from "@mui/icons-material/SellRounded";
 import PictureAsPdfRoundedIcon from "@mui/icons-material/PictureAsPdfRounded";
-import VisibilityRoundedIcon from "@mui/icons-material/VisibilityRounded";
 import EventRoundedIcon from "@mui/icons-material/EventRounded";
 import StickyNote2RoundedIcon from "@mui/icons-material/StickyNote2Rounded";
-import BadgeRoundedIcon from "@mui/icons-material/BadgeRounded";
 import NumbersRoundedIcon from "@mui/icons-material/NumbersRounded";
 import CategoryRoundedIcon from "@mui/icons-material/CategoryRounded";
 import PaymentsRoundedIcon from "@mui/icons-material/PaymentsRounded";
@@ -50,7 +42,6 @@ import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import InventoryRoundedIcon from "@mui/icons-material/InventoryRounded";
 import PersonRoundedIcon from "@mui/icons-material/PersonRounded";
-import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 
 type ItemRow = {
   id: string; // internal client-side id
@@ -92,11 +83,11 @@ export default function SaleClient() {
   const [date, setDate] = useState<string>(
     () => new Date().toISOString().split("T")[0]
   );
-  const [status, setStatus] = useState<TransactionStatus>(
+  const [status] = useState<TransactionStatus>(
     TransactionStatus.draft
   );
   const [notes, setNotes] = useState<string>("");
-  const [items, setItems] = useState<ItemRow[]>([
+  const [items, setItems] = useState<ItemRow[]>(() => [
     {
       id: Math.random().toString(),
       itemTypeId: "",
@@ -213,7 +204,11 @@ export default function SaleClient() {
         date,
         status,
         notes: notes || null,
-        items: validItems.map(({ id, ...rest }) => rest),
+        items: validItems.map(({ itemTypeId, qty, unitPrice }) => ({
+          itemTypeId,
+          qty,
+          unitPrice,
+        })),
       };
 
       const res = await createSale(payload);
@@ -438,7 +433,7 @@ export default function SaleClient() {
                           );
                           setSuppliers((prev) => [...prev, created]);
                           setCustomer(created.name);
-                        } catch (err) {
+                        } catch {
                           alert("Gagal membuat data baru");
                         } finally {
                           setCreatingSupplier(false);

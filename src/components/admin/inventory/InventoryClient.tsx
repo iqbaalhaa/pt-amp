@@ -117,7 +117,7 @@ export default function InventoryClient({ initialData }: { initialData: Inventor
       header: "",
       accessorKey: "itemTypeId",
       className: "w-[5%] text-center",
-      cell: (row) => (
+      cell: () => (
         <IconButton 
           size="small" 
           className="text-zinc-300 group-hover:text-[var(--brand)] transition-colors"

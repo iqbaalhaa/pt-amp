@@ -78,7 +78,7 @@ export async function quickCreateSupplier(name: string) {
 					isActive: true,
 				},
 			});
-		} catch (err: any) {
+		} catch (err) {
 			// Tangani race condition/unik constraint
 			const fallback = await prisma.supplier.findFirst({
 				where: {

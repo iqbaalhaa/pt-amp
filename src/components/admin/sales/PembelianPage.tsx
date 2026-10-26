@@ -47,12 +47,16 @@ export default function PembelianPage({ itemTypes }: Props) {
 		text: string;
 	} | null>(null);
 
+	// Tanggal hari ini (zona waktu browser) diisi setelah mount, bukan saat render,
+	// agar HTML server & hydrate tetap sama. setState lewat callback microtask.
 	useEffect(() => {
-		const today = new Date();
-		const yyyy = today.getFullYear();
-		const mm = String(today.getMonth() + 1).padStart(2, "0");
-		const dd = String(today.getDate()).padStart(2, "0");
-		setDate(`${yyyy}-${mm}-${dd}`);
+		queueMicrotask(() => {
+			const today = new Date();
+			const yyyy = today.getFullYear();
+			const mm = String(today.getMonth() + 1).padStart(2, "0");
+			const dd = String(today.getDate()).padStart(2, "0");
+			setDate(`${yyyy}-${mm}-${dd}`);
+		});
 	}, []);
 
 	const updateRow = (rowId: string, field: keyof ItemRow, value: string) => {

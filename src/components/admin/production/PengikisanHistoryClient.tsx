@@ -26,7 +26,7 @@ type HistoryItem = {
   date: string | Date;
   notes: string | null;
   totalUpah: number;
-  items: Array<{ nama?: string; [k: string]: any }>;
+  items: Array<{ nama?: string; [k: string]: unknown }>;
 };
 
 type ToastState = {
@@ -57,25 +57,27 @@ export default function PengikisanHistoryClient() {
 
   const [query, setQuery] = useState("");
 
-  const fetchData = async () => {
-    try {
-      setLoading(true);
-      const res = await getPengikisanHistory();
-      setData(res as HistoryItem[]);
-    } catch (error) {
-      console.error("Failed to fetch history:", error);
-      setToastState({
-        open: true,
-        message: "Gagal memuat riwayat",
-        type: "danger",
-      });
-    } finally {
-      setLoading(false);
-    }
+  // loading awal sudah true; setState hanya di callback promise (aman dipanggil dari effect)
+  const loadData = () =>
+    getPengikisanHistory()
+      .then((res) => setData(res as HistoryItem[]))
+      .catch((error) => {
+        console.error("Failed to fetch history:", error);
+        setToastState({
+          open: true,
+          message: "Gagal memuat riwayat",
+          type: "danger",
+        });
+      })
+      .finally(() => setLoading(false));
+
+  const fetchData = () => {
+    setLoading(true);
+    return loadData();
   };
 
   useEffect(() => {
-    fetchData();
+    loadData();
   }, []);
 
   const filtered = useMemo(() => {
@@ -338,7 +340,7 @@ export default function PengikisanHistoryClient() {
       <Toast
         open={toastState.open}
         message={toastState.message}
-        type={toastState.type as any}
+        type={toastState.type}
         onClose={() => setToastState((s) => ({ ...s, open: false }))}
       />
     </div>

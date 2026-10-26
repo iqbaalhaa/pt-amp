@@ -20,14 +20,15 @@ function formatRupiah(val: number) {
   }
 }
 
+const newId = () => `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
+
 export default function ExpenseForm({ inputBy }: { inputBy: string | null }) {
   const [date, setDate] = useState<string>(() => new Date().toISOString().slice(0, 10));
   const [notes, setNotes] = useState("");
   const [message, setMessage] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
-  const newId = () => `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
-  const [items, setItems] = useState<{ id: string; purpose: string; amount: string }[]>([
+  const [items, setItems] = useState<{ id: string; purpose: string; amount: string }[]>(() => [
     { id: newId(), purpose: "", amount: "" },
   ]);
 
@@ -171,7 +172,6 @@ export default function ExpenseForm({ inputBy }: { inputBy: string | null }) {
               </thead>
               <tbody className="divide-y divide-slate-100 bg-white">
                 {items.map((row, idx) => {
-                  const amtNum = parseFloat(row.amount || "0");
                   return (
                     <tr key={row.id}>
                       <td className="px-3 py-1.5 text-slate-700">{idx + 1}</td>
@@ -250,7 +250,7 @@ export default function ExpenseForm({ inputBy }: { inputBy: string | null }) {
                     const payload = {
                       date,
                       notes: notes || null,
-                      items: validItems.map(({ id, ...rest }) => rest),
+                      items: validItems.map(({ purpose, amount }) => ({ purpose, amount })),
                     };
                     const res = await createExpense(payload);
                     if (res && res.success) {
@@ -258,7 +258,7 @@ export default function ExpenseForm({ inputBy }: { inputBy: string | null }) {
                     } else {
                       setMessage("Gagal menyimpan expense.");
                     }
-                  } catch (err) {
+                  } catch {
                     setMessage("Terjadi kesalahan saat menyimpan.");
                   } finally {
                     setSaving(false);
@@ -314,7 +314,7 @@ export default function ExpenseForm({ inputBy }: { inputBy: string | null }) {
             zIndex: -1,
           }}
         >
-          <div ref={printRef as any}>
+          <div ref={printRef}>
             <Invoice data={invoiceData} hideQty />
           </div>
         </div>

@@ -37,7 +37,7 @@ export default function ChangePasswordForm() {
     }
 
     try {
-      const { data, error } = await authClient.changePassword({
+      const { error } = await authClient.changePassword({
         currentPassword,
         newPassword,
         revokeOtherSessions: true,
@@ -51,7 +51,7 @@ export default function ChangePasswordForm() {
         setNewPassword("");
         setConfirmPassword("");
       }
-    } catch (err) {
+    } catch {
       setMessage({ type: "error", text: "Terjadi kesalahan." });
     } finally {
       setLoading(false);

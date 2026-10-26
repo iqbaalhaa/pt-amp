@@ -3,18 +3,15 @@
 import { useMemo, useState, useEffect } from "react";
 import type { FormEvent } from "react";
 import jsPDF from "jspdf";
-import Link from "next/link";
 import {
   Autocomplete,
   TextField,
   createFilterOptions,
   CircularProgress,
-  InputAdornment,
   Tooltip,
   Checkbox,
 } from "@mui/material";
 
-import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
 import PictureAsPdfRoundedIcon from "@mui/icons-material/PictureAsPdfRounded";
 import SaveRoundedIcon from "@mui/icons-material/SaveRounded";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
@@ -23,10 +20,8 @@ import EventRoundedIcon from "@mui/icons-material/EventRounded";
 import StickyNote2RoundedIcon from "@mui/icons-material/StickyNote2Rounded";
 import BadgeRoundedIcon from "@mui/icons-material/BadgeRounded";
 import NumbersRoundedIcon from "@mui/icons-material/NumbersRounded";
-import PaymentsRoundedIcon from "@mui/icons-material/PaymentsRounded";
 import SummarizeRoundedIcon from "@mui/icons-material/SummarizeRounded";
 import AccessTimeRoundedIcon from "@mui/icons-material/AccessTimeRounded";
-import AttachMoneyRoundedIcon from "@mui/icons-material/AttachMoneyRounded";
 
 import GlassButton from "@/components/ui/GlassButton";
 import PageHeader from "@/components/ui/PageHeader";
@@ -38,6 +33,7 @@ import {
   createWorkerByName,
 } from "@/actions/worker-actions";
 import { formatRupiah } from "@/lib/currency";
+import { readUpahSettings } from "@/lib/upah-settings";
 
 type Row = {
   id: number;
@@ -46,7 +42,8 @@ type Row = {
   lemburJam: number;
 };
 
-const filter = createFilterOptions<WorkerDTO>();
+type WorkerOption = WorkerDTO & { inputValue?: string };
+const filter = createFilterOptions<WorkerOption>();
 
 const F4_W_MM = 210;
 const F4_H_MM = 330;
@@ -67,6 +64,26 @@ function loadLogoImage() {
   return logoImagePromise;
 }
 
+function loadUpahQcPotongSortir(): {
+  upahPerHari: number;
+  upahLemburPerJam: number;
+} {
+  const parsed = readUpahSettings();
+  // Cari key QC, lalu fallback ke key penjemuran / default generik
+  const perHari =
+    parsed?.qcPotongSortirPerHari ||
+    parsed?.penjemuranPerHari ||
+    parsed?.defaultPerHari;
+  const perJam =
+    parsed?.qcPotongSortirLemburPerJam ||
+    parsed?.penjemuranLemburPerJam ||
+    parsed?.defaultLemburPerJam;
+  return {
+    upahPerHari: typeof perHari === "number" ? perHari : 100000,
+    upahLemburPerJam: typeof perJam === "number" ? perJam : 15000,
+  };
+}
+
 function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(" ");
 }
@@ -80,8 +97,7 @@ export default function QcPotongSortirClient() {
     () => new Date().toISOString().split("T")[0]
   );
   const [notes, setNotes] = useState("");
-  const [upahPerHari, setUpahPerHari] = useState(100000);
-  const [upahLemburPerJam, setUpahLemburPerJam] = useState(15000);
+  const [{ upahPerHari, upahLemburPerJam }] = useState(loadUpahQcPotongSortir);
   const [saving, setSaving] = useState(false);
 
   const [openPreview, setOpenPreview] = useState(false);
@@ -96,33 +112,6 @@ export default function QcPotongSortirClient() {
     getWorkers().then((data) =>
       setWorkerOptions(data.filter((w) => w.isActive))
     );
-    try {
-      if (typeof window !== "undefined") {
-        const raw = window.localStorage.getItem("upahSettings");
-        if (raw) {
-          const parsed = JSON.parse(raw);
-          // Try to find relevant keys, or fallback to generic defaults
-          const perHari =
-            parsed.qcPotongSortirPerHari ||
-            parsed.penjemuranPerHari ||
-            parsed.defaultPerHari;
-          const perJam =
-            parsed.qcPotongSortirLemburPerJam ||
-            parsed.penjemuranLemburPerJam ||
-            parsed.defaultLemburPerJam;
-
-          if (typeof perHari === "number") {
-            setUpahPerHari(perHari);
-          }
-          if (typeof perJam === "number") {
-            setUpahLemburPerJam(perJam);
-          }
-        }
-      }
-    } catch {
-      setUpahPerHari(100000);
-      setUpahLemburPerJam(15000);
-    }
   }, []);
 
   const addRow = () => {
@@ -554,17 +543,21 @@ export default function QcPotongSortirClient() {
                       </td>
 
                       <td className="px-3 py-2">
-                        <Autocomplete
+                        <Autocomplete<WorkerOption, false, false, true>
                           value={
                             workerOptions.find((w) => w.name === row.nama) ||
                             null
                           }
                           onChange={async (_event, newValue) => {
-                            if (newValue && (newValue as any).inputValue) {
+                            if (
+                              newValue &&
+                              typeof newValue !== "string" &&
+                              newValue.inputValue
+                            ) {
                               setCreatingWorkerId(row.id);
                               try {
                                 const newWorker = await createWorkerByName(
-                                  (newValue as any).inputValue
+                                  newValue.inputValue
                                 );
                                 if (newWorker) {
                                   setWorkerOptions((prev) => [
@@ -598,12 +591,9 @@ export default function QcPotongSortirClient() {
                               filtered.push({
                                 inputValue,
                                 name: `Tambah "${inputValue}"`,
-                                id: 0,
+                                id: "",
                                 isActive: true,
-                                role: "WORKER",
-                                createdAt: new Date(),
-                                updatedAt: new Date(),
-                              } as any);
+                              });
                             }
                             return filtered;
                           }}
@@ -613,8 +603,8 @@ export default function QcPotongSortirClient() {
                           options={workerOptions}
                           getOptionLabel={(option) => {
                             if (typeof option === "string") return option;
-                            if ((option as any).inputValue)
-                              return (option as any).inputValue;
+                            if (option.inputValue)
+                              return option.inputValue;
                             return option.name;
                           }}
                           renderOption={(props, option) => {

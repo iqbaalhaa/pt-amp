@@ -49,8 +49,10 @@ type Row = {
   tipeUpah?: "per_qty" | "per_hari";
 };
 
-const filter = createFilterOptions<WorkerDTO>();
-const unitFilter = createFilterOptions<UnitDTO>();
+type WorkerOption = WorkerDTO & { inputValue?: string };
+const filter = createFilterOptions<WorkerOption>();
+type UnitOption = UnitDTO & { inputValue?: string };
+const unitFilter = createFilterOptions<UnitOption>();
 
 const F4_W_MM = 210;
 const F4_H_MM = 330;
@@ -708,18 +710,22 @@ export default function OtherProductionClient() {
                       </td>
 
                       <td className="px-3 py-2">
-                        <Autocomplete
+                        <Autocomplete<WorkerOption, false, false, true>
                           value={
                             workerOptions.find(
                               (w) => w.name === row.namaPekerja
                             ) || null
                           }
                           onChange={async (_event, newValue) => {
-                            if (newValue && (newValue as any).inputValue) {
+                            if (
+                              newValue &&
+                              typeof newValue !== "string" &&
+                              newValue.inputValue
+                            ) {
                               setCreatingWorkerId(row.id);
                               try {
                                 const newWorker = await createWorkerByName(
-                                  (newValue as any).inputValue
+                                  newValue.inputValue
                                 );
                                 if (newWorker) {
                                   setWorkerOptions((prev) => [
@@ -757,12 +763,9 @@ export default function OtherProductionClient() {
                               filtered.push({
                                 inputValue,
                                 name: `Tambah "${inputValue}"`,
-                                id: 0,
+                                id: "",
                                 isActive: true,
-                                role: "WORKER",
-                                createdAt: new Date(),
-                                updatedAt: new Date(),
-                              } as any);
+                              });
                             }
                             return filtered;
                           }}
@@ -772,8 +775,8 @@ export default function OtherProductionClient() {
                           options={workerOptions}
                           getOptionLabel={(option) => {
                             if (typeof option === "string") return option;
-                            if ((option as any).inputValue)
-                              return (option as any).inputValue;
+                            if (option.inputValue)
+                              return option.inputValue;
                             return option.name;
                           }}
                           renderOption={(props, option) => {
@@ -856,17 +859,21 @@ export default function OtherProductionClient() {
                             inputProps={{ min: 0, step: "any" }}
                           />
                         ) : (
-                          <Autocomplete
+                          <Autocomplete<UnitOption, false, false, true>
                             value={
                               unitOptions.find((u) => u.name === row.satuan) ||
                               null
                             }
                             onChange={async (_event, newValue) => {
-                              if (newValue && (newValue as any).inputValue) {
+                              if (
+                                newValue &&
+                                typeof newValue !== "string" &&
+                                newValue.inputValue
+                              ) {
                                 setCreatingUnitId(row.id);
                                 try {
                                   const newUnit = await quickCreateUnit(
-                                    (newValue as any).inputValue
+                                    newValue.inputValue
                                   );
                                   if (newUnit) {
                                     setUnitOptions((prev) => [
@@ -904,11 +911,10 @@ export default function OtherProductionClient() {
                                 filtered.push({
                                   inputValue,
                                   name: `Tambah "${inputValue}"`,
-                                  id: 0,
+                                  id: "",
                                   isActive: true,
-                                  createdAt: new Date(),
-                                  updatedAt: new Date(),
-                                } as any);
+                                  description: null,
+                                });
                               }
                               return filtered;
                             }}
@@ -918,8 +924,8 @@ export default function OtherProductionClient() {
                             options={unitOptions}
                             getOptionLabel={(option) => {
                               if (typeof option === "string") return option;
-                              if ((option as any).inputValue)
-                                return (option as any).inputValue;
+                              if (option.inputValue)
+                                return option.inputValue;
                               return option.name;
                             }}
                             renderOption={(props, option) => {

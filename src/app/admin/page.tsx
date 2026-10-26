@@ -26,8 +26,8 @@ export default async function AdminDashboard() {
 	const data = await getDashboardData();
 
 	const currentUser = {
-		name: (session as any)?.user?.name ?? null,
-		email: (session as any)?.user?.email ?? null,
+		name: session.user.name ?? null,
+		email: session.user.email ?? null,
 	};
 
 	return <DashboardView data={data} currentUser={currentUser} />;

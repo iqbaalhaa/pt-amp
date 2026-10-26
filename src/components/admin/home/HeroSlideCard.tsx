@@ -16,7 +16,6 @@ import {
   X,
   Plus,
   ExternalLink,
-  MoreVertical,
   Play,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";

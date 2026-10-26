@@ -1,7 +1,7 @@
 import { ContactForm } from "@/components/ContactForm";
 import { Navbar } from "@/components/Navbar";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
-import { MapPin, Phone, Mail, Clock, Facebook, Instagram, Twitter, Youtube, Linkedin, Info, Link as LinkIcon } from "lucide-react";
+import { MapPin, Phone, Mail, Facebook, Instagram, Twitter, Youtube, Linkedin, Info, Link as LinkIcon } from "lucide-react";
 import { getContactInfo } from "@/actions/contact-info-actions";
 import { getSocialMedias } from "@/actions/social-media-actions";
 import { getDictionary, type Locale } from "@/lib/i18n";

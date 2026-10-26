@@ -2,7 +2,7 @@
 
 import { User } from "@prisma/client";
 import GlassCard from "@/components/ui/GlassCard";
-import { Avatar, Box, Chip, IconButton, Menu, MenuItem, Typography } from "@mui/material";
+import { Avatar, Chip, IconButton, Menu, MenuItem, Typography } from "@mui/material";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";

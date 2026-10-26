@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
 	Box,
 	Button,
@@ -46,9 +46,12 @@ export default function UnitClient({ initialUnits }: UnitClientProps) {
 		onConfirm: () => Promise<void>;
 	} | null>(null);
 
-	useEffect(() => {
+	// Sinkron state lokal saat data dari server berubah (pola React: adjust state saat render).
+	const [prevInitialUnits, setPrevInitialUnits] = useState(initialUnits);
+	if (initialUnits !== prevInitialUnits) {
+		setPrevInitialUnits(initialUnits);
 		setUnits(initialUnits);
-	}, [initialUnits]);
+	}
 
 	const handleSelectAll = () => {
 		if (selectedIds.length === units.length) {

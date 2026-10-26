@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Stack, TextField, Alert, CircularProgress } from "@mui/material";
 import GlassButton from "@/components/ui/GlassButton";
 import { updateCurrentUserProfile } from "@/actions/account-actions";
@@ -21,10 +21,16 @@ export default function AccountProfileForm({
     { type: "success" | "error"; text: string } | null
   >(null);
 
-  useEffect(() => {
+  // Sinkron saat nilai dari server berubah (pola React: adjust state saat render).
+  const [prevInitial, setPrevInitial] = useState({ initialName, initialEmail });
+  if (
+    initialName !== prevInitial.initialName ||
+    initialEmail !== prevInitial.initialEmail
+  ) {
+    setPrevInitial({ initialName, initialEmail });
     setName(initialName);
     setEmail(initialEmail);
-  }, [initialName, initialEmail]);
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,7 +66,7 @@ export default function AccountProfileForm({
           text: result.error || "Gagal memperbarui profil akun.",
         });
       }
-    } catch (error) {
+    } catch {
       setMessage({
         type: "error",
         text: "Terjadi kesalahan.",

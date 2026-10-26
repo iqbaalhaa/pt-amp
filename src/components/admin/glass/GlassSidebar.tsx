@@ -6,7 +6,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import Inventory2Icon from "@mui/icons-material/Inventory2";
 import PeopleIcon from "@mui/icons-material/People";
-import MailIcon from "@mui/icons-material/Mail";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
 import FactoryIcon from "@mui/icons-material/Factory";
@@ -328,7 +327,7 @@ export default function GlassSidebar({
 											allowedPaths.some((p) => it.href.startsWith(p)),
 										)
 									: g.items;
-								if (filteredItems.length === 0) return null as any;
+								if (filteredItems.length === 0) return null;
 								return { title: g.title, items: filteredItems } as Group;
 							})
 							.filter((g): g is Group => Boolean(g))

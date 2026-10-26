@@ -1,5 +1,5 @@
 import React, { forwardRef } from "react";
-import { Box, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Divider, Grid } from "@mui/material";
+import { Box, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Divider } from "@mui/material";
 
 export interface ProductionReportData {
   id: string;

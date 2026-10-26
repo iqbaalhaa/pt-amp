@@ -16,6 +16,9 @@ const eslintConfig = defineConfig([
     "prisma/**",
     "public/**",
     "src/generated/**",
+    // Bukan kode aplikasi: salinan env & skrip cek sekali pakai di root.
+    "bukanenv.js",
+    "check-counts.js",
   ]),
 ]);
 

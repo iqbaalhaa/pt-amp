@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   Box,
   Button,
@@ -53,17 +53,13 @@ export default function SupplierClient({
     onConfirm: () => Promise<void>;
   } | null>(null);
 
-  useEffect(() => {
+  // Sinkron state lokal saat data dari server berubah (pola React: adjust state saat render).
+  const [prevInitialSuppliers, setPrevInitialSuppliers] = useState(initialSuppliers);
+  if (initialSuppliers !== prevInitialSuppliers) {
+    setPrevInitialSuppliers(initialSuppliers);
     setSuppliers(initialSuppliers);
-  }, [initialSuppliers]);
+  }
 
-  const handleSelectAll = () => {
-    if (selectedIds.length === suppliers.length) {
-      setSelectedIds([]);
-    } else {
-      setSelectedIds(suppliers.map((s) => s.id));
-    }
-  };
 
   const handleToggleSelect = (id: string) => {
     setSelectedIds((prev) =>

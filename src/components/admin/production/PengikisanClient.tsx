@@ -10,7 +10,6 @@ import {
   createFilterOptions,
   CircularProgress,
   Tooltip,
-  MenuItem,
 } from "@mui/material";
 
 import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
@@ -37,6 +36,7 @@ import {
   createWorkerByName,
 } from "@/actions/worker-actions";
 import { formatRupiah } from "@/lib/currency";
+import { readUpahSettings } from "@/lib/upah-settings";
 
 type Row = {
   id: number;
@@ -46,7 +46,8 @@ type Row = {
   shift?: string;
 };
 
-const filter = createFilterOptions<WorkerDTO>();
+type WorkerOption = WorkerDTO & { inputValue?: string };
+const filter = createFilterOptions<WorkerOption>();
 
 const F4_W_MM = 210;
 const F4_H_MM = 330;
@@ -68,6 +69,20 @@ function loadLogoImage() {
   });
 
   return logoImagePromise;
+}
+
+function loadUpahPengikisan(): { upahKa: number; upahStik: number } {
+  const parsed = readUpahSettings();
+  return {
+    upahKa:
+      typeof parsed?.pengikisanKa === "number"
+        ? parsed.pengikisanKa
+        : DEFAULT_UPAH_KA,
+    upahStik:
+      typeof parsed?.pengikisanStik === "number"
+        ? parsed.pengikisanStik
+        : DEFAULT_UPAH_STIK,
+  };
 }
 
 function cx(...classes: Array<string | false | null | undefined>) {
@@ -93,33 +108,12 @@ export default function PengikisanClient() {
   const [creatingWorkerId, setCreatingWorkerId] = useState<number | null>(null);
   const [bulkWorkerModalOpen, setBulkWorkerModalOpen] = useState(false);
   const [selectedWorkerIds, setSelectedWorkerIds] = useState<string[]>([]);
-  const [upahKa, setUpahKa] = useState<number>(DEFAULT_UPAH_KA);
-  const [upahStik, setUpahStik] = useState<number>(DEFAULT_UPAH_STIK);
+  const [{ upahKa, upahStik }] = useState(loadUpahPengikisan);
 
   useEffect(() => {
     getWorkers().then((data) =>
       setWorkerOptions(data.filter((w) => w.isActive))
     );
-    try {
-      if (typeof window !== "undefined") {
-        const raw = window.localStorage.getItem("upahSettings");
-        if (raw) {
-          const parsed = JSON.parse(raw) as {
-            pengikisanKa?: number;
-            pengikisanStik?: number;
-          };
-          if (typeof parsed.pengikisanKa === "number") {
-            setUpahKa(parsed.pengikisanKa);
-          }
-          if (typeof parsed.pengikisanStik === "number") {
-            setUpahStik(parsed.pengikisanStik);
-          }
-        }
-      }
-    } catch {
-      setUpahKa(DEFAULT_UPAH_KA);
-      setUpahStik(DEFAULT_UPAH_STIK);
-    }
   }, []);
 
   const addRow = () => {
@@ -600,7 +594,7 @@ export default function PengikisanClient() {
                       </td>
 
                       <td className="px-3 py-2">
-                        <Autocomplete
+                        <Autocomplete<WorkerOption, false, false, true>
                           value={
                             workerOptions.find((w) => w.name === row.nama) ||
                             (row.nama ? row.nama : null)
@@ -611,11 +605,15 @@ export default function PengikisanClient() {
                             }
                           }}
                           onChange={async (_event, newValue) => {
-                            if (newValue && (newValue as any).inputValue) {
+                            if (
+                              newValue &&
+                              typeof newValue !== "string" &&
+                              newValue.inputValue
+                            ) {
                               setCreatingWorkerId(row.id);
                               try {
                                 const newWorker = await createWorkerByName(
-                                  (newValue as any).inputValue
+                                  newValue.inputValue
                                 );
                                 if (newWorker) {
                                   setWorkerOptions((prev) => [
@@ -649,12 +647,9 @@ export default function PengikisanClient() {
                               filtered.push({
                                 inputValue,
                                 name: `Tambah "${inputValue}"`,
-                                id: 0,
+                                id: "",
                                 isActive: true,
-                                role: "WORKER",
-                                createdAt: new Date(),
-                                updatedAt: new Date(),
-                              } as any);
+                              });
                             }
                             return filtered;
                           }}
@@ -664,8 +659,8 @@ export default function PengikisanClient() {
                           options={workerOptions}
                           getOptionLabel={(option) => {
                             if (typeof option === "string") return option;
-                            if ((option as any).inputValue)
-                              return (option as any).inputValue;
+                            if (option.inputValue)
+                              return option.inputValue;
                             return option.name;
                           }}
                           renderOption={(props, option) => {

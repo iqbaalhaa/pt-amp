@@ -76,7 +76,7 @@ export async function getPemotonganHistory() {
   return data.map((item) => ({
     id: String(item.id),
     date: item.date,
-    shift: (item as any).shift as "siang" | "malam",
+    shift: item.shift as "siang" | "malam",
     petugas: item.petugas,
     notes: item.notes,
     totalUpah: Number(item.totalUpah ?? 0),
