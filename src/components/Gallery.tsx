@@ -1,6 +1,7 @@
 "use client";
 
 import { Play, Maximize2, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { DEFAULT_IMAGES } from "@/lib/default-images";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -13,32 +14,32 @@ interface GalleryItem {
 
 const defaultGalleryItems: GalleryItem[] = [
   {
-    src: "https://images.unsplash.com/photo-1605333396915-47ed6b68a00e?q=80&w=2070&auto=format&fit=crop",
+    src: DEFAULT_IMAGES.export,
     alt: "Proses Pengeringan",
     category: "Proses",
   },
   {
-    src: "https://images.unsplash.com/photo-1596483582103-605b7668636b?q=80&w=2070&auto=format&fit=crop",
+    src: DEFAULT_IMAGES.hero,
     alt: "Gudang Penyimpanan",
     category: "Fasilitas",
   },
   {
-    src: "https://images.unsplash.com/photo-1599940778173-e276d4acb2e7?q=80&w=2070&auto=format&fit=crop",
+    src: DEFAULT_IMAGES.gradeA,
     alt: "Sortir Kualitas",
     category: "Quality Control",
   },
   {
-    src: "https://images.unsplash.com/photo-1615485925763-867862f80933?q=80&w=2074&auto=format&fit=crop",
+    src: DEFAULT_IMAGES.export,
     alt: "Pengemasan",
     category: "Packing",
   },
   {
-    src: "https://images.unsplash.com/photo-1615485400323-952445c71b47?q=80&w=2074&auto=format&fit=crop",
+    src: DEFAULT_IMAGES.gradeB,
     alt: "Hasil Panen",
     category: "Raw Material",
   },
   {
-    src: "https://images.unsplash.com/photo-1611080626919-7cf5a9dbab5a?q=80&w=2000&auto=format&fit=crop",
+    src: DEFAULT_IMAGES.broken,
     alt: "Tim Produksi",
     category: "Team",
   },

@@ -1,6 +1,7 @@
 import { Navbar } from "@/components/Navbar";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { HeroCarousel, HeroSlide } from "@/components/HeroCarousel";
+import { replaceDeadSlideMedia } from "@/lib/default-images";
 import { SiteFooter } from "@/components/SiteFooter";
 import { getPublicItemTypes } from "@/actions/item-type-actions";
 import { latestPosts } from "@/lib/blog";
@@ -60,7 +61,9 @@ export default async function HomePage({
 
   // Fallback for slides if empty (optional, but good for safety)
   const finalSlides =
-    slides.length > 0 ? (slides as unknown as HeroSlide[]) : [];
+    slides.length > 0
+      ? (slides as unknown as HeroSlide[]).map(replaceDeadSlideMedia)
+      : [];
 
   return (
     <div className="min-h-screen font-sans bg-zinc-50">
