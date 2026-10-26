@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import { PROCESS_SECTION, DEFAULT_PROCESS_STEPS } from "../../src/lib/process-default";
 import { DEFAULT_HERO, LEGACY_HERO_TITLE } from "../../src/lib/hero-default";
 
 export async function seedContent(prisma: PrismaClient) {
@@ -128,6 +129,17 @@ export async function seedContent(prisma: PrismaClient) {
       ],
     });
     console.log("   - Home trust numbers seeded");
+  }
+
+  // 3c. Home "Dari Kebun ke Ekspor" steps (no photos yet: owner uploads real ones via CMS)
+  const processCount = await prisma.featureCard.count({
+    where: { section: PROCESS_SECTION },
+  });
+  if (processCount === 0) {
+    await prisma.featureCard.createMany({
+      data: DEFAULT_PROCESS_STEPS.map((step) => ({ ...step, section: PROCESS_SECTION })),
+    });
+    console.log("   - Home Process Steps seeded");
   }
 
   // 4. About Page Content

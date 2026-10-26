@@ -707,10 +707,11 @@ model AboutPoint {
 
 model FeatureCard {
   id          String   @id @default(cuid())
-  section     String   // "HOME_ABOUT" | "ABOUT_VALUES" | "HOME_STATS" | "HOME_CERTIFICATIONS"
+  section     String   // "HOME_ABOUT" | "ABOUT_VALUES" | "HOME_PROCESS" | "HOME_STATS" | "HOME_CERTIFICATIONS"
   title       String
   description String
   icon        String?
+  image       String? // optional photo (HOME_PROCESS steps)
   order       Int      @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

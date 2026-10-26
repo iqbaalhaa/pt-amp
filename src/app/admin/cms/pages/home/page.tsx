@@ -2,18 +2,22 @@ import {
   getHomePageData,
   updateHomePage,
   getHeroSlides,
+  getFeatureCards,
 } from "@/actions/cms-actions";
 import FeatureCardManager from "@/components/admin/home/FeatureCardManager";
 import { HOME_ABOUT, HOME_CERTIFICATIONS, HOME_STATS } from "@/lib/cms-sections";
 import HeroSlideCard from "@/components/admin/home/HeroSlideCard";
 import CreateHeroSlideButton from "@/components/admin/home/CreateHeroSlideButton";
+import ProcessStepsEditor from "@/components/admin/home/ProcessStepsEditor";
+import { PROCESS_SECTION } from "@/lib/process-default";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminCmsHomePage() {
-  const [home, heroSlides] = await Promise.all([
+  const [home, heroSlides, processSteps] = await Promise.all([
     getHomePageData(),
     getHeroSlides(),
+    getFeatureCards(PROCESS_SECTION),
   ]);
 
   return (
@@ -97,6 +101,8 @@ export default async function AdminCmsHomePage() {
             iconPlaceholder="CheckCircle2"
             addLabel="Tambah Sertifikasi"
           />
+
+          <ProcessStepsEditor steps={processSteps} />
         </div>
       </div>
     </div>

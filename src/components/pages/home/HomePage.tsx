@@ -1,4 +1,5 @@
 import { Navbar } from "@/components/Navbar";
+import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { HeroCarousel, HeroSlide } from "@/components/HeroCarousel";
 import { GalleryAlbums } from "@/components/GalleryAlbums";
 import { ContactForm } from "@/components/ContactForm";
@@ -17,6 +18,8 @@ import { ProductCardImage } from "./ProductCardImage";
 import { HomeBlogImage } from "./HomeBlogImage";
 import { TrustSection } from "./TrustSection";
 import { HOME_ABOUT, HOME_CERTIFICATIONS, HOME_STATS } from "@/lib/cms-sections";
+import { ProcessSection } from "./ProcessSection";
+import { PROCESS_SECTION, resolveProcessSteps } from "@/lib/process-default";
 import { ProductSpecTable } from "@/components/products/ProductSpecTable";
 import { buildProductSpecRows } from "@/lib/product-specs";
 
@@ -30,6 +33,7 @@ export default async function HomePage() {
     allAlbums,
     stats,
     certifications,
+    processCards,
   ] = await Promise.all([
     getPublicItemTypes(),
     getHomePageData(),
@@ -39,6 +43,7 @@ export default async function HomePage() {
     getGalleryAlbums(),
     getFeatureCards(HOME_STATS),
     getFeatureCards(HOME_CERTIFICATIONS),
+    getFeatureCards(PROCESS_SECTION),
   ]);
 
   const products = allProducts.slice(0, 3);
@@ -52,6 +57,7 @@ export default async function HomePage() {
   return (
     <div className="min-h-screen font-sans bg-zinc-50">
       <Navbar />
+      <WhatsAppButton />
 
       <HeroCarousel slides={finalSlides} />
 
@@ -143,6 +149,8 @@ export default async function HomePage() {
       </section>
 
       <TrustSection stats={stats} certifications={certifications} />
+
+      <ProcessSection steps={resolveProcessSteps(processCards)} />
 
       <section id="products" className="py-20 bg-zinc-50">
         <div className="container mx-auto px-4 md:px-6 lg:px-8">
