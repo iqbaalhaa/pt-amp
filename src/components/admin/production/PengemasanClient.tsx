@@ -181,10 +181,7 @@ export default function PengemasanClient() {
     return b * upahPerBungkus;
   };
 
-  const totalSemua = useMemo(
-    () => rows.reduce((sum, row) => sum + getRowTotal(row), 0),
-    [rows, upahPerBungkus]
-  );
+  const totalSemua = rows.reduce((sum, row) => sum + getRowTotal(row), 0);
 
   const toggleWorkerSelection = (id: string) => {
     setSelectedWorkerIds((prev) =>

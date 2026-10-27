@@ -217,6 +217,11 @@ const groups: Group[] = [
   },
 ];
 
+function isHrefActive(pathname: string, href: string) {
+	if (href === "/admin") return pathname === "/admin";
+	return pathname === href || pathname.startsWith(href + "/");
+}
+
 export default function GlassSidebar({
 	collapsed,
 	isMobile,
@@ -241,14 +246,11 @@ export default function GlassSidebar({
 		}));
 	};
 
-	const isActive = (href: string) => {
-		if (href === "/admin") return pathname === "/admin";
-		return pathname === href || pathname.startsWith(href + "/");
-	};
+	const isActive = (href: string) => isHrefActive(pathname, href);
 
 	useEffect(() => {
 		groups.forEach((g) => {
-			const hasActiveChild = g.items.some((it) => isActive(it.href));
+			const hasActiveChild = g.items.some((it) => isHrefActive(pathname, it.href));
 			if (hasActiveChild) {
 				setExpandedGroups((prev) => ({ ...prev, [g.title]: true }));
 			}
@@ -334,7 +336,7 @@ export default function GlassSidebar({
 							.filter((g): g is Group => Boolean(g))
 							.map((g) => {
 								const isExpanded = expandedGroups[g.title] || false;
-								const hasActiveChild = g.items.some((it) => isActive(it.href));
+								const hasActiveChild = g.items.some((it) => isHrefActive(pathname, it.href));
 
 								return (
 									<div key={g.title} className="mb-2">

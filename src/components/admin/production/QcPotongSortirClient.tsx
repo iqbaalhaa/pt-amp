@@ -179,10 +179,7 @@ export default function QcPotongSortirClient() {
     return h * upahPerHari + l * upahLemburPerJam;
   };
 
-  const totalSemua = useMemo(
-    () => rows.reduce((sum, row) => sum + getRowTotal(row), 0),
-    [rows, upahPerHari, upahLemburPerJam]
-  );
+  const totalSemua = rows.reduce((sum, row) => sum + getRowTotal(row), 0);
 
   const toggleWorkerSelection = (id: string) => {
     setSelectedWorkerIds((prev) =>
