@@ -1,0 +1,4 @@
+{
+  "command": "export BETTER_AUTH_SECRET=\"${BETTER_AUTH_SECRET:-amp-preview-dummy-secret-not-for-production}\" BETTER_AUTH_URL=\"${BETTER_AUTH_URL:-https://dev-tim-amp-df24062b4f.larika.id}\" NEXT_PUBLIC_SITE_URL=\"${NEXT_PUBLIC_SITE_URL:-https://dev-tim-amp-df24062b4f.larika.id}\" PORT=\"${PORT:-3412}\" && { [ -f pnpm-lock.yaml ] || pnpm import; } && pnpm install --no-frozen-lockfile --config.strict-dep-builds=false </dev/null && pnpm exec prisma generate && pnpm exec prisma migrate deploy && pnpm exec tsx prisma/seed-cms.ts && pnpm exec tsx prisma/seed-user-cms.ts && exec pnpm exec next dev --port \"$PORT\"",
+  "port": 3412
+}
